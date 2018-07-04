@@ -12,22 +12,14 @@
 
 namespace Packagist\WebBundle\Controller;
 
-use Composer\Console\HtmlOutputFormatter;
-use Composer\Factory;
-use Composer\IO\BufferIO;
-use Composer\Package\Loader\ArrayLoader;
-use Composer\Package\Loader\ValidatingArrayLoader;
-use Composer\Repository\InvalidRepositoryException;
-use Composer\Repository\VcsRepository;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Job;
+use Packagist\WebBundle\Entity\Version;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -37,27 +29,6 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  */
 class ApiController extends Controller
 {
-    /**
-     * @Route("/packages.json", name="packages", defaults={"_format" = "json"})
-     * @Method({"GET"})
-     */
-    public function packagesAction()
-    {
-        // fallback if any of the dumped files exist
-        $rootJson = $this->container->getParameter('kernel.root_dir').'/../web/packages_root.json';
-        if (file_exists($rootJson)) {
-            return new Response(file_get_contents($rootJson));
-        }
-        $rootJson = $this->container->getParameter('kernel.root_dir').'/../web/packages.json';
-        if (file_exists($rootJson)) {
-            return new Response(file_get_contents($rootJson));
-        }
-
-        $this->get('logger')->alert('packages.json is missing and the fallback controller is being hit, you need to use app/console packagist:dump');
-
-        return new Response('Horrible misconfiguration or the dumper script messed up, you need to use app/console packagist:dump', 404);
-    }
-
     /**
      * @Route("/api/create-package", name="generic_create", defaults={"_format" = "json"})
      * @Method({"POST"})
@@ -257,7 +228,7 @@ class ApiController extends Controller
     protected function getPackageAndVersionId($name, $version)
     {
         return $this->get('doctrine.dbal.default_connection')->fetchAssoc(
-            'SELECT p.id, v.id vid
+            'SELECT p.id, v.id as vid
             FROM package p
             LEFT JOIN package_version v ON p.id = v.package_id
             WHERE p.name = ?

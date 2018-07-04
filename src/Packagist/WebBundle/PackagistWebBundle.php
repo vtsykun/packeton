@@ -12,6 +12,9 @@
 
 namespace Packagist\WebBundle;
 
+use Packagist\WebBundle\DependencyInjection\Security\ApiHttpBasicFactory;
+use Symfony\Bundle\SecurityBundle\DependencyInjection\SecurityExtension;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
@@ -19,5 +22,10 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 class PackagistWebBundle extends Bundle
 {
-
+    public function build(ContainerBuilder $container)
+    {
+        /** @var SecurityExtension $extension */
+        $extension = $container->getExtension('security');
+        $extension->addSecurityListenerFactory(new ApiHttpBasicFactory());
+    }
 }

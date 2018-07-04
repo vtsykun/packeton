@@ -1,0 +1,39 @@
+{% extends "PackagistWebBundle::layout.html.twig" %}
+
+{% block content %}
+<div style="float:right; margin: 20px">
+    <a class="btn btn-default" href="{{ path('groups_create') }}">Greate group</a>
+</div>
+<section class="row">
+    <ul class="packages list-unstyled">
+        {% for group in groups %}
+        {% set groupUrl = path('groups_update', { 'id' : group.id }) %}
+        <li data-url="{{ groupUrl }}" class="row">
+            <div class="col-xs-12 package-item">
+                <div class="row">
+                    <div class="col-sm-9 col-lg-11" style="margin-top: 18px">
+                        <h4 class="tab-cell font-bold"><a href="{{ groupUrl }}">{{ group.name }}</a></h4>
+                    </div>
+                    <div class="col-sm-3 col-lg-1">
+                        <div style="font-size: 1.5em">
+                            <ul class="nav">
+                                <li class="launcher-item">
+                                    <form action="{{ path('groups_delete', { 'id': group.id}) }}" method="POST">
+                                        {{ form_widget(csrfForm.createView._token) }}
+                                        <button type="submit" title="Delete"><i class="fas fa-ban"></i></button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% if groups.haveToPaginate() %}
+        {{ pagerfanta(groups, 'twitter_bootstrap', {'proximity': 2}) }}
+    {% endif %}
+</section>
+{% endblock %}

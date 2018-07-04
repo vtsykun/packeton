@@ -103,7 +103,7 @@ class VersionRepository extends EntityRepository
 
         foreach ($links as $link => $table) {
             $rows = $this->getEntityManager()->getConnection()->fetchAll(
-                'SELECT version_id, packageName name, packageVersion version FROM '.$table.' WHERE version_id IN (:ids)',
+                'SELECT version_id, packageName as name, packageVersion as version FROM '.$table.' WHERE version_id IN (:ids)',
                 ['ids' => $versionIds],
                 ['ids' => Connection::PARAM_INT_ARRAY]
             );
@@ -129,7 +129,7 @@ class VersionRepository extends EntityRepository
     public function getVersionMetadataForUpdate(Package $package)
     {
         $rows = $this->getEntityManager()->getConnection()->fetchAll(
-            'SELECT id, normalizedVersion, source, softDeletedAt FROM package_version v WHERE v.package_id = :id',
+            'SELECT id, normalizedVersion as normalized_version, source, softDeletedAt FROM package_version v WHERE v.package_id = :id',
             ['id' => $package->getId()]
         );
 
@@ -138,7 +138,7 @@ class VersionRepository extends EntityRepository
             if ($row['source']) {
                 $row['source'] = json_decode($row['source'], true);
             }
-            $versions[strtolower($row['normalizedVersion'])] = $row;
+            $versions[strtolower($row['normalized_version'])] = $row;
         }
 
         return $versions;
@@ -209,5 +209,22 @@ class VersionRepository extends EntityRepository
         $this->redis->setex('new_releases', 600, json_encode($res));
 
         return $res;
+    }
+
+    public function getVersionStatisticsByMonthAndYear()
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb
+            ->select(
+                [
+                    'COUNT(v.id) as vcount',
+                    'YEAR(v.releasedAt) as year',
+                    'MONTH(v.releasedAt) as month'
+                ]
+            )
+            ->from('PackagistWebBundle:Version', 'v')
+            ->groupBy('year, month');
+
+        return $qb->getQuery()->getResult();
     }
 }

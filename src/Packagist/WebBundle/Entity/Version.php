@@ -493,6 +493,21 @@ class Version
     }
 
     /**
+     * @param array $dist
+     * @return bool
+     */
+    public function isEqualsDist(array $dist)
+    {
+        if ($oldDist = $this->getDist()) {
+            sort($oldDist);
+            sort($dist);
+            return $dist == $oldDist;
+        }
+
+        return false;
+    }
+
+    /**
      * Set autoload
      *
      * @param array $autoload

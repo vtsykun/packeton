@@ -1,0 +1,52 @@
+{% extends "PackagistWebBundle::layout.html.twig" %}
+
+{% block content %}
+<div style="float:right; margin: 20px">
+    <a class="btn btn-default" href="{{ path('users_create') }}">Create user</a>
+</div>
+<section class="row">
+    <ul class="packages list-unstyled">
+        {% for user in users %}
+        {% set packageUrl = path('user_profile', { 'name' : user.username }) %}
+        <li data-url="{{ packageUrl }}" class="row">
+            <div class="col-xs-12 package-item">
+                <div class="row">
+                    <div class="col-sm-9 col-lg-10">
+                        <div>
+                            {% if user.enabled %}
+                                <div class="tab-cell badge-enabled"><i class="fas fa-unlock"></i> Enable</div>
+                            {% else %}
+                                <div class="tab-cell badge-disable"><i class="fas fa-lock"></i> Disable</div>
+                            {% endif %}
+                            <h4 class="tab-cell font-bold"><a href="{{ packageUrl }}">{{ user.username }}</a></h4>
+                        </div>
+                        <p>Expires at:{% if user.expiresAt %} {{ user.expiresAt|date('Y-m-d') }} {% else %} N/A {% endif %}</p>
+                    </div>
+                    <div class="col-sm-3 col-lg-2">
+                        <div style="font-size: 1.5em">
+                            <ul class="nav">
+                                <li class="launcher-item">
+                                    <form action="{{ path('user_disable', {name: user.username}) }}" method="POST">
+                                        {{ form_widget(csrfForm.createView._token) }}
+                                        <button type="submit" title="Disable"><i class="fas fa-ban"></i></button>
+                                    </form>
+                                </li>
+                                <li class="launcher-item">
+                                    <a href="#">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% if users.haveToPaginate() %}
+        {{ pagerfanta(groups, 'twitter_bootstrap', {'proximity': 2}) }}
+    {% endif %}
+</section>
+{% endblock %}

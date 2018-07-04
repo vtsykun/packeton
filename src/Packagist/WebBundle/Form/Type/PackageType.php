@@ -13,6 +13,8 @@
 namespace Packagist\WebBundle\Form\Type;
 
 use Packagist\WebBundle\Entity\Package;
+use Packagist\WebBundle\Entity\SshCredentials;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -25,12 +27,19 @@ class PackageType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('repository', TextType::class, array(
-            'label' => 'Repository URL (Git/Svn/Hg)',
-            'attr'  => array(
-                'placeholder' => 'e.g.: https://github.com/composer/composer',
-            )
-        ));
+        $builder
+            ->add('credentials', EntityType::class, [
+                'label' => 'SSH Credentials (optional)',
+                'required' => false,
+                'class' => SshCredentials::class,
+                'property' => 'name'
+            ])
+            ->add('repository', TextType::class, [
+                'label' => 'Repository URL (Git/Svn/Hg)',
+                'attr'  => [
+                    'placeholder' => 'e.g.: https://github.com/composer/composer',
+                ]
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver)

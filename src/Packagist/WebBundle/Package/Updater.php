@@ -13,22 +13,27 @@
 namespace Packagist\WebBundle\Package;
 
 use cebe\markdown\GithubMarkdown;
+use Composer\Factory;
+use Composer\Package\Archiver\ArchiveManager;
 use Composer\Package\AliasPackage;
+use Composer\Package\CompletePackageInterface;
 use Composer\Package\PackageInterface;
 use Composer\Repository\RepositoryInterface;
 use Composer\Repository\VcsRepository;
 use Composer\Repository\Vcs\GitHubDriver;
 use Composer\Repository\InvalidRepositoryException;
 use Composer\Util\ErrorHandler;
+use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
 use Composer\Config;
 use Composer\IO\IOInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Packagist\WebBundle\Entity\Author;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Tag;
 use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Entity\VersionRepository;
 use Packagist\WebBundle\Entity\SuggestLink;
+use Packagist\WebBundle\Service\DistConfig;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Doctrine\DBAL\Connection;
 
@@ -45,6 +50,21 @@ class Updater
      * @var RegistryInterface
      */
     protected $doctrine;
+
+    /**
+     * @var Factory
+     */
+    protected $factory;
+
+    /**
+     * @var DistConfig
+     */
+    protected $distConfig;
+
+    /**
+     * @var ArchiveManager
+     */
+    protected $archiveManager;
 
     /**
      * Supported link types
@@ -77,10 +97,13 @@ class Updater
      * Constructor
      *
      * @param RegistryInterface $doctrine
+     * @param DistConfig $distConfig
      */
-    public function __construct(RegistryInterface $doctrine)
+    public function __construct(RegistryInterface $doctrine, DistConfig $distConfig)
     {
         $this->doctrine = $doctrine;
+        $this->distConfig = $distConfig;
+        $this->factory = new Factory();
 
         ErrorHandler::register();
     }
@@ -88,10 +111,14 @@ class Updater
     /**
      * Update a project
      *
+     * @param IOInterface $io
+     * @param Config $config
      * @param \Packagist\WebBundle\Entity\Package $package
      * @param RepositoryInterface $repository the repository instance used to update from
      * @param int $flags a few of the constants of this class
      * @param \DateTime $start
+     *
+     * @return Package
      */
     public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, \DateTime $start = null): Package
     {
@@ -106,6 +133,14 @@ class Updater
         $em = $this->doctrine->getManager();
         $apc = extension_loaded('apcu');
         $rootIdentifier = null;
+
+        if ($this->archiveManager === null) {
+            $downloadManager = $this->factory->createDownloadManager($io, $config);
+            $archiveManager = $this->factory->createArchiveManager($config, $downloadManager);
+            $archiveManager->setOverwriteFiles(false);
+        } else {
+            $archiveManager = $this->archiveManager;
+        }
 
         if ($repository instanceof VcsRepository) {
             $cfg = $repository->getRepoConfig();
@@ -144,7 +179,7 @@ class Updater
         }
 
         $versions = $repository->getPackages();
-        usort($versions, function ($a, $b) {
+        usort($versions, function (PackageInterface $a, PackageInterface $b) {
             $aVersion = $a->getVersion();
             $bVersion = $b->getVersion();
             if ($aVersion === '9999999-dev' || 'dev-' === substr($aVersion, 0, 4)) {
@@ -183,7 +218,6 @@ class Updater
 
         $existingVersions = $versionRepository->getVersionMetadataForUpdate($package);
 
-        $lastUpdated = true;
         $lastProcessed = null;
         $idsToMarkUpdated = [];
         foreach ($versions as $version) {
@@ -197,7 +231,15 @@ class Updater
             }
             $lastProcessed = $version;
 
-            $result = $this->updateInformation($versionRepository, $package, $existingVersions, $version, $flags, $rootIdentifier);
+            $result = $this->updateInformation(
+                $archiveManager,
+                $package,
+                $existingVersions,
+                $version,
+                $flags,
+                $rootIdentifier
+            );
+
             $lastUpdated = $result['updated'];
 
             if ($lastUpdated) {
@@ -250,15 +292,38 @@ class Updater
     }
 
     /**
+     * @param ArchiveManager $archiveManager
+     */
+    public function setArchiveManager(ArchiveManager $archiveManager)
+    {
+        $this->archiveManager = $archiveManager;
+    }
+
+    /**
+     * @param ArchiveManager $archiveManager
+     * @param Package $package
+     * @param array $existingVersions
+     * @param PackageInterface|CompletePackageInterface $data
+     * @param $flags
+     * @param $rootIdentifier
+     *
      * @return array with keys:
      *                    - updated (whether the version was updated or needs to be marked as updated)
      *                    - id (version id, can be null for newly created versions)
      *                    - version (normalized version from the composer package)
      *                    - object (Version instance if it was updated)
      */
-    private function updateInformation(VersionRepository $versionRepo, Package $package, array $existingVersions, PackageInterface $data, $flags, $rootIdentifier)
-    {
+    private function updateInformation(
+        ArchiveManager $archiveManager,
+        Package $package,
+        array $existingVersions,
+        PackageInterface $data,
+        $flags,
+        $rootIdentifier
+    ) {
+        /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
+        $versionRepo = $this->doctrine->getRepository('PackagistWebBundle:Version');
         $version = new Version();
 
         $normVersion = $data->getVersion();
@@ -268,9 +333,20 @@ class Updater
             $source = $existingVersion['source'];
             // update if the right flag is set, or the source reference has changed (re-tag or new commit on branch)
             if ($source['reference'] !== $data->getSourceReference() || ($flags & self::UPDATE_EQUAL_REFS)) {
-                $version = $versionRepo->findOneById($existingVersion['id']);
+                $version = $versionRepo->find($existingVersion['id']);
             } else {
-                return ['updated' => false, 'id' => $existingVersion['id'], 'version' => strtolower($normVersion), 'object' => null];
+                $updated = false;
+                $version = $versionRepo->find($existingVersion['id']);
+                if ($dist = $this->updateArchive($archiveManager, $data)) {
+                    $updated = $this->updateDist($dist, $version);
+                }
+
+                return [
+                    'updated' => $updated,
+                    'id' => $existingVersion['id'],
+                    'version' => strtolower($normVersion),
+                    'object' => $updated ? $version : null
+                ];
             }
         }
 
@@ -306,7 +382,9 @@ class Updater
             $version->setSource(null);
         }
 
-        if ($data->getDistType()) {
+        if ($dist = $this->updateArchive($archiveManager, $data)) {
+            $this->updateDist($dist, $version);
+        } elseif ($data->getDistType()) {
             $dist['type'] = $data->getDistType();
             $dist['url'] = $data->getDistUrl();
             $dist['reference'] = $data->getDistReference();
@@ -482,6 +560,45 @@ class Updater
         }
 
         return ['updated' => true, 'id' => $version->getId(), 'version' => strtolower($normVersion), 'object' => $version];
+    }
+
+    private function updateArchive(ArchiveManager $archiveManager, PackageInterface $data)
+    {
+        if ($this->distConfig->isEnable() === false) {
+            return null;
+        }
+
+        $path = $archiveManager->archive(
+            $data,
+            $this->distConfig->getArchiveFormat(),
+            $this->distConfig->generateTargetDir($data->getName()),
+            $data->getSourceReference()
+        );
+
+        $dist['type'] = $this->distConfig->getArchiveFormat();
+        $dist['url'] = $this->distConfig->generateRoute($data->getName(), $data->getSourceReference());
+        $dist['reference'] = $data->getSourceReference();
+        $dist['shasum'] = $this->distConfig->isIncludeArchiveChecksum() ? \hash_file('sha1', $path) : null;
+
+        return $dist;
+    }
+
+    private function updateDist(array $dist, Version $version)
+    {
+        if ($version->isEqualsDist($dist)) {
+            return false;
+        }
+
+        $filesystem = new Filesystem();
+        $oldDist = $version->getDist();
+        if (isset($oldDist['reference']) && $dist['reference'] !== $oldDist['reference']) {
+            $targetDir = $this->distConfig->generateDistFileName($version->getName(), $oldDist['reference']);
+            $filesystem->remove($targetDir);
+        }
+
+        $version->setDist($dist);
+
+        return true;
     }
 
     /**

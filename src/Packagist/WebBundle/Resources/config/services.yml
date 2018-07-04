@@ -1,3 +1,6 @@
+parameters:
+    packagist_web.archive: []
+
 services:
     packagist.twig.extension:
         class: Packagist\WebBundle\Twig\PackagistExtension
@@ -29,14 +32,9 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
-    packagist.package_dumper:
+    packagist.package_symlink_dumper:
         class: Packagist\WebBundle\Package\SymlinkDumper
         arguments: [ '@doctrine', '@filesystem', '@router', '%kernel.root_dir%/../web/', '%packagist_metadata_dir%', '%packagist_dumper_compress%' ]
-
-    packagist.user_provider:
-        class: Packagist\WebBundle\Security\Provider\UserProvider
-        public: false
-        arguments: ['@fos_user.user_manager', '@fos_user.user_provider.username_email']
 
     packagist.user_repository:
         class: Packagist\WebBundle\Entity\UserRepository
@@ -57,7 +55,16 @@ services:
 
     packagist.package_updater:
         class: Packagist\WebBundle\Package\Updater
-        arguments: ['@doctrine']
+        arguments: ['@doctrine', '@packagist.dist_config']
+
+    packagist.dist_config:
+        class: Packagist\WebBundle\Service\DistConfig
+        arguments: ['@router', '%packagist_web.archive%']
+
+    packagist.realtime_dumper:
+        class: Packagist\WebBundle\Package\InMemoryDumper
+        arguments: ['@doctrine', '@packagist.acl_package_checker', '@router']
+        public: true
 
     fos_user.util.user_manipulator:
         class: Packagist\WebBundle\Util\UserManipulator
@@ -118,6 +125,12 @@ services:
         tags:
             - { name: form.type, alias: packagist_user_profile }
 
+    packagist.permission_collection.form.type:
+        class: Packagist\WebBundle\Form\Type\GroupAclPermissionCollectionType
+        arguments: ['@doctrine']
+        tags:
+            - { name: form.type }
+
     packagist.menu_builder:
         class: Packagist\WebBundle\Menu\MenuBuilder
         arguments: ['@knp_menu.factory', '@security.token_storage', '@translator']
@@ -133,6 +146,12 @@ services:
         factory: ['@packagist.menu_builder', createProfileMenu]
         tags:
             - { name: knp_menu.menu, alias: profile_menu }
+
+    packagist.menu.admin:
+        class: Knp\Menu\MenuItem
+        factory: ['@packagist.menu_builder', createAdminMenu]
+        tags:
+            - { name: knp_menu.menu, alias: admin_menu }
 
     packagist.algolia.client:
         class: AlgoliaSearch\Client
@@ -168,6 +187,3 @@ services:
         arguments: []
         calls:
           - [includeStacktraces, [true]]
-
-parameters:
-    security.exception_listener.class: Packagist\WebBundle\Security\ExceptionListener

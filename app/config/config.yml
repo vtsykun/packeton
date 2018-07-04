@@ -35,10 +35,6 @@ twig:
     globals:
         google_analytics: '%google_analytics%'
         packagist_host: '%packagist_host%'
-        algolia:
-          app_id: '%algolia.app_id%'
-          search_key: '%algolia.search_key%'
-          index_name: '%algolia.index_name%'
 
 # Doctrine Configuration
 doctrine:
@@ -48,12 +44,39 @@ doctrine:
         dbname:   '%database_name%'
         user:     '%database_user%'
         password: '%database_password%'
-        charset:  utf8mb4
         # See https://github.com/sonata-project/SonataAdminBundle/issues/3342
-        server_version: 5.6
     orm:
         auto_generate_proxy_classes: '%kernel.debug%'
         auto_mapping: true
+        dql:
+            datetime_functions:
+                date:           Oro\ORM\Query\AST\Functions\SimpleFunction
+                time:           Oro\ORM\Query\AST\Functions\SimpleFunction
+                timestamp:      Oro\ORM\Query\AST\Functions\SimpleFunction
+                convert_tz:     Oro\ORM\Query\AST\Functions\DateTime\ConvertTz
+            numeric_functions:
+                timestampdiff:  Oro\ORM\Query\AST\Functions\Numeric\TimestampDiff
+                dayofyear:      Oro\ORM\Query\AST\Functions\SimpleFunction
+                dayofmonth:     Oro\ORM\Query\AST\Functions\SimpleFunction
+                dayofweek:      Oro\ORM\Query\AST\Functions\SimpleFunction
+                week:           Oro\ORM\Query\AST\Functions\SimpleFunction
+                day:            Oro\ORM\Query\AST\Functions\SimpleFunction
+                hour:           Oro\ORM\Query\AST\Functions\SimpleFunction
+                minute:         Oro\ORM\Query\AST\Functions\SimpleFunction
+                month:          Oro\ORM\Query\AST\Functions\SimpleFunction
+                quarter:        Oro\ORM\Query\AST\Functions\SimpleFunction
+                second:         Oro\ORM\Query\AST\Functions\SimpleFunction
+                year:           Oro\ORM\Query\AST\Functions\SimpleFunction
+                sign:           Oro\ORM\Query\AST\Functions\Numeric\Sign
+                pow:            Oro\ORM\Query\AST\Functions\Numeric\Pow
+                round:          Oro\ORM\Query\AST\Functions\Numeric\Round
+            string_functions:
+                md5:            Oro\ORM\Query\AST\Functions\SimpleFunction
+                group_concat:   Oro\ORM\Query\AST\Functions\String\GroupConcat
+                concat_ws:      Oro\ORM\Query\AST\Functions\String\ConcatWs
+                cast:           Oro\ORM\Query\AST\Functions\Cast
+                replace:        Oro\ORM\Query\AST\Functions\String\Replace
+                date_format:    Oro\ORM\Query\AST\Functions\String\DateFormat
 
 snc_redis:
     clients:
@@ -128,3 +151,10 @@ nelmio_cors:
         '^/packages/[^/]+/[^/]+\.json$':
             allow_methods: ['GET']
             forced_allow_origin_value: '*'
+
+packagist_web:
+    archive: true
+    archive_options:
+        format: zip
+        basedir: '%kernel.root_dir%/zipball'
+        endpoint: '%packagist_dist_host%'

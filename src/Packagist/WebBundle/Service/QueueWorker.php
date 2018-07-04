@@ -7,7 +7,6 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Packagist\WebBundle\Entity\Job;
 use Seld\Signal\SignalHandler;
-use Packagist\WebBundle\Service\LogResetter;
 
 class QueueWorker
 {
@@ -29,7 +28,7 @@ class QueueWorker
     }
 
     /**
-     * @param string|int $minPriority
+     * @param string|int $count
      */
     public function processMessages(int $count)
     {

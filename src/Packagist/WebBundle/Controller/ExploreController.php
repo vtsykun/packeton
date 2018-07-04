@@ -45,8 +45,10 @@ class ExploreController extends Controller
         $newReleases = $verRepo->getLatestReleases(10);
         $maxId = $this->getDoctrine()->getConnection()->fetchColumn('SELECT max(id) FROM package');
         $random = $pkgRepo
-            ->createQueryBuilder('p')->where('p.id >= :randId')->andWhere('p.abandoned = 0')
-            ->setParameter('randId', rand(1, $maxId))->setMaxResults(10)
+            ->createQueryBuilder('p')->where('p.id >= :randId')->andWhere('p.abandoned = :abandoned')
+            ->setParameter('randId', rand(1, $maxId))
+            ->setParameter('abandoned', false)
+            ->setMaxResults(10)
             ->getQuery()->getResult();
         try {
             $popular = array();

@@ -23,6 +23,17 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->scalarNode('rss_max_items')->defaultValue(40)->end()
+                ->booleanNode('archive')
+                    ->defaultFalse()
+                ->end()
+                ->arrayNode('archive_options')
+                    ->children()
+                        ->scalarNode('format')->defaultValue('zip')->end()
+                        ->scalarNode('basedir')->cannotBeEmpty()->end()
+                        ->scalarNode('endpoint')->cannotBeEmpty()->end()
+                        ->booleanNode('include_archive_checksum')->defaultFalse()->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

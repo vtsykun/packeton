@@ -159,6 +159,14 @@ class Package
      */
     private $updateFailureNotified = false;
 
+    /**
+     * @var SshCredentials
+     *
+     * @ORM\ManyToOne(targetEntity="SshCredentials")
+     * @ORM\JoinColumn(name="credentials_id", referencedColumnName="id", onDelete="SET NULL", nullable=true)
+     */
+    private $credentials;
+
     private $entityRepository;
     private $router;
 
@@ -561,7 +569,7 @@ class Package
     /**
      * Set repository
      *
-     * @param string $repository
+     * @param string $repoUrl
      */
     public function setRepository($repoUrl)
     {
@@ -572,9 +580,7 @@ class Package
             return;
         }
 
-        $repoUrl = preg_replace('{^git@github.com:}i', 'https://github.com/', $repoUrl);
-        $repoUrl = preg_replace('{^git://github.com/}i', 'https://github.com/', $repoUrl);
-        $repoUrl = preg_replace('{^(https://github.com/.*?)\.git$}i', '$1', $repoUrl);
+        $this->loadCredentials();
 
         // normalize protocol case
         $repoUrl = preg_replace_callback('{^(https?|git|svn)://}i', function ($match) { return strtolower($match[1]) . '://'; }, $repoUrl);
@@ -621,6 +627,19 @@ class Package
         return $this->repository;
     }
 
+    public function loadCredentials()
+    {
+        if ($this->credentials) {
+            $credentialsFile = \sys_get_temp_dir() . '/' . \sha1($this->credentials->getId());
+            if (!\file_exists($credentialsFile)) {
+                \file_put_contents($credentialsFile, $this->credentials->getKey());
+                \chmod($credentialsFile, 0600);
+            }
+            //GIT_SSH_COMMAND='echo $SSH_KEY | ssh -i /dev/stdin' ???
+            \putenv("GIT_SSH_COMMAND=ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $credentialsFile");
+        }
+    }
+
     /**
      * Add versions
      *
@@ -634,7 +653,7 @@ class Package
     /**
      * Get versions
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return \Doctrine\Common\Collections\Collection|Version[]
      */
     public function getVersions()
     {
@@ -846,6 +865,24 @@ class Package
     public function setReplacementPackage($replacementPackage)
     {
         $this->replacementPackage = $replacementPackage;
+    }
+
+    /**
+     * @return SshCredentials|null
+     */
+    public function getCredentials()
+    {
+        return $this->credentials;
+    }
+
+    /**
+     * @param SshCredentials $credentials
+     * @return Package
+     */
+    public function setCredentials(SshCredentials $credentials = null)
+    {
+        $this->credentials = $credentials;
+        return $this;
     }
 
     public static function sortVersions($a, $b)

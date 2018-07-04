@@ -16,7 +16,7 @@ class Locker
     public function lockPackageUpdate(int $packageId, int $timeout = 0)
     {
         $this->getConn()->connect('master');
-
+        return true;
         return (bool) $this->getConn()->fetchColumn('SELECT GET_LOCK(:id, :timeout)', ['id' => 'package_update_'.$packageId, 'timeout' => $timeout]);
     }
 
@@ -24,13 +24,14 @@ class Locker
     {
         $this->getConn()->connect('master');
 
+        return;
         $this->getConn()->fetchColumn('SELECT RELEASE_LOCK(:id)', ['id' => 'package_update_'.$packageId]);
     }
 
     public function lockCommand(string $command, int $timeout = 0)
     {
         $this->getConn()->connect('master');
-
+        return true;
         return (bool) $this->getConn()->fetchColumn(
             'SELECT GET_LOCK(:id, :timeout)',
             ['id' => $command, 'timeout' => $timeout]
@@ -41,6 +42,7 @@ class Locker
     {
         $this->getConn()->connect('master');
 
+        return;
         $this->getConn()->fetchColumn(
             'SELECT RELEASE_LOCK(:id)',
             ['id' => $command]

@@ -13,6 +13,7 @@
 
         <link rel="stylesheet" href="{{ asset('libs/bootstrap-3.3.5/css/bootstrap.min.css') }}" />
         <link rel="stylesheet" href="{{ asset('libs/bootstrap-3.3.5/css/bootstrap-theme.min.css') }}" />
+        <link rel="stylesheet" href="{{ asset('libs/fontawesome/css/all.css') }}" />
         <link rel="stylesheet" href="{{ asset('bundles/packagistweb/css/main.css') }}" />
         <link rel="stylesheet" href="{{ asset('css/humane/jackedup.css') }}" />
         {% block stylesheets %}{% endblock %}
@@ -50,6 +51,16 @@
                             <li>
                                 <a href="{{ path('submit') }}">{{ 'menu.submit'|trans }}</a>
                             </li>
+                        {%- if is_granted('ROLE_ADMIN') %}
+                            <li class="nav-user">
+                                <section>
+                                    Admin
+                                    <section class="nav-user-menu">
+                                        {{ knp_menu_render('admin_menu', {'allow_safe_labels': true}) }}
+                                    </section>
+                                </section>
+                            </li>
+                        {%- endif %}
                         {%- if app.user %}
                             <li class="nav-user">
                                 <section>
@@ -61,9 +72,6 @@
                                 </section>
                             </li>
                         {%- else %}
-                            <li>
-                                <a href="{{ path('fos_user_registration_register') }}">{{ 'menu.create_account'|trans }}</a>
-                            </li>
                             <li class="nav-user">
                                 <section class="nav-user-signin">
                                     <a href="{{ path('hwi_oauth_connect') }}">{{ 'menu.sign_in'|trans }}</a>
@@ -72,11 +80,11 @@
                                         <form action="{{ path('login_check') }}" method="POST">
                                             <div class="input-group">
                                                 <input class="form-control" type="text" id="_username" name="_username" placeholder="{{ 'security.login.username'|trans({}, 'FOSUserBundle') }}">
-                                                <span class="input-group-addon"><span class="icon-user"></span></span>
+                                                <span class="input-group-addon"><i class="fas fa-user"></i></span>
                                             </div>
                                             <div class="input-group">
                                                 <input class="form-control" type="password" id="_password" name="_password" placeholder="{{ 'security.login.password'|trans({}, 'FOSUserBundle') }}">
-                                                <span class="input-group-addon"><span class="icon-lock"></span></span>
+                                                <span class="input-group-addon"><i class="fas fa-lock"></i></span>
                                             </div>
 
                                             <div class="checkbox">
@@ -89,16 +97,7 @@
                                             {%- if packagist_host and packagist_host in app.request.headers.get('Referer') %}
                                                 <input type="hidden" name="_target_path" value="{{ app.request.headers.get('Referer') }}" />
                                             {%- endif %}
-
-                                            <div class="signin-box-buttons">
-                                                <a href="{{ hwi_oauth_login_url('github') }}" class="pull-right btn btn-primary btn-github"><span class="icon-github"></span>Use Github</a>
-                                                <button type="submit" class="btn btn-success" id="_submit" name="_submit">{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}</button>
-                                            </div>
                                         </form>
-
-                                        <div class="signin-box-register">
-                                            <a href="{{ path('fos_user_registration_register') }}">{{ 'signinbox.register'|trans }}</a>
-                                        </div>
                                     </section>
                                 </section>
                             </li>
@@ -171,8 +170,7 @@
             <nav class="container">
                 <div class="row">
                     <ul class="social col-xs-7 col-sm-4 col-md-2 pull-right">
-                        <li><a href="http://github.com/composer/packagist" title="{{ 'menu.github'|trans }}"><span class="icon-github"></span></a></li>
-                        <li><a href="https://twitter.com/packagist" title="{{ 'menu.twitter'|trans }}"><span class="icon-twitter"></span></a></li>
+                        <li><a href="http://github.com/composer/packagist" title="{{ 'menu.github'|trans }}"><span class="fab fa-github"></span></a></li>
                         <li><a href="mailto:contact@packagist.org" title="{{ 'menu.contact'|trans }}"><span class="icon-mail"></span></a></li>
                     </ul>
 
@@ -202,25 +200,11 @@
             </nav>
         </footer>
 
-        <script>
-            var algoliaConfig = {{ algolia|json_encode|raw }};
-        </script>
-
         <script src="{{ asset('libs/jquery-2.1.4.min.js') }}"></script>
         <script src="{{ asset('libs/humane-3.2.2.min.js') }}"></script>
         <script src="{{ asset('bundles/packagistweb/js/layout.js') }}"></script>
         <script src="{{ asset('libs/bootstrap-3.3.5/js/bootstrap.min.js')}}"></script>
         <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.7.4/dist/instantsearch.min.js"></script>
-        <script src="{{ asset('bundles/packagistweb/js/search.js') }}"></script>
-
-        {%- if not app.debug and google_analytics.ga_key %}
-        <script>
-            var _gaq=[['_setAccount','{{ google_analytics.ga_key }}'],['_trackPageview']];
-            (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.async=1;
-            g.src='https://ssl.google-analytics.com/ga.js';
-            s.parentNode.insertBefore(g,s)}(document,'script'));
-        </script>
-        {%- endif %}
 
         {% block scripts %}{% endblock %}
     </body>

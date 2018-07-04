@@ -22,6 +22,8 @@ menu:
     change_password: Change password
     my_packages: My packages
     my_favorites: My favorites
+    my_users: My users
+    my_groups: My groups
 
 signinbox:
      register: No account yet? Create one now!
@@ -75,8 +77,7 @@ submit:
     submit: Submit
     guide: |
         <p>Please make sure you have read the package <a href="%path_about%#naming-your-package">naming conventions</a> before submitting your package. The authoritative name of your package will be taken from the composer.json file inside the master branch or trunk of your repository, and it can not be changed after that.</p>
-        <p><strong>Do not submit forks of existing packages.</strong> If you need to test changes to a package that you forked to patch, use <a href="https://getcomposer.org/doc/05-repositories.md#vcs">VCS Repositories</a> instead. If however it is a real long-term fork you intend on maintaining feel free to submit it.</p>
-        <p>If you need help or if you have any questions please get in touch with the Composer <a href="https://getcomposer.org/doc/07-community.md">community</a>.</p>
+        <p><strong>No credentials yet?</strong> If you still need to grant us access to your packages see the Settings > Credentials page.</p>
 
 abandon:
     submit: Abandon Package

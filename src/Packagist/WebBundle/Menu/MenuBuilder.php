@@ -3,6 +3,7 @@
 namespace Packagist\WebBundle\Menu;
 
 use Knp\Menu\FactoryInterface;
+use Knp\Menu\ItemInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -10,6 +11,7 @@ class MenuBuilder
 {
     private $factory;
     private $username;
+    private $translator;
 
     /**
      * @param FactoryInterface      $factory
@@ -32,8 +34,8 @@ class MenuBuilder
         $menu->setChildrenAttribute('class', 'list-unstyled');
 
         $this->addProfileMenu($menu);
-        $menu->addChild('hr', array('label' => '<hr>', 'labelAttributes' => array('class' => 'normal'), 'extras' => array('safe_label' => true)));
-        $menu->addChild($this->translator->trans('menu.logout'), array('label' => '<span class="icon-off"></span>' . $this->translator->trans('menu.logout'), 'route' => 'logout', 'extras' => array('safe_label' => true)));
+        $menu->addChild('hr', ['label' => '<hr>', 'labelAttributes' => ['class' => 'normal'], 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.logout'), ['label' => '<span class="fas fa-power-off"></span>' . $this->translator->trans('menu.logout'), 'route' => 'logout', 'extras' => ['safe_label' => true]]);
 
         return $menu;
     }
@@ -48,12 +50,23 @@ class MenuBuilder
         return $menu;
     }
 
-    private function addProfileMenu($menu)
+    public function createAdminMenu()
     {
-        $menu->addChild($this->translator->trans('menu.profile'), array('label' => '<span class="icon-vcard"></span>' . $this->translator->trans('menu.profile'), 'route' => 'fos_user_profile_show', 'extras' => array('safe_label' => true)));
-        $menu->addChild($this->translator->trans('menu.settings'), array('label' => '<span class="icon-tools"></span>' . $this->translator->trans('menu.settings'), 'route' => 'fos_user_profile_edit', 'extras' => array('safe_label' => true)));
-        $menu->addChild($this->translator->trans('menu.change_password'), array('label' => '<span class="icon-key"></span>' . $this->translator->trans('menu.change_password'), 'route' => 'fos_user_change_password', 'extras' => array('safe_label' => true)));
-        $menu->addChild($this->translator->trans('menu.my_packages'), array('label' => '<span class="icon-box"></span>' . $this->translator->trans('menu.my_packages'), 'route' => 'user_packages', 'routeParameters' => array('name' => $this->username), 'extras' => array('safe_label' => true)));
-        $menu->addChild($this->translator->trans('menu.my_favorites'), array('label' => '<span class="icon-leaf"></span>' . $this->translator->trans('menu.my_favorites'), 'route' => 'user_favorites', 'routeParameters' => array('name' => $this->username), 'extras' => array('safe_label' => true)));
+        $menu = $this->factory->createItem('root');
+        $menu->setChildrenAttribute('class', 'list-unstyled');
+
+        $menu->addChild($this->translator->trans('menu.my_users'), ['label' => '<span class="fas fa-user"></span>' . $this->translator->trans('menu.my_users'), 'route' => 'users_list', 'extras' =>['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.my_groups'), ['label' => '<span class="fas fa-users"></span>' . $this->translator->trans('menu.my_groups'), 'route' => 'groups_index', 'extras' =>['safe_label' => true]]);
+
+        return $menu;
+    }
+
+    private function addProfileMenu(ItemInterface $menu)
+    {
+        $menu->addChild($this->translator->trans('menu.profile'), ['label' => '<span class="fas fa-id-card"></span>' . $this->translator->trans('menu.profile'), 'route' => 'fos_user_profile_show', 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.settings'), ['label' => '<span class="fas fa-cogs"></span>' . $this->translator->trans('menu.settings'), 'route' => 'fos_user_profile_edit', 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.change_password'), ['label' => '<span class="fas fa-key"></span>' . $this->translator->trans('menu.change_password'), 'route' => 'fos_user_change_password', 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.my_packages'), ['label' => '<span class="fas fa-box-open"></span>' . $this->translator->trans('menu.my_packages'), 'route' => 'user_packages', 'routeParameters' => ['name' => $this->username], 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.my_favorites'), ['label' => '<span class="fas fa-leaf"></span>' . $this->translator->trans('menu.my_favorites'), 'route' => 'user_favorites', 'routeParameters' => ['name' => $this->username], 'extras' => ['safe_label' => true]]);
     }
 }

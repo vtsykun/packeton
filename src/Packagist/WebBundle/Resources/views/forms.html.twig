@@ -5,6 +5,11 @@
 {{ parent() }}
 {% endblock textarea_widget %}
 
+{%- block choice_widget_collapsed -%}
+    {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+    {{ parent() }}
+{%- endblock choice_widget_collapsed -%}
+
 {% block form_widget_simple %}
 {% spaceless %}
     {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
@@ -43,3 +48,19 @@
     {% endif %}
 {% endspaceless %}
 {% endblock form_errors %}
+
+{%- block package_permission_widget -%}
+    <div class="collection-item">
+        <div class="input-group">
+            <div class="input-group-addon">{% if value is not empty %}{{ value.name }}{% endif %}</div>
+            {{ form_widget(form.version) }}
+            <div class="input-group-addon" style="width: 11%">
+                {{ form_widget(form.selected) }}
+            </div>
+            {{ form_widget(form.name) }}
+        </div>
+        {{ form_errors(form.version) }}
+        {{ form_errors(form.selected) }}
+        {{ form_errors(form.name) }}
+    </div>
+{%- endblock package_permission_widget -%}

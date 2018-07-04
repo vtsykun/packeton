@@ -13,12 +13,16 @@
 namespace Packagist\WebBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use FOS\UserBundle\Model\User as BaseUser;
 
 /**
  * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\UserRepository")
  * @ORM\Table(name="fos_user")
+ * @UniqueEntity(fields={"email"})
+ * @UniqueEntity(fields={"username"})
  * @ORM\AttributeOverrides({
  *     @ORM\AttributeOverride(name="username",
  *         column=@ORM\Column(
@@ -60,6 +64,17 @@ class User extends BaseUser
      * @ORM\GeneratedValue(strategy="AUTO")
      */
     protected $id;
+
+    /**
+     * @var Group[]|Collection
+     *
+     * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Group")
+     * @ORM\JoinTable(name="fos_user_access_group",
+     *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id", onDelete="CASCADE")}
+     * )
+     */
+    protected $groups;
 
     /**
      * @ORM\ManyToMany(targetEntity="Package", mappedBy="maintainers")
@@ -104,6 +119,7 @@ class User extends BaseUser
     {
         $this->packages = new ArrayCollection();
         $this->authors = new ArrayCollection();
+        $this->groups = new ArrayCollection();
         $this->createdAt = new \DateTime();
         parent::__construct();
     }
@@ -274,5 +290,37 @@ class User extends BaseUser
     public function getGravatarUrl()
     {
         return 'https://www.gravatar.com/avatar/'.md5(strtolower($this->getEmail())).'?d=identicon';
+    }
+
+    public function setGroups($groups)
+    {
+        $this->groups->clear();
+        if (\is_iterable($groups)) {
+            foreach ($groups as $group) {
+                $this->groups->add($group);
+            }
+        }
+    }
+
+    /**
+     * Returns the user roles
+     *
+     * @return array The roles
+     */
+    public function getRoles()
+    {
+        $roles = $this->roles;
+        // we need to make sure to have at least one role
+        $roles[] = static::ROLE_DEFAULT;
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getExpiresAt()
+    {
+        return $this->expiresAt;
     }
 }

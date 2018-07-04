@@ -130,8 +130,8 @@ class PackageRepository extends EntityRepository
             WHERE p.abandoned = false
             AND (
                 p.crawledAt IS NULL
-                OR (p.autoUpdated = 0 AND p.crawledAt < :recent AND p.createdAt >= :yesterday)
-                OR (p.autoUpdated = 0 AND p.crawledAt < :crawled)
+                OR (p.autoUpdated = false AND p.crawledAt < :recent AND p.createdAt >= :yesterday)
+                OR (p.autoUpdated = false AND p.crawledAt < :crawled)
                 OR (p.crawledAt < :autocrawled)
             )
             ORDER BY p.id ASC',
@@ -292,9 +292,9 @@ class PackageRepository extends EntityRepository
     public function getDependentCount($name)
     {
         $sql = 'SELECT COUNT(*) count FROM (
-                SELECT pv.package_id FROM link_require r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = 1) WHERE r.packageName = :name
+                SELECT pv.package_id FROM link_require r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = true) WHERE r.packageName = :name
                 UNION
-                SELECT pv.package_id FROM link_require_dev r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = 1) WHERE r.packageName = :name
+                SELECT pv.package_id FROM link_require_dev r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = true) WHERE r.packageName = :name
             ) x';
 
         $stmt = $this->getEntityManager()->getConnection()
@@ -309,9 +309,9 @@ class PackageRepository extends EntityRepository
     {
         $sql = 'SELECT p.id, p.name, p.description, p.language, p.abandoned, p.replacementPackage
             FROM package p INNER JOIN (
-                SELECT pv.package_id FROM link_require r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = 1) WHERE r.packageName = :name
+                SELECT pv.package_id FROM link_require r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = true) WHERE r.packageName = :name
                 UNION
-                SELECT pv.package_id FROM link_require_dev r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = 1) WHERE r.packageName = :name
+                SELECT pv.package_id FROM link_require_dev r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = true) WHERE r.packageName = :name
             ) x ON x.package_id = p.id ORDER BY p.name ASC LIMIT '.((int)$limit).' OFFSET '.((int)$offset);
 
         $stmt = $this->getEntityManager()->getConnection()
@@ -331,7 +331,7 @@ class PackageRepository extends EntityRepository
     {
         $sql = 'SELECT COUNT(DISTINCT pv.package_id) count
             FROM link_suggest s
-            INNER JOIN package_version pv ON (pv.id = s.version_id AND pv.development = 1)
+            INNER JOIN package_version pv ON (pv.id = s.version_id AND pv.development = true)
             WHERE s.packageName = :name';
 
         $stmt = $this->getEntityManager()->getConnection()
@@ -346,7 +346,7 @@ class PackageRepository extends EntityRepository
     {
         $sql = 'SELECT p.id, p.name, p.description, p.language, p.abandoned, p.replacementPackage
             FROM link_suggest s
-            INNER JOIN package_version pv ON (pv.id = s.version_id AND pv.development = 1)
+            INNER JOIN package_version pv ON (pv.id = s.version_id AND pv.development = true)
             INNER JOIN package p ON (p.id = pv.package_id)
             WHERE s.packageName = :name
             GROUP BY pv.package_id
@@ -409,5 +409,22 @@ class PackageRepository extends EntityRepository
             ->orderBy('p.id', 'DESC');
 
         return $qb;
+    }
+
+    public function getPackagesStatisticsByMonthAndYear()
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb
+            ->select(
+                [
+                    'COUNT(p.id) as pcount',
+                    'YEAR(p.createdAt) as year',
+                    'MONTH(p.createdAt) as month'
+                ]
+            )
+            ->from('PackagistWebBundle:Package', 'p')
+            ->groupBy('year, month');
+
+        return $qb->getQuery()->getResult();
     }
 }

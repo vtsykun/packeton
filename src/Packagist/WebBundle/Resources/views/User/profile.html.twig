@@ -8,29 +8,38 @@
 <h2 class="title">
     {{ user.username }}
     <small>
-        {% if is_granted('ROLE_ANTISPAM') and user.hasRole('ROLE_SPAMMER') %}
-            [SPAMMER]
-        {% endif %}
         {{ 'user.member_since'|trans }}: {{ user.createdAt|date('M d, Y') }}
         {%- if is_granted('ROLE_ADMIN') %}
             <a href="mailto:{{ user.email }}">{{ user.email }}</a>
-        {%- endif %}
-        {%- if is_granted('ROLE_ANTISPAM') %}
-            <form class="delete action" action="{{ path('mark_spammer', {name: user.username}) }}" method="POST">
-                {{ form_widget(spammerForm._token) }}
-                <input class="btn btn-danger" type="submit" value="Mark as Spammer" />
-            </form>
         {%- endif %}
     </small>
 </h2>
 
 <section class="row">
     <section class="col-md-12">
-        {% embed "PackagistWebBundle:Web:list.html.twig" with {noLayout: 'true', showAutoUpdateWarning: isActualUser} %}
-            {% block content_title %}
-                <h3 class="font-normal profile-title">{{ 'user.packages'|trans({ '%username%':user.username }) }}</h3>
-            {% endblock %}
-        {% endembed %}
+        <p>Your customer needs to authenticate to access their Composer repository:<br>
+            The simplest way to provide your credentials is providing your set of credentials
+            inline with the repository specification such as:
+        </p>
+        <pre>
+{
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "{{ app.request.getScheme() }}://{{ user.username }}:{{ user.apiToken }}@{{ app.request.getHttpHost() }}"
+        }
+    ]
+}
+        </pre>
+        <p>
+            When you don't want to hard code your credentials into your composer.json.
+            There is a second way to provide these details and it is via interaction.
+            If you don't provide the authentication credentials composer will prompt you upon connection
+            to enter the username and password.
+        </p>
+        <pre>
+composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.username }} {{ user.apiToken }}
+        </pre>
     </section>
 </section>
 {% endblock %}

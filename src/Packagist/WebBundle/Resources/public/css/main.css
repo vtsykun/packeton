@@ -744,7 +744,7 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     background: #f28d1a;
 }
 
-.nav-tabs.nav-stacked [class^="icon-"], .nav-tabs.nav-stacked [class*=" icon-"] {
+.nav-tabs.nav-stacked .fas, .nav-tabs.nav-stacked .fas {
     float: right;
     font-size: 20px;
     margin-top: -2px;
@@ -1607,6 +1607,45 @@ svg.chart {
   position: relative;
 }
 
+.nav .launcher-item {
+    padding: 5px;
+    display: table-cell;
+}
+.launcher-item a, .launcher-item button {
+    color: #2d2d32;
+    background:none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 10px 15px;
+    border: none;
+}
+.launcher-item button:hover {
+    text-decoration: none;
+    background: #eee;
+}
+.badge-enabled {
+    background-color: #dff2d4;
+    color: #2f8206;
+    border-radius: 10px;
+    padding: 2px 10px;
+}
+.badge-disable {
+    background-color: #ffccce;
+    color: #951f04;
+    border-radius: 10px;
+    padding: 2px 10px;
+}
+.tab-cell {
+    display: table-cell;
+    padding-left: 8px;
+}
+.collection-item .input-group .input-group-addon {
+    width: 50%;
+}
+
+.collection-item .input-group .form-control {
+    width: 40%;
+}
 
 [class^="icon-"]:before,
 [class*=" icon-"]:before {
@@ -1624,30 +1663,4 @@ svg.chart {
     speak: none;
 }
 
-.icon-tools:before { content: '\2692'; } /* '⚒' */
-.icon-cogs:before { content: '\26ef'; } /* '⛯' */
 .icon-mail:before { content: '\2709'; } /* '✉' */
-.icon-user-add:before { content: '\e700'; } /* '' */
-.icon-vcard:before { content: '\e722'; } /* '' */
-.icon-archive:before { content: '\e738'; } /* '' */
-.icon-share:before { content: '\e73c'; } /* '' */
-.icon-back-in-time:before { content: '\e771'; } /* '' */
-.icon-off:before { content: '\e78e'; } /* '' */
-.icon-flow-tree:before { content: '\e792'; } /* '' */
-.icon-paper-plane:before { content: '\e79b'; } /* '' */
-.icon-traffic-cone:before { content: '\e7a3'; } /* '' */
-.icon-github:before { content: '\f09b'; } /* '' */
-.icon-lightbulb:before { content: '\f0eb'; } /* '' */
-.icon-twitter:before { content: '\f309'; } /* '' */
-.icon-box:before { content: '\f330'; } /* '' */
-.icon-leaf:before { content: '🍂'; } /* '\1f342' */
-.icon-user:before { content: '👤'; } /* '\1f464' */
-.icon-users:before { content: '👥'; } /* '\1f465' */
-.icon-folder:before { content: '📁'; } /* '\1f4c1' */
-.icon-chart:before { content: '📈'; } /* '\1f4c8' */
-.icon-megaphone:before { content: '📣'; } /* '\1f4e3' */
-.icon-newspaper:before { content: '📰'; } /* '\1f4f0' */
-.icon-key:before { content: '🔑'; } /* '\1f511' */
-.icon-lock:before { content: '🔒'; } /* '\1f512' */
-.icon-lock-open:before { content: '🔓'; } /* '\1f513' */
-.icon-rocket:before { content: '🚀'; } /* '\1f680' */

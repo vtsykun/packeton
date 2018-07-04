@@ -29,7 +29,11 @@ class PackagistWebExtension extends Extension
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
+        $loader->load('security.yml');
 
         $container->setParameter('packagist_web.rss_max_items', $config['rss_max_items']);
+        if (true === $config['archive']) {
+            $container->setParameter('packagist_web.archive', $config['archive_options']);
+        }
     }
 }

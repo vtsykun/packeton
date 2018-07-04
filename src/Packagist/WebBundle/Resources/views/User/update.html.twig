@@ -1,0 +1,33 @@
+{% extends "PackagistWebBundle::layout.html.twig" %}
+{% block stylesheets %}
+    <link href="{{ asset('libs/datepicker/bootstrap-datepicker.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <h2 class="title">Create a new user</h2>
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+        {{ form_row(form.email) }}
+        {{ form_row(form.username) }}
+        {{ form_row(form.plainPassword) }}
+        {{ form_row(form.enabled) }}
+        {{ form_row(form.expiresAt) }}
+        {{ form_row(form.groups) }}
+        <input class="btn btn-block btn-success btn-lg" type="submit" value="{{ 'submit.submit'|trans }}" />
+        {{ form_end(form) }}
+        <div class="col-md-6">
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ asset('libs/datepicker/bootstrap-datepicker.min.js') }}"></script>
+    <script>
+        $(function(){
+            $('.js-datepicker').datepicker({
+                format: 'yyyy-mm-dd'
+            });
+        });
+    </script>
+{% endblock %}

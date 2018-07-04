@@ -206,13 +206,11 @@ class WebController extends Controller
      */
     public function statsAction()
     {
-        $packages = $this->getDoctrine()
-            ->getConnection()
-            ->fetchAll('SELECT COUNT(*) count, YEAR(createdAt) year, MONTH(createdAt) month FROM `package` GROUP BY year, month');
+        $packages = $this->getDoctrine()->getRepository('PackagistWebBundle:Package')
+            ->getPackagesStatisticsByMonthAndYear();
 
-        $versions = $this->getDoctrine()
-            ->getConnection()
-            ->fetchAll('SELECT COUNT(*) count, YEAR(releasedAt) year, MONTH(releasedAt) month FROM `package_version` GROUP BY year, month');
+        $versions = $this->getDoctrine()->getRepository('PackagistWebBundle:Version')
+            ->getVersionStatisticsByMonthAndYear();
 
         $chart = array('versions' => array(), 'packages' => array(), 'months' => array());
 
@@ -227,14 +225,14 @@ class WebController extends Controller
         // prepare data
         $count = 0;
         foreach ($packages as $dataPoint) {
-            $count += $dataPoint['count'];
+            $count += $dataPoint['pcount'];
             $chart['packages'][$dataPoint['year'] . '-' . str_pad($dataPoint['month'], 2, '0', STR_PAD_LEFT)] = $count;
         }
 
         $count = 0;
         foreach ($versions as $dataPoint) {
             $yearMonth = $dataPoint['year'] . '-' . str_pad($dataPoint['month'], 2, '0', STR_PAD_LEFT);
-            $count += $dataPoint['count'];
+            $count += $dataPoint['vcount'];
             if (in_array($yearMonth, $chart['months'])) {
                 $chart['versions'][$yearMonth] = $count;
             }

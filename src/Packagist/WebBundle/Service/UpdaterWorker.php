@@ -2,7 +2,10 @@
 
 namespace Packagist\WebBundle\Service;
 
-use Packagist\WebBundle\Service\Scheduler;
+use Composer\IO\IOInterface;
+use Composer\Package\Archiver\PharArchiver;
+use Composer\Package\Archiver\ZipArchiver;
+use Packagist\WebBundle\Package\ArchiveManager;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\Loader\ValidatingArrayLoader;
@@ -10,12 +13,8 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Repository\InvalidRepositoryException;
 use Composer\Repository\VcsRepository;
-use Composer\IO\ConsoleIO;
 use Composer\IO\BufferIO;
-use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\HelperSet;
-use Monolog\Handler\StreamHandler;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Package\Updater;
 use Packagist\WebBundle\Entity\Job;
@@ -78,6 +77,7 @@ class UpdaterWorker
         $config = Factory::createConfig();
         $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
         $io->loadConfiguration($config);
+        $archiveManager = $this->createArchiveManager($io);
 
         try {
             $flags = 0;
@@ -92,10 +92,12 @@ class UpdaterWorker
             $loader = new ValidatingArrayLoader(new ArrayLoader());
 
             // prepare repository
+            $package->loadCredentials();
             $repository = new VcsRepository(array('url' => $package->getRepository()), $io, $config);
             $repository->setLoader($loader);
 
             // perform the actual update (fetch and re-scan the repository's source)
+            $this->updater->setArchiveManager($archiveManager);
             $package = $this->updater->update($io, $config, $package, $repository, $flags);
 
             // github update downgraded to a git clone, this should not happen, so check through API whether the package still exists
@@ -231,5 +233,22 @@ class UpdaterWorker
                 }
             }
         }
+    }
+
+    /**
+     * @param IOInterface $io
+     * @return ArchiveManager
+     */
+    private function createArchiveManager(IOInterface $io)
+    {
+        $composer = Factory::create($io);
+        $downloadManager = $composer->getDownloadManager();
+
+        $archiveManager = new ArchiveManager($downloadManager);
+        $archiveManager->setOverwriteFiles(false);
+        $archiveManager->addArchiver(new ZipArchiver());
+        $archiveManager->addArchiver(new PharArchiver());
+
+        return $archiveManager;
     }
 }

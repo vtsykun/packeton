@@ -16,6 +16,7 @@ use Doctrine\ORM\NoResultException;
 use FOS\UserBundle\Model\UserInterface;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
+use Packagist\WebBundle\Form\Type\CustomerUserType;
 use Packagist\WebBundle\Model\RedisAdapter;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
@@ -23,8 +24,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
@@ -35,6 +38,137 @@ class UserController extends Controller
 {
     /**
      * @Template()
+     * @Route("/users/", name="users_list")
+     */
+    public function listAction()
+    {
+        $qb = $this->getDoctrine()->getRepository('PackagistWebBundle:User')
+            ->createQueryBuilder('u');
+        $qb->orderBy('u.id', 'DESC');
+
+        $paginator = new Pagerfanta(new DoctrineORMAdapter($qb, false));
+        $paginator->setMaxPerPage(6);
+
+        $csrfForm = $this->createFormBuilder([])->getForm();
+
+        return [
+            'users' => $paginator,
+            'csrfForm' => $csrfForm
+        ];
+    }
+
+    /**
+     * @Template()
+     * @Route("/users/{name}/update", name="users_update")
+     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     *
+     * @param User $user
+     * @param  Request $request
+     * @return mixed
+     */
+    public function updateAction(Request $request, User $user)
+    {
+        $token = $this->get('security.token_storage')->getToken();
+        if ($token && $token->getUsername() !== $user->getUsername()) {
+            return $this->handleUpdate($request, $user, 'User has been saved.');
+        }
+
+        throw new AccessDeniedHttpException('You can not update yourself');
+    }
+
+    /**
+     * @Template("PackagistWebBundle:User:update.html.twig")
+     * @Route("/users/create", name="users_create")
+     *
+     * @param Request $request
+     * @return mixed
+     */
+    public function createAction(Request $request)
+    {
+        $user = new User();
+        return $this->handleUpdate($request, $user, 'User has been saved.');
+    }
+
+    /**
+     * @Route("/users/{name}/disable", name="user_disable")
+     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     *
+     * @param Request $request
+     * @param User $user
+     * @return mixed
+     */
+    public function disableAction(Request $request, User $user)
+    {
+        $token = $this->get('security.token_storage')->getToken();
+        if (!$token || $token->getUsername() !== $user->getUsername()) {
+            throw new AccessDeniedHttpException('You can not update yourself');
+        }
+
+        $form = $this->createFormBuilder([])->getForm();
+
+        $form->submit($request->get('form'));
+        if ($form->isValid()) {
+            $user->setEnabled(false);
+            $this->get('fos_user.user_manager')->updateUser($user);
+            $this->addFlash('success', $user->getUsername().' has been disable');
+        }
+
+        return $this->redirect(
+            $this->generateUrl("user_profile", ["name" => $user->getUsername()])
+        );
+    }
+
+    /**
+     * @Route("/users/{name}/enable", name="user_enable")
+     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     *
+     * @param Request $request
+     * @param User $user
+     * @return mixed
+     */
+    public function enableAction(Request $request, User $user)
+    {
+        $token = $this->get('security.token_storage')->getToken();
+        if (!$token || $token->getUsername() !== $user->getUsername()) {
+            throw new AccessDeniedHttpException('You can not update yourself');
+        }
+
+        $form = $this->createFormBuilder([])->getForm();
+
+        $form->submit($request->get('form'));
+        if ($form->isValid()) {
+            $user->setEnabled(true);
+            $this->get('fos_user.user_manager')->updateUser($user);
+            $this->addFlash('success', $user->getUsername().' has been mark as active');
+        }
+
+        return $this->redirect(
+            $this->generateUrl("user_profile", ["name" => $user->getUsername()])
+        );
+    }
+
+    protected function handleUpdate(Request $request, User $user, $flashMessage)
+    {
+        $form = $this->createForm(CustomerUserType::class, $user);
+        if ($request->getMethod() === 'POST') {
+            $form->submit($request);
+            if ($form->isValid()) {
+                $user = $form->getData();
+                $this->get('fos_user.user_manager')->updateUser($user);
+
+                $this->addFlash('success', $flashMessage);
+                return new RedirectResponse($this->generateUrl('users_list'));
+            }
+        }
+
+        return [
+            'form' => $form->createView(),
+            'entity' => $user
+        ];
+    }
+
+    /**
+     * @Template()
      * @Route("/users/{name}/packages/", name="user_packages")
      * @ParamConverter("user", options={"mapping": {"name": "username"}})
      */
@@ -42,61 +176,11 @@ class UserController extends Controller
     {
         $packages = $this->getUserPackages($req, $user);
 
-        return array(
+        return [
             'packages' => $packages,
             'meta' => $this->getPackagesMetadata($packages),
             'user' => $user,
-        );
-    }
-
-    /**
-     * @Route("/spammers/{name}/", name="mark_spammer")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
-     * @Method({"POST"})
-     */
-    public function markSpammerAction(Request $req, User $user)
-    {
-        if (!$this->isGranted('ROLE_ANTISPAM')) {
-            throw new AccessDeniedException('This user can not mark others as spammers');
-        }
-
-        $form = $this->createFormBuilder(array())->getForm();
-
-        $form->submit($req->request->get('form'));
-        if ($form->isValid()) {
-            $user->addRole('ROLE_SPAMMER');
-            $user->setEnabled(false);
-            $this->get('fos_user.user_manager')->updateUser($user);
-            $doctrine = $this->getDoctrine();
-
-            $doctrine->getConnection()->executeUpdate(
-                'UPDATE package p JOIN maintainers_packages mp ON mp.package_id = p.id
-                 SET abandoned = 1, replacementPackage = "spam/spam", description = "", readme = "", indexedAt = NULL, dumpedAt = "2100-01-01 00:00:00"
-                 WHERE mp.user_id = :userId',
-                ['userId' => $user->getId()]
-            );
-
-            /** @var VersionRepository $versionRepo */
-            $versionRepo = $doctrine->getRepository('PackagistWebBundle:Version');
-            $packages = $doctrine
-                ->getRepository('PackagistWebBundle:Package')
-                ->getFilteredQueryBuilder(array('maintainer' => $user->getId()), true)
-                ->getQuery()->getResult();
-
-            foreach ($packages as $package) {
-                foreach ($package->getVersions() as $version) {
-                    $versionRepo->remove($version);
-                }
-            }
-
-            $this->getDoctrine()->getManager()->flush();
-
-            $this->get('session')->getFlashBag()->set('success', $user->getUsername().' has been marked as a spammer');
-        }
-
-        return $this->redirect(
-            $this->generateUrl("user_profile", array("name" => $user->getUsername()))
-        );
+        ];
     }
 
     /**
@@ -114,11 +198,11 @@ class UserController extends Controller
 
         return $this->container->get('templating')->renderResponse(
             'FOSUserBundle:Profile:show.html.twig',
-            array(
+            [
                 'packages' => $packages,
                 'meta' => $this->getPackagesMetadata($packages),
                 'user' => $user,
-            )
+            ]
         );
     }
 
@@ -131,15 +215,11 @@ class UserController extends Controller
     {
         $packages = $this->getUserPackages($req, $user);
 
-        $data = array(
+        $data = [
             'packages' => $packages,
             'meta' => $this->getPackagesMetadata($packages),
             'user' => $user,
-        );
-
-        if ($this->isGranted('ROLE_ANTISPAM')) {
-            $data['spammerForm'] = $this->createFormBuilder(array())->getForm()->createView();
-        }
+        ];
 
         return $data;
     }
@@ -158,9 +238,9 @@ class UserController extends Controller
             }
         } catch (\Exception $e) {
             $this->get('session')->getFlashBag()->set('error', 'Could not connect to the Redis database.');
-            $this->get('logger')->notice($e->getMessage(), array('exception' => $e));
+            $this->get('logger')->notice($e->getMessage(), ['exception' => $e]);
 
-            return array('user' => $user, 'packages' => array());
+            return ['user' => $user, 'packages' => []];
         }
 
         $paginator = new Pagerfanta(
@@ -170,7 +250,7 @@ class UserController extends Controller
         $paginator->setMaxPerPage(15);
         $paginator->setCurrentPage($req->query->get('page', 1), false, true);
 
-        return array('packages' => $paginator, 'user' => $user);
+        return ['packages' => $paginator, 'user' => $user];
     }
 
     /**
@@ -224,7 +304,7 @@ class UserController extends Controller
     {
         $packages = $this->getDoctrine()
             ->getRepository('PackagistWebBundle:Package')
-            ->getFilteredQueryBuilder(array('maintainer' => $user->getId()), true);
+            ->getFilteredQueryBuilder(['maintainer' => $user->getId()], true);
 
         $paginator = new Pagerfanta(new DoctrineORMAdapter($packages, true));
         $paginator->setMaxPerPage(15);
