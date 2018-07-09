@@ -7,7 +7,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\LockHandler;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Seld\Signal\SignalHandler;
 
 class RunWorkersCommand extends ContainerAwareCommand
 {

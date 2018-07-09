@@ -12,6 +12,7 @@
 
 namespace Packagist\WebBundle\Entity;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -131,19 +132,15 @@ class PackageRepository extends EntityRepository
             WHERE p.abandoned = false
             AND (
                 p.crawledAt IS NULL
-                OR (p.autoUpdated = false AND p.crawledAt < :recent AND p.createdAt >= :yesterday)
                 OR (p.autoUpdated = false AND p.crawledAt < :crawled)
                 OR (p.crawledAt < :autocrawled)
             )
             ORDER BY p.id ASC',
             array(
-                // crawl new packages once an hour for the first day so that dummy packages get deleted ASAP
-                'recent' => date('Y-m-d H:i:s', strtotime('-1hour')),
-                'yesterday' => date('Y-m-d H:i:s', strtotime('-1day')),
                 // crawl packages without auto-update once a week
-                'crawled' => date('Y-m-d H:i:s', strtotime('-1week')),
-                // crawl auto-updated packages once a month just in case
-                'autocrawled' => date('Y-m-d H:i:s', strtotime('-1month')),
+                'crawled' => date('Y-m-d H:i:s', strtotime('-4hour')),
+                // crawl auto-updated packages once a week just in case
+                'autocrawled' => date('Y-m-d H:i:s', strtotime('-7day')),
             )
         );
     }
@@ -429,33 +426,38 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function searchPackage(string $search, int $limit = 10, int $page = 0)
+    public function searchPackage(string $search, int $limit = 10, int $page = 0, array $allowed = null)
     {
         $conn = $this->getEntityManager()->getConnection();
         if ($conn->getDatabasePlatform() instanceof PostgreSqlPlatform && $this->checkExtension('fuzzystrmatch')) {
-            $packages = [];
-            $sql = 'SELECT levenshtein(name, :search)/(1.0 + length(name)) AS idx, id 
-                    FROM package
-                    ORDER BY idx LIMIT :limit OFFSET :ofs';
-            $packagesId = $conn
-                ->executeQuery(
-                    $sql,
-                    ['search' => $search, 'limit' => $limit, 'ofs' => $page * $limit]
-                )->fetchAll();
+            $params = ['search' => $search, 'limit' => $limit, 'ofs' => $page * $limit];
+            $sql = 'SELECT levenshtein(name, :search)/(1.0 + length(name)) AS idx, id'
+                . ' FROM package ';
 
-            if ($packagesId) {
-                foreach (array_column($packagesId, 'id') as $id) {
-                    $packages[] = $this->find($id);
-                }
+            if (null !== $allowed) {
+                $sql .= ' WHERE id IN (:ids) ';
+                $params['ids'] = $allowed;
             }
-            return $packages;
+            $sql .= 'ORDER BY idx LIMIT :limit OFFSET :ofs';
+
+            return array_map(
+                function ($item) {
+                    return $this->find($item['id']);
+                },
+                $conn->executeQuery($sql, $params, ['ids' => Connection::PARAM_INT_ARRAY])->fetchAll()
+            );
         }
 
         $qb = $this->createQueryBuilder('p');
+        if (null !== $allowed) {
+            $qb->andWhere('p.id IN (:ids)')
+                ->setParameter('ids', $allowed);
+        }
 
-        return $qb->where(
+        return $qb->andWhere(
                 $qb->expr()->like('p.name', ':name')
-            )->setParameter('name', $search)
+            )
+            ->setParameter('name', '%' . $search . '%')
             ->setMaxResults($limit)
             ->setFirstResult($limit * $page)
             ->getQuery()->getResult();

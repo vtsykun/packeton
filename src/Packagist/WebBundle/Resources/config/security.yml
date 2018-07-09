@@ -19,9 +19,10 @@ services:
 
     packagist.security.authentication.provider:
         class: Packagist\WebBundle\Security\Api\ApiTokenProvider
+        public: false
         arguments:
             - '@packagist.user_provider'
-        public: false
+            - ~
 
     packagist.security.authentication.listener:
         class: Packagist\WebBundle\Security\Api\ApiBasicAuthenticationListener

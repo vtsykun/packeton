@@ -32,7 +32,7 @@ class PackageType extends AbstractType
                 'label' => 'SSH Credentials (optional)',
                 'required' => false,
                 'class' => SshCredentials::class,
-                'property' => 'name'
+                'choice_label' => 'name'
             ])
             ->add('repository', TextType::class, [
                 'label' => 'Repository URL (Git/Svn/Hg)',

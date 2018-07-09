@@ -38,7 +38,7 @@ class InMemoryDumper
 
         $userHash = \hash('sha256', \json_encode($providers));
         $rootFile['provider-includes'] = [
-            '/p/providers$%hash%.json' => [
+            'p/providers$%hash%.json' => [
                 'sha256' => $userHash
             ]
         ];
@@ -71,7 +71,10 @@ class InMemoryDumper
 
             $versionData = $versionRepo->getVersionData(\array_keys($versionIds));
             foreach ($versionIds as $version) {
-                $packageData[$version->getVersion()] = $version->toArray($versionData);
+                $packageData[$version->getVersion()] = \array_merge(
+                    $version->toArray($versionData),
+                    ['uid' => $version->getId()]
+                );
             }
 
             $packageData = [

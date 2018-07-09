@@ -1,2 +1,19 @@
-{% embed "PackagistWebBundle:Web:list.html.twig" %}
-{% endembed %}
+{% extends noLayout|default(false) ? "::base_nolayout.html.twig" : "PackagistWebBundle::layout.html.twig" %}
+
+{% block content %}
+    {% block content_title %}<h3 class="title">{{ 'listing.title'|trans }}</h3>{% endblock %}
+    <section class="row">
+        {% if packages|length %}
+            {% for package in packages %}
+                {% include 'PackagistWebBundle:Package:package.html.twig' %}
+            {% endfor %}
+            {% if packages.haveToPaginate() %}
+                {{ pagerfanta(packages, 'twitter_bootstrap', {'proximity': 2}) }}
+            {% endif %}
+        {% else %}
+            <div class="alert alert-danger">
+                <p>{{ 'listing.nopackages'|trans }}</p>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

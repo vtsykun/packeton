@@ -134,13 +134,9 @@ class Updater
         $apc = extension_loaded('apcu');
         $rootIdentifier = null;
 
-        if ($this->archiveManager === null) {
-            $downloadManager = $this->factory->createDownloadManager($io, $config);
-            $archiveManager = $this->factory->createArchiveManager($config, $downloadManager);
-            $archiveManager->setOverwriteFiles(false);
-        } else {
-            $archiveManager = $this->archiveManager;
-        }
+        $downloadManager = $this->factory->createDownloadManager($io, $config);
+        $archiveManager = $this->factory->createArchiveManager($config, $downloadManager);
+        $archiveManager->setOverwriteFiles(false);
 
         if ($repository instanceof VcsRepository) {
             $cfg = $repository->getRepoConfig();
@@ -366,7 +362,7 @@ class Updater
         }
 
         $version->setHomepage($data->getHomepage());
-        $version->setLicense($data->getLicense() ?: array());
+        $version->setLicense($data->getLicense() ?: []);
 
         $version->setPackage($package);
         $version->setUpdatedAt(new \DateTime);
@@ -568,17 +564,24 @@ class Updater
             return null;
         }
 
-        $path = $archiveManager->archive(
-            $data,
-            $this->distConfig->getArchiveFormat(),
-            $this->distConfig->generateTargetDir($data->getName()),
-            $data->getSourceReference()
-        );
+        if (false === $this->distConfig->isLazy()) {
+            $fileName= $this->distConfig->getFileName(
+                $data->getSourceReference(),
+                $data->getVersion()
+            );
+
+            $path = $archiveManager->archive(
+                $data,
+                $this->distConfig->getArchiveFormat(),
+                $this->distConfig->generateTargetDir($data->getName()),
+                $fileName
+            );
+            $dist['shasum'] = $this->distConfig->isIncludeArchiveChecksum() ? \hash_file('sha1', $path) : null;
+        }
 
         $dist['type'] = $this->distConfig->getArchiveFormat();
         $dist['url'] = $this->distConfig->generateRoute($data->getName(), $data->getSourceReference());
         $dist['reference'] = $data->getSourceReference();
-        $dist['shasum'] = $this->distConfig->isIncludeArchiveChecksum() ? \hash_file('sha1', $path) : null;
 
         return $dist;
     }
@@ -592,7 +595,11 @@ class Updater
         $filesystem = new Filesystem();
         $oldDist = $version->getDist();
         if (isset($oldDist['reference']) && $dist['reference'] !== $oldDist['reference']) {
-            $targetDir = $this->distConfig->generateDistFileName($version->getName(), $oldDist['reference']);
+            $targetDir = $this->distConfig->generateDistFileName(
+                $version->getName(),
+                $oldDist['reference'],
+                $version->getVersion()
+            );
             $filesystem->remove($targetDir);
         }
 

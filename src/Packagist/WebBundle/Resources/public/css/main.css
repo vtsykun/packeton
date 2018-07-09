@@ -55,7 +55,7 @@ body {
   position: absolute;
   width: 100px;
   left: -98px;
-  top: -43px;
+  top: -33px;
 }
 @media (min-width: 1200px) {
   .logo {
@@ -305,6 +305,7 @@ strong {
 .nav-user .signin-box .signin-box-buttons {
     float: left;
     width: 100%;
+    padding: 10px;
 }
 
 .nav-user .signin-box .signin-box-register {
@@ -594,7 +595,7 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     margin: 0 -4px 6px 0;
     border-right: 0;
     background: none;
-    color: #c6cacd;
+    color: #7e7d7b;
     font-size: 16px;
 }
 
@@ -1661,6 +1662,25 @@ svg.chart {
     text-decoration: inherit;
     text-align: center;
     speak: none;
+}
+
+.package-panel-info {
+    border-color: #f28d1a;
+}
+.package-panel-danger {
+    border-color: #cd3729;
+}
+.package-panel-info >.panel-heading {
+    background-image: linear-gradient(#f28d1a, #f59d3e);
+}
+.package-panel-danger >.panel-heading {
+    background-image: linear-gradient(#cd3729, #cd554c);
+}
+.panel-heading .anchor {
+    color: #FFF;
+}
+.package-permission input {
+    width: 100% !important;
 }
 
 .icon-mail:before { content: '\2709'; } /* '✉' */

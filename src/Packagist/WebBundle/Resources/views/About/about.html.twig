@@ -99,6 +99,7 @@ v2.0.4-p1</code></pre>
     <div class="clearfix"></div>
 
     <h2 class="title" id="how-to-update-packages">How to update packages?</h2>
+    {% set url = app.request.getScheme() ~ '://' ~ app.request.getHttpHost() %}
     <section class="row">
         <section class="col-md-6">
             <h3>GitHub Service Hook</h3>
@@ -116,15 +117,15 @@ v2.0.4-p1</code></pre>
 
         <section class="col-md-6">
             <h3>Bitbucket Webhooks</h3>
-            <p>To enable the Bitbucket web hook, go to your BitBucket repository, open the settings and select "Webhooks" in the menu. Add a new hook. You have to enter the Packagist endpoint, containing both your username and API token. Enter <code>https://packagist.org/api/bitbucket?username={{ app.user.username|default('USERNAME') }}&amp;apiToken=API_TOKEN</code> as URL. Save your changes and you're done.</p>
+            <p>To enable the Bitbucket web hook, go to your BitBucket repository, open the settings and select "Webhooks" in the menu. Add a new hook. You have to enter the Packagist endpoint, containing both your username and API token. Enter <code>{{ url }}/api/bitbucket?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}</code> as URL. Save your changes and you're done.</p>
         </section>
 
         <div class="clearfix"></div>
         <section class="col-md-6">
             <h3>Manual hook setup</h3>
-            <p>If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually from a git post-receive hook or similar. You have to do a <code>POST</code> request to <code>https://packagist.org/api/update-package?username={{ app.user.username|default('USERNAME') }}&amp;apiToken=API_TOKEN</code> with a request body looking like this: <code>{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}</code></p>
+            <p>If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually from a git post-receive hook or similar. You have to do a <code>POST</code> request to <code>{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}</code> with a request body looking like this: <code>{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}</code></p>
             <p>You can do this using curl for example:</p>
-            <pre>curl -XPOST -H'content-type:application/json' 'https://packagist.org/api/update-package?username={{ app.user.username|default('USERNAME') }}&amp;apiToken=API_TOKEN' -d'{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'</pre>
+            <pre>curl -XPOST -H'content-type:application/json' '{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}' -d'{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'</pre>
         </section>
 
         <section class="col-md-6">

@@ -52,11 +52,11 @@
 {%- block package_permission_widget -%}
     <div class="collection-item">
         <div class="input-group">
-            <div class="input-group-addon">{% if value is not empty %}{{ value.name }}{% endif %}</div>
-            {{ form_widget(form.version) }}
+            <div class="input-group-addon" style="width: 75%;">{% if value is not empty %}{{ value.name }}{% endif %}</div>
             <div class="input-group-addon" style="width: 11%">
                 {{ form_widget(form.selected) }}
             </div>
+            <div style="width: 15%; float: right" class="package-permission">{{ form_widget(form.version) }}</div>
             {{ form_widget(form.name) }}
         </div>
         {{ form_errors(form.version) }}

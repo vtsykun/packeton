@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -46,6 +47,10 @@ class PackageController extends Controller
      */
     public function allAction(Request $req)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         return new RedirectResponse($this->generateUrl('browse'), Response::HTTP_MOVED_PERMANENTLY);
     }
 
@@ -56,6 +61,10 @@ class PackageController extends Controller
      */
     public function listAction(Request $req)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         /** @var PackageRepository $repo */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
         $fields = (array) $req->query->get('fields', array());
@@ -88,7 +97,7 @@ class PackageController extends Controller
     public function submitPackageAction(Request $req)
     {
         $user = $this->getUser();
-        if (!$user->isEnabled()) {
+        if (!$user->isEnabled() || !$this->isGranted('ROLE_ADMIN')) {
             throw new AccessDeniedException();
         }
 
@@ -126,10 +135,14 @@ class PackageController extends Controller
      */
     public function fetchInfoAction(Request $req)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $package = new Package;
         $package->setEntityRepository($this->getDoctrine()->getRepository('PackagistWebBundle:Package'));
         $package->setRouter($this->get('router'));
-        $form = $this->createForm(new PackageType, $package);
+        $form = $this->createForm(PackageType::class, $package);
         $user = $this->getUser();
         $package->addMaintainer($user);
 
@@ -183,6 +196,10 @@ class PackageController extends Controller
      */
     public function viewVendorAction($vendor)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $packages = $this->getDoctrine()
             ->getRepository('PackagistWebBundle:Package')
             ->getFilteredQueryBuilder(['vendor' => $vendor.'/%'], true)
@@ -203,37 +220,6 @@ class PackageController extends Controller
 
     /**
      * @Route(
-     *     "/p/{name}.{_format}",
-     *     name="view_package_alias",
-     *     requirements={"name"="[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+?)?", "_format"="(json)"},
-     *     defaults={"_format"="html"}
-     * )
-     * @Route(
-     *     "/packages/{name}",
-     *     name="view_package_alias2",
-     *     requirements={"name"="[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+?)?/"},
-     *     defaults={"_format"="html"}
-     * )
-     * @Method({"GET"})
-     */
-    public function viewPackageAliasAction(Request $req, $name)
-    {
-        $format = $req->getRequestFormat();
-        if ($format === 'html') {
-            $format = null;
-        }
-        if ($format === 'json' || (!$format && substr($name, -5) === '.json')) {
-            throw new NotFoundHttpException('Package not found');
-        }
-        if (false === strpos(trim($name, '/'), '/')) {
-            return $this->redirect($this->generateUrl('view_vendor', array('vendor' => $name, '_format' => $format)));
-        }
-
-        return $this->redirect($this->generateUrl('view_package', array('name' => trim($name, '/'), '_format' => $format)));
-    }
-
-    /**
-     * @Route(
      *     "/providers/{name}",
      *     name="view_providers",
      *     requirements={"name"="[A-Za-z0-9/_.-]+?"},
@@ -243,6 +229,10 @@ class PackageController extends Controller
      */
     public function viewProvidersAction($name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         /** @var PackageRepository $repo */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
         $providers = $repo->findProviders($name);
@@ -293,6 +283,9 @@ class PackageController extends Controller
         $req->getSession()->save();
 
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                throw new AccessDeniedHttpException;
+            }
             return $this->{$match['method'].'Action'}($req, $match['pkg']);
         }
 
@@ -303,19 +296,11 @@ class PackageController extends Controller
             /** @var Package $package */
             $package = $repo->getPartialPackageByNameWithVersions($name);
         } catch (NoResultException $e) {
-            if ('json' === $req->getRequestFormat()) {
-                return new JsonResponse(array('status' => 'error', 'message' => 'Package not found'), 404);
-            }
-
-            if ($providers = $repo->findProviders($name)) {
-                return $this->redirect($this->generateUrl('view_providers', array('name' => $name)));
-            }
-
-            return $this->redirect($this->generateUrl('search', array('q' => $name, 'reason' => 'package_not_found')));
+            throw new NotFoundHttpException;
         }
 
-        if ($package->isAbandoned() && $package->getReplacementPackage() === 'spam/spam') {
-            throw new NotFoundHttpException('This is a spam package');
+        if (!$this->isGranted('ROLE_ADMIN', $package)) {
+            throw new NotFoundHttpException;
         }
 
         if ('json' === $req->getRequestFormat()) {
@@ -416,6 +401,10 @@ class PackageController extends Controller
      */
     public function viewPackageDownloadsAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedHttpException;
+        }
+
         /** @var PackageRepository $repo */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
 
@@ -475,6 +464,9 @@ class PackageController extends Controller
 
         /** @var VersionRepository $repo  */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
+        if (!$this->isGranted('ROLE_ADMIN', $repo->find($versionId))) {
+            throw new AccessDeniedHttpException;
+        }
 
         $html = $this->renderView(
             'PackagistWebBundle:Package:versionDetails.html.twig',
@@ -494,6 +486,10 @@ class PackageController extends Controller
      */
     public function deletePackageVersionAction(Request $req, $versionId)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         /** @var VersionRepository $repo  */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
 
@@ -522,6 +518,10 @@ class PackageController extends Controller
      */
     public function updatePackageAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $doctrine = $this->getDoctrine();
 
         try {
@@ -581,6 +581,10 @@ class PackageController extends Controller
      */
     public function deletePackageAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $doctrine = $this->getDoctrine();
 
         try {
@@ -613,6 +617,10 @@ class PackageController extends Controller
      */
     public function createMaintainerAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         /** @var $package Package */
         $package = $this->getDoctrine()
             ->getRepository('PackagistWebBundle:Package')
@@ -670,6 +678,10 @@ class PackageController extends Controller
      */
     public function removeMaintainerAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         /** @var $package Package */
         $package = $this->getDoctrine()
             ->getRepository('PackagistWebBundle:Package')
@@ -831,6 +843,10 @@ class PackageController extends Controller
      */
     public function statsAction(Request $req, Package $package)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $versions = $package->getVersions()->toArray();
         usort($versions, Package::class.'::sortVersions');
         $date = $this->guessStatsStartDate($package);
@@ -874,6 +890,10 @@ class PackageController extends Controller
      */
     public function dependentsAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -903,6 +923,10 @@ class PackageController extends Controller
      */
     public function suggestersAction(Request $req, $name)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -933,6 +957,10 @@ class PackageController extends Controller
      */
     public function overallStatsAction(Request $req, Package $package, Version $version = null)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         if ($from = $req->query->get('from')) {
             $from = new DateTimeImmutable($from);
         } else {
@@ -1008,6 +1036,10 @@ class PackageController extends Controller
      */
     public function versionStatsAction(Request $req, Package $package, $version)
     {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException;
+        }
+
         $normalizer = new VersionParser;
         $normVersion = $normalizer->normalize($version);
 

@@ -23,22 +23,6 @@ class PackagesAclVoter implements VoterInterface
     /**
      * {@inheritdoc}
      */
-    public function supportsAttribute($attribute)
-    {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function supportsClass($class)
-    {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function vote(TokenInterface $token, $object, array $attributes)
     {
         if (!$object instanceof Package && !$object instanceof Version) {
@@ -56,6 +40,6 @@ class PackagesAclVoter implements VoterInterface
             return self::ACCESS_DENIED;
         }
 
-        return self::ACCESS_ABSTAIN;
+        return self::ACCESS_GRANTED;
     }
 }

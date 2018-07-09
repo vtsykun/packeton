@@ -12,14 +12,6 @@
 
 namespace Packagist\WebBundle\Command;
 
-use Composer\Factory;
-use Composer\IO\BufferIO;
-use Composer\IO\ConsoleIO;
-use Composer\Package\Loader\ArrayLoader;
-use Composer\Package\Loader\ValidatingArrayLoader;
-use Composer\Repository\InvalidRepositoryException;
-use Composer\Repository\VcsRepository;
-use Packagist\WebBundle\Package\Updater;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -58,7 +50,6 @@ class UpdatePackagesCommand extends ContainerAwareCommand
         $package = $input->getArgument('package');
 
         $doctrine = $this->getContainer()->get('doctrine');
-        $router = $this->getContainer()->get('router');
         $deleteBefore = false;
         $updateEqualRefs = false;
         $randomTimes = true;
@@ -113,5 +104,7 @@ class UpdatePackagesCommand extends ContainerAwareCommand
         }
 
         $locker->unlockCommand($this->getName());
+
+        return 0;
     }
 }

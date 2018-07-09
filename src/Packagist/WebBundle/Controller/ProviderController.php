@@ -4,6 +4,7 @@ namespace Packagist\WebBundle\Controller;
 
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Version;
+use Packagist\WebBundle\Service\DistManager;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +23,7 @@ class ProviderController extends Controller
         $manager = $this->container->get('packagist.package_manager');
         $rootPackages = $manager->getRootPackagesJson($this->getUser());
 
-        return new JsonResponse($rootPackages);
+        return new Response(\json_encode($rootPackages), 200, ['Content-Type' => 'application/json']);
     }
 
     /**
@@ -45,7 +46,7 @@ class ProviderController extends Controller
             return $this->createNotFound();
         }
 
-        return new JsonResponse($providers);
+        return new Response(\json_encode($providers), 200, ['Content-Type' => 'application/json']);
     }
 
     /**
@@ -73,7 +74,7 @@ class ProviderController extends Controller
             return $this->createNotFound();
         }
 
-        return new JsonResponse($package);
+        return new Response(\json_encode($package), 200, ['Content-Type' => 'application/json']);
     }
 
     /**
@@ -92,6 +93,7 @@ class ProviderController extends Controller
     public function zipballAction(Package $package, $hash)
     {
         $config = $this->container->get('packagist.dist_config');
+        $distManager = new DistManager($config);
         if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match)) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
         }
@@ -105,19 +107,35 @@ class ProviderController extends Controller
             }
         );
 
-        /** @var Version $version */
-        foreach ($versions as $version) {
-            if (false === $this->isGranted('ROLE_USER', $version)) {
-                continue;
-            }
-
-            $dist = $version->getDist();
-            if ($file = $config->generateDistFileName($version->getName(), $dist['reference']) and \file_exists($file)) {
-                return new BinaryFileResponse($file);
+        // Try to download from cache
+        if ($versions->count() === 0) {
+            list($path, $versionName) = $distManager->lookupInCache($match[0], $package->getName());
+            if (null !== $versionName) {
+                $version = $package->getVersions()
+                    ->filter(
+                        function (Version $version) use ($versionName) {
+                            return $versionName === $version->getVersion();
+                        }
+                )->first();
+                if ($version && $this->isGranted('ROLE_ADMIN', $version)) {
+                    return new BinaryFileResponse($path);
+                }
             }
         }
 
-        return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
+        /** @var Version $version */
+        foreach ($versions as $version) {
+            if (!$this->isGranted('ROLE_ADMIN', $version)) {
+                continue;
+            }
+
+            if ($path = $distManager->getDistPath($version)) {
+                return new BinaryFileResponse($path);
+            }
+            break;
+        }
+
+        return $this->createNotFound();
     }
 
     protected function createNotFound()

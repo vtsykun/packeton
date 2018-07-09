@@ -15,16 +15,18 @@
                         <h4 class="tab-cell font-bold"><a href="{{ groupUrl }}">{{ group.name }}</a></h4>
                     </div>
                     <div class="col-sm-3 col-lg-1">
-                        <div style="font-size: 1.5em">
-                            <ul class="nav">
-                                <li class="launcher-item">
-                                    <form action="{{ path('groups_delete', { 'id': group.id}) }}" method="POST">
-                                        {{ form_widget(csrfForm.createView._token) }}
-                                        <button type="submit" title="Delete"><i class="fas fa-ban"></i></button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
+                    <div style="font-size: 1.5em">
+                        <ul class="nav">
+                        <li class="launcher-item">
+                            <form action="{{ path('groups_delete', { 'id': group.id}) }}" method="POST"
+                                  onsubmit="return confirm('Are you sure?');"
+                            >
+                                {{ form_widget(csrfForm.createView._token) }}
+                                <button type="submit" title="Delete"><i class="fas fa-ban"></i></button>
+                            </form>
+                        </li>
+                        </ul>
+                    </div>
                     </div>
                 </div>
             </div>

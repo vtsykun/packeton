@@ -22,9 +22,6 @@
         <link rel="alternate" type="application/rss+xml" title="Newly Submitted Packages - Packagist" href="{{ url('feed_packages', {_format: 'rss'}) }}" />
         <link rel="alternate" type="application/rss+xml" title="New Releases - Packagist" href="{{ url('feed_releases', {_format: 'rss'}) }}" />
         {% endblock %}
-
-        <link rel="search" type="application/opensearchdescription+xml" href="{{ asset('search.osd') }}" title="Packagist" />
-
         {% block head_additions %}{% endblock %}
     </head>
 
@@ -45,13 +42,13 @@
 
                     <div class="collapse navbar-collapse">
                         <ul class="nav navbar-nav">
+                        {%- if is_granted('ROLE_ADMIN') %}
                             <li>
                                 <a href="{{ path('browse') }}">{{ 'menu.browse'|trans }}</a>
                             </li>
                             <li>
                                 <a href="{{ path('submit') }}">{{ 'menu.submit'|trans }}</a>
                             </li>
-                        {%- if is_granted('ROLE_ADMIN') %}
                             <li class="nav-user">
                                 <section>
                                     Admin
@@ -74,10 +71,9 @@
                         {%- else %}
                             <li class="nav-user">
                                 <section class="nav-user-signin">
-                                    <a href="{{ path('hwi_oauth_connect') }}">{{ 'menu.sign_in'|trans }}</a>
-
+                                    <a href="{{ path('fos_user_security_login') }}">{{ 'menu.sign_in'|trans }}</a>
                                     <section class="signin-box">
-                                        <form action="{{ path('login_check') }}" method="POST">
+                                        <form action="{{ path('fos_user_security_check') }}" method="POST">
                                             <div class="input-group">
                                                 <input class="form-control" type="text" id="_username" name="_username" placeholder="{{ 'security.login.username'|trans({}, 'FOSUserBundle') }}">
                                                 <span class="input-group-addon"><i class="fas fa-user"></i></span>
@@ -97,6 +93,10 @@
                                             {%- if packagist_host and packagist_host in app.request.headers.get('Referer') %}
                                                 <input type="hidden" name="_target_path" value="{{ app.request.headers.get('Referer') }}" />
                                             {%- endif %}
+
+                                            <div class="signin-box-buttons">
+                                                <button type="submit" class="btn btn-success" id="_submit2" name="_submit">{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}</button>
+                                            </div>
                                         </form>
                                     </section>
                                 </section>
@@ -150,9 +150,6 @@
 
                         <div class="row">
                             <div class="col-md-9">
-                                <div id="powered-by">
-                                    Search by <a href="https://www.algolia.com/"><img src="{{ asset('bundles/packagistweb/img/algolia-logo-light.svg') }}"></a>
-                                </div>
                                 <div id="pagination-container">
                                     <div class="pagination"></div>
                                 </div>
@@ -174,28 +171,30 @@
                         <li><a href="mailto:contact@packagist.org" title="{{ 'menu.contact'|trans }}"><span class="icon-mail"></span></a></li>
                     </ul>
 
-                    <ul class="col-xs-4 col-md-2">
-                        <li><a href="{{ path('about') }}">{{ 'menu.about_packagist'|trans }}</a></li>
-                        <li><a href="{{ path('feeds') }}" rel="nofollow">{{ 'menu.rss_feeds'|trans }}</a></li>
-                    </ul>
+                    {%- if is_granted('ROLE_ADMIN') %}
+                        <ul class="col-xs-4 col-md-2">
+                            <li><a href="{{ path('about') }}">{{ 'menu.about_packagist'|trans }}</a></li>
+                            <li><a href="{{ path('feeds') }}" rel="nofollow">{{ 'menu.rss_feeds'|trans }}</a></li>
+                        </ul>
 
-                    <div class="clearfix visible-xs-block"></div>
+                        <div class="clearfix visible-xs-block"></div>
 
-                    <ul class="col-xs-3 col-md-2">
-                        <li><a href="{{ path('stats') }}" rel="nofollow">{{ 'menu.stats'|trans }}</a></li>
-                        <li><a href="{{ path('browse') }}">{{ 'menu.browse_packages'|trans }}</a></li>
-                    </ul>
+                        <ul class="col-xs-3 col-md-2">
+                            <li><a href="{{ path('stats') }}" rel="nofollow">{{ 'menu.stats'|trans }}</a></li>
+                            <li><a href="{{ path('browse') }}">{{ 'menu.browse_packages'|trans }}</a></li>
+                        </ul>
 
-                    <div class="clearfix visible-xs-block"></div>
+                        <div class="clearfix visible-xs-block"></div>
 
-                    <ul class="col-xs-3 col-md-2">
-                        <li><a href="{{ path('api_doc') }}">{{ 'menu.api_doc'|trans }}</a></li>
-                    </ul>
+                        <ul class="col-xs-3 col-md-2">
+                            <li><a href="{{ path('api_doc') }}">{{ 'menu.api_doc'|trans }}</a></li>
+                        </ul>
+                    {%- endif %}
 
                 </div>
 
                 <div class="row">
-                    <p class="toran col-xs-12">Packagist maintenance and hosting is supported by <a href="https://packagist.com/">Private Packagist</a></p>
+                    <p class="toran col-xs-12">Packagist maintenance and hosting is supported by <a href="http://cuantic.com/">Cuantic</a></p>
                 </div>
             </nav>
         </footer>

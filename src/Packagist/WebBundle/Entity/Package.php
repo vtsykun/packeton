@@ -33,7 +33,6 @@ use Composer\Repository\Vcs\GitHubDriver;
  *     }
  * )
  * @Assert\Callback(callback="isPackageUnique")
- * @Assert\Callback(callback="isVendorWritable")
  * @Assert\Callback(callback="isRepositoryValid", groups={"Update", "Default"})
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
@@ -609,9 +608,6 @@ class Package
             if (null === $this->getName()) {
                 $this->setName($information['name']);
             }
-            if ($driver instanceof GitHubDriver) {
-                $this->repository = $driver->getRepositoryUrl();
-            }
         } catch (\Exception $e) {
             $this->vcsDriverError = '['.get_class($e).'] '.$e->getMessage();
         }
@@ -672,6 +668,14 @@ class Package
         if (isset($this->cachedVersions[strtolower($normalizedVersion)])) {
             return $this->cachedVersions[strtolower($normalizedVersion)];
         }
+    }
+
+    /**
+     * @return Version|null
+     */
+    public function getHighest()
+    {
+        return $this->getVersion('9999999-dev');
     }
 
     /**

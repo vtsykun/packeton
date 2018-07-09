@@ -1,4 +1,4 @@
-<form action="{{ path('fos_user_profile_edit') }}" {{ form_enctype(form) }} method="POST" class="fos_user_profile_edit col-md-6">
+{{ form_start(form, {'attr': {'class': 'fos_user_profile_edit col-md-6', 'action': path('fos_user_profile_edit') }}) }}
     {{ form_errors(form) }}
 
     <div class="form-group clearfix">
@@ -40,15 +40,7 @@
 
     <input type="submit" class="btn btn-block btn-success btn-lg" value="{{ 'profile.edit.submit'|trans({}, 'FOSUserBundle') }}" />
 
-    <hr>
-
-    <h5>Using GitHub:</h5>
-
-    <a href="{{ app.user.githubId ? '#' : hwi_oauth_login_url('github') }}" class="btn btn-block btn-github btn-lg {{ app.user.githubId ? 'disabled' : 'btn-primary' }}">
-        <span class="fab fa-github"></span>
-        {{ (app.user.githubId ? 'profile.accounts_connected' : 'profile.connect_accounts')|trans }}
-    </a>
-</form>
+{{ form_end(form) }}
 
 <div class="col-md-2">
 </div>

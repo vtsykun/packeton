@@ -37,6 +37,7 @@
                             {% endif %}
                             <a href="{{ path("view_vendor", {"vendor": package.vendor}) }}">{{ package.vendor }}/</a>{{ package.packageName }}
                         </h2>
+                        <p>Last updated: {{ package.crawledAt ? package.crawledAt|date('Y-m-d H:i:s') ~ ' UTC': 'N/A' }}</p>
                     </div>
                 </div>
             </div>
@@ -71,11 +72,6 @@
                     %}
                         <div class="alert alert-danger">This package is in a broken state and will not update anymore. Some branches contain invalid data and until you fix them the entire package is frozen. Click "Update" below to see details.</div>
                     {% endif %}
-
-                    {% if expandedVersion and not expandedVersion.license %}
-                        <div class="alert alert-danger">There is no license information available for the latest version ({{ expandedVersion.version }}) of this package.</div>
-                    {% endif %}
-
                     <p class="description">{{ package.description|truncate(300) }}</p>
 
                     {% if hasActions %}
@@ -112,7 +108,8 @@
                 </div>
 
                 <div class="col-md-offset-1 col-md-3">
-                    <div class="row package-aside">
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <div class="row package-aside">
                         <div class="details col-xs-12 col-sm-6 col-md-12">
                             <p class="maintainers">
                                 {% for maintainer in package.maintainers -%}
@@ -214,6 +211,7 @@
                             {% endif %}
                         </div>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 

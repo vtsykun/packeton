@@ -211,7 +211,7 @@ class Version
         $this->updatedAt = new \DateTime;
     }
 
-    public function toArray(array $versionData)
+    public function toArray(array $versionData = [])
     {
         $tags = array();
         foreach ($this->getTags() as $tag) {

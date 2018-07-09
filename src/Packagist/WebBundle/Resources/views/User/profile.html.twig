@@ -16,12 +16,23 @@
 </h2>
 
 <section class="row">
-    <section class="col-md-12">
-        <p>Your customer needs to authenticate to access their Composer repository:<br>
-            The simplest way to provide your credentials is providing your set of credentials
-            inline with the repository specification such as:
-        </p>
-        <pre>
+
+    {% if deleteForm is defined and is_granted('ROLE_ADMIN') and user.admin == false %}
+        <div class="btn-group btn-group-xs">
+            <form class="delete action" action="{{ path('user_delete', {name: user.username}) }}" method="post" onsubmit="return confirm('Are you sure?');">
+                {{ form_widget(deleteForm._token) }}
+                <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+        </div>
+    {% endif %}
+
+    {% if user.admin == false or isActualUser %}
+        <section class="col-md-12">
+            <p>Your customer needs to authenticate to access their Composer repository:<br>
+                The simplest way to provide your credentials is providing your set of credentials
+                inline with the repository specification such as:
+            </p>
+            <pre>
 {
     "repositories": [
         {
@@ -30,16 +41,17 @@
         }
     ]
 }
-        </pre>
-        <p>
-            When you don't want to hard code your credentials into your composer.json.
-            There is a second way to provide these details and it is via interaction.
-            If you don't provide the authentication credentials composer will prompt you upon connection
-            to enter the username and password.
-        </p>
-        <pre>
+            </pre>
+            <p>
+                When you don't want to hard code your credentials into your composer.json.
+                There is a second way to provide these details and it is via interaction.
+                If you don't provide the authentication credentials composer will prompt you upon connection
+                to enter the username and password.
+            </p>
+            <pre>
 composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.username }} {{ user.apiToken }}
-        </pre>
-    </section>
+            </pre>
+        </section>
+    {% endif %}
 </section>
 {% endblock %}

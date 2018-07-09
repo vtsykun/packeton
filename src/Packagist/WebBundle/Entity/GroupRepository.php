@@ -39,10 +39,11 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
 
     /**
      * @param User $user
+     * @param bool $hydration
      *
      * @return Package[]
      */
-    public function getAllowedPackagesForUser(User $user)
+    public function getAllowedPackagesForUser(User $user, $hydration = true)
     {
         $qb = $this->_em->createQueryBuilder();
         $qb
@@ -55,7 +56,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             ->where($qb->expr()->eq('u.id', $user->getId()));
 
         $result = $qb->getQuery()->getResult();
-        if ($result) {
+        if ($hydration && $result) {
             $qb = $this->_em->createQueryBuilder();
             $qb->select('p')
                 ->from('PackagistWebBundle:Package', 'p')
@@ -65,6 +66,6 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             return $qb->getQuery()->getResult();
         }
 
-        return [];
+        return $result ? array_column($result, 'id') : [];
     }
 }

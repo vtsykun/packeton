@@ -18,25 +18,5 @@ fos_user_resetting:
 fos_user_change_password:
     resource: '@FOSUserBundle/Resources/config/routing/change_password.xml'
 
-
-hwi_oauth_connect:
-    resource: '@HWIOAuthBundle/Resources/config/routing/connect.xml'
-    prefix:   /connect
-
-# overrides the fosub /login page
-hwi_oauth_login:
-    resource: '@HWIOAuthBundle/Resources/config/routing/login.xml'
-    prefix:   /login
-
-hwi_oauth_redirect:
-    resource: '@HWIOAuthBundle/Resources/config/routing/redirect.xml'
-    prefix:   /login
-
-github_check:
-    path: /login/check-github
-
-logout:
-    path: /logout
-
-login_check:
-    path: /login_check
+fos_user:
+    resource: "@FOSUserBundle/Resources/config/routing/security.xml"

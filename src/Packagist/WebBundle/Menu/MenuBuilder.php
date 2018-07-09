@@ -43,7 +43,7 @@ class MenuBuilder
 
         $this->addProfileMenu($menu);
         $menu->addChild('hr', ['label' => '<hr>', 'labelAttributes' => ['class' => 'normal'], 'extras' => ['safe_label' => true]]);
-        $menu->addChild($this->translator->trans('menu.logout'), ['label' => '<span class="fas fa-power-off"></span>' . $this->translator->trans('menu.logout'), 'route' => 'logout', 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.logout'), ['label' => '<span class="fas fa-power-off"></span>' . $this->translator->trans('menu.logout'), 'route' => 'fos_user_security_logout', 'extras' => ['safe_label' => true]]);
 
         return $menu;
     }

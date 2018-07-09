@@ -12,18 +12,19 @@
 
 namespace Packagist\WebBundle\Controller;
 
+use Doctrine\ORM\QueryBuilder;
+use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Form\Model\SearchQuery;
 use Packagist\WebBundle\Form\Type\SearchQueryType;
 use Pagerfanta\Adapter\ArrayAdapter;
+use Pagerfanta\Adapter\CallbackAdapter;
 use Pagerfanta\Pagerfanta;
 use Predis\Connection\ConnectionException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -33,10 +34,20 @@ class WebController extends Controller
     /**
      * @Template()
      * @Route("/", name="home")
+     *
+     * @param Request $request
+     * @return array
      */
-    public function indexAction()
+    public function indexAction(Request $request)
     {
-        return array('page' => 'home');
+        $page = $request->query->get('page', 1);
+        $paginator = new Pagerfanta($this->createAdapter());
+        $paginator->setMaxPerPage(10);
+        $paginator->setCurrentPage($page);
+
+        return [
+            'packages' => $paginator
+        ];
     }
 
     /**
@@ -79,9 +90,14 @@ class WebController extends Controller
                 $perPage = max(0, min(100, $perPage));
             }
 
+            $allowed = $this->isGranted('ROLE_ADMIN') ? null :
+                $this->getDoctrine()
+                    ->getRepository('PackagistWebBundle:Group')
+                    ->getAllowedPackagesForUser($this->getUser(), false);
+
             $page = $req->query->get('page', 1) - 1;
             $packages = $this->getDoctrine()->getRepository('PackagistWebBundle:Package')
-                ->searchPackage($query, $perPage, $page);
+                ->searchPackage($query, $perPage, $page, $allowed);
         }
 
         $paginator = new Pagerfanta(new ArrayAdapter($packages));
@@ -327,5 +343,48 @@ class WebController extends Controller
                 $searchQuery
             );
         }
+    }
+
+    private function createAdapter()
+    {
+        /** @var QueryBuilder $qb */
+        $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
+        $qb->from('PackagistWebBundle:Package', 'p');
+        $repo = $this->get('doctrine')->getRepository('PackagistWebBundle:Package');
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $packages = $this->get('doctrine')->getRepository('PackagistWebBundle:Group')
+                ->getAllowedPackagesForUser($this->getUser());
+            $qb->andWhere('p.id IN (:ids)')
+                ->setParameter('ids', $packages);
+        }
+
+        $adapter = new CallbackAdapter(
+            function () use ($qb) {
+                $qb = clone $qb;
+                $qb->select('COUNT(1)');
+                return $qb->getQuery()->getSingleScalarResult();
+            },
+            function ($offset, $length) use ($qb, $repo) {
+                $qb = clone $qb;
+                $qb->select('p')
+                    ->setMaxResults($length)
+                    ->setFirstResult($offset)
+                    ->orderBy('p.id', 'DESC');
+
+                $packages = array_map(
+                    function (Package $package) use ($repo) {
+                        return [
+                            'package' => $package,
+                            'dependencies' => $repo->getDependents($package->getName())
+                        ];
+                    },
+                    $qb->getQuery()->getResult()
+                );
+
+                return $packages;
+            }
+        );
+
+        return $adapter;
     }
 }

@@ -18,11 +18,11 @@
             <div class="col-md-6">
                 {% if error is defined and error is not empty %}
                     <div class="alert alert-warning">
-                        {{ error }}
+                        {{ error.messageKey|trans(error.messageData, 'security') }}
                     </div>
                 {% endif %}
 
-                <form action="{{ path('login_check') }}" method="POST">
+                <form action="{{ path('fos_user_security_check') }}" method="POST">
                     <div class="form-group clearfix">
                         <label for="username">{{ 'security.login.username'|trans({}, 'FOSUserBundle') }}</label>
                         <div class="input-group clearfix">
@@ -58,13 +58,4 @@
                 <hr>
             </div>
         {% endif %}
-
-        {% for owner in hwi_oauth_resource_owners() %}
-            {% if not app.user %}
-                <div class="clearfix"></div>
-            {% endif %}
-            <div class="col-md-6">
-                <a class="btn btn-block btn-{{ owner }} btn-primary btn-lg" href="{{ hwi_oauth_login_url(owner) }}"><span class="icon-{{ owner }}"></span>Login with {{ owner | trans({}, 'HWIOAuthBundle') }}</a>{% if not loop.last %}<br />{% endif %}
-            </div>
-        {% endfor %}
 {% endblock %}

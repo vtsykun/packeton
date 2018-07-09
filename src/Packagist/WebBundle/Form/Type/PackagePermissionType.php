@@ -28,7 +28,7 @@ class PackagePermissionType extends AbstractType
                     'label' => 'Version',
                     'required' => false,
                     'attr' => [
-                        'placeholder' => 'Version (example ^1.0|^2.0)'
+                        'placeholder' => '^1.0|^2.0'
                     ],
                     'constraints' => [new Callback($this->versionValidator())]
                 ]

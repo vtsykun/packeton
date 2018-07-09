@@ -93,8 +93,8 @@ class GroupController extends Controller
     {
         $form = $this->createForm(GroupType::class, $group);
         if ($request->getMethod() === 'POST') {
-            $form->submit($request);
-            if ($form->isValid()) {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
                 $group = $form->getData();
                 $em = $this->getDoctrine()->getManager();
                 $em->persist($group);

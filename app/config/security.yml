@@ -11,14 +11,8 @@ security:
 
     firewalls:
         packages:
-            pattern: (^(/packages.json$|/p/|/zipball/|/downloads/))+
+            pattern: (^(/packages.json$|/p/|/zipball/|/downloads/|/api/))+
             api_basic: true
-            remember_me:
-                secret: '%remember_me.secret%'
-                user_providers: packagist
-                name: pauth
-                always_remember_me: true
-                lifetime: 31104000 # 1y
 
         main:
             pattern:      .*
@@ -36,13 +30,6 @@ security:
                 lifetime: 31104000 # 1y
             logout:       true
             anonymous:    true
-            oauth:
-                resource_owners:
-                    github: '/login/check-github'
-                login_path:        /login
-                failure_path:      /login
-                oauth_user_provider:
-                    service: packagist.user_provider
             switch_user:
                 provider: packagist
 
@@ -56,10 +43,12 @@ security:
         # URL of FOSUserBundle which need to be available to anonymous users
         - { path: ^/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/login/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/resetting/, role: IS_AUTHENTICATED_ANONYMOUSLY }
 
         # Packagist
-        - { path: (^(/change-password|/profile/))+, role: ROLE_USER }
+        - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
         - { path: (^(/packages.json$|/p/|/zipball/|/downloads/))+, role: ROLE_USER }
+        - { path: ^/$, role: ROLE_USER }
 
         # Secured part of the site
         # This config requires being logged for the whole site and having the admin role for the admin part.

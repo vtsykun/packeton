@@ -115,6 +115,12 @@ class User extends BaseUser
      */
     private $failureNotifications = true;
 
+    /**
+     * @ORM\Column(name="expires_at", type="date", nullable=true)
+     * @var \DateTime
+     */
+    private $expiresAt;
+
     public function __construct()
     {
         $this->packages = new ArrayCollection();
@@ -322,6 +328,35 @@ class User extends BaseUser
     public function getExpiresAt()
     {
         return $this->expiresAt;
+    }
+
+    /**
+     * @param \DateTime $expiresAt
+     * @return $this
+     */
+    public function setExpiresAt($expiresAt)
+    {
+        $this->expiresAt = $expiresAt;
+        return $this;
+    }
+
+    public function generateApiToken()
+    {
+        $this->apiToken = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $this->apiToken = substr($this->apiToken, 0, 20);
+        return $this->apiToken;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isAccountNonExpired()
+    {
+        if (null === $this->expiresAt) {
+            return true;
+        }
+
+        return new \DateTime('now') < $this->expiresAt;
     }
 
     /**

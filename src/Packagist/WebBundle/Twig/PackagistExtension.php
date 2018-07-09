@@ -2,18 +2,18 @@
 
 namespace Packagist\WebBundle\Twig;
 
-use Packagist\WebBundle\Model\ProviderManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PackagistExtension extends \Twig_Extension
 {
     /**
-     * @var ProviderManager
+     * @var ContainerInterface
      */
-    private $providerManager;
+    private $container;
 
-    public function __construct(ProviderManager $providerManager)
+    public function __construct(ContainerInterface $container)
     {
-        $this->providerManager = $providerManager;
+        $this->container = $container;
     }
 
     public function getTests()
@@ -49,12 +49,12 @@ class PackagistExtension extends \Twig_Extension
             return false;
         }
 
-        return $this->providerManager->packageExists($package);
+        return $this->getProviderManager()->packageExists($package);
     }
 
     public function providerExistsTest($package)
     {
-        return $this->providerManager->packageIsProvided($package);
+        return $this->getProviderManager()->packageIsProvided($package);
     }
 
     public function prettifySourceReference($sourceReference)
@@ -69,5 +69,13 @@ class PackagistExtension extends \Twig_Extension
     public function generateGravatarHash($email)
     {
         return md5(strtolower($email));
+    }
+
+    /**
+     * @return \Packagist\WebBundle\Model\ProviderManager
+     */
+    private function getProviderManager()
+    {
+        return $this->container->get('packagist.provider_manager');
     }
 }

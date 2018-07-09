@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Packagist\WebBundle\Service;
 
@@ -38,13 +40,43 @@ class DistConfig
     /**
      * @param string $name
      * @param string $reference
+     * @param string $version
      *
      * @return string
      */
-    public function generateDistFileName(string $name, string $reference):  string
+    public function generateDistFileName(string $name, string $reference, string $version):  string
     {
         $targetDir = $this->generateTargetDir($name);
-        return $targetDir . '/' . $reference . '.' . $this->getArchiveFormat();
+        $fileName = $this->getFileName($reference, $version);
+        return $targetDir . '/' . $fileName . '.' . $this->getArchiveFormat();
+    }
+
+    /**
+     * @param string $reference
+     * @param string $version
+     * @return string
+     */
+    public function getFileName(string $reference, string $version): string
+    {
+        $fileName = $version . '-' . $reference;
+        return str_replace('/', '-', $fileName);
+    }
+
+    /**
+     * @param string $fileName
+     * @return string
+     */
+    public function guessesVersion(string $fileName)
+    {
+        $fileName = explode('-', $fileName);
+        $pathCount = count($fileName);
+        if ($pathCount > 1) {
+            unset($fileName[$pathCount - 1]);
+        }
+
+        $fileName = implode('-', $fileName);
+        $fileName = preg_replace('/(ticket|feature|fix)-/i', '$1/', $fileName);
+        return $fileName;
     }
 
     /**
@@ -79,5 +111,13 @@ class DistConfig
     public function isEnable(): bool
     {
         return !empty($this->config);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLazy(): bool
+    {
+        return $this->config['lazy'] ?? true;
     }
 }

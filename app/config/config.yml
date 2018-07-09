@@ -33,7 +33,6 @@ twig:
     debug:            '%kernel.debug%'
     strict_variables: '%kernel.debug%'
     globals:
-        google_analytics: '%google_analytics%'
         packagist_host: '%packagist_host%'
 
 # Doctrine Configuration
@@ -44,6 +43,7 @@ doctrine:
         dbname:   '%database_name%'
         user:     '%database_user%'
         password: '%database_password%'
+        port:     '%database_port%'
         # See https://github.com/sonata-project/SonataAdminBundle/issues/3342
     orm:
         auto_generate_proxy_classes: '%kernel.debug%'
@@ -105,6 +105,7 @@ swiftmailer:
     password:  '%mailer_password%'
     encryption: '%mailer_encryption%'
     auth_mode: '%mailer_auth_mode%'
+    port:      '%mailer_port%'
     spool:     { type: memory }
 
 fos_user:
@@ -117,40 +118,7 @@ fos_user:
         sender_name:    '%mailer_from_name%'
     profile:
         form:
-            type:       packagist_user_profile
-
-hwi_oauth:
-    firewall_names: [main]
-    connect:
-        account_connector: packagist.user_provider
-        registration_form_handler: packagist.oauth.registration_form_handler
-        registration_form: packagist.oauth.registration_form
-    fosub:
-        username_iterations: 30
-        properties:
-            github: githubId
-    resource_owners:
-        github:
-            type:          github
-            client_id:     '%github.client_id%'
-            client_secret: '%github.client_secret%'
-            options:
-                csrf: true
-
-nelmio_cors:
-    defaults:
-        allow_origin: ['*']
-        allow_headers: ['*']
-        max_age: 3600
-    paths:
-        '^/packages/list\.json$':
-            allow_methods: ['GET']
-            forced_allow_origin_value: '*'
-        '^/search\.json$':
-            allow_methods: ['GET']
-        '^/packages/[^/]+/[^/]+\.json$':
-            allow_methods: ['GET']
-            forced_allow_origin_value: '*'
+            type:  Packagist\WebBundle\Form\Type\ProfileFormType
 
 packagist_web:
     archive: true

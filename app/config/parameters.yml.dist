@@ -1,9 +1,10 @@
 parameters:
-    database_driver: pdo_mysql
+    database_driver: pdo_pgsql
     database_host: localhost
     database_name: packagist
-    database_user: root
-    database_password:
+    database_user: postgres
+    database_password: ~
+    database_port: ~
     database_name_test: packagist_test
 
     mailer_transport:
@@ -13,11 +14,8 @@ parameters:
     mailer_from_email: admin@example.org
     mailer_from_name: Admin Team
     mailer_encryption: tls
+    mailer_port: ~
     mailer_auth_mode: login
-
-    # packagist_host: example.org
-    # router.request_context.host: '%packagist_host%'
-    # router.request_context.scheme: https
 
     redis_dsn: redis://localhost/1
     redis_dsn_test: redis://127.0.0.1/14
@@ -27,10 +25,6 @@ parameters:
 
     google_analytics:
         ga_key:
-
-    # set those to values obtained by creating an application at https://github.com/settings/applications
-    github.client_id: CHANGE_ME_IN_PROD
-    github.client_secret: CHANGE_ME_IN_PROD
 
     # -- performance features --
     # set both to apc to optimize things if it is available
@@ -48,8 +42,5 @@ parameters:
     # e.g. ['.*\.?packagist\.org$'] to allow packagist.org and all subdomains as valid hosts
     trusted_hosts: ~
 
-    # -- Algolia credentials --
-    algolia.app_id: CHANGE_ME
-    algolia.admin_key: CHANGE_ME
-    algolia.search_key: CHANGE_ME
-    algolia.index_name: 'packagist'
+    # Host for download zip
+    packagist_dist_host: ~

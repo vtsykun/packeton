@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packagist\WebBundle\Security\Api;
 
 use Packagist\WebBundle\Entity\User;
@@ -9,15 +11,18 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class ApiTokenProvider implements AuthenticationProviderInterface
 {
     private $userProvider;
+    private $userChecker;
 
-    public function __construct(UserProviderInterface $provider)
+    public function __construct(UserProviderInterface $provider, UserCheckerInterface $userChecker)
     {
         $this->userProvider = $provider;
+        $this->userChecker = $userChecker;
     }
 
     /**
@@ -71,6 +76,7 @@ class ApiTokenProvider implements AuthenticationProviderInterface
 
         try {
             $user = $this->userProvider->loadUserByUsername($username);
+            $this->userChecker->checkPreAuth($user);
         } catch (UsernameNotFoundException $e) {
             throw new BadCredentialsException('Bad credentials.', 0, $e);
         } catch (\Exception $e) {

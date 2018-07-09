@@ -87,6 +87,7 @@ class UserController extends Controller
     public function createAction(Request $request)
     {
         $user = new User();
+        $user->generateApiToken();
         return $this->handleUpdate($request, $user, 'User has been saved.');
     }
 
@@ -94,8 +95,8 @@ class UserController extends Controller
     {
         $form = $this->createForm(CustomerUserType::class, $user);
         if ($request->getMethod() === 'POST') {
-            $form->submit($request);
-            if ($form->isValid()) {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
                 $user = $form->getData();
                 $this->get('fos_user.user_manager')->updateUser($user);
 
@@ -156,15 +157,37 @@ class UserController extends Controller
      */
     public function profileAction(Request $req, User $user)
     {
+        $deleteForm = $this->createFormBuilder([])->getForm();
         $packages = $this->getUserPackages($req, $user);
 
         $data = [
             'packages' => $packages,
             'meta' => $this->getPackagesMetadata($packages),
             'user' => $user,
+            'deleteForm' => $deleteForm->createView()
         ];
 
         return $data;
+    }
+
+    /**
+     * @Route("/users/{name}/delete", name="user_delete")
+     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     */
+    public function deleteAction(Request $request, User $user)
+    {
+        $form = $this->createFormBuilder([])->getForm();
+        $form->submit($request->request->get('form'));
+        if ($form->isValid()) {
+            $request->getSession()->save();
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($user);
+            $em->flush();
+
+            return new RedirectResponse('/');
+        }
+
+        return new Response('Invalid form input', 400);
     }
 
     /**

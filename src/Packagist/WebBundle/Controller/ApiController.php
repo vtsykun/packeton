@@ -14,11 +14,9 @@ namespace Packagist\WebBundle\Controller;
 
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Version;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,7 +41,7 @@ class ApiController extends Controller
         $package = new Package;
         $package->setEntityRepository($this->getDoctrine()->getRepository('PackagistWebBundle:Package'));
         $package->setRouter($this->get('router'));
-        $user = $this->findUser($request);
+        $user = $this->getUser();
         $package->addMaintainer($user);
         $package->setRepository($url);
         $errors = $this->get('validator')->validate($package);
@@ -116,7 +114,7 @@ class ApiController extends Controller
      */
     public function editPackageAction(Request $request, Package $package)
     {
-        $user = $this->findUser($request);
+        $user = $this->getUser();
         if (!$package->getMaintainers()->contains($user) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
         }
@@ -254,14 +252,13 @@ class ApiController extends Controller
         }
 
         // find the user
-        $user = $this->findUser($request);
-
+        $user = $this->getUser();
         if (!$user) {
             return new Response(json_encode(array('status' => 'error', 'message' => 'Invalid credentials')), 403);
         }
 
-        // try to find the user package
-        $packages = $this->findPackagesByUrl($user, $url, $urlRegex);
+        // try to find the all package
+        $packages = $this->findPackagesByUrl($url, $urlRegex);
 
         if (!$packages) {
             return new Response(json_encode(array('status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)')), 404);
@@ -312,19 +309,19 @@ class ApiController extends Controller
     /**
      * Find a user package given by its full URL
      *
-     * @param User $user
      * @param string $url
      * @param string $urlRegex
      * @return array the packages found
      */
-    protected function findPackagesByUrl(User $user, $url, $urlRegex)
+    protected function findPackagesByUrl($url, $urlRegex)
     {
         if (!preg_match($urlRegex, $url, $matched)) {
-            return array();
+            return [];
         }
 
-        $packages = array();
-        foreach ($user->getPackages() as $package) {
+        $packages = [];
+        $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
+        foreach ($repo->findAll() as $package) {
             if (preg_match($urlRegex, $package->getRepository(), $candidate)
                 && strtolower($candidate['host']) === strtolower($matched['host'])
                 && strtolower($candidate['path']) === strtolower($matched['path'])

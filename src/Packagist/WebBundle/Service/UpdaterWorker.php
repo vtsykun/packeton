@@ -2,13 +2,9 @@
 
 namespace Packagist\WebBundle\Service;
 
-use Composer\IO\IOInterface;
-use Composer\Package\Archiver\PharArchiver;
-use Composer\Package\Archiver\ZipArchiver;
-use Packagist\WebBundle\Package\ArchiveManager;
+use Packagist\WebBundle\Model\ValidatingArrayLoader;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
-use Composer\Package\Loader\ValidatingArrayLoader;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Repository\InvalidRepositoryException;
@@ -23,7 +19,6 @@ use Packagist\WebBundle\Model\DownloadManager;
 use Seld\Signal\SignalHandler;
 use Composer\Factory;
 use Composer\Downloader\TransportException;
-use Composer\Util\RemoteFilesystem;
 
 class UpdaterWorker
 {
@@ -77,7 +72,6 @@ class UpdaterWorker
         $config = Factory::createConfig();
         $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
         $io->loadConfiguration($config);
-        $archiveManager = $this->createArchiveManager($io);
 
         try {
             $flags = 0;
@@ -97,15 +91,7 @@ class UpdaterWorker
             $repository->setLoader($loader);
 
             // perform the actual update (fetch and re-scan the repository's source)
-            $this->updater->setArchiveManager($archiveManager);
             $package = $this->updater->update($io, $config, $package, $repository, $flags);
-
-            // github update downgraded to a git clone, this should not happen, so check through API whether the package still exists
-            if (preg_match('{[@/]github.com[:/]([^/]+/[^/]+?)(\.git)?$}i', $package->getRepository(), $match) && 0 === strpos($repository->getDriver()->getUrl(), 'git@')) {
-                if ($result = $this->checkForDeadGitHubPackage($package, $match, $io, $io->getOutput())) {
-                    return $result;
-                }
-            }
         } catch (\Throwable $e) {
             $output = $io->getOutput();
 
@@ -149,13 +135,6 @@ class UpdaterWorker
             } elseif ($e instanceof TransportException && preg_match('{https://api.bitbucket.org/2.0/repositories/[^/]+/.+?\?fields=-project}i', $e->getMessage()) && $e->getStatusCode() == 404) {
                 // bitbucket api root returns a 404
                 $found404 = true;
-            }
-
-            // github 404'ed, check through API whether the package still exists and delete if not
-            if ($found404 && preg_match('{[@/]github.com[:/]([^/]+/[^/]+?)(\.git)?$}i', $package->getRepository(), $match)) {
-                if ($result = $this->checkForDeadGitHubPackage($package, $match, $io, $output)) {
-                    return $result;
-                }
             }
 
             // detected a 404 so mark the package as gone and prevent updates for 1y
@@ -202,53 +181,5 @@ class UpdaterWorker
             'message' => 'Update of '.$package->getName().' complete',
             'details' => '<pre>'.$io->getOutput().'</pre>'
         ];
-    }
-
-    private function checkForDeadGitHubPackage(Package $package, $match, $io, $output)
-    {
-        $rfs = new RemoteFilesystem($io);
-        try {
-            $rfs->getContents('github.com', 'https://api.github.com/repos/'.$match[1], false, ['retry-auth-failure' => false]);
-        } catch (\Throwable $e) {
-            if ($e instanceof TransportException && $e->getStatusCode() === 404) {
-                try {
-                    if (
-                        // check composer repo is visible to make sure it's not github or something else glitching
-                        $rfs->getContents('github.com', 'https://api.github.com/repos/composer/composer', false, ['retry-auth-failure' => false])
-                        // remove packages with very low downloads and that are 404
-                        && $this->downloadManager->getTotalDownloads($package) <= 100
-                    ) {
-                        $name = $package->getName();
-                        $this->packageManager->deletePackage($package);
-
-                        return [
-                            'status' => Job::STATUS_PACKAGE_DELETED,
-                            'message' => 'Update of '.$package->getName().' failed, package appears to be 404/gone and has been deleted',
-                            'details' => '<pre>'.$output.'</pre>',
-                            'exception' => $e,
-                        ];
-                    }
-                } catch (\Throwable $e) {
-                    // ignore failures here, we/github must be offline
-                }
-            }
-        }
-    }
-
-    /**
-     * @param IOInterface $io
-     * @return ArchiveManager
-     */
-    private function createArchiveManager(IOInterface $io)
-    {
-        $composer = Factory::create($io);
-        $downloadManager = $composer->getDownloadManager();
-
-        $archiveManager = new ArchiveManager($downloadManager);
-        $archiveManager->setOverwriteFiles(false);
-        $archiveManager->addArchiver(new ZipArchiver());
-        $archiveManager->addArchiver(new PharArchiver());
-
-        return $archiveManager;
     }
 }

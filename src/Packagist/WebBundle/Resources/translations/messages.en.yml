@@ -50,7 +50,7 @@ explore:
 
 search:
     claim_html: |
-        Packagist is the main <a href="https://getcomposer.org/">Composer</a> repository. It aggregates public PHP packages installable with Composer.
+        Packagist is the main <a href="https://getcomposer.org/">Composer</a> repository. It aggregates PHP packages installable with Composer.
 
 packages:
     mine: My packages
@@ -152,7 +152,7 @@ user:
 
 'Search packages...': 'Search packages...'
 brandname: Packagist
-navclaim: The PHP Package Repository
+navclaim: The Private Composer Repository
 Sort: 'Sort'
 Order: 'Order'
 Username: 'Username'
