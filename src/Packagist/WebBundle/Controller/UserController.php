@@ -44,7 +44,8 @@ class UserController extends Controller
     {
         $qb = $this->getDoctrine()->getRepository('PackagistWebBundle:User')
             ->createQueryBuilder('u');
-        $qb->orderBy('u.id', 'DESC');
+        $qb->where("u.roles NOT LIKE '%ADMIN%'")
+            ->orderBy('u.id', 'DESC');
 
         $paginator = new Pagerfanta(new DoctrineORMAdapter($qb, false));
         $paginator->setMaxPerPage(6);
@@ -69,7 +70,7 @@ class UserController extends Controller
     public function updateAction(Request $request, User $user)
     {
         $token = $this->get('security.token_storage')->getToken();
-        if ($token && $token->getUsername() !== $user->getUsername()) {
+        if ($token && $token->getUsername() !== $user->getUsername() && !$user->isAdmin()) {
             return $this->handleUpdate($request, $user, 'User has been saved.');
         }
 
@@ -87,64 +88,6 @@ class UserController extends Controller
     {
         $user = new User();
         return $this->handleUpdate($request, $user, 'User has been saved.');
-    }
-
-    /**
-     * @Route("/users/{name}/disable", name="user_disable")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
-     *
-     * @param Request $request
-     * @param User $user
-     * @return mixed
-     */
-    public function disableAction(Request $request, User $user)
-    {
-        $token = $this->get('security.token_storage')->getToken();
-        if (!$token || $token->getUsername() !== $user->getUsername()) {
-            throw new AccessDeniedHttpException('You can not update yourself');
-        }
-
-        $form = $this->createFormBuilder([])->getForm();
-
-        $form->submit($request->get('form'));
-        if ($form->isValid()) {
-            $user->setEnabled(false);
-            $this->get('fos_user.user_manager')->updateUser($user);
-            $this->addFlash('success', $user->getUsername().' has been disable');
-        }
-
-        return $this->redirect(
-            $this->generateUrl("user_profile", ["name" => $user->getUsername()])
-        );
-    }
-
-    /**
-     * @Route("/users/{name}/enable", name="user_enable")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
-     *
-     * @param Request $request
-     * @param User $user
-     * @return mixed
-     */
-    public function enableAction(Request $request, User $user)
-    {
-        $token = $this->get('security.token_storage')->getToken();
-        if (!$token || $token->getUsername() !== $user->getUsername()) {
-            throw new AccessDeniedHttpException('You can not update yourself');
-        }
-
-        $form = $this->createFormBuilder([])->getForm();
-
-        $form->submit($request->get('form'));
-        if ($form->isValid()) {
-            $user->setEnabled(true);
-            $this->get('fos_user.user_manager')->updateUser($user);
-            $this->addFlash('success', $user->getUsername().' has been mark as active');
-        }
-
-        return $this->redirect(
-            $this->generateUrl("user_profile", ["name" => $user->getUsername()])
-        );
     }
 
     protected function handleUpdate(Request $request, User $user, $flashMessage)

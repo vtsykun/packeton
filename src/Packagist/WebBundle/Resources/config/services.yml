@@ -61,7 +61,7 @@ services:
         class: Packagist\WebBundle\Service\DistConfig
         arguments: ['@router', '%packagist_web.archive%']
 
-    packagist.realtime_dumper:
+    packagist.in_memory_dumper:
         class: Packagist\WebBundle\Package\InMemoryDumper
         arguments: ['@doctrine', '@packagist.acl_package_checker', '@router']
         public: true
@@ -116,8 +116,8 @@ services:
             - '@logger'
             - { from: '%mailer_from_email%', fromName: '%mailer_from_name%' }
             - '@packagist.provider_manager'
-            - '@packagist.algolia.client'
-            - '%algolia.index_name%'
+            - '@packagist.in_memory_dumper'
+            - '@security.authorization_checker'
 
     packagist.profile.form.type:
         class: Packagist\WebBundle\Form\Type\ProfileFormType
@@ -133,7 +133,7 @@ services:
 
     packagist.menu_builder:
         class: Packagist\WebBundle\Menu\MenuBuilder
-        arguments: ['@knp_menu.factory', '@security.token_storage', '@translator']
+        arguments: ['@knp_menu.factory', '@security.token_storage', '@translator', '@security.authorization_checker']
 
     packagist.menu.user:
         class: Knp\Menu\MenuItem

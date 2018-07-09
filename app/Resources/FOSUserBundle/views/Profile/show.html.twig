@@ -19,10 +19,12 @@
         <hr>
     {%- endif %}
 
-    {% embed "PackagistWebBundle:Web:list.html.twig" with {noLayout: 'true', showAutoUpdateWarning: true} %}
-        {% block content_title %}
-            <h3 class="font-normal">{{ 'packages.yours'|trans }}</h3>
-        {% endblock %}
-    {% endembed %}
+    {% if is_granted('ROLE_ADMIN') %}
+        {% embed "PackagistWebBundle:Web:list.html.twig" with {noLayout: 'true', showAutoUpdateWarning: true} %}
+            {% block content_title %}
+                <h3 class="font-normal">{{ 'packages.yours'|trans }}</h3>
+            {% endblock %}
+        {% endembed %}
+    {% endif %}
 </section>
 {% endblock %}

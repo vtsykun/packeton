@@ -323,4 +323,12 @@ class User extends BaseUser
     {
         return $this->expiresAt;
     }
+
+    /**
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return $this->hasRole('ROLE_ADMIN') || $this->isSuperAdmin();
+    }
 }

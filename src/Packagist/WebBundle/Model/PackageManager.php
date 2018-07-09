@@ -12,10 +12,15 @@
 
 namespace Packagist\WebBundle\Model;
 
+use Doctrine\Common\Cache\ApcuCache;
+use Doctrine\Common\Cache\Cache;
+use Packagist\WebBundle\Entity\User;
+use Packagist\WebBundle\Entity\VersionRepository;
+use Packagist\WebBundle\Package\InMemoryDumper;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Packagist\WebBundle\Entity\Package;
 use Psr\Log\LoggerInterface;
-use AlgoliaSearch\Client as AlgoliaClient;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 
 /**
@@ -29,19 +34,34 @@ class PackageManager
     protected $logger;
     protected $options;
     protected $providerManager;
-    protected $algoliaClient;
-    protected $algoliaIndexName;
+    protected $dumper;
+    protected $cache;
+    protected $authorizationChecker;
 
-    public function __construct(RegistryInterface $doctrine, \Swift_Mailer $mailer, \Twig_Environment $twig, LoggerInterface $logger, array $options, ProviderManager $providerManager, AlgoliaClient $algoliaClient, string $algoliaIndexName)
-    {
+    public function __construct(
+        RegistryInterface $doctrine,
+        \Swift_Mailer $mailer,
+        \Twig_Environment $twig,
+        LoggerInterface $logger,
+        array $options,
+        ProviderManager $providerManager,
+        InMemoryDumper $dumper,
+        AuthorizationCheckerInterface $authorizationChecker,
+        Cache $cache = null
+    ) {
         $this->doctrine = $doctrine;
         $this->mailer = $mailer;
         $this->twig = $twig;
         $this->logger = $logger;
         $this->options = $options;
         $this->providerManager = $providerManager;
-        $this->algoliaClient = $algoliaClient;
-        $this->algoliaIndexName  = $algoliaIndexName;
+        $this->authorizationChecker = $authorizationChecker;
+        $this->dumper = $dumper;
+        if ($cache === null) {
+            $cache = new ApcuCache();
+            $cache->setNamespace('package_manager');
+        }
+        $this->cache = $cache;
     }
 
     public function deletePackage(Package $package)
@@ -53,20 +73,10 @@ class PackageManager
         }
 
         $this->providerManager->deletePackage($package);
-        $packageName = $package->getName();
 
         $em = $this->doctrine->getManager();
         $em->remove($package);
         $em->flush();
-
-        // attempt search index cleanup
-        try {
-            $indexName = $this->algoliaIndexName;
-            $algolia = $this->algoliaClient;
-            $index = $algolia->initIndex($indexName);
-            $index->deleteObject($packageName);
-        } catch (\AlgoliaSearch\AlgoliaException $e) {
-        }
     }
 
     public function notifyUpdateFailure(Package $package, \Exception $e, $details = null)
@@ -110,7 +120,7 @@ class PackageManager
         return true;
     }
 
-    public function notifyNewMaintainer($user, $package)
+    public function notifyNewMaintainer($user, Package $package)
     {
         $body = $this->twig->render('PackagistWebBundle:Email:maintainer_added.txt.twig', array(
             'package_name' => $package->getName()
@@ -132,5 +142,51 @@ class PackageManager
         }
 
         return true;
+    }
+
+    public function getRootPackagesJson(User $user = null)
+    {
+        $packagesData = $this->dumpInMemory($user, false);
+        return $packagesData[0];
+    }
+
+    public function getProvidersJson(User $user = null, $hash)
+    {
+        list($root, $providers) = $this->dumpInMemory($user);
+        $rootHash = \reset($root['provider-includes']);
+        if ($hash && $rootHash['sha256'] !== $hash) {
+            return false;
+        }
+
+        return $providers;
+    }
+
+    public function getPackageJson(User $user = null, string $package, string $hash)
+    {
+        list($root, $providers, $packages) = $this->dumpInMemory($user);
+
+        if (false === isset($providers['providers'][$package]) ||
+            ($hash && $providers['providers'][$package]['sha256'] !== $hash)
+        ) {
+            return false;
+        }
+
+        return $packages[$package];
+    }
+
+    private function dumpInMemory(User $user = null, $cache = true)
+    {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_ADMIN')) {
+            $user = null;
+        }
+
+        $cacheKey = (string) ($user ? $user->getId() : 0);
+        if ($cache && $this->cache->contains($cacheKey)) {
+            return $this->cache->fetch($cacheKey);
+        }
+
+        $data = $this->dumper->dump($user);
+        $this->cache->save($cacheKey, $data, 120);
+        return $data;
     }
 }

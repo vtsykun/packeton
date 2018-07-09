@@ -12,6 +12,7 @@
 
 namespace Packagist\WebBundle\Entity;
 
+use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
@@ -426,5 +427,51 @@ class PackageRepository extends EntityRepository
             ->groupBy('year, month');
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function searchPackage(string $search, int $limit = 10, int $page = 0)
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        if ($conn->getDatabasePlatform() instanceof PostgreSqlPlatform && $this->checkExtension('fuzzystrmatch')) {
+            $packages = [];
+            $sql = 'SELECT levenshtein(name, :search)/(1.0 + length(name)) AS idx, id 
+                    FROM package
+                    ORDER BY idx LIMIT :limit OFFSET :ofs';
+            $packagesId = $conn
+                ->executeQuery(
+                    $sql,
+                    ['search' => $search, 'limit' => $limit, 'ofs' => $page * $limit]
+                )->fetchAll();
+
+            if ($packagesId) {
+                foreach (array_column($packagesId, 'id') as $id) {
+                    $packages[] = $this->find($id);
+                }
+            }
+            return $packages;
+        }
+
+        $qb = $this->createQueryBuilder('p');
+
+        return $qb->where(
+                $qb->expr()->like('p.name', ':name')
+            )->setParameter('name', $search)
+            ->setMaxResults($limit)
+            ->setFirstResult($limit * $page)
+            ->getQuery()->getResult();
+    }
+
+    private function checkExtension($extensionName)
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $count = $conn
+            ->executeQuery(
+                'SELECT COUNT(1) as v FROM pg_extension WHERE extname = :name',
+                [
+                    'name' => $extensionName
+                ]
+            )->fetch();
+
+        return isset($count['v']) && $count['v'] === 1;
     }
 }

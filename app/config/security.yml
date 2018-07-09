@@ -11,7 +11,7 @@ security:
 
     firewalls:
         packages:
-            pattern: (^(/packages.json$|/p/|/zipball/|/downloads/|))+
+            pattern: (^(/packages.json$|/p/|/zipball/|/downloads/))+
             api_basic: true
             remember_me:
                 secret: '%remember_me.secret%'
@@ -58,7 +58,7 @@ security:
         - { path: ^/login/, role: IS_AUTHENTICATED_ANONYMOUSLY }
 
         # Packagist
-        - { path: ^/profile/, role: ROLE_USER }
+        - { path: (^(/change-password|/profile/))+, role: ROLE_USER }
         - { path: (^(/packages.json$|/p/|/zipball/|/downloads/))+, role: ROLE_USER }
 
         # Secured part of the site

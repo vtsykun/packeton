@@ -49,7 +49,6 @@ class PackagesAclChecker
         return \count($version) > 0;
     }
 
-
     /**
      * Check that customer/user can download this version
      *

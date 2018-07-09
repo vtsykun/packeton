@@ -26,6 +26,7 @@ class CustomerUserType extends AbstractType
             ->add('username', null, ['label' => 'form.username', 'translation_domain' => 'FOSUserBundle'])
             ->add('enabled', CheckboxType::class, ['required' => false])
             ->add('plainPassword', RepeatedType::class, [
+                'required' => false,
                 'type' => PasswordType::class,
                 'options' => ['translation_domain' => 'FOSUserBundle'],
                 'first_options' => ['label' => 'form.password'],

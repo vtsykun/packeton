@@ -85,6 +85,6 @@ class InMemoryDumper
             ];
         }
 
-        return [$providers, $packagesData];
+        return [['providers' => $providers], $packagesData];
     }
 }

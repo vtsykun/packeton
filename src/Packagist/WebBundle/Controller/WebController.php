@@ -14,6 +14,8 @@ namespace Packagist\WebBundle\Controller;
 
 use Packagist\WebBundle\Form\Model\SearchQuery;
 use Packagist\WebBundle\Form\Type\SearchQueryType;
+use Pagerfanta\Adapter\ArrayAdapter;
+use Pagerfanta\Pagerfanta;
 use Predis\Connection\ConnectionException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
@@ -66,137 +68,26 @@ class WebController extends Controller
      */
     public function searchAction(Request $req)
     {
+        $packages = [];
         $form = $this->createForm(SearchQueryType::class, new SearchQuery());
-
-        $filteredOrderBys = $this->getFilteredOrderedBys($req);
-        $normalizedOrderBys = $this->getNormalizedOrderBys($filteredOrderBys);
-
-        $this->computeSearchQuery($req, $filteredOrderBys);
-
-        $typeFilter = str_replace('%type%', '', $req->query->get('type'));
-        $tagsFilter = $req->query->get('tags');
-
-        if ($req->getRequestFormat() !== 'json') {
-            return $this->render('PackagistWebBundle:Web:search.html.twig', [
-                'packages' => [],
-            ]);
-        }
-
-        if (!$req->query->has('search_query') && !$typeFilter && !$tagsFilter) {
-            return JsonResponse::create(array(
-                'error' => 'Missing search query, example: ?q=example'
-            ), 400)->setCallback($req->query->get('callback'));
-        }
-
-        $indexName = $this->container->getParameter('algolia.index_name');
-        $algolia = $this->get('packagist.algolia.client');
-        $index = $algolia->initIndex($indexName);
-        $query = '';
-        $queryParams = [];
-
-        // filter by type
-        if ($typeFilter) {
-            $queryParams['filters'][] = 'type:'.$typeFilter;
-        }
-
-        // filter by tags
-        if ($tagsFilter) {
-
-            $tags = array();
-            foreach ((array) $tagsFilter as $tag) {
-                $tags[] = 'tags:'.$tag;
-            }
-            $queryParams['filters'][] = '(' . implode(' OR ', $tags) . ')';
-        }
-
-        if (!empty($filteredOrderBys)) {
-            return JsonResponse::create(array(
-                'status' => 'error',
-                'message' => 'Search sorting is not available anymore',
-            ), 400)->setCallback($req->query->get('callback'));
-        }
-
         $form->handleRequest($req);
         if ($form->isValid()) {
             $query = $form->getData()->getQuery();
+
+            $perPage = $req->query->getInt('per_page', 15);
+            if ($perPage <= 0 || $perPage > 100) {
+                $perPage = max(0, min(100, $perPage));
+            }
+
+            $page = $req->query->get('page', 1) - 1;
+            $packages = $this->getDoctrine()->getRepository('PackagistWebBundle:Package')
+                ->searchPackage($query, $perPage, $page);
         }
 
-        $perPage = $req->query->getInt('per_page', 15);
-        if ($perPage <= 0 || $perPage > 100) {
-           if ($req->getRequestFormat() === 'json') {
-                return JsonResponse::create(array(
-                    'status' => 'error',
-                    'message' => 'The optional packages per_page parameter must be an integer between 1 and 100 (default: 15)',
-                ), 400)->setCallback($req->query->get('callback'));
-            }
+        $paginator = new Pagerfanta(new ArrayAdapter($packages));
+        $paginator->setMaxPerPage(10);
 
-            $perPage = max(0, min(100, $perPage));
-        }
-
-        if (isset($queryParams['filters'])) {
-            $queryParams['filters'] = implode(' AND ', $queryParams['filters']);
-        }
-        $queryParams['hitsPerPage'] = $perPage;
-        $queryParams['page'] = $req->query->get('page', 1) - 1;
-
-        try {
-            $results = $index->search($query, $queryParams);
-        } catch (\Throwable $e) {
-            return JsonResponse::create(array(
-                'status' => 'error',
-                'message' => 'Could not connect to the search server',
-            ), 500)->setCallback($req->query->get('callback'));
-        }
-
-        $result = array(
-            'results' => array(),
-            'total' => $results['nbHits'],
-        );
-
-        foreach ($results['hits'] as $package) {
-            if (ctype_digit((string) $package['id'])) {
-                $url = $this->generateUrl('view_package', array('name' => $package['name']), UrlGeneratorInterface::ABSOLUTE_URL);
-            } else {
-                $url = $this->generateUrl('view_providers', array('name' => $package['name']), UrlGeneratorInterface::ABSOLUTE_URL);
-            }
-
-            $row = array(
-                'name' => $package['name'],
-                'description' => $package['description'] ?: '',
-                'url' => $url,
-                'repository' => $package['repository'],
-            );
-            if (ctype_digit((string) $package['id'])) {
-                $row['downloads'] = $package['meta']['downloads'];
-                $row['favers'] = $package['meta']['favers'];
-            } else {
-                $row['virtual'] = true;
-            }
-            if (!empty($package['abandoned'])) {
-                $row['abandoned'] = $package['replacementPackage'] ?? true;
-            }
-            $result['results'][] = $row;
-        }
-
-        if ($results['nbPages'] > $results['page'] + 1) {
-            $params = array(
-                '_format' => 'json',
-                'q' => $form->getData()->getQuery(),
-                'page' => $results['page'] + 2,
-            );
-            if ($tagsFilter) {
-                $params['tags'] = (array) $tagsFilter;
-            }
-            if ($typeFilter) {
-                $params['type'] = $typeFilter;
-            }
-            if ($perPage !== 15) {
-                $params['per_page'] = $perPage;
-            }
-            $result['next'] = $this->generateUrl('search', $params, UrlGeneratorInterface::ABSOLUTE_URL);
-        }
-
-        return JsonResponse::create($result)->setCallback($req->query->get('callback'));
+        return $this->render('PackagistWebBundle:Web:search.html.twig', ['packages' => $paginator]);
     }
 
     /**

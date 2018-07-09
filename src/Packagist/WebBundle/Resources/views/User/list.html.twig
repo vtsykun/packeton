@@ -11,7 +11,7 @@
         <li data-url="{{ packageUrl }}" class="row">
             <div class="col-xs-12 package-item">
                 <div class="row">
-                    <div class="col-sm-9 col-lg-10">
+                    <div class="col-sm-9 col-lg-11">
                         <div>
                             {% if user.enabled %}
                                 <div class="tab-cell badge-enabled"><i class="fas fa-unlock"></i> Enable</div>
@@ -22,17 +22,11 @@
                         </div>
                         <p>Expires at:{% if user.expiresAt %} {{ user.expiresAt|date('Y-m-d') }} {% else %} N/A {% endif %}</p>
                     </div>
-                    <div class="col-sm-3 col-lg-2">
+                    <div class="col-sm-3 col-lg-1">
                         <div style="font-size: 1.5em">
                             <ul class="nav">
                                 <li class="launcher-item">
-                                    <form action="{{ path('user_disable', {name: user.username}) }}" method="POST">
-                                        {{ form_widget(csrfForm.createView._token) }}
-                                        <button type="submit" title="Disable"><i class="fas fa-ban"></i></button>
-                                    </form>
-                                </li>
-                                <li class="launcher-item">
-                                    <a href="#">
+                                    <a href="{{ path('users_update', {name: user.username}) }}">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
                                 </li>

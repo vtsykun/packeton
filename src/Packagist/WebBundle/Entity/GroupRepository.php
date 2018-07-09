@@ -46,7 +46,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
     {
         $qb = $this->_em->createQueryBuilder();
         $qb
-            ->select('p')
+            ->select('p.id')
             ->distinct(true)
             ->from('PackagistWebBundle:User', 'u')
             ->innerJoin('u.groups', 'g')
@@ -55,7 +55,16 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             ->where($qb->expr()->eq('u.id', $user->getId()));
 
         $result = $qb->getQuery()->getResult();
+        if ($result) {
+            $qb = $this->_em->createQueryBuilder();
+            $qb->select('p')
+                ->from('PackagistWebBundle:Package', 'p')
+                ->where('p.id IN (:ids)')
+                ->setParameter('ids', array_column($result, 'id'));
 
-        return $result;
+            return $qb->getQuery()->getResult();
+        }
+
+        return [];
     }
 }
