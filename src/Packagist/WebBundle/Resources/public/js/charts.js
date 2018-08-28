@@ -2,7 +2,7 @@
     "use strict";
 
     var colors = [
-        '#f28d1a',
+        '#0c71d0',
         '#2d2d32'
     ];
 

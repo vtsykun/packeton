@@ -1,8 +1,8 @@
 {
     "name": "okvpn/private-package",
     "description": "Private Package for Vendors",
-    "keywords": ["package", "composer", "private packagest"],
-    "homepage": "http://packagist.org/",
+    "keywords": ["package", "composer", "private packagist"],
+    "homepage": "https://github.com/vtsykun/private-packagist/",
     "type": "project",
     "license": "MIT",
     "authors": [
@@ -18,11 +18,12 @@
         },
         {
             "name": "Uladzimir Tsykun",
-            "email": "vtsykun@okvpn.org"
+            "email": "vtsykun@okvpn.org",
+            "homepage": "https://github.com/vtsykun"
         }
     ],
     "support": {
-          "email": "vtsykun@okvpn.org"
+        "email": "vtsykun@okvpn.org"
     },
     "autoload": {
         "psr-4": { "Packagist\\": "src/Packagist/" },

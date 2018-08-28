@@ -14,9 +14,9 @@
                     <div class="col-sm-9 col-lg-11">
                         <div>
                             {% if user.enabled %}
-                                <div class="tab-cell badge-enabled"><i class="fas fa-unlock"></i> Enable</div>
+                                <div class="tab-cell badge-enabled"><i class="fa fa-unlock"></i> Enable</div>
                             {% else %}
-                                <div class="tab-cell badge-disable"><i class="fas fa-lock"></i> Disable</div>
+                                <div class="tab-cell badge-disable"><i class="fa fa-lock"></i> Disable</div>
                             {% endif %}
                             <h4 class="tab-cell font-bold"><a href="{{ packageUrl }}">{{ user.username }}</a></h4>
                         </div>
@@ -27,7 +27,7 @@
                             <ul class="nav">
                                 <li class="launcher-item">
                                     <a href="{{ path('users_update', {name: user.username}) }}">
-                                        <i class="fas fa-pencil-alt"></i>
+                                        <i class="fa fa-pencil-alt"></i>
                                     </a>
                                 </li>
                             </ul>

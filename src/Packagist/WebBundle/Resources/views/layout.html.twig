@@ -76,11 +76,11 @@
                                         <form action="{{ path('fos_user_security_check') }}" method="POST">
                                             <div class="input-group">
                                                 <input class="form-control" type="text" id="_username" name="_username" placeholder="{{ 'security.login.username'|trans({}, 'FOSUserBundle') }}">
-                                                <span class="input-group-addon"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-addon"><i class="fa fa-user"></i></span>
                                             </div>
                                             <div class="input-group">
                                                 <input class="form-control" type="password" id="_password" name="_password" placeholder="{{ 'security.login.password'|trans({}, 'FOSUserBundle') }}">
-                                                <span class="input-group-addon"><i class="fas fa-lock"></i></span>
+                                                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
                                             </div>
 
                                             <div class="checkbox">
@@ -168,7 +168,7 @@
                 <div class="row">
                     <ul class="social col-xs-7 col-sm-4 col-md-2 pull-right">
                         <li><a href="http://github.com/composer/packagist" title="{{ 'menu.github'|trans }}"><span class="fab fa-github"></span></a></li>
-                        <li><a href="mailto:contact@packagist.org" title="{{ 'menu.contact'|trans }}"><span class="icon-mail"></span></a></li>
+                        <li><a href="mailto:vtsykun@okvpn.org" title="{{ 'menu.contact'|trans }}"><i class="fa fa-envelope"></i></a></li>
                     </ul>
 
                     {%- if is_granted('ROLE_ADMIN') %}
@@ -191,10 +191,6 @@
                         </ul>
                     {%- endif %}
 
-                </div>
-
-                <div class="row">
-                    <p class="toran col-xs-12">Packagist maintenance and hosting is supported by <a href="http://cuantic.com/">Cuantic</a></p>
                 </div>
             </nav>
         </footer>
