@@ -152,7 +152,7 @@ user:
 
 'Search packages...': 'Search packages...'
 brandname: Packagist
-navclaim: The Private Composer Repository
+navclaim: Composer private repository
 Sort: 'Sort'
 Order: 'Order'
 Username: 'Username'
