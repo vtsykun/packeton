@@ -1,5 +1,5 @@
-Private Composer repository
-===========================
+Packeton - Private PHP package repository for vendors
+======================================================
 
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
@@ -7,10 +7,11 @@ The Open Source alternative of [Private Packagist for vendors](https://packagist
 Features
 --------
 
+- Compatible with composer.
 - Customers user and groups.
-- Limit access by vendor and versions
+- Limit access by vendor and versions.
 - Expire access time.
-- Archive packages and downloads its from your host
+- Archive packages and downloads its from your host.
 
 What was changed in this fork?
 -----------------------------

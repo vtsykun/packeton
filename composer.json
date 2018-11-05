@@ -1,8 +1,8 @@
 {
-    "name": "okvpn/private-package",
-    "description": "Private Package for Vendors",
-    "keywords": ["package", "composer", "private packagist"],
-    "homepage": "https://github.com/vtsykun/private-packagist/",
+    "name": "okvpn/packeton",
+    "description": "Private PHP package repository for vendors",
+    "keywords": ["packeton", "composer", "private-packagist"],
+    "homepage": "https://github.com/vtsykun/packeton",
     "type": "project",
     "license": "MIT",
     "authors": [
