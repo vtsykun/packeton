@@ -40,7 +40,7 @@
     </ul>
 
     {% if users.haveToPaginate() %}
-        {{ pagerfanta(groups, 'twitter_bootstrap', {'proximity': 2}) }}
+        {{ pagerfanta(users, 'twitter_bootstrap', {'proximity': 2}) }}
     {% endif %}
 </section>
 {% endblock %}

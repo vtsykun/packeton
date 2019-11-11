@@ -130,6 +130,7 @@ class Updater
         $deleteDate = clone $start;
         $deleteDate->modify('-1day');
 
+        /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
         $apc = extension_loaded('apcu');
         $rootIdentifier = null;
@@ -259,7 +260,7 @@ class Updater
 
         // remove outdated versions
         foreach ($existingVersions as $version) {
-            if (!is_null($version['softDeletedAt']) && new \DateTime($version['softDeletedAt']) < $deleteDate) {
+            if (!is_null($version['soft_deleted_at']) && new \DateTime($version['soft_deleted_at']) < $deleteDate) {
                 $versionRepository->remove($versionRepository->findOneById($version['id']));
             } else {
                 // set it to be soft-deleted so next update that occurs after deleteDate (1day) if the

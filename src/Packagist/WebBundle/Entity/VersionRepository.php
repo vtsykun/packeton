@@ -129,7 +129,7 @@ class VersionRepository extends EntityRepository
     public function getVersionMetadataForUpdate(Package $package)
     {
         $rows = $this->getEntityManager()->getConnection()->fetchAll(
-            'SELECT id, normalizedVersion as normalized_version, source, softDeletedAt FROM package_version v WHERE v.package_id = :id',
+            'SELECT id, normalizedVersion as normalized_version, source, softDeletedAt as soft_deleted_at FROM package_version v WHERE v.package_id = :id',
             ['id' => $package->getId()]
         );
 
