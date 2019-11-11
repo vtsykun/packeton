@@ -11,7 +11,7 @@ security:
 
     firewalls:
         packages:
-            pattern: (^(/packages.json$|/p/|/zipball/|/downloads/|/api/))+
+            pattern: (^(/packages.json$|/p/|/zipball/|/feeds/.+(\.rss|\.atom)|/downloads/|/api/))+
             api_basic: true
 
         main:

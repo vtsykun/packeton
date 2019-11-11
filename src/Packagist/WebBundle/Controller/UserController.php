@@ -39,9 +39,14 @@ class UserController extends Controller
     /**
      * @Template()
      * @Route("/users/", name="users_list")
+     *
+     * @param Request $request
+     * @return array
      */
-    public function listAction()
+    public function listAction(Request $request)
     {
+        $page = $request->query->get('page', 1);
+
         $qb = $this->getDoctrine()->getRepository('PackagistWebBundle:User')
             ->createQueryBuilder('u');
         $qb->where("u.roles NOT LIKE '%ADMIN%'")
@@ -52,6 +57,7 @@ class UserController extends Controller
 
         $csrfForm = $this->createFormBuilder([])->getForm();
 
+        $paginator->setCurrentPage($page, false, true);
         return [
             'users' => $paginator,
             'csrfForm' => $csrfForm
