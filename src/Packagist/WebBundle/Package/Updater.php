@@ -278,8 +278,8 @@ class Updater
             $this->updateReadme($io, $package, $repository);
         }
 
-        $package->setUpdatedAt(new \DateTime);
-        $package->setCrawledAt(new \DateTime);
+        $package->setUpdatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
+        $package->setCrawledAt(new \DateTime('now', new \DateTimeZone('UTC')));
         $em->flush();
         if ($repository->hadInvalidBranches()) {
             throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
@@ -556,7 +556,12 @@ class Updater
             $version->getSuggest()->clear();
         }
 
-        return ['updated' => true, 'id' => $version->getId(), 'version' => strtolower($normVersion), 'object' => $version];
+        return [
+            'updated' => true,
+            'id' => $version->getId(),
+            'version' => strtolower($normVersion),
+            'object' => $version
+        ];
     }
 
     private function updateArchive(ArchiveManager $archiveManager, PackageInterface $data)

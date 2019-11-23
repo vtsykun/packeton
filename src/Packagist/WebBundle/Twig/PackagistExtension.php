@@ -3,8 +3,11 @@
 namespace Packagist\WebBundle\Twig;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
+use Twig\TwigTest;
 
-class PackagistExtension extends \Twig_Extension
+class PackagistExtension extends AbstractExtension
 {
     /**
      * @var ContainerInterface
@@ -19,18 +22,18 @@ class PackagistExtension extends \Twig_Extension
     public function getTests()
     {
         return array(
-            new \Twig_SimpleTest('existing_package', [$this, 'packageExistsTest']),
-            new \Twig_SimpleTest('existing_provider', [$this, 'providerExistsTest']),
-            new \Twig_SimpleTest('numeric', [$this, 'numericTest']),
+            new TwigTest('existing_package', [$this, 'packageExistsTest']),
+            new TwigTest('existing_provider', [$this, 'providerExistsTest']),
+            new TwigTest('numeric', [$this, 'numericTest']),
         );
     }
 
     public function getFilters()
     {
-        return array(
-            new \Twig_SimpleFilter('prettify_source_reference', [$this, 'prettifySourceReference']),
-            new \Twig_SimpleFilter('gravatar_hash', [$this, 'generateGravatarHash'])
-        );
+        return [
+            new TwigFilter('prettify_source_reference', [$this, 'prettifySourceReference']),
+            new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash'])
+        ];
     }
 
     public function getName()

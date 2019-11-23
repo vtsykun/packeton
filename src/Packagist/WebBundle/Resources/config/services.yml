@@ -70,10 +70,11 @@ services:
             - '@event_dispatcher'
             - '@request_stack'
 
-    packagist.oauth.registration_form_type:
-        class: Packagist\WebBundle\Form\Type\OAuthRegistrationFormType
+    fos_user.form.package_type:
+        class: Packagist\WebBundle\Form\Type\PackageType
+        arguments: ['@packagist.package_manager']
         tags:
-            - { name: form.type, alias: packagist_oauth_user_registration }
+            - { name: form.type }
 
     packagist.oauth.registration_form:
         factory: ['@form.factory', create]
@@ -111,6 +112,11 @@ services:
             - '@packagist.provider_manager'
             - '@packagist.in_memory_dumper'
             - '@security.authorization_checker'
+            - '@packagist_factory'
+
+    Packagist\WebBundle\Model\PackageManager:
+        alias: packagist.package_manager
+        public: true
 
     packagist.profile.form.type:
         class: Packagist\WebBundle\Form\Type\ProfileFormType
@@ -165,7 +171,15 @@ services:
 
     updater_worker:
         class: Packagist\WebBundle\Service\UpdaterWorker
-        arguments: ["@logger", "@doctrine", "@packagist.package_updater", "@locker", "@scheduler", "@packagist.package_manager", "@packagist.download_manager"]
+        arguments:
+            - "@logger"
+            - "@doctrine"
+            - "@packagist.package_updater"
+            - "@locker"
+            - "@scheduler"
+            - "@packagist.package_manager"
+            - "@packagist.download_manager"
+            - "@packagist_factory"
 
     packagist.log_resetter:
         class: Packagist\WebBundle\Service\LogResetter
@@ -174,3 +188,32 @@ services:
     packagist.console_stack_trace_line_formatter:
         class: Symfony\Bridge\Monolog\Formatter\ConsoleFormatter
         arguments: []
+
+    packagist_factory:
+        class: Packagist\WebBundle\Composer\PackagistFactory
+        public: true
+        arguments:
+            - '@Packagist\WebBundle\Composer\VcsRepositoryFactory'
+
+    Packagist\WebBundle\Service\DistManager:
+        public: true
+        arguments:
+            - '@packagist.dist_config'
+            - '@packagist_factory'
+
+    Packagist\WebBundle\Composer\PackagistFactory:
+        alias: packagist_factory
+        public: true
+
+    Packagist\WebBundle\Util\ChangelogUtils:
+        public: true
+        arguments:
+            - '@packagist_factory'
+
+    Packagist\WebBundle\Composer\VcsDriverFactory:
+        public: true
+
+    Packagist\WebBundle\Composer\VcsRepositoryFactory:
+        public: true
+        arguments:
+            - '@Packagist\WebBundle\Composer\VcsDriverFactory'

@@ -211,6 +211,45 @@ class VersionRepository extends EntityRepository
         return $res;
     }
 
+    /**
+     * @param string $package
+     * @param string $version
+     *
+     * @return string|null
+     */
+    public function getPreviousRelease(string $package, string $version)
+    {
+        $subQb = $this->getEntityManager()->createQueryBuilder();
+        $releasedAt = $subQb->select('v.releasedAt')
+            ->from('PackagistWebBundle:Version', 'v')
+            ->leftJoin('v.package', 'p')
+            ->where('v.version = :version')
+            ->andWhere('p.name = :name')
+            ->setParameter('version', $version)
+            ->setParameter('name', $package)
+            ->setMaxResults(1)
+            ->getQuery()->getSingleScalarResult();
+
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('v.version')
+            ->from('PackagistWebBundle:Version', 'v')
+            ->leftJoin('v.package', 'p')
+            ->andWhere('v.development = false')
+            ->andWhere('p.name = :name')
+            ->setParameter('name', $package)
+            ->orderBy('v.releasedAt', 'DESC')
+            ->setMaxResults(1);
+
+        if ($releasedAt) {
+            $qb->andWhere('v.releasedAt < :releasedAt')
+                ->setParameter('releasedAt', $releasedAt);
+        } else {
+            $qb->setFirstResult(1);
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
+
     public function getVersionStatisticsByMonthAndYear()
     {
         $qb = $this->getEntityManager()->createQueryBuilder();

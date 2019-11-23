@@ -4,6 +4,8 @@ namespace Packagist\WebBundle\Controller;
 
 use Composer\Factory;
 use Composer\IO\BufferIO;
+use Packagist\WebBundle\Form\Type\CredentialType;
+use Packagist\WebBundle\Util\ChangelogUtils;
 use Symfony\Component\Console\Output\OutputInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\Loader\ValidatingArrayLoader;
@@ -101,9 +103,7 @@ class PackageController extends Controller
             throw new AccessDeniedException();
         }
 
-        $package = new Package;
-        $package->setEntityRepository($this->getDoctrine()->getRepository('PackagistWebBundle:Package'));
-        $package->setRouter($this->get('router'));
+        $package = new Package();
         $form = $this->createForm(PackageType::class, $package, [
             'action' => $this->generateUrl('submit'),
         ]);
@@ -140,8 +140,6 @@ class PackageController extends Controller
         }
 
         $package = new Package;
-        $package->setEntityRepository($this->getDoctrine()->getRepository('PackagistWebBundle:Package'));
-        $package->setRouter($this->get('router'));
         $form = $this->createForm(PackageType::class, $package);
         $user = $this->getUser();
         $package->addMaintainer($user);
@@ -389,6 +387,59 @@ class PackageController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * @Route(
+     *     "/packages/{package}/changelog",
+     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
+     *     name="package_changelog"
+     * )
+     *
+     * @param string $package
+     * @param Request $request
+     * @return Response
+     *
+     * @Method({"GET"})
+     */
+    public function changelogAction($package, Request $request)
+    {
+        $package = $this->get('doctrine')->getRepository('PackagistWebBundle:Package')
+            ->findOneBy(['name' => $package]);
+        if (null === $package) {
+            return new JsonResponse(['error' => 'Not found'], 404);
+        }
+        if (!$this->isGranted('ROLE_ADMIN', $package)) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
+        $changelogBuilder = $this->get(ChangelogUtils::class);
+        $fromVersion = $request->get('from');
+        $toVersion = $request->get('to');
+        if (!$toVersion) {
+            return new JsonResponse(['error' => 'Parameters: "to" can not be empty'], 400);
+        }
+
+        if (!$fromVersion) {
+            $fromVersion = $this->get('packagist.version_repository')
+                ->getPreviousRelease($package->getName(), $toVersion);
+            if (!$fromVersion) {
+                return new JsonResponse(['error' => 'Previous release do not exists'], 400);
+            }
+        }
+
+        $changeLog = $changelogBuilder->getChangelog($package, $fromVersion, $toVersion);
+        return new JsonResponse(
+            [
+                'result' => $changeLog,
+                'error' => null,
+                'metadata' => [
+                    'from' => $fromVersion,
+                    'to' => $toVersion,
+                    'package' => $package->getName()
+                ]
+            ]
+        );
     }
 
     /**
@@ -745,7 +796,8 @@ class PackageController extends Controller
             throw new AccessDeniedException;
         }
 
-        $form = $this->createFormBuilder($package, array("validation_groups" => array("Update")))
+        $form = $this->createFormBuilder($package, ["validation_groups" => ["Update"]])
+            ->add('credentials', CredentialType::class)
             ->add('repository', TextType::class)
             ->setMethod('POST')
             ->setAction($this->generateUrl('edit_package', ['name' => $package->getName()]))

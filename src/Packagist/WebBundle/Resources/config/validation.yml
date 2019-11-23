@@ -1,0 +1,7 @@
+Packagist\WebBundle\Entity\Package:
+    constraints:
+        - Packagist\WebBundle\Validator\Constraint\PackageUnique: ~
+        - Packagist\WebBundle\Validator\Constraint\PackageRepository: { groups: [Update, Default] }
+    properties:
+        repository:
+            - NotBlank: { groups: [Update, Default] }

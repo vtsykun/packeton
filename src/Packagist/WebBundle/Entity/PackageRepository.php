@@ -114,12 +114,7 @@ class PackageRepository extends EntityRepository
             $names[] = $row['name'];
         }
 
-        if (defined('SORT_FLAG_CASE')) {
-            sort($names, SORT_STRING | SORT_FLAG_CASE);
-        } else {
-            sort($names, SORT_STRING);
-        }
-
+        sort($names, SORT_STRING | SORT_FLAG_CASE);
         return $names;
     }
 
@@ -137,10 +132,10 @@ class PackageRepository extends EntityRepository
             )
             ORDER BY p.id ASC',
             array(
-                // crawl packages without auto-update once a week
-                'crawled' => date('Y-m-d H:i:s', strtotime('-4hour')),
+                // crawl packages without auto-update once a hour
+                'crawled' => date('Y-m-d H:i:s', strtotime('-1hour')),
                 // crawl auto-updated packages once a week just in case
-                'autocrawled' => date('Y-m-d H:i:s', strtotime('-7day')),
+                'autocrawled' => date('Y-m-d H:i:s', strtotime('-1day')),
             )
         );
     }

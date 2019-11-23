@@ -6,7 +6,9 @@ namespace Packagist\WebBundle\Service;
 
 use Composer\Factory;
 use Composer\IO\BufferIO;
+use Composer\IO\NullIO;
 use Composer\Repository\VcsRepository;
+use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\Version;
 use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Filesystem\Filesystem;
@@ -16,10 +18,12 @@ class DistManager
 {
     private $config;
     private $fileSystem;
+    private $packagistFactory;
 
-    public function __construct(DistConfig $config)
+    public function __construct(DistConfig $config, PackagistFactory $packagistFactory)
     {
         $this->config = $config;
+        $this->packagistFactory = $packagistFactory;
         $this->fileSystem = new Filesystem();
     }
 
@@ -59,16 +63,17 @@ class DistManager
     private function download(Version $version): ?string
     {
         $package = $version->getPackage();
-        $package->loadCredentials();
-
-        $io = new BufferIO('', StreamOutput::VERBOSITY_VERBOSE);
-        $config = Factory::createConfig();
-        $io->loadConfiguration($config);
-        $repository = new VcsRepository(['url' => $package->getRepository()], $io, $config);
+        $io = new NullIO();
+        $repository = $this->packagistFactory->createRepository(
+            $package->getRepository(),
+            $io,
+            null,
+            $package->getCredentials()
+        );
 
         $factory = new Factory();
-        $dm = $factory->createDownloadManager($io, $config);
-        $archiveManager = $factory->createArchiveManager($config, $dm);
+        $dm = $factory->createDownloadManager($io, $repository->getConfig());
+        $archiveManager = $factory->createArchiveManager($repository->getConfig(), $dm);
         $archiveManager->setOverwriteFiles(false);
 
         $versions = $repository->getPackages();

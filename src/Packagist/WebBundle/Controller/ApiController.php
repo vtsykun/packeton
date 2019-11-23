@@ -14,6 +14,7 @@ namespace Packagist\WebBundle\Controller;
 
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
+use Packagist\WebBundle\Model\PackageManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -35,22 +36,21 @@ class ApiController extends Controller
     {
         $payload = json_decode($request->getContent(), true);
         if (!$payload) {
-            return new JsonResponse(array('status' => 'error', 'message' => 'Missing payload parameter'), 406);
+            return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
         }
         $url = $payload['repository']['url'];
         $package = new Package;
-        $package->setEntityRepository($this->getDoctrine()->getRepository('PackagistWebBundle:Package'));
-        $package->setRouter($this->get('router'));
         $user = $this->getUser();
         $package->addMaintainer($user);
         $package->setRepository($url);
+        $this->get(PackageManager::class)->updatePackageUrl($package);
         $errors = $this->get('validator')->validate($package);
         if (count($errors) > 0) {
-            $errorArray = array();
+            $errorArray = [];
             foreach ($errors as $error) {
                 $errorArray[$error->getPropertyPath()] =  $error->getMessage();
             }
-            return new JsonResponse(array('status' => 'error', 'message' => $errorArray), 406);
+            return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
         }
         try {
             $em = $this->getDoctrine()->getManager();
@@ -58,10 +58,10 @@ class ApiController extends Controller
             $em->flush();
         } catch (\Exception $e) {
             $this->get('logger')->critical($e->getMessage(), array('exception', $e));
-            return new JsonResponse(array('status' => 'error', 'message' => 'Error saving package'), 500);
+            return new JsonResponse(['status' => 'error', 'message' => 'Error saving package'], 500);
         }
 
-        return new JsonResponse(array('status' => 'success'), 202);
+        return new JsonResponse(['status' => 'success'], 202);
     }
 
     /**
@@ -69,6 +69,8 @@ class ApiController extends Controller
      * @Route("/api/github", name="github_postreceive", defaults={"_format" = "json"})
      * @Route("/api/bitbucket", name="bitbucket_postreceive", defaults={"_format" = "json"})
      * @Method({"POST"})
+     *
+     * {@inheritdoc}
      */
     public function updatePackageAction(Request $request)
     {
@@ -116,7 +118,7 @@ class ApiController extends Controller
     {
         $user = $this->getUser();
         if (!$package->getMaintainers()->contains($user) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
-            throw new AccessDeniedException;
+            throw new AccessDeniedException();
         }
 
         $payload = json_decode($request->request->get('payload'), true);
@@ -125,13 +127,14 @@ class ApiController extends Controller
         }
 
         $package->setRepository($payload['repository']);
-        $errors = $this->get('validator')->validate($package, array("Update"));
+        $this->get(PackageManager::class)->updatePackageUrl($package);
+        $errors = $this->get('validator')->validate($package, ["Update"]);
         if (count($errors) > 0) {
-            $errorArray = array();
+            $errorArray = [];
             foreach ($errors as $error) {
                 $errorArray[$error->getPropertyPath()] =  $error->getMessage();
             }
-            return new JsonResponse(array('status' => 'error', 'message' => $errorArray), 406);
+            return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
         }
 
         $package->setCrawledAt(null);
@@ -140,7 +143,7 @@ class ApiController extends Controller
         $em->persist($package);
         $em->flush();
 
-        return new JsonResponse(array('status' => 'success'), 200);
+        return new JsonResponse(['status' => 'success'], 200);
     }
 
     /**
@@ -188,11 +191,10 @@ class ApiController extends Controller
     {
         $contents = json_decode($request->getContent(), true);
         if (empty($contents['downloads']) || !is_array($contents['downloads'])) {
-            return new JsonResponse(array('status' => 'error', 'message' => 'Invalid request format, must be a json object containing a downloads key filled with an array of name/version objects'), 200);
+            return new JsonResponse(['status' => 'error', 'message' => 'Invalid request format, must be a json object containing a downloads key filled with an array of name/version objects'], 200);
         }
 
-        $failed = array();
-
+        $failed = [];
         $ip = $request->headers->get('X-'.$this->container->getParameter('trusted_ip_header'));
         if (!$ip) {
             $ip = $request->getClientIp();
@@ -212,10 +214,10 @@ class ApiController extends Controller
         $this->get('packagist.download_manager')->addDownloads($jobs);
 
         if ($failed) {
-            return new JsonResponse(array('status' => 'partial', 'message' => 'Packages '.json_encode($failed).' not found'), 200);
+            return new JsonResponse(['status' => 'partial', 'message' => 'Packages '.json_encode($failed).' not found'], 200);
         }
 
-        return new JsonResponse(array('status' => 'success'), 201);
+        return new JsonResponse(['status' => 'success'], 201);
     }
 
     /**
@@ -248,20 +250,20 @@ class ApiController extends Controller
     {
         // try to parse the URL first to avoid the DB lookup on malformed requests
         if (!preg_match($urlRegex, $url)) {
-            return new Response(json_encode(array('status' => 'error', 'message' => 'Could not parse payload repository URL')), 406);
+            return new Response(json_encode(['status' => 'error', 'message' => 'Could not parse payload repository URL']), 406);
         }
 
         // find the user
         $user = $this->getUser();
         if (!$user) {
-            return new Response(json_encode(array('status' => 'error', 'message' => 'Invalid credentials')), 403);
+            return new Response(json_encode(['status' => 'error', 'message' => 'Invalid credentials']), 403);
         }
 
         // try to find the all package
         $packages = $this->findPackagesByUrl($url, $urlRegex);
 
         if (!$packages) {
-            return new Response(json_encode(array('status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)')), 404);
+            return new Response(json_encode(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)']), 404);
         }
 
         // put both updating the database and scanning the repository in a transaction
@@ -278,32 +280,6 @@ class ApiController extends Controller
         }
 
         return new JsonResponse(['status' => 'success', 'jobs' => $jobs], 202);
-    }
-
-    /**
-     * Find a user by his username and API token
-     *
-     * @param Request $request
-     * @return User|null the found user or null otherwise
-     */
-    protected function findUser(Request $request)
-    {
-        $username = $request->request->has('username') ?
-            $request->request->get('username') :
-            $request->query->get('username');
-
-        $apiToken = $request->request->has('apiToken') ?
-            $request->request->get('apiToken') :
-            $request->query->get('apiToken');
-
-        $user = $this->get('packagist.user_repository')
-            ->findOneBy(array('username' => $username, 'apiToken' => $apiToken));
-
-        if ($user && !$user->isEnabled()) {
-            return null;
-        }
-
-        return $user;
     }
 
     /**

@@ -49,6 +49,10 @@ class SshCredentials
      */
     private $fingerprint;
 
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
 
     /**
      * Get id
