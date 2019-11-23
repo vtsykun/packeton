@@ -69,16 +69,16 @@ class PackageController extends Controller
 
         /** @var PackageRepository $repo */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
-        $fields = (array) $req->query->get('fields', array());
-        $fields = array_intersect($fields, array('repository', 'type'));
+        $fields = (array) $req->query->get('fields', []);
+        $fields = array_intersect($fields, ['repository', 'type']);
 
         if ($fields) {
-            $filters = array_filter(array(
+            $filters = array_filter([
                 'type' => $req->query->get('type'),
                 'vendor' => $req->query->get('vendor'),
-            ));
+            ]);
 
-            return new JsonResponse(array('packages' => $repo->getPackagesWithFields($filters, $fields)));
+            return new JsonResponse(['packages' => $repo->getPackagesWithFields($filters, $fields)]);
         }
 
         if ($req->query->get('type')) {
@@ -89,7 +89,7 @@ class PackageController extends Controller
             $names = $this->get('packagist.provider_manager')->getPackageNames();
         }
 
-        return new JsonResponse(array('packageNames' => $names));
+        return new JsonResponse(['packageNames' => $names]);
     }
 
     /**
@@ -120,18 +120,19 @@ class PackageController extends Controller
 
                 $this->get('session')->getFlashBag()->set('success', $package->getName().' has been added to the package list, the repository will now be crawled.');
 
-                return new RedirectResponse($this->generateUrl('view_package', array('name' => $package->getName())));
+                return new RedirectResponse($this->generateUrl('view_package', ['name' => $package->getName()]));
             } catch (\Exception $e) {
-                $this->get('logger')->critical($e->getMessage(), array('exception', $e));
+                $this->get('logger')->critical($e->getMessage(),['exception', $e]);
                 $this->get('session')->getFlashBag()->set('error', $package->getName().' could not be saved.');
             }
         }
 
-        return array('form' => $form->createView(), 'page' => 'submit');
+        return ['form' => $form->createView(), 'page' => 'submit'];
     }
 
     /**
      * @Route("/packages/fetch-info", name="submit.fetch_info", defaults={"_format"="json"})
+     * {@inheritdoc}
      */
     public function fetchInfoAction(Request $req)
     {
@@ -155,37 +156,37 @@ class PackageController extends Controller
                     ['query' => '%/'.$name]
                 );
 
-            $similar = array();
+            $similar = [];
 
             foreach ($existingPackages as $existingPackage) {
-                $similar[] = array(
+                $similar[] = [
                     'name' => $existingPackage['name'],
-                    'url' => $this->generateUrl('view_package', array('name' => $existingPackage['name']), true),
-                );
+                    'url' => $this->generateUrl('view_package', ['name' => $existingPackage['name']], true),
+                ];
             }
 
-            return new JsonResponse(array('status' => 'success', 'name' => $package->getName(), 'similar' => $similar));
+            return new JsonResponse(['status' => 'success', 'name' => $package->getName(), 'similar' => $similar]);
         }
 
         if ($form->isSubmitted()) {
-            $errors = array();
+            $errors = [];
             if (count($form->getErrors())) {
                 foreach ($form->getErrors() as $error) {
-                    $errors[] = $error->getMessageTemplate();
+                    $errors[] = $error->getMessage();
                 }
             }
             foreach ($form->all() as $child) {
                 if (count($child->getErrors())) {
                     foreach ($child->getErrors() as $error) {
-                        $errors[] = $error->getMessageTemplate();
+                        $errors[] = $error->getMessage();
                     }
                 }
             }
 
-            return new JsonResponse(array('status' => 'error', 'reason' => $errors));
+            return new JsonResponse(['status' => 'error', 'reason' => $errors]);
         }
 
-        return new JsonResponse(array('status' => 'error', 'reason' => 'No data posted.'));
+        return new JsonResponse(['status' => 'error', 'reason' => 'No data posted.']);
     }
 
     /**
@@ -205,15 +206,15 @@ class PackageController extends Controller
             ->getResult();
 
         if (!$packages) {
-            return $this->redirect($this->generateUrl('search', array('q' => $vendor, 'reason' => 'vendor_not_found')));
+            return $this->redirect($this->generateUrl('search', ['q' => $vendor, 'reason' => 'vendor_not_found']));
         }
 
-        return array(
+        return [
             'packages' => $packages,
             'meta' => $this->getPackagesMetadata($packages),
             'vendor' => $vendor,
             'paginate' => false,
-        );
+        ];
     }
 
     /**
@@ -235,7 +236,7 @@ class PackageController extends Controller
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
         $providers = $repo->findProviders($name);
         if (!$providers) {
-            return $this->redirect($this->generateUrl('search', array('q' => $name, 'reason' => 'package_not_found')));
+            return $this->redirect($this->generateUrl('search', ['q' => $name, 'reason' => 'package_not_found']));
         }
 
         $package = $repo->findOneBy(['name' => $name]);
@@ -245,7 +246,7 @@ class PackageController extends Controller
 
         try {
             $redis = $this->get('snc_redis.default');
-            $trendiness = array();
+            $trendiness = [];
             foreach ($providers as $package) {
                 /** @var Package $package */
                 $trendiness[$package->getId()] = (int) $redis->zscore('downloads:trending', $package->getId());
@@ -258,12 +259,12 @@ class PackageController extends Controller
             });
         } catch (ConnectionException $e) {}
 
-        return $this->render('PackagistWebBundle:Package:providers.html.twig', array(
+        return $this->render('PackagistWebBundle:Package:providers.html.twig', [
             'name' => $name,
             'packages' => $providers,
             'meta' => $this->getPackagesMetadata($providers),
             'paginate' => false,
-        ));
+        ]);
     }
 
     /**
@@ -1110,55 +1111,59 @@ class PackageController extends Controller
     private function createAddMaintainerForm(Package $package)
     {
         if (!$user = $this->getUser()) {
-            return;
+            return null;
         }
 
         if ($this->isGranted('ROLE_EDIT_PACKAGES') || $package->getMaintainers()->contains($user)) {
             $maintainerRequest = new MaintainerRequest();
             return $this->createForm(AddMaintainerRequestType::class, $maintainerRequest);
         }
+
+        return null;
     }
 
     private function createRemoveMaintainerForm(Package $package)
     {
         if (!($user = $this->getUser()) || 1 == $package->getMaintainers()->count()) {
-            return;
+            return null;
         }
 
         if ($this->isGranted('ROLE_EDIT_PACKAGES') || $package->getMaintainers()->contains($user)) {
             $maintainerRequest = new MaintainerRequest();
-            return $this->createForm(RemoveMaintainerRequestType::class, $maintainerRequest, array(
+            return $this->createForm(RemoveMaintainerRequestType::class, $maintainerRequest, [
                 'package' => $package,
-            ));
+            ]);
         }
+
+        return null;
     }
 
     private function createDeletePackageForm(Package $package)
     {
         if (!$user = $this->getUser()) {
-            return;
+            return null;
         }
 
         // super admins bypass additional checks
         if (!$this->isGranted('ROLE_DELETE_PACKAGES')) {
             // non maintainers can not delete
             if (!$package->getMaintainers()->contains($user)) {
-                return;
+                return null;
             }
 
             try {
                 $downloads = $this->get('packagist.download_manager')->getTotalDownloads($package);
             } catch (ConnectionException $e) {
-                return;
+                return null;
             }
 
             // more than 100 downloads = established package, do not allow deletion by maintainers
             if ($downloads > 100) {
-                return;
+                return null;
             }
         }
 
-        return $this->createFormBuilder(array())->getForm();
+        return $this->createFormBuilder([])->getForm();
     }
 
     private function createDatePoints(DateTimeImmutable $from, DateTimeImmutable $to, $average, Package $package, Version $version = null)
