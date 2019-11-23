@@ -217,3 +217,10 @@ services:
         public: true
         arguments:
             - '@Packagist\WebBundle\Composer\VcsDriverFactory'
+
+    Packagist\WebBundle\Validator\Constraint\PackageUniqueValidator:
+        arguments:
+            - '@doctrine'
+            - '@router'
+        tags:
+            - { name: validator.constraint_validator }

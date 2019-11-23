@@ -42,7 +42,7 @@ class PackageType extends AbstractType
                 ]
             ]);
 
-        $builder->addEventListener(FormEvents::POST_SUBMIT, [$this, 'updateRepository']);
+        $builder->addEventListener(FormEvents::POST_SUBMIT, [$this, 'updateRepository'], 255);
     }
 
     /**

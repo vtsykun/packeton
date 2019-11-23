@@ -22,9 +22,7 @@ class SshKeyCredentialType extends AbstractType
             ->add('name', TextType::class, [
                 'constraints' => [new NotBlank()]
             ])
-            ->add('key', PrivateKeyType::class, [
-                'constraints' => [new NotBlank()]
-            ]);
+            ->add('key', PrivateKeyType::class);
     }
 
     /**

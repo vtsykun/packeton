@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packagist\WebBundle\Validator\Constraint;
 
 use Doctrine\Common\Persistence\ManagerRegistry;
@@ -10,7 +12,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
 /**
- * Validate composer package
+ * Validate composer package name
  */
 class PackageUniqueValidator extends ConstraintValidator
 {
@@ -37,10 +39,7 @@ class PackageUniqueValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, Package::class);
         }
 
-
-
         $repo = $this->doctrine->getRepository(Package::class);
-
         if ($name = $value->getName()) {
             try {
                 if ($repo->findOneByName($name)) {
