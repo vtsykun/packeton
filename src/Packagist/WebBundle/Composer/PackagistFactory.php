@@ -67,6 +67,10 @@ class PackagistFactory
         }
 
         $repoConfig['url'] = $url;
+        if (null !== $credentials) {
+            // Disable API if used ssh key
+            $repoConfig['no-api'] = true;
+        }
 
         return $this->repositoryFactory->create($repoConfig, $io, $config);
     }

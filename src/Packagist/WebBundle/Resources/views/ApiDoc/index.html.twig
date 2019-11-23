@@ -61,14 +61,23 @@ GET https://{{ packagist_host }}/packages/list.json?type=[type]&token={{ apiToke
 
 <section class="col-d-12">
 <h3 id="list-changelog">{{ 'api_doc.changelog_name'|trans }}</h3>
+Get git diff between two commits or tags. <b>WARNING</b> Working only if repository was cloned by git.
+If you want to use this feature for GitHub you need set composer config flag <code>no-api</code> see <a href="https://getcomposer.org/doc/06-config.md#use-github-api">here</a>
+<br><br>
 <pre>
-GET https://{{ packagist_host }}/packages/{name}/changelog?token={{ apiToken }}&from=1.0.0&to=1.0.1
+GET https://{{ packagist_host }}/packages/{name}/changelog?token={{ apiToken }}&from=3.1.14&to=3.1.15
 <code>
 {
-  "packageNames": [
-    "[vendor]/[package]",
-    ...
-  ]
+  "result": [
+    "BAP-18660: ElasticSearch 6",
+    "BB-17293: Back-office >Wrong height"
+  ],
+  "error": null,
+  "metadata": {
+    "from": "3.1.14",
+    "to": "3.1.15",
+    "package": "okvpn/platform"
+  }
 }
 </code></pre>
 <p>Working example: <code><a href="https://{{ packagist_host }}/packages/{{ examplePackage }}/changelog?token={{ apiToken }}&from=1.0.0&to=1.0.1">https://{{ packagist_host }}/packages/{{ examplePackage }}/changelog?token={{ apiToken }}&from=1.0.0&to=1.0.1</a></code></p>

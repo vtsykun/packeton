@@ -45,8 +45,8 @@ class PackageUniqueValidator extends ConstraintValidator
                 if ($repo->findOneByName($name)) {
                     $this->context
                         ->buildViolation($constraint->packageExists, [
-                            '{{ name }}' => $name,
-                            '{{ route_name }}' => $this->router->generate('view_package', ['name' => $name])
+                            '%name%' => $name,
+                            '%route_name%' => $this->router->generate('view_package', ['name' => $name])
                         ])
                         ->atPath('repository')
                         ->addViolation()

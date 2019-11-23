@@ -2,9 +2,11 @@
 {% block stylesheets %}
     <link href="{{ asset('libs/datepicker/bootstrap-datepicker.css') }}" rel="stylesheet">
 {% endblock %}
+{% set title  = entity.id ? 'Update user ' ~ entity.username : 'Create a new user' %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-    <h2 class="title">Create a new user</h2>
+    <h2 class="title">{{ title }}</h2>
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
         {{ form_row(form.email) }}

@@ -1520,7 +1520,7 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
   margin-bottom: 0;
 }
 .alert-warning {
-    border-left-color: #0c71d0;
+    border-left-color: #cd6222;
     color: #2d2d32;
 }
 .alert-danger, .alert-error {
