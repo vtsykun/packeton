@@ -53,7 +53,7 @@ class QueueWorker
                 $nextScheduledJobCheck = $this->checkForScheduledJobs($signal);
             }
 
-            $result = $this->redis->brpop('jobs', 10);
+            $result = $this->redis->brpop('jobs', 2);
             if (!$result) {
                 $this->logger->debug('No message in queue');
                 continue;

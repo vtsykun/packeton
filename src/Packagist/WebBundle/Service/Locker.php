@@ -2,6 +2,7 @@
 
 namespace Packagist\WebBundle\Service;
 
+use Doctrine\DBAL\Connection;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
 class Locker

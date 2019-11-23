@@ -92,8 +92,7 @@ class ProviderController extends Controller
      */
     public function zipballAction(Package $package, $hash)
     {
-        $config = $this->container->get('packagist.dist_config');
-        $distManager = new DistManager($config);
+        $distManager = $this->container->get(DistManager::class);
         if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match)) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
         }

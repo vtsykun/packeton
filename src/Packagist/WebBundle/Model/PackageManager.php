@@ -1,19 +1,12 @@
 <?php
 
-/*
- * This file is part of Packagist.
- *
- * (c) Jordi Boggiano <j.boggiano@seld.be>
- *     Nils Adermann <naderman@naderman.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Packagist\WebBundle\Model;
 
 use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\Cache;
+use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\VersionRepository;
 use Packagist\WebBundle\Package\InMemoryDumper;
@@ -21,11 +14,8 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
 use Packagist\WebBundle\Entity\Package;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Twig\Environment;
 
-
-/**
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
 class PackageManager
 {
     protected $doctrine;
@@ -37,16 +27,18 @@ class PackageManager
     protected $dumper;
     protected $cache;
     protected $authorizationChecker;
+    protected $packagistFactory;
 
     public function __construct(
         RegistryInterface $doctrine,
         \Swift_Mailer $mailer,
-        \Twig_Environment $twig,
+        Environment $twig,
         LoggerInterface $logger,
         array $options,
         ProviderManager $providerManager,
         InMemoryDumper $dumper,
         AuthorizationCheckerInterface $authorizationChecker,
+        PackagistFactory $packagistFactory,
         Cache $cache = null
     ) {
         $this->doctrine = $doctrine;
@@ -57,6 +49,7 @@ class PackageManager
         $this->providerManager = $providerManager;
         $this->authorizationChecker = $authorizationChecker;
         $this->dumper = $dumper;
+        $this->packagistFactory = $packagistFactory;
         if ($cache === null) {
             $cache = new ApcuCache();
             $cache->setNamespace('package_manager');
@@ -77,6 +70,43 @@ class PackageManager
         $em = $this->doctrine->getManager();
         $em->remove($package);
         $em->flush();
+    }
+
+    /**
+     * @param Package $package
+     */
+    public function updatePackageUrl(Package $package): void
+    {
+        if (!$package->getRepository() || $package->vcsDriver === true) {
+            return;
+        }
+        // avoid user@host URLs
+        if (preg_match('{https?://.+@}', $package->getRepository())) {
+            return;
+        }
+
+        try {
+            $repository = $this->packagistFactory->createRepository(
+                $package->getRepository(),
+                null,
+                null,
+                $package->getCredentials()
+            );
+
+            $driver = $package->vcsDriver = $repository->getDriver();
+            if (!$driver) {
+                return;
+            }
+            $information = $driver->getComposerInformation($driver->getRootIdentifier());
+            if (!isset($information['name'])) {
+                return;
+            }
+            if (null === $package->getName()) {
+                $package->setName($information['name']);
+            }
+        } catch (\Exception $e) {
+            $package->vcsDriverError = '['.get_class($e).'] '.$e->getMessage();
+        }
     }
 
     public function notifyUpdateFailure(Package $package, \Exception $e, $details = null)
@@ -150,7 +180,12 @@ class PackageManager
         return $packagesData[0];
     }
 
-    public function getProvidersJson(User $user = null, $hash)
+    /**
+     * @param User|null|object $user
+     * @param string $hash
+     * @return bool
+     */
+    public function getProvidersJson(?User $user, $hash)
     {
         list($root, $providers) = $this->dumpInMemory($user);
         $rootHash = \reset($root['provider-includes']);
@@ -161,7 +196,14 @@ class PackageManager
         return $providers;
     }
 
-    public function getPackageJson(User $user = null, string $package, string $hash)
+    /**
+     * @param User|null|object $user
+     * @param string $package
+     * @param string $hash
+     *
+     * @return mixed
+     */
+    public function getPackageJson(?User $user, string $package, string $hash)
     {
         list($root, $providers, $packages) = $this->dumpInMemory($user);
 

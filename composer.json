@@ -31,7 +31,7 @@
         "exclude-from-classmap": [ "src/Packagist/WebBundle/Tests/" ]
     },
     "require": {
-        "php": ">=7.0",
+        "php": ">=7.1",
         "symfony/symfony": "^3.4",
         "doctrine/orm": "^2.6",
         "doctrine/doctrine-bundle": "^1.2",
@@ -45,7 +45,7 @@
         "jms/security-extra-bundle": "^1.5",
         "jms/di-extra-bundle": "^1.4",
         "oro/doctrine-extensions": "^1.2",
-        "composer/composer": "^1.6",
+        "composer/composer": "^1.9",
         "friendsofsymfony/user-bundle": "^2.1",
         "predis/predis": "^1.0",
         "snc/redis-bundle": "^2.0",

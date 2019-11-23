@@ -2,6 +2,7 @@
 
 namespace Packagist\WebBundle\Service;
 
+use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Model\ValidatingArrayLoader;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
@@ -30,6 +31,7 @@ class UpdaterWorker
     private $scheduler;
     private $packageManager;
     private $downloadManager;
+    private $packagistFactory;
 
     public function __construct(
         LoggerInterface $logger,
@@ -38,7 +40,8 @@ class UpdaterWorker
         Locker $locker,
         Scheduler $scheduler,
         PackageManager $packageManager,
-        DownloadManager $downloadManager
+        DownloadManager $downloadManager,
+        PackagistFactory $packagistFactory
     ) {
         $this->logger = $logger;
         $this->doctrine = $doctrine;
@@ -47,6 +50,7 @@ class UpdaterWorker
         $this->scheduler = $scheduler;
         $this->packageManager = $packageManager;
         $this->downloadManager = $downloadManager;
+        $this->packagistFactory = $packagistFactory;
     }
 
     public function process(Job $job, SignalHandler $signal): array
@@ -69,7 +73,7 @@ class UpdaterWorker
 
         $this->logger->info('Updating '.$package->getName());
 
-        $config = Factory::createConfig();
+        $config = $this->packagistFactory->createConfig($package->getCredentials());
         $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
         $io->loadConfiguration($config);
 
@@ -86,8 +90,7 @@ class UpdaterWorker
             $loader = new ValidatingArrayLoader(new ArrayLoader());
 
             // prepare repository
-            $package->loadCredentials();
-            $repository = new VcsRepository(array('url' => $package->getRepository()), $io, $config);
+            $repository = $this->packagistFactory->createRepository($package->getRepository(), $io, $config);
             $repository->setLoader($loader);
 
             // perform the actual update (fetch and re-scan the repository's source)
@@ -139,9 +142,6 @@ class UpdaterWorker
 
             // detected a 404 so mark the package as gone and prevent updates for 1y
             if ($found404) {
-                $package->setCrawledAt(new \DateTime('+1 year'));
-                $this->doctrine->getEntityManager()->flush($package);
-
                 return [
                     'status' => Job::STATUS_PACKAGE_GONE,
                     'message' => 'Update of '.$package->getName().' failed, package appears to be 404/gone and has been marked as crawled for 1year',

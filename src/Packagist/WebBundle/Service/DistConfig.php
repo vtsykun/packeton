@@ -102,7 +102,7 @@ class DistConfig
             ['package' => $name, 'hash' => $reference . '.' . $this->getArchiveFormat()]
         );
 
-        return $this->config['endpoint'] . $uri;
+        return rtrim($this->config['endpoint'], '/') . $uri;
     }
 
     /**

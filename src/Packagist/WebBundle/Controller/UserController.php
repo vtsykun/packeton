@@ -15,9 +15,12 @@ namespace Packagist\WebBundle\Controller;
 use Doctrine\ORM\NoResultException;
 use FOS\UserBundle\Model\UserInterface;
 use Packagist\WebBundle\Entity\Package;
+use Packagist\WebBundle\Entity\SshCredentials;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Form\Type\CustomerUserType;
+use Packagist\WebBundle\Form\Type\SshKeyCredentialType;
 use Packagist\WebBundle\Model\RedisAdapter;
+use Packagist\WebBundle\Util\SshKeyHelper;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -154,6 +157,37 @@ class UserController extends Controller
                 'user' => $user,
             ]
         );
+    }
+
+    /**
+     * @Template("PackagistWebBundle:User:sshkey.html.twig")
+     * @Route("/users/sshkey", name="user_add_sshkey")
+     * {@inheritdoc}
+     */
+    public function addSSHKeyAction(Request $request)
+    {
+        $sshKey = new SshCredentials();
+        $form = $this->createForm(SshKeyCredentialType::class, $sshKey);
+
+        if ($request->getMethod() === 'POST') {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $sshKey = $form->getData();
+                $em = $this->getDoctrine()->getManager();
+                $fingerprint = SshKeyHelper::getFingerprint($sshKey->getKey());
+                $sshKey->setFingerprint($fingerprint);
+
+                $em->persist($sshKey);
+                $em->flush();
+
+                $this->addFlash('success', 'Ssh key was added successfully');
+                return new RedirectResponse('/');
+            }
+        }
+
+        return [
+            'form' => $form->createView(),
+        ];
     }
 
     /**

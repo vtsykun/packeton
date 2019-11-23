@@ -12,6 +12,7 @@
 
 namespace Packagist\WebBundle\Controller;
 
+use Packagist\WebBundle\Entity\Version;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
@@ -26,6 +27,22 @@ class ApiDocController extends Controller
      */
     public function indexAction()
     {
-        return array();
+        $qb = $this->getDoctrine()->getRepository(Version::class)
+            ->createQueryBuilder('v');
+
+        $qb->select(['v.name'])
+            ->groupBy('v.name')
+            ->orderBy('COUNT(v.id)', 'DESC')
+            ->setMaxResults(1);
+
+        try {
+            $examplePackage = $qb->getQuery()->getSingleScalarResult();
+        } catch (\Exception $exception) {
+            $examplePackage = 'monolog/monolog';
+        }
+
+        return [
+            'examplePackage' => $examplePackage
+        ];
     }
 }

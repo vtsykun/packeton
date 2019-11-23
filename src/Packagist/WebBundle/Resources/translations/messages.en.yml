@@ -24,6 +24,7 @@ menu:
     my_favorites: My favorites
     my_users: My users
     my_groups: My groups
+    ssh_keys: Ssh keys
 
 signinbox:
      register: No account yet? Create one now!
@@ -130,8 +131,9 @@ statistics:
 
 api_doc:
     title: API documentation
-    intro: Packagist has a public API to consume data. See bellow the most important URIs:
+    intro: 'Packagist has a public API to consume data. See bellow the most important URIs:'
     listing_names: Listing package names
+    changelog_name: 'Get the package git changelog'
     all_packages: All packages
     by_organization: By organization
     by_name: By name
