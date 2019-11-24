@@ -10,8 +10,8 @@ Features
 - Compatible with composer.
 - Customers user and groups.
 - Limit access by vendor and versions.
-- Expire access time.
-- Archive packages and downloads its from your host.
+- Expire access time for user.
+- Mirroring for packages' zip files and downloads its from your host.
 
 What was changed in this fork?
 -----------------------------
@@ -95,13 +95,72 @@ You should now be able to access the site, create a user, etc.
 
 10. Make a VirtualHost with DocumentRoot pointing to web/
 
+Ssh key access and composer oauth token.
+-----------------------
+Packagist uses the Composer global config and global ssh-key to get read access to your repositories, so
+the supervisor worker `packagist:run-workers` and web-server must run under the user, 
+that have ssh key or composer config that gives it read (clone) access to your git/svn/hg repositories.
+For example, if your application runs under `www-data` and have home directory `/var/www`, directory
+structure must be like this.
+
+    ```
+    └── /var/www/
+        ├── .ssh/ # ssh keys directory
+        │   ├── config
+        │   ├── id_rsa # main ssh key
+        │   ├── private_key_2 # additional ssh key
+        │   └── private_key_3
+        │
+        └── .composer/ # composer home
+            ├── auth.json
+            └── config.json
+    
+    ```
+
+Example ssh config for multiple SSH Keys for different github account/repos, 
+see [here for details](https://gist.github.com/jexchan/2351996)
+
+```
+# .ssh/config - example
+
+Host github-oroinc
+	HostName github.com
+	User git
+	IdentityFile /var/www/.ssh/private_key_2
+	IdentitiesOnly yes
+
+Host github-org2
+	HostName github.com
+	User git
+	IdentityFile /var/www/.ssh/private_key_3
+	IdentitiesOnly yes
+
+```
+
+You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.github.com/jeffersonmartin/d0d4a8dfec90d224d14f250b36c74d2f)
+
+```
+{
+    "github-oauth": {
+        "github.com": "xxxxxxxxxxxxx"
+    }
+}
+```
+
+#### Don't use GitHub Api.
+
+By default composer will use GitHub API to get metadata for your GitHub repository, you can add 
+`use-github-api` to composer config.json to always use ssh key and clone the repository as 
+it would with any other git repository, [see here](https://getcomposer.org/doc/06-config.md#use-github-api)
+
+
 Installation using docker
 ------------------------
 
 See [packagist-docker](https://github.com/vtsykun/packagist-docker.git).
 
-Usage
-------
+Usage and Authentication
+------------------------
 By default admin user have access to all repositories and able to submit packages, create users, view statistics. 
 The customer users can only see related packages and own profile with instruction how to use api token.
 
