@@ -43,4 +43,5 @@ parameters:
     trusted_hosts: ~
 
     # Host for download zip
-    packagist_dist_host: ~
+    # Value of dist composer metadata
+    packagist_dist_host: https://example.com
