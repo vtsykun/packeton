@@ -103,7 +103,7 @@ that have ssh key or composer config that gives it read (clone) access to your g
 For example, if your application runs under `www-data` and have home directory `/var/www`, directory
 structure must be like this.
 
-    ```
+```
     └── /var/www/
         ├── .ssh/ # ssh keys directory
         │   ├── config
@@ -115,7 +115,7 @@ structure must be like this.
             ├── auth.json
             └── config.json
     
-    ```
+```
 
 Example ssh config for multiple SSH Keys for different github account/repos, 
 see [here for details](https://gist.github.com/jexchan/2351996)
