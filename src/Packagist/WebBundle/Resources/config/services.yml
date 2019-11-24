@@ -224,3 +224,10 @@ services:
             - '@router'
         tags:
             - { name: validator.constraint_validator }
+
+    Packagist\WebBundle\Command\CreateUserCommand:
+        arguments:
+            - '@fos_user.util.user_manipulator'
+            - '@fos_user.user_manager'
+        tags:
+            - { name: console.command }
