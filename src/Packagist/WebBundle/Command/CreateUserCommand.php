@@ -61,6 +61,7 @@ class CreateUserCommand extends Command
                 $this->userManipulator->changePassword($username, $password);
             }
 
+            $output->writeln("User $username was updated successfully");
             return;
         }
 
@@ -68,5 +69,7 @@ class CreateUserCommand extends Command
         $email = $input->getOption('email') ?: $username . '@example.com';
         $this->userManipulator->create($username, $password, $email, true, $input->getOption('admin'));
         $this->userManipulator->addRole($username, 'ROLE_ADMIN');
+
+        $output->writeln("User $username was created successfully");
     }
 }
