@@ -1,5 +1,6 @@
 imports:
     - { resource: config.yml }
+    - { resource: logger.yml }
 
 doctrine:
     orm:
@@ -15,30 +16,6 @@ doctrine_cache:
             type: predis
             predis:
                 client_id: snc_redis.cache_client
-
-monolog:
-    handlers:
-        main:
-            type:         fingers_crossed
-            action_level: error
-            handler:      nested
-            channels: ['!event']
-            excluded_404s:
-                - ^/
-        nested:
-            type:  stream
-            path:  '%kernel.logs_dir%/%kernel.environment%.log'
-            level: debug
-            include_stacktraces: true
-
-        console_debug:
-            type:   console
-            verbosity_levels:
-                VERBOSITY_NORMAL: EMERGENCY
-                VERBOSITY_VERBOSE: INFO
-                VERBOSITY_VERY_VERBOSE: NOTICE
-                VERBOSITY_DEBUG: DEBUG
-            formatter: packagist.console_stack_trace_line_formatter
 
 snc_redis:
     clients:
