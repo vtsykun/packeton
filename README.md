@@ -156,8 +156,83 @@ it would with any other git repository, [see here](https://getcomposer.org/doc/0
 
 Installation using docker
 ------------------------
+You can use the docker [image okvpn/packeton](https://hub.docker.com/r/okvpn/packeton).
 
-See [packagist-docker](https://github.com/vtsykun/packagist-docker.git).
+#### Environment variables
+
+* `PRIVATE_REPO_DOMAIN_LIST` - Save ssh fingerprints to known_hosts for this domain.
+
+* `VIRTUAL_HOST` - Packagist site domain (example packagist.youcomany.org). 
+Used for downloading the mirroring zip packages. (The host add into dist url for composer metadata).
+
+* `DATABASE_DRIVER` - Specify database driver (pdo_mysql, pdo_pgsql)
+
+* `DATABASE_HOST` -  Specify hostname of the database
+
+* `DATABASE_PORT` - Specify port of the database (optional)
+
+* `DATABASE_USER` - Specify user to use to authenticate to the database 
+
+* `DATABASE_NAME` - Specify database name
+
+* `DATABASE_PASSWORD` - Specify database password
+
+* `ADMIN_USER` - Creating admin account, by default there is no admin user created so 
+you won't be able to login to the packagist. To create an admin account you need to use 
+environment variables to pass in an initial username and password (ADMIN_PASSWORD, ADMIN_EMAIL)
+
+* `ADMIN_PASSWORD` - used together with `ADMIN_USER`
+
+* `ADMIN_EMAIL` - used together with `ADMIN_USER`
+
+The typical example `docker-compose.yml`
+
+```yaml
+version: '2'
+
+services:
+    postgres:
+        hostname: postgres
+        container_name: postgres_packagist
+        image: postgres:9.6
+        volumes:
+            - .docker/db:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: packagist
+            POSTGRES_PASSWORD: 123456
+        expose:
+            - "5432"
+    packagist:
+        image: okvpn/packeton:latest
+        container_name: packagist
+        hostname: packagist
+        volumes:
+            - .docker/zipball:/var/www/packagist/app/zipball # cache for zipped directors
+            - .docker/composer:/var/www/.composer # to place composer config
+            - .docker/ssh:/var/www/.ssh           # to place priv ssh key
+
+            # example how to overwrite main layout to change logo 
+            # - ${PWD}/PackagistWebBundle:/var/www/packagist/app/Resources/PackagistWebBundle
+        links:
+            - "postgres"
+        environment:
+            PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
+            VIRTUAL_HOST: pkg.okvpn.org
+            DATABASE_HOST: postgres
+            DATABASE_PORT: 5432
+            DATABASE_DRIVER: pdo_pgsql
+            DATABASE_USER: postgres
+            DATABASE_NAME: packagist
+            DATABASE_PASSWORD: 123456
+            ADMIN_USER: admin
+            ADMIN_PASSWORD: composer
+            ADMIN_EMAIL: admin@example.com
+        ports:
+          - 127.0.0.1:8088:80
+
+```
+
+Also see [packagist-docker](https://github.com/vtsykun/packagist-docker.git).
 
 Usage and Authentication
 ------------------------
