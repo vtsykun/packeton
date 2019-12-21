@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packagist\WebBundle\Validator\Constraint;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\Package;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Validator\Constraint;

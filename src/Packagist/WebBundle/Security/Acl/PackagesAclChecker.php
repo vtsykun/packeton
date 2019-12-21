@@ -4,7 +4,7 @@ namespace Packagist\WebBundle\Security\Acl;
 
 use Composer\Package\Version\VersionParser;
 use Composer\Semver\Constraint\Constraint;
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Version;

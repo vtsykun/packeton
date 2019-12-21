@@ -4,7 +4,7 @@ namespace Packagist\WebBundle\Form\Type;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\GroupAclPermission;
 use Packagist\WebBundle\Form\DataTransformer\GroupAclPermissionsTransformer;
 use Symfony\Component\Form\AbstractType;

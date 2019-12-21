@@ -31,7 +31,7 @@
         "exclude-from-classmap": [ "src/Packagist/WebBundle/Tests/" ]
     },
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.2",
         "symfony/symfony": "^3.4",
         "doctrine/orm": "^2.6",
         "doctrine/doctrine-bundle": "^1.2",
@@ -41,9 +41,6 @@
         "symfony/monolog-bundle": "^3.1",
         "sensio/distribution-bundle": "^5.0",
         "sensio/framework-extra-bundle": "^3.0",
-        "sensio/generator-bundle": "^3.0",
-        "jms/security-extra-bundle": "^1.5",
-        "jms/di-extra-bundle": "^1.4",
         "oro/doctrine-extensions": "^1.2",
         "composer/composer": "^1.9",
         "friendsofsymfony/user-bundle": "^2.1",
@@ -51,16 +48,16 @@
         "snc/redis-bundle": "^2.0",
         "white-october/pagerfanta-bundle": "^1.0",
         "zendframework/zend-feed": "^2.0",
-        "zendframework/zend-servicemanager": "^2.0",
-        "zendframework/zend-uri": "^2.0",
         "pagerfanta/pagerfanta": "^1.0",
         "knplabs/knp-menu-bundle": "^2.1",
         "ezyang/htmlpurifier": "^4.6",
         "cebe/markdown": "^1.1",
-        "seld/signal-handler": "^1.1"
+        "seld/signal-handler": "^1.1",
+        "incenteev/composer-parameter-handler": "^2.0"
     },
     "require-dev": {
         "symfony/phpunit-bridge": "^2.7 || ^3.0",
+        "sensio/generator-bundle": "^3.0",
         "phpunit/phpunit": "^6.5"
     },
     "scripts": {
@@ -77,6 +74,9 @@
         "post-update-cmd": [
             "@symfony-scripts"
         ]
+    },
+    "config": {
+        "sort-packages": true
     },
     "extra": {
         "symfony-app-dir": "app",

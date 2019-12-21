@@ -4,7 +4,7 @@ namespace Packagist\WebBundle\Form\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\GroupAclPermission;
 use Packagist\WebBundle\Form\Model\PackagePermission;
 use Symfony\Component\Form\DataTransformerInterface;

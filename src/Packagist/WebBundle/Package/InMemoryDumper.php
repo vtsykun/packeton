@@ -2,7 +2,7 @@
 
 namespace Packagist\WebBundle\Package;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Security\Acl\PackagesAclChecker;
