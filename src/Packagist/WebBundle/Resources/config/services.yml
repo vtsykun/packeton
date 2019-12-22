@@ -113,6 +113,7 @@ services:
             - '@packagist.in_memory_dumper'
             - '@security.authorization_checker'
             - '@packagist_factory'
+            - '@packagist_cache'
 
     Packagist\WebBundle\Model\PackageManager:
         alias: packagist.package_manager
@@ -231,3 +232,13 @@ services:
             - '@fos_user.user_manager'
         tags:
             - { name: console.command }
+
+    # Form extensions
+    Packagist\WebBundle\Form\Extension\TooltipExtension:
+        tags:
+            - { name: form.type_extension, extended_type: 'Symfony\Component\Form\Extension\Core\Type\FormType' }
+
+    packagist_cache:
+        parent: doctrine_cache.abstract.file_system
+        arguments:
+            - '%kernel.cache_dir%/packagist'

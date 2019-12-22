@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packagist\WebBundle\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packagist\WebBundle\Entity\Group;
+use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Security\Acl\PackagesAclChecker;
@@ -21,9 +25,55 @@ class InMemoryDumper
         $this->checker = $checker;
     }
 
-    public function dump(User $user = null)
+    /**
+     * @param User|null $user
+     * @return array
+     */
+    public function dump(User $user = null): array
     {
         return $this->dumpRootPackages($user);
+    }
+
+    /**
+     * @param null|User $user
+     * @param string|Package $package
+     *
+     * @return array
+     */
+    public function dumpPackage(?User $user, $package): array
+    {
+        if (is_string($package)) {
+            $package = $this->registry
+                ->getRepository(Package::class)
+                ->findOneBy(['name' => $package]);
+        }
+
+        if (!$package instanceof Package) {
+            return [];
+        }
+
+        if ($user !== null && $this->checker->isGrantedAccessForPackage($user, $package) === false) {
+            return [];
+        }
+
+        $versionIds = $packageData = [];
+        /** @var Version $version */
+        foreach ($package->getVersions() as $version) {
+            if ($user === null || $this->checker->isGrantedAccessForVersion($user, $version)) {
+                $versionIds[$version->getId()] = $version;
+            }
+        }
+
+        $versionRepo = $this->registry->getRepository(Version::class);
+        $versionData = $versionRepo->getVersionData(\array_keys($versionIds));
+        foreach ($versionIds as $version) {
+            $packageData[$version->getVersion()] = \array_merge(
+                $version->toArray($versionData),
+                ['uid' => $version->getId()]
+            );
+        }
+
+        return $packageData;
     }
 
     private function dumpRootPackages(User $user = null)
@@ -46,41 +96,21 @@ class InMemoryDumper
         return [$rootFile, $providers, $packagesData];
     }
 
-    private function dumpUserPackages(User $user = null)
+    private function dumpUserPackages(User $user = null): array
     {
-        $packages = $user ? $this->registry->getRepository('PackagistWebBundle:Group')->getAllowedPackagesForUser($user) :
-            $this->registry->getRepository('PackagistWebBundle:Package')->findAll();
+        $packages = $user ?
+            $this->registry->getRepository(Group::class)
+                ->getAllowedPackagesForUser($user) :
+            $this->registry->getRepository(Package::class)->findAll();
 
-        $versionRepo = $this->registry->getRepository('PackagistWebBundle:Version');
-
-        $providers = [];
-        $packagesData = [];
+        $providers = $packagesData = $packagesData = [];
         foreach ($packages as $package) {
-            if ($user !== null && $this->checker->isGrantedAccessForPackage($user, $package) === false) {
+            if (!$packageData = $this->dumpPackage($user, $package)) {
                 continue;
             }
 
-            /** @var Version[] $versionIds */
-            $versionIds = [];
-            $packageData = [];
-            foreach ($package->getVersions() as $version) {
-                if ($user === null || $this->checker->isGrantedAccessForVersion($user, $version)) {
-                    $versionIds[$version->getId()] = $version;
-                }
-            }
-
-            $versionData = $versionRepo->getVersionData(\array_keys($versionIds));
-            foreach ($versionIds as $version) {
-                $packageData[$version->getVersion()] = \array_merge(
-                    $version->toArray($versionData),
-                    ['uid' => $version->getId()]
-                );
-            }
-
             $packageData = [
-                'packages' => [
-                    $package->getName() => $packageData
-                ]
+                'packages' => [$package->getName() => $packageData]
             ];
             $packagesData[$package->getName()] = $packageData;
             $providers[$package->getName()] = [

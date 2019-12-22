@@ -64,12 +64,17 @@ class ProviderController extends Controller
     public function packageAction($package)
     {
         $package = \explode('$', $package);
+        $manager = $this->container->get('packagist.package_manager');
         if (\count($package) !== 2) {
+            $package = $manager->getPackageJson($this->getUser(), $package[0]);
+            if ($package) {
+                return new Response(\json_encode($package), 200, ['Content-Type' => 'application/json']);
+            }
             return $this->createNotFound();
         }
 
         $manager = $this->container->get('packagist.package_manager');
-        $package = $manager->getPackageJson($this->getUser(), $package[0], $package[1]);
+        $package = $manager->getCachedPackageJson($this->getUser(), $package[0], $package[1]);
         if (!$package) {
             return $this->createNotFound();
         }

@@ -8,17 +8,20 @@ Features
 --------
 
 - Compatible with composer.
+- Support update webhook for GitHub, Bitbucket and GitLab.
 - Customers user and groups.
 - Limit access by vendor and versions.
-- Expire access time for user.
+- Expire access for user. 
+- Allow to freeze updates for the new releases after expire a customers license.
 - Mirroring for packages' zip files and downloads its from your host.
+- Allow to add ssh keys from UI and use multiple SSH Keys settings for different github/git accounts.
 
 What was changed in this fork?
 -----------------------------
 - Disable anonymously access, registrations, added groups and permissions.
 - Support MySQL and PostgresSQL.
 - Support Symfony 3.4
-- Removed HWIOBundle, NelmioCorsBundle, NelmioSecurityBundle, Algolia, GoogleAnalytics dependencies.
+- Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
 Demo
 -------

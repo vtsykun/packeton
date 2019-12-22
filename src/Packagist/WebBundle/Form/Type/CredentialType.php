@@ -21,7 +21,8 @@ class CredentialType extends AbstractType
                     return $credentials->getName() . ($credentials->getFingerprint() ?
                         (' (' . $credentials->getFingerprint() . ')') : '');
                 },
-                'label' => 'SSH Credentials (optional, uses for Git to set GIT_SSH_COMMAND)',
+                'label' => 'SSH Credentials',
+                'tooltip' => 'Optional, support only for Git 2.3+, to use other IdentityFile from env. GIT_SSH_COMMAND. By default will be used system ssh key',
                 'required' => false,
             ]);
     }

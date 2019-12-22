@@ -77,11 +77,15 @@ class User extends BaseUser
     protected $groups;
 
     /**
+     * @var Package[]
+     *
      * @ORM\ManyToMany(targetEntity="Package", mappedBy="maintainers")
      */
     private $packages;
 
     /**
+     * @var Author[]
+     *
      * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\Author", mappedBy="owner")
      */
     private $authors;
@@ -120,6 +124,14 @@ class User extends BaseUser
      * @var \DateTime
      */
     private $expiresAt;
+
+    /**
+     * Disable to updates a new release after this date expired
+     *
+     * @ORM\Column(name="expired_updates_at", type="date", nullable=true)
+     * @var \DateTime
+     */
+    private $expiredUpdatesAt;
 
     public function __construct()
     {
@@ -365,5 +377,23 @@ class User extends BaseUser
     public function isAdmin()
     {
         return $this->hasRole('ROLE_ADMIN') || $this->isSuperAdmin();
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getExpiredUpdatesAt()
+    {
+        return $this->expiredUpdatesAt;
+    }
+
+    /**
+     * @param \DateTime $expiredUpdatesAt
+     * @return $this
+     */
+    public function setExpiredUpdatesAt($expiredUpdatesAt)
+    {
+        $this->expiredUpdatesAt = $expiredUpdatesAt;
+        return $this;
     }
 }

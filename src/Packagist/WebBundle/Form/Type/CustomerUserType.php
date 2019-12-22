@@ -35,9 +35,14 @@ class CustomerUserType extends AbstractType
             ])
             ->add('expiresAt', DateType::class, [
                 'required' => false,
-                'attr' => ['class' => 'js-datepicker'],
                 'widget' => 'single_text',
-                'label' => 'Access expiration date'
+                'label' => 'Access expiration date',
+            ])
+            ->add('expiredUpdatesAt', DateType::class, [
+                'required' => false,
+                'widget' => 'single_text',
+                'label' => 'Update expiration',
+                'tooltip' => 'A new release updates will be frozen after this date. But the user can uses the versions released before'
             ])
             ->add('groups', EntityType::class, [
                 'choice_label' => 'name',

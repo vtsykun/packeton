@@ -59,6 +59,10 @@ class PackagesAclChecker
      */
     public function isGrantedAccessForVersion(User $user, Version $version)
     {
+        if ($user->getExpiredUpdatesAt() && $user->getExpiredUpdatesAt() < $version->getReleasedAt()) {
+            return false;
+        }
+
         $versions = $this->getVersions($user, $version->getPackage());
 
         foreach ($versions as $constraint) {

@@ -48,4 +48,6 @@
             scrollTo(0, $($(e.target).attr('href')).offset().top - 65);
         }, 0);
     });
+
+    $('[data-toggle="popover"]').popover();
 })(jQuery, humane);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Packagist\WebBundle\Model;
 
-use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\Cache;
 use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\User;
@@ -39,7 +38,7 @@ class PackageManager
         InMemoryDumper $dumper,
         AuthorizationCheckerInterface $authorizationChecker,
         PackagistFactory $packagistFactory,
-        Cache $cache = null
+        Cache $cache
     ) {
         $this->doctrine = $doctrine;
         $this->mailer = $mailer;
@@ -50,10 +49,6 @@ class PackageManager
         $this->authorizationChecker = $authorizationChecker;
         $this->dumper = $dumper;
         $this->packagistFactory = $packagistFactory;
-        if ($cache === null) {
-            $cache = new ApcuCache();
-            $cache->setNamespace('package_manager');
-        }
         $this->cache = $cache;
     }
 
@@ -197,13 +192,28 @@ class PackageManager
     }
 
     /**
+     * @param null|User|object $user
+     * @param string $package
+     *
+     * @return array
+     */
+    public function getPackageJson(?User $user, string $package)
+    {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_ADMIN')) {
+            $user = null;
+        }
+
+        return $this->dumper->dumpPackage($user, $package);
+    }
+
+    /**
      * @param User|null|object $user
      * @param string $package
      * @param string $hash
      *
      * @return mixed
      */
-    public function getPackageJson(?User $user, string $package, string $hash)
+    public function getCachedPackageJson(?User $user, string $package, string $hash)
     {
         list($root, $providers, $packages) = $this->dumpInMemory($user);
 
@@ -216,19 +226,19 @@ class PackageManager
         return $packages[$package];
     }
 
-    private function dumpInMemory(User $user = null, $cache = true)
+    private function dumpInMemory(User $user = null, bool $cache = true)
     {
         if ($user && $this->authorizationChecker->isGranted('ROLE_ADMIN')) {
             $user = null;
         }
 
-        $cacheKey = (string) ($user ? $user->getId() : 0);
+        $cacheKey = 'user_' . ($user ? $user->getId() : 0);
         if ($cache && $this->cache->contains($cacheKey)) {
             return $this->cache->fetch($cacheKey);
         }
 
         $data = $this->dumper->dump($user);
-        $this->cache->save($cacheKey, $data, 120);
+        $this->cache->save($cacheKey, $data, 600);
         return $data;
     }
 }
