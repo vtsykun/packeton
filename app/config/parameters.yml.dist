@@ -23,9 +23,6 @@ parameters:
 
     locale: en
 
-    google_analytics:
-        ga_key:
-
     # -- performance features --
     # set both to apc to optimize things if it is available
     validation_cache_backend: ~
@@ -45,3 +42,5 @@ parameters:
     # Host for download zip
     # Value of dist composer metadata
     packagist_dist_host: https://example.com
+    packagist_host: example.com
+    github_no_api: ~

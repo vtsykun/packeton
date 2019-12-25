@@ -14,13 +14,14 @@ use Packagist\WebBundle\Entity\SshCredentials;
 class PackagistFactory
 {
     protected $tmpDir;
-
+    protected $githubNoApi;
     protected $repositoryFactory;
 
-    public function __construct(VcsRepositoryFactory $repositoryFactory, string $tmpDir = null)
+    public function __construct(VcsRepositoryFactory $repositoryFactory, string $tmpDir = null, $githubNoApi = null)
     {
         $this->repositoryFactory = $repositoryFactory;
         $this->tmpDir = $tmpDir ?: sys_get_temp_dir();
+        $this->githubNoApi = (bool) $this->githubNoApi;
     }
 
     /**
@@ -67,7 +68,7 @@ class PackagistFactory
         }
 
         $repoConfig['url'] = $url;
-        if (null !== $credentials) {
+        if (null !== $credentials || true === $this->githubNoApi) {
             // Disable API if used ssh key
             $repoConfig['no-api'] = true;
         }
