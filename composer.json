@@ -1,7 +1,7 @@
 {
     "name": "okvpn/packeton",
     "description": "Private PHP package repository for vendors",
-    "keywords": ["packeton", "composer", "private-packagist"],
+    "keywords": ["packeton", "composer", "private-packagist", "packagist", "satis"],
     "homepage": "https://github.com/vtsykun/packeton",
     "type": "project",
     "license": "MIT",
