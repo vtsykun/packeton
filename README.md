@@ -23,8 +23,13 @@ What was changed in this fork?
 - Support Symfony 3.4
 - Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
+Install from Docker
+--------------------
+
+See https://hub.docker.com/r/okvpn/packeton
+
 Demo
--------
+----
 See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/composer)
 
 [![Demo](docs/demo.png)](docs/demo.png)
