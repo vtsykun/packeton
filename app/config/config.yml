@@ -32,8 +32,6 @@ twig:
         - 'PackagistWebBundle::forms.html.twig'
     debug:            '%kernel.debug%'
     strict_variables: '%kernel.debug%'
-    globals:
-        packagist_host: '%packagist_host%'
 
 # Doctrine Configuration
 doctrine:

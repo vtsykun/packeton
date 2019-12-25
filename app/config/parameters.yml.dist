@@ -42,5 +42,4 @@ parameters:
     # Host for download zip
     # Value of dist composer metadata
     packagist_dist_host: https://example.com
-    packagist_host: example.com
     github_no_api: ~

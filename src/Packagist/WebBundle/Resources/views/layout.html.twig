@@ -90,10 +90,6 @@
                                                 </label>
                                             </div>
 
-                                            {%- if packagist_host and packagist_host in app.request.headers.get('Referer') %}
-                                                <input type="hidden" name="_target_path" value="{{ app.request.headers.get('Referer') }}" />
-                                            {%- endif %}
-
                                             <div class="signin-box-buttons">
                                                 <button type="submit" class="btn btn-success" id="_submit2" name="_submit">{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}</button>
                                             </div>

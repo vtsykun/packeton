@@ -195,10 +195,7 @@ class ApiController extends Controller
         }
 
         $failed = [];
-        $ip = $request->headers->get('X-'.$this->container->getParameter('trusted_ip_header'));
-        if (!$ip) {
-            $ip = $request->getClientIp();
-        }
+        $ip = $request->getClientIp();
 
         $jobs = [];
         foreach ($contents['downloads'] as $package) {

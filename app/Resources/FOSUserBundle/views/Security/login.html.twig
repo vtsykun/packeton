@@ -47,11 +47,6 @@
                             {{- 'security.login.remember_me'|trans({}, 'FOSUserBundle') }}
                         </label>
                     </div>
-
-                    {% if packagist_host and packagist_host in app.request.headers.get('Referer') %}
-                        <input type="hidden" name="_target_path" value="{{ app.request.headers.get('Referer') }}" />
-                    {% endif %}
-
                     <input class="btn btn-block btn-success btn-lg" type="submit" id="_submit" name="_submit" value="{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}" />
                 </form>
 
