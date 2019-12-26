@@ -1,0 +1,22 @@
+{% extends "PackagistWebBundle::layout.html.twig" %}
+
+{% set title  = entity.id ? 'Update webhook ' ~ entity.name : 'Create a new webhook' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% form_theme form with [
+        'PackagistWebBundle:Webhook:form_theme.html.twig'
+    ] %}
+
+    <h2 class="title">{{ title }}</h2>
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+        {{ form_rest(form) }}
+
+        <input class="btn btn-block btn-success btn-lg" type="submit" value="Add webhook" />
+        {{ form_end(form) }}
+        <div class="col-md-6">
+        </div>
+    </section>
+
+{% endblock %}

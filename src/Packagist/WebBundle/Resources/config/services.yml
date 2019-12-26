@@ -228,6 +228,12 @@ services:
         tags:
             - { name: validator.constraint_validator }
 
+    Packagist\WebBundle\Form\Type\WebhookType:
+        arguments:
+            - '@security.token_storage'
+        tags:
+            - { name: form.type }
+
     Packagist\WebBundle\Command\CreateUserCommand:
         arguments:
             - '@fos_user.util.user_manipulator'

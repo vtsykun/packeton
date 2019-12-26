@@ -1684,3 +1684,13 @@ svg.chart {
 }
 
 .icon-mail:before { content: '\2709'; } /* '✉' */
+
+.webhook .panel-heading a {
+    font-size: 1.2em;
+    color: #373b40;
+    text-decoration: none;
+}
+
+.webhook .panel-body {
+    padding: 10px 10px 6px;
+}

@@ -36,7 +36,7 @@ class PackageUniqueValidator extends ConstraintValidator
         }
 
         if (!$value instanceof Package) {
-            throw new UnexpectedTypeException($constraint, Package::class);
+            throw new UnexpectedTypeException($value, Package::class);
         }
 
         $repo = $this->doctrine->getRepository(Package::class);
