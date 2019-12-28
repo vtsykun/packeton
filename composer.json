@@ -33,6 +33,7 @@
     "require": {
         "php": ">=7.2",
         "symfony/symfony": "^3.4",
+        "symfony/http-client": "^5.0",
         "doctrine/orm": "^2.6",
         "doctrine/doctrine-bundle": "^1.2",
         "doctrine/doctrine-cache-bundle": "^1.3",

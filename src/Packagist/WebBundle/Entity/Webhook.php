@@ -78,9 +78,9 @@ class Webhook
     /**
      * @var array|null
      *
-     * @ORM\Column(name="custom_headers", type="json_array", nullable=true)
+     * @ORM\Column(name="options", type="json_array", nullable=true)
      */
-    private $customHeaders;
+    private $options;
 
     /**
      * @var string|null
@@ -280,13 +280,13 @@ class Webhook
     /**
      * Set customHeaders.
      *
-     * @param array|null $customHeaders
+     * @param array|null $options
      *
      * @return $this
      */
-    public function setCustomHeaders($customHeaders = null)
+    public function setOptions($options = null)
     {
-        $this->customHeaders = $customHeaders;
+        $this->options = $options;
 
         return $this;
     }
@@ -296,9 +296,9 @@ class Webhook
      *
      * @return array|null
      */
-    public function getCustomHeaders()
+    public function getOptions()
     {
-        return $this->customHeaders;
+        return $this->options;
     }
 
     /**

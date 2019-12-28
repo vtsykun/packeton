@@ -231,6 +231,7 @@ services:
     Packagist\WebBundle\Form\Type\WebhookType:
         arguments:
             - '@security.token_storage'
+            - '@packagist.payload_rendered'
         tags:
             - { name: form.type }
 

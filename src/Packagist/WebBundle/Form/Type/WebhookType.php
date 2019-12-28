@@ -7,6 +7,7 @@ namespace Packagist\WebBundle\Form\Type;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Validator\Constraint\ValidRegex;
+use Packagist\WebBundle\Webhook\PayloadRenderer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -17,8 +18,10 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Url;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class WebhookType extends AbstractType
 {
@@ -28,11 +31,18 @@ class WebhookType extends AbstractType
     private $tokenStorage;
 
     /**
-     * @param TokenStorage $tokenStorage
+     * @var PayloadRenderer
      */
-    public function __construct(TokenStorage $tokenStorage)
+    private $renderer;
+
+    /**
+     * @param TokenStorage $tokenStorage
+     * @param PayloadRenderer $renderer
+     */
+    public function __construct(TokenStorage $tokenStorage, PayloadRenderer $renderer)
     {
         $this->tokenStorage = $tokenStorage;
+        $this->renderer = $renderer;
     }
 
     /**
@@ -68,9 +78,10 @@ class WebhookType extends AbstractType
                 'tooltip' => 'Must be a valid regex to filter by version.',
                 'constraints' => [new ValidRegex()]
             ])
-            ->add('customHeaders', JsonTextType::class, [
+            ->add('options', JsonTextType::class, [
                 'required' => false,
-                'tooltip' => 'Must be valid JSON',
+                'label' => 'Request options',
+                'tooltip' => 'webhooks.options.tooltip',
                 'attr' => [
                     'rows' => 6,
                     'style' => 'resize: none;'
@@ -78,11 +89,12 @@ class WebhookType extends AbstractType
             ])
             ->add('payload', TextareaType::class, [
                 'required' => false,
-                'tooltip' => 'The twig template that will render and send as request body, for example you can use json_encode|raw filter to send JSON request',
+                'tooltip' => 'webhooks.payload.tooltip',
                 'attr' => [
                     'rows' => 10,
                     'style' => 'resize: none;'
-                ]
+                ],
+                'constraints' => [new Callback([$this, 'checkPayload'])]
             ])
             ->add('visibility', ChoiceType::class, [
                 'required' => true,
@@ -146,6 +158,23 @@ class WebhookType extends AbstractType
             'data_class' =>  Webhook::class,
             'visibility_field' => false,
         ]);
+    }
+
+    /**
+     * @param string|null $value
+     * @param ExecutionContextInterface $context
+     */
+    public function checkPayload($value, ExecutionContextInterface $context): void
+    {
+        if (empty($value)) {
+            return;
+        }
+
+        try {
+            $this->renderer->createTemplate($value);
+        } catch (\Throwable $exception) {
+            $context->addViolation('This value is not a valid twig. ' . $exception->getMessage());
+        }
     }
 
     /**
