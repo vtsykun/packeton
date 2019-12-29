@@ -247,6 +247,20 @@ services:
         tags:
             - { name: form.type_extension, extended_type: 'Symfony\Component\Form\Extension\Core\Type\FormType' }
 
+    Packagist\WebBundle\Webhook\RequestResolver:
+        arguments:
+            - '@packagist.payload_rendered'
+
+    Packagist\WebBundle\Webhook\HookRequestExecutor:
+        arguments:
+            - '@Packagist\WebBundle\Webhook\RequestResolver'
+
+    Packagist\WebBundle\Webhook\HookTestAction:
+        public: true
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+            - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
+
     packagist_cache:
         parent: doctrine_cache.abstract.file_system
         arguments:

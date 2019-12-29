@@ -4,10 +4,6 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-    {% form_theme form with [
-        'PackagistWebBundle:Webhook:form_theme.html.twig'
-    ] %}
-
     <h2 class="title">{{ title }}</h2>
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}

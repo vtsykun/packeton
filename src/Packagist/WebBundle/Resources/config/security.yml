@@ -17,6 +17,11 @@ services:
         tags:
             - { name: security.voter }
 
+    packagist.webhook.acl_voter:
+        class: Packagist\WebBundle\Security\Acl\OwnerVoter
+        tags:
+            - { name: security.voter }
+
     packagist.security.authentication.provider:
         class: Packagist\WebBundle\Security\Api\ApiTokenProvider
         public: false

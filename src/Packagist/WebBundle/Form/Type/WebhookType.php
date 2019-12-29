@@ -20,7 +20,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class WebhookType extends AbstractType
@@ -57,7 +56,7 @@ class WebhookType extends AbstractType
             ])
             ->add('url', TextType::class, [
                 'required' => true,
-                'constraints' => [new NotBlank(), new Url()]
+                'constraints' => [new NotBlank(),]
             ])
             ->add('method', ChoiceType::class, [
                 'required' => true,
@@ -65,7 +64,8 @@ class WebhookType extends AbstractType
                     'POST' => 'POST',
                     'GET' => 'GET',
                     'DELETE' => 'DELETE',
-                    'PUT' => 'PUT'
+                    'PUT' => 'PUT',
+                    'PATCH' => 'PATCH'
                 ]
             ])
             ->add('packageRestriction', TextType::class, [
@@ -110,16 +110,7 @@ class WebhookType extends AbstractType
                 'label' => 'Trigger',
                 'multiple' => true,
                 'expanded' => true,
-                'choices' => [
-                    'A new stability release' => Webhook::HOOK_RL_NEW,
-                    'Update existing stability release' => Webhook::HOOK_RL_UPDATE,
-                    'Update repo failed' => Webhook::HOOK_REPO_FAIL,
-                    'Remove stability release' => Webhook::HOOK_RL_DELETE,
-                    'Push a new tag/branch' => Webhook::HOOK_PUSH_NEW,
-                    'Update any tag/branch hash' => Webhook::HOOK_PUSH_UPDATE,
-                    'Created a new repository' => Webhook::HOOK_REPO_NEW,
-                    'Remove repository' => Webhook::HOOK_REPO_DELETE,
-                ]
+                'choices' => self::getEventsChoices(),
             ])
             ->add('active', CheckboxType::class, [
                 'required' => false,
@@ -128,6 +119,9 @@ class WebhookType extends AbstractType
         $builder->addEventListener(FormEvents::POST_SET_DATA, [$this, 'onSetData']);
     }
 
+    /**
+     * @param FormEvent $event
+     */
     public function onSetData(FormEvent $event): void
     {
         $form = $event->getForm();
@@ -156,7 +150,6 @@ class WebhookType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' =>  Webhook::class,
-            'visibility_field' => false,
         ]);
     }
 
@@ -175,6 +168,20 @@ class WebhookType extends AbstractType
         } catch (\Throwable $exception) {
             $context->addViolation('This value is not a valid twig. ' . $exception->getMessage());
         }
+    }
+
+    public static function getEventsChoices(): array
+    {
+        return [
+            'New stability release' => Webhook::HOOK_RL_NEW,
+            'Update stability release' => Webhook::HOOK_RL_UPDATE,
+            'Remove stability release' => Webhook::HOOK_RL_DELETE,
+            'Update repo failed' => Webhook::HOOK_REPO_FAILED,
+            'New tag/branch' => Webhook::HOOK_PUSH_NEW,
+            'Update tag/branch' => Webhook::HOOK_PUSH_UPDATE,
+            'Created a new repository' => Webhook::HOOK_REPO_NEW,
+            'Remove repository' => Webhook::HOOK_REPO_DELETE,
+        ];
     }
 
     /**

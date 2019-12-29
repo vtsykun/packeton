@@ -36,9 +36,9 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
         $this->forbiddenTags = $forbiddenTags;
         $this->forbiddenFilters = $forbiddenFilters;
         $this->setForbiddenMethods($forbiddenMethods);
+        $this->setForbiddenProperties($forbiddenProperties);
         $this->forbiddenClasses = $forbiddenClasses;
         $this->forbiddenFunctions = $forbiddenFunctions;
-        $this->forbiddenProperties = $forbiddenProperties;
     }
 
     /**
@@ -92,13 +92,25 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
 
     public function setForbiddenMethods(array $methods = null)
     {
-        if (null === $this->forbiddenMethods) {
+        if (null === $methods) {
             return;
         }
 
         $this->forbiddenMethods = [];
         foreach ($methods as $class => $m) {
             $this->forbiddenMethods[$class] = array_map('strtolower', \is_array($m) ? $m : [$m]);
+        }
+    }
+
+    public function setForbiddenProperties(array $properties = null)
+    {
+        if (null === $properties) {
+            return;
+        }
+
+        $this->forbiddenProperties = [];
+        foreach ($properties as $class => $p) {
+            $this->forbiddenProperties[$class] = array_map('strtolower', \is_array($p) ? $p : [$p]);
         }
     }
 
@@ -157,6 +169,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
         }
 
         $forbid = false;
+        $property = is_string($property) ? strtolower($property) : $property;
         foreach ($this->forbiddenProperties as $class => $properties) {
             if ($obj instanceof $class) {
                 $forbid = \in_array($property, \is_array($properties) ? $properties : [$properties]);

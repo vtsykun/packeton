@@ -712,11 +712,11 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     border-right: 0;
 }
 
-.nav-tabs {
+.nav-user-menu .nav-tabs {
     border: 0;
 }
 
-.nav-tabs li a {
+.nav-user-menu .nav-tabs li a {
     padding: 11px 20px;
     background: #fff;
     color: #515966;
@@ -724,37 +724,37 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     border-radius: 0;
 }
 
-.nav-tabs li:first-child a {
+.nav-user-menu  .nav-tabs li:first-child a {
     border-radius: 4px 4px 0 0;
 }
 
-.nav-tabs li:last-child a {
+.nav-user-menu  .nav-tabs li:last-child a {
     border-radius: 0 0 4px 4px;
 }
 
-.nav-tabs li.active a, .nav-tabs.nav-stacked > li > a:hover {
+.nav-user-menu .nav-tabs li.active a, .nav-tabs.nav-stacked > li > a:hover {
     background: #0c71d0;
     color: #fff;
 }
 
-.nav-tabs.nav-stacked > li > a, .nav-tabs.nav-stacked > li > a:hover {
+.nav-user-menu .nav-tabs.nav-stacked > li > a, .nav-tabs.nav-stacked > li > a:hover {
     border: 0;
 }
 
-.nav-tabs.nav-stacked > li > a:hover {
+.nav-user-menu .nav-tabs.nav-stacked > li > a:hover {
     background: #0c71d0;
 }
 
-.nav-tabs.nav-stacked .fas, .nav-tabs.nav-stacked .fas {
+.nav-user-menu .nav-tabs.nav-stacked .fas, .nav-tabs.nav-stacked .fas {
     float: right;
     font-size: 20px;
     margin-top: -2px;
 }
 
-.nav-stacked>li+li {
+.nav-user-menu .nav-stacked>li+li {
   margin-top: 0;
 }
-.nav-tabs>li{
+.nav-user-menu .nav-tabs>li{
   margin-bottom: 0;
 }
 
@@ -1693,4 +1693,16 @@ svg.chart {
 
 .webhook .panel-body {
     padding: 10px 10px 6px;
+}
+
+pre.github {
+    padding: 7px 12px;
+    margin: 10px 0;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
 }

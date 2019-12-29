@@ -1,0 +1,28 @@
+{% extends "PackagistWebBundle::layout.html.twig" %}
+
+{% block scripts %}
+    <script src="{{ asset('bundles/packagistweb/js/testHook.js')}}"></script>
+{% endblock %}
+
+{% set title = 'Test webhook ' ~ entity.name %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h2 class="title">{{ title }}</h2>
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-md-6', id: 'test-form' } }) }}
+        {{ form_rest(form) }}
+
+        <input class="btn btn-block btn-success btn-lg" type="submit" value="TEST" />
+        <a href="{{ path('webhook_update', {id: entity.id})}}">Update webhook</a>
+        {{ form_end(form) }}
+
+        <div class="col-md-6">
+        </div>
+    </section>
+
+    <section class="row" style="padding-top: 20px">
+        <div class="col-md-8 test-result"></div>
+    </section>
+
+{% endblock %}

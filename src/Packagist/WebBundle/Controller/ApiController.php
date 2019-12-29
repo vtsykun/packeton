@@ -44,7 +44,7 @@ class ApiController extends Controller
         $package->addMaintainer($user);
         $package->setRepository($url);
         $this->get(PackageManager::class)->updatePackageUrl($package);
-        $errors = $this->get('validator')->validate($package);
+        $errors = $this->get('validator')->validate($package, null, ['Create']);
         if (count($errors) > 0) {
             $errorArray = [];
             foreach ($errors as $error) {
@@ -128,7 +128,7 @@ class ApiController extends Controller
 
         $package->setRepository($payload['repository']);
         $this->get(PackageManager::class)->updatePackageUrl($package);
-        $errors = $this->get('validator')->validate($package, ["Update"]);
+        $errors = $this->get('validator')->validate($package, null, ["Update"]);
         if (count($errors) > 0) {
             $errorArray = [];
             foreach ($errors as $error) {

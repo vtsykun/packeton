@@ -2,15 +2,8 @@
 
 namespace Packagist\WebBundle\Controller;
 
-use Composer\Factory;
-use Composer\IO\BufferIO;
 use Packagist\WebBundle\Form\Type\CredentialType;
 use Packagist\WebBundle\Util\ChangelogUtils;
-use Symfony\Component\Console\Output\OutputInterface;
-use Composer\Package\Loader\ArrayLoader;
-use Composer\Package\Loader\ValidatingArrayLoader;
-use Composer\Console\HtmlOutputFormatter;
-use Composer\Repository\VcsRepository;
 use Doctrine\ORM\NoResultException;
 use Packagist\WebBundle\Entity\PackageRepository;
 use Packagist\WebBundle\Entity\VersionRepository;
@@ -105,6 +98,7 @@ class PackageController extends Controller
         $package = new Package();
         $form = $this->createForm(PackageType::class, $package, [
             'action' => $this->generateUrl('submit'),
+            'validation_groups' => ['Create']
         ]);
         $package->addMaintainer($user);
 
@@ -140,7 +134,7 @@ class PackageController extends Controller
         }
 
         $package = new Package;
-        $form = $this->createForm(PackageType::class, $package);
+        $form = $this->createForm(PackageType::class, $package, ['validation_groups' => ['Create']]);
         $user = $this->getUser();
         $package->addMaintainer($user);
 
@@ -796,12 +790,10 @@ class PackageController extends Controller
             throw new AccessDeniedException;
         }
 
-        $form = $this->createFormBuilder($package, ["validation_groups" => ["Update"]])
-            ->add('credentials', CredentialType::class)
-            ->add('repository', TextType::class)
-            ->setMethod('POST')
-            ->setAction($this->generateUrl('edit_package', ['name' => $package->getName()]))
-            ->getForm();
+        $form = $this->createForm(PackageType::class, $package, [
+            'action' => $this->generateUrl('edit_package', ['name' => $package->getName()]),
+            'validation_groups' => ['Update'],
+        ]);
 
         $form->handleRequest($req);
         if ($form->isValid()) {

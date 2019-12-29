@@ -10,17 +10,14 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="webhook")
  * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\WebhookRepository")
  */
-class Webhook
+class Webhook implements OwnerAwareInterface
 {
-    public const USER_VISIBLE = 'user';
-    public const GLOBAL_VISIBLE = 'global';
-
     public const HOOK_RL_NEW = 'new_release';
     public const HOOK_RL_UPDATE = 'update_release';
     public const HOOK_RL_DELETE = 'delete_release';
     public const HOOK_PUSH_NEW = 'push_new_event';
     public const HOOK_PUSH_UPDATE = 'update_new_event';
-    public const HOOK_REPO_FAIL = 'update_repo_failed';
+    public const HOOK_REPO_FAILED = 'update_repo_failed';
     public const HOOK_REPO_NEW = 'new_repo';
     public const HOOK_REPO_DELETE = 'delete_repo';
 

@@ -8,6 +8,9 @@ parameters:
     security_policy_forbidden_properties:
         'Packagist\WebBundle\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
         'Packagist\WebBundle\Entity\Package': ['credentials']
+    security_policy_forbidden_methods:
+        'Packagist\WebBundle\Entity\User': ['getApiToken', 'getGithubToken', 'getPassword', 'getSalt']
+        'Packagist\WebBundle\Entity\Package': ['getCredentials']
 
 services:
     packagist.twig.webhook_security_policy:
@@ -32,7 +35,7 @@ services:
             - ~  # Parent tags
             - [] # Allow all filters
             - ~  # Parent functions
-            - ~  # Parent method
+            - '%security_policy_forbidden_methods%'
             - '%security_policy_forbidden_properties%'
             - '%security_policy_forbidden_classes%'
         calls:

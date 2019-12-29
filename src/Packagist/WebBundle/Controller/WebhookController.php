@@ -2,10 +2,17 @@
 
 namespace Packagist\WebBundle\Controller;
 
+use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Form\Type\HookTestActionType;
 use Packagist\WebBundle\Form\Type\WebhookType;
+use Packagist\WebBundle\Webhook\HookTestAction;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -67,14 +74,71 @@ class WebhookController extends Controller
      */
     public function updateAction(Request $request, Webhook $hook)
     {
-        if ($hook->getVisibility() === Webhook::USER_VISIBLE
-            && $hook->getOwner()
-            && $hook->getOwner()->getId() !== $this->getUser()->getId()
-        ) {
+        if ($this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException();
         }
 
         return $this->handleUpdate($request, $hook, 'Successfully saved.');
+    }
+
+    /**
+     * @Template("PackagistWebBundle:Webhook:test.html.twig")
+     * @Route("/test/{id}/send", name="webhook_test_action", requirements={"id"="\d+"})
+     *
+     * {@inheritdoc}
+     */
+    public function testAction(Request $request, Webhook $entity)
+    {
+        if ($this->isGranted('VIEW', $entity)) {
+            throw new AccessDeniedException();
+        }
+
+        $testAction = $this->get(HookTestAction::class);
+
+        $form = $this->createFormBuilder()
+            ->add('event', ChoiceType::class, [
+                'required' => true,
+                'choices' => WebhookType::getEventsChoices(),
+            ])
+            ->add('package', EntityType::class, [
+                'class' => Package::class,
+                'choice_label' => 'name',
+                'required' => false,
+            ])
+            ->add('versions', TextType::class, [
+                'required' => false,
+            ])
+            ->add('sendReal', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Send request?'
+            ])
+            ->getForm();
+
+        $errors = $response = null;
+        if ($request->getMethod() === 'POST') {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $data = $form->getData();
+                $data['user'] = $this->getUser();
+                try {
+                    $response = $testAction->runTest($entity, $data);
+                } catch (\Throwable $exception) {
+                    $errors = $exception->getMessage();
+                }
+            } else {
+                $errors = $form->getErrors(true);
+            }
+
+            return $this->render('@PackagistWeb/Webhook/test_widget.html.twig', [
+                'response' => $response,
+                'errors' => $errors
+            ]);
+        }
+
+        return [
+            'form' => $form->createView(),
+            'entity' => $entity,
+        ];
     }
 
     /**

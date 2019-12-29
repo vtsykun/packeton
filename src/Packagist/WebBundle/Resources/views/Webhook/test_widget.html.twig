@@ -1,0 +1,13 @@
+{% if errors is not null %}
+    <div class="alert alert-warning">
+        {{ errors }}
+    </div>
+{% endif %}
+
+{% if response is not null %}
+    {% for hook in response %}
+        <div style="padding-top: 25px">
+            {% include '@PackagistWeb/Webhook/hookinfo.html.twig' with {'hook': hook} %}
+        </div>
+    {% endfor %}
+{% endif %}
