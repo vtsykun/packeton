@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packagist\WebBundle\Webhook;
 
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Version;
@@ -15,11 +15,11 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 class HookTestAction
 {
     private $executor;
-    private $manager;
+    private $registry;
 
-    public function __construct(EntityManagerInterface $manager, HookRequestExecutor $executor)
+    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor)
     {
-        $this->manager = $manager;
+        $this->registry = $registry;
         $this->executor = $executor;
     }
 
@@ -55,7 +55,7 @@ class HookTestAction
                 ];
                 break;
             case Webhook::HOOK_REPO_DELETE:
-                $repo = $this->manager->getRepository(Version::class);
+                $repo = $this->registry->getRepository(Version::class);
                 $package = $data['package'] ?? null;
                 if ($package instanceof Package) {
                     $package = $package->toArray($repo);
@@ -100,7 +100,7 @@ class HookTestAction
     private function selectPackage(array &$data): void
     {
         if (!($data['package'] ?? null) instanceof Package) {
-            $data['package'] = $this->manager->getRepository(Package::class)
+            $data['package'] = $this->registry->getRepository(Package::class)
                 ->findOneBy([]);
         }
     }
@@ -134,30 +134,8 @@ class HookTestAction
     private function selectUser(array &$data): void
     {
         if (!($data['user'] ?? null) instanceof User) {
-            $data['user'] = $this->manager->getRepository(User::class)
+            $data['user'] = $this->registry->getRepository(User::class)
                 ->findOneBy([]);
         }
-    }
-
-    public function demoResponse()
-    {
-        $request = new HookRequest(
-            'https://getbootstrap.com/docs/3.3/components/#badges',
-            'POST',
-            [
-                'headers' => ['User-Agent' => 'Test hooks']
-            ],
-            'If you would like phpredis to serialize your data using the igbinary library, run configure with'
-        );
-
-        return new HookResponse(
-            $request,
-            'OK',
-            [
-                'headers' => ['User-Agent' => 'Test hooks'],
-                'status_code' => 200,
-                'total_time' => 0.287,
-            ]
-        );
     }
 }

@@ -53,12 +53,12 @@ EOF
         $versionRepo = $doctrine->getRepository('PackagistWebBundle:Version');
 
         $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
-        $ids = array();
+        $ids = [];
         foreach ($packages as $package) {
             $ids[] = $package['id'];
         }
 
-        $packageNames = array();
+        $packageNames = [];
 
         while ($ids) {
             $qb = $versionRepo->createQueryBuilder('v');

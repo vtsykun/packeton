@@ -16,7 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\AuthorRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\AuthorRepository")
  * @ORM\Table(name="author")
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
@@ -79,7 +79,7 @@ class Author
 
     public function toArray()
     {
-        $data = array();
+        $data = [];
 
         if ($this->getName()) {
             $data['name'] = $this->getName();

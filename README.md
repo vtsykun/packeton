@@ -18,9 +18,8 @@ Features
 
 What was changed in this fork?
 -----------------------------
-- Disable anonymously access, registrations, added groups and permissions.
+- Disable anonymously access, registrations, spam/antispam, added groups and permissions.
 - Support MySQL and PostgresSQL.
-- Support Symfony 3.4
 - Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
 Install from Docker

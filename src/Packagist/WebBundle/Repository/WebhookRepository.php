@@ -2,6 +2,8 @@
 
 namespace Packagist\WebBundle\Repository;
 
+use Packagist\WebBundle\Entity\Webhook;
+
 /**
  * WebhookRepository
  *
@@ -10,4 +12,24 @@ namespace Packagist\WebBundle\Repository;
  */
 class WebhookRepository extends \Doctrine\ORM\EntityRepository
 {
+    /**
+     * @param string|null $package
+     *
+     * @return Webhook[]
+     */
+    public function findActive(string $package = null): array
+    {
+        $webhooks = $this->createQueryBuilder('w')
+            ->where('w.active = true')
+            ->getQuery()
+            ->getResult();
+
+        if (null !== $package) {
+            $webhooks = array_filter($webhooks, function (Webhook $webhook) use ($package) {
+                return $webhook->getPackageRestriction() === null || preg_match($webhook->getPackageRestriction(), $package);
+            });
+        }
+
+        return $webhooks;
+    }
 }

@@ -32,26 +32,9 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
-    packagist.user_repository:
-        class: Packagist\WebBundle\Entity\UserRepository
-        factory: ['@doctrine', getRepository]
-        arguments: ['PackagistWebBundle:User']
-
-    packagist.package_repository:
-        class: Packagist\WebBundle\Entity\PackageRepository
-        factory: ['@doctrine', getRepository]
-        arguments: ['PackagistWebBundle:Package']
-
-    packagist.version_repository:
-        class: Packagist\WebBundle\Entity\VersionRepository
-        factory: ['@doctrine', getRepository]
-        arguments: ['PackagistWebBundle:Version']
-        calls:
-            - [ setRedis, [ '@snc_redis.cache_client' ]]
-
     packagist.package_updater:
         class: Packagist\WebBundle\Package\Updater
-        arguments: ['@doctrine', '@packagist.dist_config']
+        arguments: ['@doctrine', '@packagist.dist_config', '@event_dispatcher']
 
     packagist.dist_config:
         class: Packagist\WebBundle\Service\DistConfig
@@ -92,14 +75,13 @@ services:
         public: true
         arguments:
             - '@snc_redis.default_client'
-            - '@packagist.package_repository'
+            - '@doctrine'
 
     packagist.favorite_manager:
         class: Packagist\WebBundle\Model\FavoriteManager
         arguments:
             - '@snc_redis.default_client'
-            - '@packagist.package_repository'
-            - '@packagist.user_repository'
+            - '@doctrine'
 
     packagist.package_manager:
         class: Packagist\WebBundle\Model\PackageManager
@@ -155,12 +137,15 @@ services:
 
     packagist.queue_worker:
         class: Packagist\WebBundle\Service\QueueWorker
+        public: true
         arguments:
             - "@packagist.log_resetter"
             - "@snc_redis.default_client"
             - "@doctrine"
             - "@logger"
-            - 'package:updates': '@updater_worker'
+            -
+                - 'package:updates': '@updater_worker'
+                - 'webhook:send': '@sender_hook_worker'
 
     scheduler:
         class: Packagist\WebBundle\Service\Scheduler
@@ -181,6 +166,9 @@ services:
             - "@packagist.package_manager"
             - "@packagist.download_manager"
             - "@packagist_factory"
+
+    sender_hook_worker:
+        class: Packagist\WebBundle\Webhook\SenderWorker
 
     packagist.log_resetter:
         class: Packagist\WebBundle\Service\LogResetter
@@ -221,6 +209,11 @@ services:
         arguments:
             - '@Packagist\WebBundle\Composer\VcsDriverFactory'
 
+    packagist_cache:
+        parent: doctrine_cache.abstract.file_system
+        arguments:
+            - '%kernel.cache_dir%/packagist'
+
     Packagist\WebBundle\Validator\Constraint\PackageUniqueValidator:
         arguments:
             - '@doctrine'
@@ -258,10 +251,11 @@ services:
     Packagist\WebBundle\Webhook\HookTestAction:
         public: true
         arguments:
-            - '@doctrine.orm.default_entity_manager'
+            - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
 
-    packagist_cache:
-        parent: doctrine_cache.abstract.file_system
+    Packagist\WebBundle\Webhook\EventListener\HookListener:
         arguments:
-            - '%kernel.cache_dir%/packagist'
+            - '@doctrine'
+        tags:
+            - { name: kernel.event_listener, event: onPackageRefresh }

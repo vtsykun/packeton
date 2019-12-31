@@ -12,20 +12,21 @@
 
 namespace Packagist\WebBundle\Model;
 
-use Packagist\WebBundle\Entity\PackageRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Packagist\WebBundle\Entity\Package;
+use Packagist\WebBundle\Repository\PackageRepository;
 use Predis\Client;
 
 class ProviderManager
 {
     protected $redis;
-    protected $repo;
+    protected $registry;
     protected $initializedProviders = false;
 
-    public function __construct(Client $redis, PackageRepository $repo)
+    public function __construct(Client $redis, ManagerRegistry $registry)
     {
         $this->redis = $redis;
-        $this->repo = $repo;
+        $this->registry = $registry;
     }
 
     public function packageExists($name)
@@ -48,7 +49,7 @@ class ProviderManager
     public function getPackageNames()
     {
         if (!$this->redis->scard('set:packages')) {
-            $names = $this->repo->getPackageNames();
+            $names = $this->getRepo()->getPackageNames();
             while ($names) {
                 $nameSlice = array_splice($names, 0, 1000);
                 $this->redis->sadd('set:packages', $nameSlice);
@@ -73,12 +74,20 @@ class ProviderManager
 
     private function populateProviders()
     {
-        $names = $this->repo->getProvidedNames();
+        $names = $this->getRepo()->getProvidedNames();
         while ($names) {
             $nameSlice = array_splice($names, 0, 1000);
             $this->redis->sadd('set:providers', $nameSlice);
         }
 
         $this->redis->expire('set:providers', 3600);
+    }
+
+    /**
+     * @return \Doctrine\ORM\EntityRepository|\Doctrine\Persistence\ObjectRepository|object|PackageRepository
+     */
+    private function getRepo()
+    {
+        return $this->registry->getRepository(Package::class);
     }
 }

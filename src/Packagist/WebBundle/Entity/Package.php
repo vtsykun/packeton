@@ -4,9 +4,11 @@ namespace Packagist\WebBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Persistence\ObjectRepository;
+use Packagist\WebBundle\Repository\VersionRepository;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\PackageRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\PackageRepository")
  * @ORM\Table(
  *     name="package",
  *     uniqueConstraints={@ORM\UniqueConstraint(name="package_name_idx", columns={"name"})},
@@ -169,6 +171,10 @@ class Package
         $this->createdAt = new \DateTime;
     }
 
+    /**
+     * @param VersionRepository|ObjectRepository $versionRepo
+     * @return array
+     */
     public function toArray(VersionRepository $versionRepo)
     {
         $versions = $versionIds = [];
@@ -468,7 +474,7 @@ class Package
     public function getVersion($normalizedVersion)
     {
         if (null === $this->cachedVersions) {
-            $this->cachedVersions = array();
+            $this->cachedVersions = [];
             foreach ($this->getVersions() as $version) {
                 $this->cachedVersions[strtolower($version->getNormalizedVersion())] = $version;
             }

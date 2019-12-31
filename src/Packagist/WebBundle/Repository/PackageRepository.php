@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packagist\WebBundle\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
@@ -97,7 +97,7 @@ class PackageRepository extends EntityRepository
             ->createQuery("SELECT p.name $selector  FROM Packagist\WebBundle\Entity\Package p $where")
             ->setParameters($filters);
 
-        $result = array();
+        $result = [];
         foreach ($query->getScalarResult() as $row) {
             $name = $row['name'];
             unset($row['name']);
@@ -109,7 +109,7 @@ class PackageRepository extends EntityRepository
 
     private function getPackageNamesForQuery($query)
     {
-        $names = array();
+        $names = [];
         foreach ($query->getScalarResult() as $row) {
             $names[] = $row['name'];
         }
@@ -205,7 +205,7 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getSingleResult();
     }
 
-    public function getPackagesWithVersions(array $ids = null, $filters = array())
+    public function getPackagesWithVersions(array $ids = null, $filters = [])
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p', 'v')
@@ -235,7 +235,7 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function getFilteredQueryBuilder(array $filters = array(), $orderByName = false)
+    public function getFilteredQueryBuilder(array $filters = [], $orderByName = false)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p')

@@ -1,6 +1,9 @@
 <?php
 
-namespace Packagist\WebBundle\Entity;
+namespace Packagist\WebBundle\Repository;
+
+use Packagist\WebBundle\Entity\Package;
+use Packagist\WebBundle\Entity\User;
 
 /**
  * GruopRepository

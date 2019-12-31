@@ -2,11 +2,10 @@
 
 namespace Packagist\WebBundle\Controller;
 
-use Packagist\WebBundle\Form\Type\CredentialType;
 use Packagist\WebBundle\Util\ChangelogUtils;
 use Doctrine\ORM\NoResultException;
-use Packagist\WebBundle\Entity\PackageRepository;
-use Packagist\WebBundle\Entity\VersionRepository;
+use Packagist\WebBundle\Repository\PackageRepository;
+use Packagist\WebBundle\Repository\VersionRepository;
 use Packagist\WebBundle\Form\Model\MaintainerRequest;
 use Packagist\WebBundle\Form\Type\AbandonedType;
 use Packagist\WebBundle\Entity\Package;
@@ -15,7 +14,6 @@ use Packagist\WebBundle\Form\Type\AddMaintainerRequestType;
 use Packagist\WebBundle\Form\Type\PackageType;
 use Packagist\WebBundle\Form\Type\RemoveMaintainerRequestType;
 use Predis\Connection\ConnectionException;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -244,7 +242,7 @@ class PackageController extends Controller
                 /** @var Package $package */
                 $trendiness[$package->getId()] = (int) $redis->zscore('downloads:trending', $package->getId());
             }
-            usort($providers, function ($a, $b) use ($trendiness) {
+            usort($providers, function (Package $a, Package $b) use ($trendiness) {
                 if ($trendiness[$a->getId()] === $trendiness[$b->getId()]) {
                     return strcmp($a->getName(), $b->getName());
                 }
@@ -415,7 +413,8 @@ class PackageController extends Controller
         }
 
         if (!$fromVersion) {
-            $fromVersion = $this->get('packagist.version_repository')
+            $fromVersion = $this->getDoctrine()
+                ->getRepository(Version::class)
                 ->getPreviousRelease($package->getName(), $toVersion);
             if (!$fromVersion) {
                 return new JsonResponse(['error' => 'Previous release do not exists'], 400);

@@ -1,8 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Packagist\WebBundle\Entity;
+namespace Packagist\WebBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
+use Packagist\WebBundle\Entity\Job;
 
 class JobRepository extends EntityRepository
 {

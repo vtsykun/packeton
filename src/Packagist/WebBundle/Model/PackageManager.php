@@ -107,7 +107,7 @@ class PackageManager
     public function notifyUpdateFailure(Package $package, \Exception $e, $details = null)
     {
         if (!$package->isUpdateFailureNotified()) {
-            $recipients = array();
+            $recipients = [];
             foreach ($package->getMaintainers() as $maintainer) {
                 if ($maintainer->isNotifiableForFailures()) {
                     $recipients[$maintainer->getEmail()] = $maintainer->getUsername();

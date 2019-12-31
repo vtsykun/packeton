@@ -50,6 +50,9 @@ class Locker
         );
     }
 
+    /**
+     * @return Connection|object
+     */
     private function getConn()
     {
         return $this->doctrine->getManager()->getConnection();

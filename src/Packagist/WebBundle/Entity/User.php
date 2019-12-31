@@ -19,7 +19,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use FOS\UserBundle\Model\User as BaseUser;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\UserRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\UserRepository")
  * @ORM\Table(name="fos_user")
  * @UniqueEntity(fields={"email"})
  * @UniqueEntity(fields={"username"})

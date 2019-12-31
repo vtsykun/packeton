@@ -10,9 +10,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packagist\WebBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
+use Packagist\WebBundle\Entity\Package;
+use Packagist\WebBundle\Entity\User;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>

@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use DateTimeInterface;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\JobRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\JobRepository")
  * @ORM\Table(
  *     name="job",
  *     indexes={

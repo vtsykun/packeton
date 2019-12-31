@@ -28,13 +28,13 @@ class Controller extends BaseController
         $dlMgr = $this->get('packagist.download_manager');
 
         try {
-            $ids = array();
+            $ids = [];
 
             if (!count($packages)) {
                 return;
             }
 
-            $favs = array();
+            $favs = [];
             $solarium = false;
             foreach ($packages as $package) {
                 if ($package instanceof \Solarium_Document_ReadOnly) {
