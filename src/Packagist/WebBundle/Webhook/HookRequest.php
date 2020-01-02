@@ -82,4 +82,9 @@ class HookRequest implements \JsonSerializable
             'options' => $this->options
         ];
     }
+
+    public static function fromArray(array $data): self
+    {
+        return new self($data['url'], $data['method'], $data['options'] ?? [], $data['body'] ?? null);
+    }
 }

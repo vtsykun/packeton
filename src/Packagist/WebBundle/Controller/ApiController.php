@@ -13,7 +13,6 @@
 namespace Packagist\WebBundle\Controller;
 
 use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Model\PackageManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -31,6 +30,8 @@ class ApiController extends Controller
     /**
      * @Route("/api/create-package", name="generic_create", defaults={"_format" = "json"})
      * @Method({"POST"})
+     *
+     * {@inheritdoc}
      */
     public function createPackageAction(Request $request)
     {
@@ -149,23 +150,25 @@ class ApiController extends Controller
     /**
      * @Route("/downloads/{name}", name="track_download", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"})
      * @Method({"POST"})
+     * @inheritDoc
      */
     public function trackDownloadAction(Request $request, $name)
     {
         $result = $this->getPackageAndVersionId($name, $request->request->get('version_normalized'));
 
         if (!$result) {
-            return new JsonResponse(array('status' => 'error', 'message' => 'Package not found'), 200);
+            return new JsonResponse(['status' => 'error', 'message' => 'Package not found'], 200);
         }
 
         $this->get('packagist.download_manager')->addDownloads(['id' => $result['id'], 'vid' => $result['vid'], 'ip' => $request->getClientIp()]);
 
-        return new JsonResponse(array('status' => 'success'), 201);
+        return new JsonResponse(['status' => 'success'], 201);
     }
 
     /**
      * @Route("/jobs/{id}", name="get_job", requirements={"id"="[a-f0-9]+"}, defaults={"_format" = "json"})
      * @Method({"GET"})
+     * @inheritDoc
      */
     public function getJobAction(Request $request, string $id)
     {
@@ -186,6 +189,7 @@ class ApiController extends Controller
      *
      * @Route("/downloads/", name="track_download_batch", defaults={"_format" = "json"})
      * @Method({"POST"})
+     * @inheritDoc
      */
     public function trackDownloadsAction(Request $request)
     {

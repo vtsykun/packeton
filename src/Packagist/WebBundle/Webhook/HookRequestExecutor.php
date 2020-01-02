@@ -23,7 +23,7 @@ class HookRequestExecutor
      * @param array $variables
      * @return HookResponse[]
      */
-    public function executeWebhook(Webhook $webhook, HttpClientInterface $client = null, array $variables = [])
+    public function executeWebhook(Webhook $webhook, array $variables = [], HttpClientInterface $client = null)
     {
         $variables['webhook'] = $webhook;
         if (null === $client) {
@@ -40,7 +40,7 @@ class HookRequestExecutor
             return [$this->createFailsResponse($webhook, $exception)];
         }
 
-        // Only 50 first requests.
+        // Limit only 50 first requests.
         $responses = [];
         $requests = array_slice($requests, 0, 50);
         foreach ($requests as $request) {
@@ -65,12 +65,9 @@ class HookRequestExecutor
 
                 $responses[] = new HookResponse(
                     $request,
-                    substr($response->getContent(false), 0, 98304),
+                    substr($response->getContent(false), 0, 8192), // Save only first 8k bytes to database
                     $options
                 );
-                if ($response->getStatusCode() >= 300) {
-                    $maxAttempt--;
-                }
             } catch (\Exception $exception) {
                 $responses[] = $this->createFailsResponse($webhook, $exception, $request);
                 $maxAttempt--;

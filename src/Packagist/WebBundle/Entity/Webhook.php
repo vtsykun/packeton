@@ -203,6 +203,36 @@ class Webhook implements OwnerAwareInterface
     }
 
     /**
+     * @param string ...$events
+     * @return bool
+     */
+    public function matchAllEvents(...$events): bool
+    {
+        foreach ($events as $event) {
+            if (false === in_array($event, $this->getEvents() ?: [])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string ...$events
+     * @return bool
+     */
+    public function matchAnyEvents(...$events): bool
+    {
+        foreach ($events as $event) {
+            if (true === in_array($event, $this->getEvents() ?: [])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Set active.
      *
      * @param bool|null $active

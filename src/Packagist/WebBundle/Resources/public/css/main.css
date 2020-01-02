@@ -1706,3 +1706,13 @@ pre.github {
     border-radius: 3px;
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
 }
+
+.hook-delivery-guid {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 0.95em;
+    color: rgba(0,0,0,.5);
+    background-color: rgba(209,227,237,.5);
+    border-radius: 3px;
+    cursor: pointer;
+}

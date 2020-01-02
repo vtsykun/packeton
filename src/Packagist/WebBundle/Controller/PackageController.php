@@ -527,6 +527,8 @@ class PackageController extends Controller
      *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "versionId"="[0-9]+"}
      * )
      * @Method({"DELETE"})
+     *
+     * {@inheritdoc}
      */
     public function deletePackageVersionAction(Request $req, $versionId)
     {
@@ -559,6 +561,7 @@ class PackageController extends Controller
     /**
      * @Route("/packages/{name}", name="update_package", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"})
      * @Method({"PUT"})
+     * @inheritDoc
      */
     public function updatePackageAction(Request $req, $name)
     {

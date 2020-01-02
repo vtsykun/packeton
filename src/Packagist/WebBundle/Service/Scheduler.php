@@ -19,6 +19,14 @@ class Scheduler
         $this->redis = $redis;
     }
 
+    /**
+     * @param $packageOrId
+     * @param bool $updateEqualRefs
+     * @param bool $deleteBefore
+     * @param null $executeAfter
+     *
+     * @return Job|object
+     */
     public function scheduleUpdate($packageOrId, $updateEqualRefs = false, $deleteBefore = false, $executeAfter = null): Job
     {
         if ($packageOrId instanceof Package) {
@@ -108,7 +116,7 @@ class Scheduler
         return $results;
     }
 
-    private function createJob(string $type, array $payload, $packageId = null, $executeAfter = null): Job
+    private function createJob(string $type, array $payload, int $packageId = null, $executeAfter = null): Job
     {
         $jobId = bin2hex(random_bytes(20));
 
@@ -116,7 +124,7 @@ class Scheduler
         $job->setId($jobId);
         $job->setType($type);
         $job->setPayload($payload);
-        $job->setCreatedAt(new \DateTime());
+        $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
         if ($packageId) {
             $job->setPackageId($packageId);
         }

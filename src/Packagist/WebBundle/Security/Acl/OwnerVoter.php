@@ -30,6 +30,6 @@ class OwnerVoter implements VoterInterface
             return self::ACCESS_DENIED;
         }
 
-        return self::ACCESS_ABSTAIN;
+        return self::ACCESS_GRANTED;
     }
 }

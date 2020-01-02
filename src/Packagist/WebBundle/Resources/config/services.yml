@@ -18,20 +18,6 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.response, method: onResponse }
 
-    packagist.logged_in_user_cannot_register_listener:
-        class: Packagist\WebBundle\EventListener\LoggedInUserCannotRegisterListener
-        arguments:
-            - '@security.authorization_checker'
-            - '@router'
-        tags:
-            - { name: kernel.event_subscriber }
-
-    packagist.registration_listener:
-        class: Packagist\WebBundle\EventListener\RegistrationListener
-        arguments: [ '@fos_user.util.token_generator' ]
-        tags:
-            - { name: kernel.event_subscriber }
-
     packagist.package_updater:
         class: Packagist\WebBundle\Package\Updater
         arguments: ['@doctrine', '@packagist.dist_config', '@event_dispatcher']
@@ -143,17 +129,13 @@ services:
             - "@snc_redis.default_client"
             - "@doctrine"
             - "@logger"
-            -
-                - 'package:updates': '@updater_worker'
-                - 'webhook:send': '@sender_hook_worker'
+            - '@Packagist\WebBundle\Service\JobPersister'
+            - 'package:updates': '@updater_worker'
+              'webhook:send': '@sender_hook_worker'
 
     scheduler:
         class: Packagist\WebBundle\Service\Scheduler
         arguments: ["@snc_redis.default_client", "@doctrine"]
-
-    locker:
-        class: Packagist\WebBundle\Service\Locker
-        arguments: ["@doctrine"]
 
     updater_worker:
         class: Packagist\WebBundle\Service\UpdaterWorker
@@ -161,14 +143,19 @@ services:
             - "@logger"
             - "@doctrine"
             - "@packagist.package_updater"
-            - "@locker"
+            - '@Symfony\Component\Lock\Factory'
             - "@scheduler"
             - "@packagist.package_manager"
             - "@packagist.download_manager"
             - "@packagist_factory"
+            - '@event_dispatcher'
 
     sender_hook_worker:
         class: Packagist\WebBundle\Webhook\SenderWorker
+        arguments:
+            - '@serializer'
+            - '@doctrine'
+            - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
 
     packagist.log_resetter:
         class: Packagist\WebBundle\Service\LogResetter
@@ -254,8 +241,31 @@ services:
             - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
 
-    Packagist\WebBundle\Webhook\EventListener\HookListener:
+    Symfony\Component\Lock\Factory:
+        public: true
+        alias: lock.default.factory
+
+    Packagist\WebBundle\Service\JobPersister:
+        arguments:
+            - '@doctrine'
+
+    Packagist\WebBundle\Service\JobScheduler:
+        arguments:
+            - '@snc_redis.default_client'
+            - '@Packagist\WebBundle\Service\JobPersister'
+
+    Packagist\WebBundle\Webhook\Serializer\JobDataSerializer:
         arguments:
             - '@doctrine'
         tags:
-            - { name: kernel.event_listener, event: onPackageRefresh }
+            - { name: serializer.normalizer }
+
+    Packagist\WebBundle\Webhook\EventListener\HookListener:
+        arguments:
+            - '@doctrine'
+            - '@serializer'
+            - '@Packagist\WebBundle\Service\JobScheduler'
+        tags:
+            - { name: kernel.event_listener, event: packageRefresh }
+            - { name: kernel.event_listener, event: packagePersist }
+            - { name: kernel.event_listener, event: packageError }

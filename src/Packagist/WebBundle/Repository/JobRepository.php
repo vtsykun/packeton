@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Packagist\WebBundle\Repository;
 
@@ -14,7 +16,7 @@ class JobRepository extends EntityRepository
         return 1 === $conn->executeUpdate('UPDATE job SET status = :status, startedAt = :now WHERE id = :id AND startedAt IS NULL', [
             'id' => $jobId,
             'status' => Job::STATUS_STARTED,
-            'now' => date('Y-m-d H:i:s'),
+            'now' => (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
         ]);
     }
 
@@ -25,7 +27,7 @@ class JobRepository extends EntityRepository
         $conn->executeUpdate('UPDATE job SET status = :newstatus WHERE status = :status AND startedAt < :timeout', [
             'status' => Job::STATUS_STARTED,
             'newstatus' => Job::STATUS_TIMEOUT,
-            'timeout' => date('Y-m-d H:i:s', strtotime('-30 minutes')),
+            'timeout' => (new \DateTime('-30 minutes', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
         ]);
     }
 
@@ -35,11 +37,34 @@ class JobRepository extends EntityRepository
 
         $stmt = $conn->executeQuery('SELECT id FROM job WHERE status = :status AND (executeAfter IS NULL OR executeAfter <= :now) ORDER BY createdAt ASC', [
             'status' => Job::STATUS_QUEUED,
-            'now' => date('Y-m-d H:i:s'),
+            'now' => (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
         ]);
 
         while ($row = $stmt->fetch(\PDO::FETCH_COLUMN)) {
             yield $row;
         }
+    }
+
+    /**
+     * @param string $type
+     * @param int $packageId
+     * @param int $limit
+     * @return Job[]
+     */
+    public function findJobsByType(string $type, $packageId = null, $limit = 25)
+    {
+        $qb = $this->createQueryBuilder('j')
+            ->where('j.type = :type')
+            ->andWhere('j.completedAt IS NOT NULL')
+            ->setMaxResults($limit)
+            ->setParameter('type', $type)
+            ->orderBy('j.completedAt', 'DESC');
+
+        if ($packageId) {
+            $qb->andWhere('j.packageId = :packageId')
+                ->setParameter('packageId', $packageId);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }

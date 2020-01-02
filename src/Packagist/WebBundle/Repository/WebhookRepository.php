@@ -14,10 +14,11 @@ class WebhookRepository extends \Doctrine\ORM\EntityRepository
 {
     /**
      * @param string|null $package
+     * @param array $events
      *
      * @return Webhook[]
      */
-    public function findActive(string $package = null): array
+    public function findActive(string $package = null, array $events = []): array
     {
         $webhooks = $this->createQueryBuilder('w')
             ->where('w.active = true')
@@ -27,6 +28,12 @@ class WebhookRepository extends \Doctrine\ORM\EntityRepository
         if (null !== $package) {
             $webhooks = array_filter($webhooks, function (Webhook $webhook) use ($package) {
                 return $webhook->getPackageRestriction() === null || preg_match($webhook->getPackageRestriction(), $package);
+            });
+        }
+
+        if ($events) {
+            $webhooks = array_filter($webhooks, function (Webhook $webhook) use ($events) {
+                return $webhook->matchAnyEvents(...$events);
             });
         }
 

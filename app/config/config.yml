@@ -25,6 +25,9 @@ framework:
     trusted_hosts: '%trusted_hosts%'
     http_method_override: true
     fragments: ~
+    lock: '%redis_dsn%'
+    serializer:
+        enabled: true
 
 # Twig Configuration
 twig:

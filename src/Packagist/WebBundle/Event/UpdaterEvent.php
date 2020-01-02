@@ -9,7 +9,8 @@ use Symfony\Component\EventDispatcher\Event;
 
 class UpdaterEvent extends Event
 {
-    public const VERSIONS_UPDATE  = 'onPackageRefresh';
+    public const VERSIONS_UPDATE  = 'packageRefresh';
+    public const PACKAGE_PERSIST  = 'packagePersist';
 
     private $package;
     private $created;
@@ -17,7 +18,7 @@ class UpdaterEvent extends Event
     private $deleted;
     private $flags;
 
-    public function __construct(Package $package, $flags, array $created = [], array $updated = [], array $deleted = [])
+    public function __construct(Package $package, $flags = 0, array $created = [], array $updated = [], array $deleted = [])
     {
         $this->package = $package;
         $this->created = $created;

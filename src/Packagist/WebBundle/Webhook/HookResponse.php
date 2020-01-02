@@ -98,4 +98,13 @@ class HookResponse implements \JsonSerializable
             'options' => $this->options
         ];
     }
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            HookRequest::fromArray($data['request']),
+            $data['response'] ?? null,
+            $data['options'] ?? []
+        );
+    }
 }

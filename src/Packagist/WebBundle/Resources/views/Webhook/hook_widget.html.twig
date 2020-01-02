@@ -1,4 +1,4 @@
-{% if errors is not null %}
+{% if errors is defined and errors is not null %}
     <div class="alert alert-warning">
         {{ errors }}
     </div>

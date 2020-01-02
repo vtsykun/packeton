@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packagist\WebBundle\Controller;
 
+use Packagist\WebBundle\Entity\Job;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Form\Type\HookTestActionType;
 use Packagist\WebBundle\Form\Type\WebhookType;
+use Packagist\WebBundle\Webhook\HookResponse;
 use Packagist\WebBundle\Webhook\HookTestAction;
-use Pagerfanta\Adapter\DoctrineORMAdapter;
-use Pagerfanta\Pagerfanta;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -32,7 +33,6 @@ class WebhookController extends Controller
      */
     public function indexAction(Request $request)
     {
-        $page = $request->query->get('page', 1);
         $qb = $this->getDoctrine()
             ->getRepository(Webhook::class)
             ->createQueryBuilder('w')
@@ -42,10 +42,6 @@ class WebhookController extends Controller
             ->orWhere("w.visibility = 'global'")
             ->orWhere("w.visibility = 'user' AND IDENTITY(w.owner) = :owner")
             ->setParameter('owner', $this->getUser()->getId());
-
-        $paginator = new Pagerfanta(new DoctrineORMAdapter($qb, false));
-        $paginator->setMaxPerPage(10);
-        $paginator->setCurrentPage($page, false, true);
 
         /** @var Webhook[] $webhooks */
         $webhooks = $qb->getQuery()->getResult();
@@ -74,11 +70,44 @@ class WebhookController extends Controller
      */
     public function updateAction(Request $request, Webhook $hook)
     {
-        if ($this->isGranted('VIEW', $hook)) {
+        if (!$this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException();
         }
 
-        return $this->handleUpdate($request, $hook, 'Successfully saved.');
+        $response = $this->handleUpdate($request, $hook, 'Successfully saved.');
+        if ($request->getMethod() === 'GET') {
+            $response['jobs'] = $this->getDoctrine()
+                ->getRepository(Job::class)
+                ->findJobsByType('webhook:send', $hook->getId());
+        }
+
+        return $response;
+    }
+
+    /**
+     * @Route("/job/{id}", name="webhook_job_action")
+     *
+     * {@inheritdoc}
+     */
+    public function jobAction(Job $entity)
+    {
+        $hook = $this->getDoctrine()->getRepository(Webhook::class)
+            ->find($entity->getPackageId());
+        if ($hook === null || !$this->isGranted('VIEW', $hook)) {
+            throw new AccessDeniedException();
+        }
+
+        $result = $entity->getResult() ?: [];
+        try {
+            $response = array_map(HookResponse::class.'::fromArray', $result['response'] ?? []);
+        } catch (\Throwable $e) {
+            $response = null;
+        }
+
+        return $this->render('@PackagistWeb/Webhook/hook_widget.html.twig', [
+            'response' => $response,
+            'errors' => $result['exceptionMsg'] ?? null
+        ]);
     }
 
     /**
@@ -89,7 +118,7 @@ class WebhookController extends Controller
      */
     public function testAction(Request $request, Webhook $entity)
     {
-        if ($this->isGranted('VIEW', $entity)) {
+        if (!$this->isGranted('VIEW', $entity)) {
             throw new AccessDeniedException();
         }
 
@@ -129,7 +158,7 @@ class WebhookController extends Controller
                 $errors = $form->getErrors(true);
             }
 
-            return $this->render('@PackagistWeb/Webhook/test_widget.html.twig', [
+            return $this->render('@PackagistWeb/Webhook/hook_widget.html.twig', [
                 'response' => $response,
                 'errors' => $errors
             ]);

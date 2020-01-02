@@ -228,9 +228,9 @@ class Updater
 
             if ($lastUpdated) {
                 if (isset($existingVersions[$result['version']])) {
-                    $updatedVersions[] = $version->getId();
+                    $updatedVersions[] = $result['id'];
                 } else {
-                    $newVersions[] = $version->getId();
+                    $newVersions[] = $result['id'];
                 }
             }
 
@@ -259,8 +259,14 @@ class Updater
             }
         }
 
-        if ($deletedVersions || $updatedVersions || $newVersions) {
-            $this->dispatcher->dispatch(UpdaterEvent::VERSIONS_UPDATE, new UpdaterEvent($package, $flags, $newVersions, $updatedVersions, $deletedVersions));
+        $isNewPackage = false;
+        if (null === $package->getUpdatedAt()) {
+            $isNewPackage = true;
+        } elseif ($deletedVersions || $updatedVersions || $newVersions) {
+            $this->dispatcher->dispatch(
+                UpdaterEvent::VERSIONS_UPDATE,
+                new UpdaterEvent($package, $flags, $newVersions, $updatedVersions, $deletedVersions)
+            );
         }
 
         foreach ($deletedVersions as $versionId) {
@@ -278,6 +284,10 @@ class Updater
         $em->flush();
         if ($repository->hadInvalidBranches()) {
             throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
+        }
+
+        if (true === $isNewPackage) {
+            $this->dispatcher->dispatch(UpdaterEvent::PACKAGE_PERSIST, new UpdaterEvent($package, $flags));
         }
 
         return $package;

@@ -94,7 +94,7 @@ class HookTestAction
             $client = new MockHttpClient($callback);
         }
 
-        return $this->executor->executeWebhook($webhook, $client, $context);
+        return $this->executor->executeWebhook($webhook, $context, $client);
     }
 
     private function selectPackage(array &$data): void
