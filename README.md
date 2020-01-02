@@ -10,8 +10,8 @@ Features
 - Compatible with composer.
 - Support update webhook for GitHub, Bitbucket and GitLab.
 - Customers user and groups.
+- Generic Packeton [webhooks](docs/webhook.md)
 - Limit access by vendor and versions.
-- Expire access for user. 
 - Allow to freeze updates for the new releases after expire a customers license.
 - Mirroring for packages' zip files and downloads its from your host.
 - Allow to add ssh keys from UI and use multiple SSH Keys settings for different github/git accounts.
@@ -31,7 +31,7 @@ Demo
 ----
 See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/composer)
 
-[![Demo](docs/demo.png)](docs/demo.png)
+[![Demo](docs/img/demo.png)](docs/img/demo.png)
 
 Requirements
 ------------
