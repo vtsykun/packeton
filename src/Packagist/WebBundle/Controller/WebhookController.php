@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
@@ -45,8 +46,11 @@ class WebhookController extends Controller
 
         /** @var Webhook[] $webhooks */
         $webhooks = $qb->getQuery()->getResult();
+        $deleteCsrfToken = $this->get('security.csrf.token_manager')->getToken('webhook_delete');
+
         return [
             'webhooks' => $webhooks,
+            'deleteCsrfToken' => $deleteCsrfToken,
         ];
     }
 
@@ -82,6 +86,25 @@ class WebhookController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * @Route("/delete/{id}", name="webhook_delete")
+     * {@inheritdoc}
+     */
+    public function deleteAction(Request $request, Webhook $hook)
+    {
+        if (!$this->isGranted('VIEW', $hook)) {
+            throw new AccessDeniedException;
+        }
+        if (!$this->isCsrfTokenValid('webhook_delete', $request->request->get('_token'))) {
+            throw new AccessDeniedException;
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->remove($hook);
+        $em->flush();
+        return new Response('', 204);
     }
 
     /**

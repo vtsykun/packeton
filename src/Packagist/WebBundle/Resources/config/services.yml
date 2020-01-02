@@ -81,6 +81,7 @@ services:
             - '@packagist.in_memory_dumper'
             - '@security.authorization_checker'
             - '@packagist_factory'
+            - '@event_dispatcher'
             - '@packagist_cache'
 
     Packagist\WebBundle\Model\PackageManager:
@@ -269,3 +270,4 @@ services:
             - { name: kernel.event_listener, event: packageRefresh }
             - { name: kernel.event_listener, event: packagePersist }
             - { name: kernel.event_listener, event: packageError }
+            - { name: kernel.event_listener, event: packageRemove }

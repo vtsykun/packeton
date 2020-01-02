@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook;
+namespace Packagist\WebBundle\Webhook\Twig;
 
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;

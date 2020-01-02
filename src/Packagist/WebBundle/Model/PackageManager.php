@@ -7,11 +7,14 @@ namespace Packagist\WebBundle\Model;
 use Doctrine\Common\Cache\Cache;
 use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\VersionRepository;
+use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Event\UpdaterEvent;
 use Packagist\WebBundle\Package\InMemoryDumper;
+use Packagist\WebBundle\Repository\VersionRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Packagist\WebBundle\Entity\Package;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 
@@ -27,6 +30,7 @@ class PackageManager
     protected $cache;
     protected $authorizationChecker;
     protected $packagistFactory;
+    protected $dispatcher;
 
     public function __construct(
         RegistryInterface $doctrine,
@@ -38,6 +42,7 @@ class PackageManager
         InMemoryDumper $dumper,
         AuthorizationCheckerInterface $authorizationChecker,
         PackagistFactory $packagistFactory,
+        EventDispatcherInterface $dispatcher,
         Cache $cache
     ) {
         $this->doctrine = $doctrine;
@@ -49,13 +54,16 @@ class PackageManager
         $this->authorizationChecker = $authorizationChecker;
         $this->dumper = $dumper;
         $this->packagistFactory = $packagistFactory;
+        $this->dispatcher = $dispatcher;
         $this->cache = $cache;
     }
 
     public function deletePackage(Package $package)
     {
         /** @var VersionRepository $versionRepo */
-        $versionRepo = $this->doctrine->getRepository('PackagistWebBundle:Version');
+        $versionRepo = $this->doctrine->getRepository(VersionRepository::class);
+        $this->dispatcher->dispatch(UpdaterEvent::PACKAGE_REMOVE, new UpdaterEvent($package));
+
         foreach ($package->getVersions() as $version) {
             $versionRepo->remove($version);
         }

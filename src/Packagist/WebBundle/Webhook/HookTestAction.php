@@ -121,7 +121,7 @@ class HookTestAction
         if (isset($data['versions'])) {
             $versions = array_map('trim', explode(',', $data['versions']));
             $collection = $collection->filter(function (Version $version) use ($versions) {
-                return in_array($version->getVersion(), [$versions]);
+                return in_array($version->getVersion(), $versions);
             });
             $data['versions'] = $collection->toArray();
         } elseif ($ver = $collection->first()) {

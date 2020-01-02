@@ -7,7 +7,7 @@ namespace Packagist\WebBundle\Form\Type;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Validator\Constraint\ValidRegex;
-use Packagist\WebBundle\Webhook\PayloadRenderer;
+use Packagist\WebBundle\Webhook\Twig\PayloadRenderer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;

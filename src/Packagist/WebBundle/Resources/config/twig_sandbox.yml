@@ -1,6 +1,6 @@
 parameters:
     security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'apply', 'verbatim']
-    security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range']
+    security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range', 'constant']
     security_policy_methods: []
     security_policy_forbidden_classes:
         - 'Packagist\WebBundle\Entity\Job'
@@ -28,7 +28,7 @@ services:
             - '%security_policy_functions%'
 
     packagist.twig.webhook_security_policy.forbidden:
-        class: Packagist\WebBundle\Webhook\WebhookSecurityPolicy
+        class: Packagist\WebBundle\Webhook\Twig\WebhookSecurityPolicy
         decorates: packagist.twig.webhook_security_policy
         arguments:
             - '@packagist.twig.webhook_security_policy.forbidden.inner'
@@ -48,12 +48,20 @@ services:
             - true # use sandbox globally in instance
 
     packagist.twig.webhook_placeholder.extension:
-        class: Packagist\WebBundle\Webhook\PlaceholderExtension
+        class: Packagist\WebBundle\Webhook\Twig\PlaceholderExtension
+        tags:
+            - { name: 'packagist_trusted_extension' }
+
+    packagist.twig.webhook.extension:
+        class: Packagist\WebBundle\Webhook\Twig\WebhookExtension
+        arguments:
+            - '@doctrine'
+            - '@Packagist\WebBundle\Util\ChangelogUtils'
         tags:
             - { name: 'packagist_trusted_extension' }
 
     packagist.payload_rendered:
-        class: Packagist\WebBundle\Webhook\PayloadRenderer
+        class: Packagist\WebBundle\Webhook\Twig\PayloadRenderer
         lazy: true
         public: true
         arguments:
@@ -62,3 +70,4 @@ services:
         calls:
             - [addExtension, ['@packagist.twig.webhook_sandbox']]
             - [addExtension, ['@packagist.twig.webhook_placeholder.extension']]
+            - [addExtension, ['@packagist.twig.webhook.extension']]

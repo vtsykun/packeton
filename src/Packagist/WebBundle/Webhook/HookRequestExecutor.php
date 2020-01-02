@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packagist\WebBundle\Webhook;
 
 use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Webhook\Twig\InterruptException;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -27,10 +28,7 @@ class HookRequestExecutor
     {
         $variables['webhook'] = $webhook;
         if (null === $client) {
-            $client = HttpClient::create([
-                'max_duration' => 80,
-                'timeout' => 60
-            ]);
+            $client = HttpClient::create(['max_duration' => 60]);
         }
 
         $maxAttempt = 3;
@@ -108,12 +106,16 @@ class HookRequestExecutor
     private function createFailsResponse(Webhook $webhook, \Throwable $exception, HookRequest $request = null)
     {
         $message = null;
-        while ($exception) {
-            $message = null !== $message ?
-                : sprintf("Exception (%s). %s", get_class($exception), $exception->getMessage());
-            sprintf("\n * Prev exception (%s). %s", get_class($exception), $exception->getMessage());
+        if ($exception->getPrevious() instanceof InterruptException) {
+            $message = $exception->getPrevious()->getMessage();
+        } else {
+            while ($exception) {
+                $message = null === $message ?
+                    sprintf("Exception (%s). %s", get_class($exception), $exception->getMessage()) :
+                    $message . sprintf("\n * Prev exception (%s). %s", get_class($exception), $exception->getMessage());
 
-            $exception = $exception->getPrevious();
+                $exception = $exception->getPrevious();
+            }
         }
 
         if (null === $request) {

@@ -206,35 +206,26 @@ class VersionRepository extends EntityRepository
      */
     public function getPreviousRelease(string $package, string $version)
     {
-        $subQb = $this->getEntityManager()->createQueryBuilder();
-        $releasedAt = $subQb->select('v.releasedAt')
-            ->from('PackagistWebBundle:Version', 'v')
-            ->leftJoin('v.package', 'p')
-            ->where('v.version = :version')
-            ->andWhere('p.name = :name')
-            ->setParameter('version', $version)
+        $versions = $qb = $this->createQueryBuilder('v')
+            ->resetDQLPart('select')
+            ->select('v.version')
+            ->where('v.development = false')
+            ->andWhere('v.name = :name')
             ->setParameter('name', $package)
-            ->setMaxResults(1)
-            ->getQuery()->getSingleScalarResult();
-
-        $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb->select('v.version')
-            ->from('PackagistWebBundle:Version', 'v')
-            ->leftJoin('v.package', 'p')
-            ->andWhere('v.development = false')
-            ->andWhere('p.name = :name')
-            ->setParameter('name', $package)
-            ->orderBy('v.releasedAt', 'DESC')
-            ->setMaxResults(1);
-
-        if ($releasedAt) {
-            $qb->andWhere('v.releasedAt < :releasedAt')
-                ->setParameter('releasedAt', $releasedAt);
-        } else {
-            $qb->setFirstResult(1);
+            ->getQuery()
+            ->getResult();
+        $result = null;
+        $versions = $versions ? array_column($versions, 'version') : null;
+        foreach ($versions as $candidate) {
+            if (version_compare($version, $candidate) < 0) {
+                continue;
+            }
+            if ($result === null || version_compare($result, $candidate) < 0) {
+                $result = $candidate;
+            }
         }
 
-        return $qb->getQuery()->getSingleScalarResult();
+        return $result;
     }
 
     public function getVersionStatisticsByMonthAndYear()

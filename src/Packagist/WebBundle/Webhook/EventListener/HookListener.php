@@ -80,6 +80,36 @@ class HookListener
     }
 
     /**
+     * @param UpdaterEvent $event
+     */
+    public function onPackageRemove(UpdaterEvent $event): void
+    {
+        $webhooks = $this->registry->getRepository(Webhook::class)
+            ->findActive($event->getPackage()->getName(), [Webhook::HOOK_REPO_DELETE]);
+        if (empty($webhooks)) {
+            return;
+        }
+
+        $versionRepo = $this->registry->getRepository(Version::class);
+        $package = $event->getPackage()->toArray($versionRepo);
+        $versions = $package['versions'] ?? [];
+        unset($package['versions']);
+
+        foreach ($webhooks as $webhook) {
+            $context = [
+                'package' => $package,
+                'versions' => $versions,
+                'event' => Webhook::HOOK_REPO_DELETE
+            ];
+
+            $this->jobScheduler->publish('webhook:send', [
+                'context' => $context,
+                'webhook' => $webhook->getId(),
+            ]);
+        }
+    }
+
+    /**
      * @param UpdaterErrorEvent $event
      */
     public function onPackageError(UpdaterErrorEvent $event): void
@@ -156,7 +186,7 @@ class HookListener
         foreach ($removeVersions as $id) {
             $version = $repo->find($id);
             if ($version instanceof Version) {
-                if ($hook->getVersionRestriction() && preg_match($hook->getVersionRestriction(), $version->getVersion())) {
+                if ($hook->getVersionRestriction() && !preg_match($hook->getVersionRestriction(), $version->getVersion())) {
                     continue;
                 }
                 $versions[] = $version->toArray();

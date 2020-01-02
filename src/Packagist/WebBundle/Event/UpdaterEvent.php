@@ -11,6 +11,7 @@ class UpdaterEvent extends Event
 {
     public const VERSIONS_UPDATE  = 'packageRefresh';
     public const PACKAGE_PERSIST  = 'packagePersist';
+    public const PACKAGE_REMOVE   = 'packageRemove';
 
     private $package;
     private $created;

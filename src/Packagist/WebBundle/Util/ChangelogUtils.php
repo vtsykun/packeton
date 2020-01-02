@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Packagist\WebBundle\Util;
 
-use Composer\Config;
-use Composer\Factory;
 use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\Package;
 
 class ChangelogUtils
 {
+    private const VALID_TAG_REGEX = '#^[a-z0-9\.\-_]+$#i';
+
     /**
      * @var PackagistFactory
      */
@@ -38,6 +38,9 @@ class ChangelogUtils
         // see GitDriver
         $repoDir = $config->get('cache-vcs-dir') . '/' . preg_replace('{[^a-z0-9.]}i', '-', $package->getRepository()) . '/';
         if (!is_dir($repoDir)) {
+            return [];
+        }
+        if (!preg_match(self::VALID_TAG_REGEX, $fromVersion) || !preg_match(self::VALID_TAG_REGEX, $toVersion)) {
             return [];
         }
 
