@@ -37,8 +37,9 @@ Requirements
 ------------
 
 - MySQL or PostgresSQL for the main data store.
-- Redis for some functionality (favorites, download statistics).
+- Redis for some functionality (favorites, download statistics, worker queue).
 - git/svn/hg depending on which repositories you want to support.
+- Supervisor to run a background job worker
 
 Installation
 ------------

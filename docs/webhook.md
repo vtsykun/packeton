@@ -22,11 +22,14 @@ Examples
  - [Slack notification](#slack-notification)
  - [How to use url placeholder](#use-url-placeholder)
  - [Interrupt request](#interrupt-request)
+ - [Nesting webhook](#nesting-webhook)
+ - [JIRA issue fix version](#jira-create-a-new-release-and-set-fix-version)
+ - [Packeton twig function](#new-twig-functions)
 
 Telegram notification
 ---------------------
 
-POST https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage
+POST `https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage`
 
 Options:
 ```json
@@ -60,7 +63,7 @@ Slack notification
 ------------------
 In first you need create a [slack app](https://api.slack.com/apps)
 
-POST https://slack.com/api/chat.postMessage
+POST `https://slack.com/api/chat.postMessage`
 
 Options:
 
@@ -94,7 +97,7 @@ Use url placeholder
 
 The placeholder allow to build URL parameters from twig template.
 
-http://httpbin.org/{{ method }}?repo={{ repoName }}
+`http://httpbin.org/{{ method }}?repo={{ repoName }}`
 
 *Syntax*
 
@@ -113,7 +116,7 @@ Variant 2. Send many request for each value from array string[]
 
 Example
 
-http://httpbin.org/{{ method }}?repo={{ repoName }}
+`http://httpbin.org/{{ method }}?repo={{ repoName }}`
 
 Payload
 
@@ -148,3 +151,94 @@ Payload
 
 {{ request|json_encode }}
 ```
+
+Nesting webhook
+---------------
+
+You can trigger webhook from twig code. It may be used for send two requests a one event.
+
+*Syntax*
+
+Use `trigger_webhook(hookId: int|Webhook, context: array)` function.
+
+Example Payload
+
+```twig
+{% do trigger_webhook(6, {'project': 'OK', 'version': versions[0].version}) %}
+```
+
+Jira create a new release and set fix version
+---------------------------------------
+
+You need to create two webhook for its, the first must triggers on a new release event, 
+the second will be called from twig code.
+
+![Jira](img/jira.png)
+
+#### Create a new release in JIRA
+
+POST `https://jiraserver/rest/api/2/version`
+
+Options:
+
+```json
+{
+    "headers": {
+        "Content-Type": "application/json"
+    },
+    "auth_basic": "jirauser:password"
+}
+```
+
+Payload
+
+```twig
+{% set changeLog = get_changelog(package, null, versions[0].version) %}
+{% set ticket = preg_match_all('/((OK|OTEK)-(\\d+))\\s*:/u', changeLog|join(';'), 1) %}
+
+{% set request = {
+    'archived': false,
+    'releaseDate': versions[0].releasedAt|date('Y-m-d'),
+    'name': versions[0].version,
+    'released': true,
+    'description': 'Packagist auto release',
+    'project': 'OK'
+} %}
+
+{% if ticket|length == 0 %}
+    {{ interrupt('There are not commits with JIRA tiket no.') }}
+{% endif %}
+
+{% do trigger_webhook(6, {'project': 'OK', 'ticket': ticket, 'version': versions[0].version}) %}
+{{ request|json_encode }}
+```
+
+#### Update an issue fix version
+
+PUT `https://jiraserver/rest/api/2/issue/{{ issue }}`
+
+Options:
+
+```json
+{
+    "headers": {
+        "Content-Type": "application/json"
+    },
+    "auth_basic": "jirauser:password"
+}
+```
+Payload
+
+```twig
+{% placeholder issue with ticket %}
+
+{% set request = {
+    'fields': {
+        'fixVersions': [{'name': version}]
+    }
+} %}
+
+{{ request|json_encode }}
+```
+
+![Jira issue](img/jira_response.png)
