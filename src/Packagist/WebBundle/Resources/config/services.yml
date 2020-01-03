@@ -157,6 +157,7 @@ services:
             - '@serializer'
             - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
+            - '@Packagist\WebBundle\Service\JobScheduler'
 
     packagist.log_resetter:
         class: Packagist\WebBundle\Service\LogResetter

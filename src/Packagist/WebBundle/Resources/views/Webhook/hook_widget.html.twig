@@ -7,7 +7,11 @@
 {% if response is not null %}
     {% for hook in response %}
         <div style="padding-top: 25px">
-            {% include '@PackagistWeb/Webhook/hookinfo.html.twig' with {'hook': hook} %}
+            {% if hook.errorMessage is defined %}
+                <pre class="github">{{ hook.errorMessage }}</pre>
+            {% else %}
+                {% include '@PackagistWeb/Webhook/hookinfo.html.twig' with {'hook': hook} %}
+            {% endif %}
         </div>
     {% endfor %}
 {% endif %}

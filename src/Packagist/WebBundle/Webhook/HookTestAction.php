@@ -9,8 +9,10 @@ use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Webhook\Twig\WebhookContext;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class HookTestAction
 {
@@ -94,7 +96,41 @@ class HookTestAction
             $client = new MockHttpClient($callback);
         }
 
-        return $this->executor->executeWebhook($webhook, $context, $client);
+        return $this->processChildWebhook($webhook, $context, $client);
+    }
+
+    /**
+     * @param Webhook $webhook
+     * @param array $context
+     * @param HttpClientInterface $client
+     * @param int $nestingLevel
+     *
+     * @return HookResponse[]
+     */
+    private function processChildWebhook(Webhook $webhook, array $context, HttpClientInterface $client = null, int $nestingLevel = 0)
+    {
+        if ($nestingLevel >= 3) {
+            return [new HookErrorResponse('Maximum webhook nesting level of 3 reached')];
+        }
+
+        $runtimeContext = new WebhookContext();
+        $this->executor->setContext($runtimeContext);
+
+        $response = $this->executor->executeWebhook($webhook, $context, $client);
+        $this->executor->setContext(null);
+
+        if (isset($runtimeContext[WebhookContext::CHILD_WEBHOOK])) {
+            /** @var Webhook $childHook */
+            foreach ($runtimeContext[WebhookContext::CHILD_WEBHOOK] as list($childHook, $childContext)) {
+                if (null !== $childHook->getOwner() && $childHook->getOwner() !== $webhook->getOwner()) {
+                    continue;
+                }
+                $child = $this->processChildWebhook($webhook, $childContext, $client, $nestingLevel+1);
+                $response = array_merge($response, $child);
+            }
+        }
+
+        return $response;
     }
 
     private function selectPackage(array &$data): void

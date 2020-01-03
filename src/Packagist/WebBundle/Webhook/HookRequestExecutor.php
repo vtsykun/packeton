@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Packagist\WebBundle\Webhook;
 
 use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Webhook\Twig\ContextAwareInterface;
 use Packagist\WebBundle\Webhook\Twig\InterruptException;
+use Packagist\WebBundle\Webhook\Twig\WebhookContext;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class HookRequestExecutor
+class HookRequestExecutor implements ContextAwareInterface
 {
     private $requestResolver;
 
@@ -124,5 +126,13 @@ class HookRequestExecutor
         }
 
         return new HookResponse($request, $message);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setContext(WebhookContext $context = null): void
+    {
+        $this->requestResolver->setContext($context);
     }
 }

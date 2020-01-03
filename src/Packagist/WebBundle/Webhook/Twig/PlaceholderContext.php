@@ -57,18 +57,14 @@ class PlaceholderContext
         // Generate all possible combination if used > 1 parameters for variable
         $stack = [$content];
         foreach ($replacements as $hash => $variables) {
-            foreach ($variables as $var) {
-                $currentStack = $stack;
-                foreach ($currentStack as $content) {
-                    $stack[] = str_replace($hash, $var, $content);
+            $baseContent = $stack[0];
+            foreach ($variables as $i => $var) {
+                if (isset($stack[$i])) {
+                    $stack[$i] = str_replace($hash, $var, $stack[$i]);
+                } else {
+                    $stack[$i] = str_replace($hash, $var, $baseContent);
                 }
             }
-            foreach ($stack as $i => $content) {
-                if (strpos($content, $hash) !== false) {
-                    unset($stack[$i]);
-                }
-            }
-            $stack = array_values($stack);
         }
 
         $stack = array_values(array_unique($stack));

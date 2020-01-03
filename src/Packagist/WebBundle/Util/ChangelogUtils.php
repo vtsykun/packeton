@@ -28,10 +28,11 @@ class ChangelogUtils
      * @param Package|object $package
      * @param string $fromVersion
      * @param string $toVersion
+     * @param int $limit
      *
      * @return array
      */
-    public function getChangelog(Package $package, string $fromVersion, string $toVersion): array
+    public function getChangelog(Package $package, string $fromVersion, string $toVersion, int $limit = null): array
     {
         $config = $this->factory->createConfig($package->getCredentials());
 
@@ -46,6 +47,9 @@ class ChangelogUtils
 
         $diff = escapeshellarg("$fromVersion..$toVersion");
         $cmd = "cd $repoDir; git log $diff --pretty=format:'- %B' --decorate=full --no-merges --date=short";
+        if (null !== $limit) {
+            $cmd .= " --max-count=$limit";
+        }
         if (!$output = shell_exec($cmd)) {
             return [];
         }

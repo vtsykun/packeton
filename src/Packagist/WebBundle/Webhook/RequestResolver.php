@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Packagist\WebBundle\Webhook;
 
 use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Webhook\Twig\ContextAwareInterface;
 use Packagist\WebBundle\Webhook\Twig\PayloadRenderer;
 use Packagist\WebBundle\Webhook\Twig\PlaceholderContext;
 use Packagist\WebBundle\Webhook\Twig\PlaceholderExtension;
+use Packagist\WebBundle\Webhook\Twig\WebhookContext;
 
-class RequestResolver
+class RequestResolver implements ContextAwareInterface
 {
     private $renderer;
 
@@ -52,5 +54,13 @@ class RequestResolver
             list($url, $content) = explode($separator, $content);
             yield new HookRequest($url, $webhook->getMethod(), $webhook->getOptions() ?: [], $content ? trim($content) : null);
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setContext(WebhookContext $context = null): void
+    {
+        $this->renderer->setContext($context);
     }
 }
