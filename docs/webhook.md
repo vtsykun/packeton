@@ -242,3 +242,8 @@ Payload
 ```
 
 ![Jira issue](img/jira_response.png)
+
+New twig functions
+-----------------
+
+See [WebhookExtension](/src/Packagist/WebBundle/Webhook/Twig/WebhookExtension.php) for details.
