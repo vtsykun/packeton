@@ -37,7 +37,7 @@ class FeedController extends Controller
      */
     public function feedsAction()
     {
-        return array();
+        return [];
     }
 
     /**
@@ -60,7 +60,7 @@ class FeedController extends Controller
             $req,
             'Newly Submitted Packages',
             'Latest packages submitted to Packagist.',
-            $this->generateUrl('browse', array(), UrlGeneratorInterface::ABSOLUTE_URL),
+            $this->generateUrl('browse', [], UrlGeneratorInterface::ABSOLUTE_URL),
             $packages
         );
 
@@ -87,7 +87,7 @@ class FeedController extends Controller
             $req,
             'New Releases',
             'Latest releases of all packages.',
-            $this->generateUrl('browse', array(), UrlGeneratorInterface::ABSOLUTE_URL),
+            $this->generateUrl('browse', [], UrlGeneratorInterface::ABSOLUTE_URL),
             $packages
         );
 

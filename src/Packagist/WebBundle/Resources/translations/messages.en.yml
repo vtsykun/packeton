@@ -25,6 +25,7 @@ menu:
     my_users: My users
     my_groups: My groups
     ssh_keys: Credentials
+    webhooks: Webhooks
 
 signinbox:
      register: No account yet? Create one now!
@@ -147,6 +148,19 @@ api_doc:
     search_by_type: Search packages by type
     get_by_name: Get a package by name
     get_package_data: Getting package data
+
+webhooks:
+    payload.tooltip: |
+        The twig template code to render the Generic body request payload.
+        Untrusted template code is evaluate in a Twig sandbox mode.
+        You can use <i>json_encode</i> filter to send JSON request, see more about syntax
+        in <a href="https://twig.symfony.com/doc/2.x/" target="_blank"> twig docs </a>.
+        More examples and variables description you can see
+        <a href="https://github.com/vtsykun/packeton/blob/master/docs/webhook.md" target="_blank"> here </a>
+    options.tooltip: |
+        Symfony http-client options, must be a valid JSON.
+        See <a href="https://symfony.com/doc/current/components/http_client.html" target="_blank"> symfony docs </a>
+        for details
 
 user:
     member_since: member since

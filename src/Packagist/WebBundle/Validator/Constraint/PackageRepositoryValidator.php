@@ -22,7 +22,7 @@ class PackageRepositoryValidator extends ConstraintValidator
         }
 
         if (!$value instanceof Package) {
-            throw new UnexpectedTypeException($constraint, Package::class);
+            throw new UnexpectedTypeException($value, Package::class);
         }
 
         // vcs driver was not nulled which means the repository was not set/modified and is still valid

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Packagist\WebBundle\Util;
 
-use Composer\Config;
-use Composer\Factory;
 use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\Package;
 
 class ChangelogUtils
 {
+    private const VALID_TAG_REGEX = '#^[a-z0-9\.\-_]+$#i';
+
     /**
      * @var PackagistFactory
      */
@@ -28,10 +28,11 @@ class ChangelogUtils
      * @param Package|object $package
      * @param string $fromVersion
      * @param string $toVersion
+     * @param int $limit
      *
      * @return array
      */
-    public function getChangelog(Package $package, string $fromVersion, string $toVersion): array
+    public function getChangelog(Package $package, string $fromVersion, string $toVersion, int $limit = null): array
     {
         $config = $this->factory->createConfig($package->getCredentials());
 
@@ -40,9 +41,15 @@ class ChangelogUtils
         if (!is_dir($repoDir)) {
             return [];
         }
+        if (!preg_match(self::VALID_TAG_REGEX, $fromVersion) || !preg_match(self::VALID_TAG_REGEX, $toVersion)) {
+            return [];
+        }
 
         $diff = escapeshellarg("$fromVersion..$toVersion");
         $cmd = "cd $repoDir; git log $diff --pretty=format:'- %B' --decorate=full --no-merges --date=short";
+        if (null !== $limit) {
+            $cmd .= " --max-count=$limit";
+        }
         if (!$output = shell_exec($cmd)) {
             return [];
         }

@@ -2,18 +2,10 @@
 
 namespace Packagist\WebBundle\Controller;
 
-use Composer\Factory;
-use Composer\IO\BufferIO;
-use Packagist\WebBundle\Form\Type\CredentialType;
 use Packagist\WebBundle\Util\ChangelogUtils;
-use Symfony\Component\Console\Output\OutputInterface;
-use Composer\Package\Loader\ArrayLoader;
-use Composer\Package\Loader\ValidatingArrayLoader;
-use Composer\Console\HtmlOutputFormatter;
-use Composer\Repository\VcsRepository;
 use Doctrine\ORM\NoResultException;
-use Packagist\WebBundle\Entity\PackageRepository;
-use Packagist\WebBundle\Entity\VersionRepository;
+use Packagist\WebBundle\Repository\PackageRepository;
+use Packagist\WebBundle\Repository\VersionRepository;
 use Packagist\WebBundle\Form\Model\MaintainerRequest;
 use Packagist\WebBundle\Form\Type\AbandonedType;
 use Packagist\WebBundle\Entity\Package;
@@ -22,7 +14,6 @@ use Packagist\WebBundle\Form\Type\AddMaintainerRequestType;
 use Packagist\WebBundle\Form\Type\PackageType;
 use Packagist\WebBundle\Form\Type\RemoveMaintainerRequestType;
 use Predis\Connection\ConnectionException;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -105,6 +96,7 @@ class PackageController extends Controller
         $package = new Package();
         $form = $this->createForm(PackageType::class, $package, [
             'action' => $this->generateUrl('submit'),
+            'validation_groups' => ['Create']
         ]);
         $package->addMaintainer($user);
 
@@ -140,7 +132,7 @@ class PackageController extends Controller
         }
 
         $package = new Package;
-        $form = $this->createForm(PackageType::class, $package);
+        $form = $this->createForm(PackageType::class, $package, ['validation_groups' => ['Create']]);
         $user = $this->getUser();
         $package->addMaintainer($user);
 
@@ -250,7 +242,7 @@ class PackageController extends Controller
                 /** @var Package $package */
                 $trendiness[$package->getId()] = (int) $redis->zscore('downloads:trending', $package->getId());
             }
-            usort($providers, function ($a, $b) use ($trendiness) {
+            usort($providers, function (Package $a, Package $b) use ($trendiness) {
                 if ($trendiness[$a->getId()] === $trendiness[$b->getId()]) {
                     return strcmp($a->getName(), $b->getName());
                 }
@@ -421,7 +413,8 @@ class PackageController extends Controller
         }
 
         if (!$fromVersion) {
-            $fromVersion = $this->get('packagist.version_repository')
+            $fromVersion = $this->getDoctrine()
+                ->getRepository(Version::class)
                 ->getPreviousRelease($package->getName(), $toVersion);
             if (!$fromVersion) {
                 return new JsonResponse(['error' => 'Previous release do not exists'], 400);
@@ -534,6 +527,8 @@ class PackageController extends Controller
      *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "versionId"="[0-9]+"}
      * )
      * @Method({"DELETE"})
+     *
+     * {@inheritdoc}
      */
     public function deletePackageVersionAction(Request $req, $versionId)
     {
@@ -566,6 +561,7 @@ class PackageController extends Controller
     /**
      * @Route("/packages/{name}", name="update_package", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"})
      * @Method({"PUT"})
+     * @inheritDoc
      */
     public function updatePackageAction(Request $req, $name)
     {
@@ -796,12 +792,10 @@ class PackageController extends Controller
             throw new AccessDeniedException;
         }
 
-        $form = $this->createFormBuilder($package, ["validation_groups" => ["Update"]])
-            ->add('credentials', CredentialType::class)
-            ->add('repository', TextType::class)
-            ->setMethod('POST')
-            ->setAction($this->generateUrl('edit_package', ['name' => $package->getName()]))
-            ->getForm();
+        $form = $this->createForm(PackageType::class, $package, [
+            'action' => $this->generateUrl('edit_package', ['name' => $package->getName()]),
+            'validation_groups' => ['Update'],
+        ]);
 
         $form->handleRequest($req);
         if ($form->isValid()) {

@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use DateTimeInterface;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\JobRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\JobRepository")
  * @ORM\Table(
  *     name="job",
  *     indexes={
@@ -46,7 +46,7 @@ class Job
     /**
      * @ORM\Column(type="json_array")
      */
-    private $payload;
+    private $payload = [];
 
     /**
      * One of queued, started, completed, failed
@@ -110,12 +110,12 @@ class Job
         $this->id = $id;
     }
 
-    public function getId(): string
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function setPackageId(int $packageId)
+    public function setPackageId(?int $packageId)
     {
         $this->packageId = $packageId;
     }
@@ -170,7 +170,7 @@ class Job
         return $this->createdAt;
     }
 
-    public function getStartedAt(): DateTimeInterface
+    public function getStartedAt(): ?DateTimeInterface
     {
         return $this->startedAt;
     }

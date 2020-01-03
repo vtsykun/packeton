@@ -33,9 +33,11 @@ use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Tag;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\SuggestLink;
+use Packagist\WebBundle\Event\UpdaterEvent;
 use Packagist\WebBundle\Service\DistConfig;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -67,42 +69,52 @@ class Updater
     protected $archiveManager;
 
     /**
+     * @var EventDispatcherInterface
+     */
+    protected $dispatcher;
+
+    /**
      * Supported link types
      * @var array
      */
-    protected $supportedLinkTypes = array(
-        'require'     => array(
+    protected $supportedLinkTypes = [
+        'require'     => [
             'method' => 'getRequires',
             'entity' => 'RequireLink',
-        ),
-        'conflict'    => array(
+        ],
+        'conflict'    => [
             'method' => 'getConflicts',
             'entity' => 'ConflictLink',
-        ),
-        'provide'     => array(
+        ],
+        'provide'     => [
             'method' => 'getProvides',
             'entity' => 'ProvideLink',
-        ),
-        'replace'     => array(
+        ],
+        'replace'     => [
             'method' => 'getReplaces',
             'entity' => 'ReplaceLink',
-        ),
-        'devRequire' => array(
+        ],
+        'devRequire' => [
             'method' => 'getDevRequires',
             'entity' => 'DevRequireLink',
-        ),
-    );
+        ],
+    ];
 
     /**
      * Constructor
      *
      * @param RegistryInterface $doctrine
      * @param DistConfig $distConfig
+     * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct(RegistryInterface $doctrine, DistConfig $distConfig)
-    {
+    public function __construct(
+        RegistryInterface $doctrine,
+        DistConfig $distConfig,
+        EventDispatcherInterface $dispatcher
+    ) {
         $this->doctrine = $doctrine;
         $this->distConfig = $distConfig;
+        $this->dispatcher = $dispatcher;
         $this->factory = new Factory();
 
         ErrorHandler::register();
@@ -132,7 +144,6 @@ class Updater
 
         /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
-        $apc = extension_loaded('apcu');
         $rootIdentifier = null;
 
         $downloadManager = $this->factory->createDownloadManager($io, $config);
@@ -140,38 +151,6 @@ class Updater
         $archiveManager->setOverwriteFiles(false);
 
         if ($repository instanceof VcsRepository) {
-            $cfg = $repository->getRepoConfig();
-            if (isset($cfg['url']) && preg_match('{\bgithub\.com\b}', $cfg['url'])) {
-                foreach ($package->getMaintainers() as $maintainer) {
-                    if (!($newGithubToken = $maintainer->getGithubToken())) {
-                        continue;
-                    }
-
-                    $valid = null;
-                    if ($apc) {
-                        $valid = apcu_fetch('is_token_valid_'.$maintainer->getUsernameCanonical());
-                    }
-
-                    if (true !== $valid) {
-                        $context = stream_context_create(['http' => ['header' => 'User-agent: packagist-token-check']]);
-                        $rate = json_decode(@file_get_contents('https://api.github.com/rate_limit?access_token='.$newGithubToken, false, $context), true);
-                        // invalid/outdated token, wipe it so we don't try it again
-                        if (!$rate && (strpos($http_response_header[0], '403') || strpos($http_response_header[0], '401'))) {
-                            $maintainer->setGithubToken(null);
-                            $em->flush($maintainer);
-                            continue;
-                        }
-                    }
-
-                    if ($apc) {
-                        apcu_store('is_token_valid_'.$maintainer->getUsernameCanonical(), true, 86400);
-                    }
-
-                    $io->setAuthentication('github.com', $newGithubToken, 'x-oauth-basic');
-                    break;
-                }
-            }
-
             $rootIdentifier = $repository->getDriver()->getRootIdentifier();
         }
 
@@ -216,7 +195,7 @@ class Updater
         $existingVersions = $versionRepository->getVersionMetadataForUpdate($package);
 
         $lastProcessed = null;
-        $idsToMarkUpdated = [];
+        $idsToMarkUpdated = $newVersions = $updatedVersions = $deletedVersions = [];
         foreach ($versions as $version) {
             if ($version instanceof AliasPackage) {
                 continue;
@@ -247,6 +226,14 @@ class Updater
                 $idsToMarkUpdated[] = $result['id'];
             }
 
+            if ($lastUpdated) {
+                if (isset($existingVersions[$result['version']])) {
+                    $updatedVersions[] = $result['id'];
+                } else {
+                    $newVersions[] = $result['id'];
+                }
+            }
+
             // mark the version processed so we can prune leftover ones
             unset($existingVersions[$result['version']]);
         }
@@ -261,7 +248,7 @@ class Updater
         // remove outdated versions
         foreach ($existingVersions as $version) {
             if (!is_null($version['soft_deleted_at']) && new \DateTime($version['soft_deleted_at']) < $deleteDate) {
-                $versionRepository->remove($versionRepository->findOneById($version['id']));
+                $deletedVersions[] = $version['id'];
             } else {
                 // set it to be soft-deleted so next update that occurs after deleteDate (1day) if the
                 // version is still missing it will be really removed
@@ -270,6 +257,20 @@ class Updater
                     ['now' => date('Y-m-d H:i:s'), 'id' => $version['id']]
                 );
             }
+        }
+
+        $isNewPackage = false;
+        if (null === $package->getUpdatedAt()) {
+            $isNewPackage = true;
+        } elseif ($deletedVersions || $updatedVersions || $newVersions) {
+            $this->dispatcher->dispatch(
+                UpdaterEvent::VERSIONS_UPDATE,
+                new UpdaterEvent($package, $flags, $newVersions, $updatedVersions, $deletedVersions)
+            );
+        }
+
+        foreach ($deletedVersions as $versionId) {
+            $versionRepository->remove($versionRepository->findOneById($versionId));
         }
 
         if (preg_match('{^(?:git://|git@|https?://)github.com[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match) && $repository instanceof VcsRepository) {
@@ -283,6 +284,10 @@ class Updater
         $em->flush();
         if ($repository->hadInvalidBranches()) {
             throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
+        }
+
+        if (true === $isNewPackage) {
+            $this->dispatcher->dispatch(UpdaterEvent::PACKAGE_PERSIST, new UpdaterEvent($package, $flags));
         }
 
         return $package;
@@ -407,7 +412,7 @@ class Updater
         $version->setSupport($data->getSupport());
 
         if ($data->getKeywords()) {
-            $keywords = array();
+            $keywords = [];
             foreach ($data->getKeywords() as $keyword) {
                 $keywords[mb_strtolower($keyword, 'UTF-8')] = $keyword;
             }
@@ -489,7 +494,7 @@ class Updater
 
         // handle links
         foreach ($this->supportedLinkTypes as $linkType => $opts) {
-            $links = array();
+            $links = [];
             foreach ($data->{$opts['method']}() as $link) {
                 $constraint = $link->getPrettyConstraint();
                 if (false !== strpos($constraint, ',') && false !== strpos($constraint, '@')) {

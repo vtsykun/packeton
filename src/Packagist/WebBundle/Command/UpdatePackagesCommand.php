@@ -17,6 +17,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Lock\Factory;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -30,12 +31,12 @@ class UpdatePackagesCommand extends ContainerAwareCommand
     {
         $this
             ->setName('packagist:update')
-            ->setDefinition(array(
+            ->setDefinition([
                 new InputOption('force', null, InputOption::VALUE_NONE, 'Force a re-crawl of all packages, or if a package name is given forces an update of all versions'),
                 new InputOption('delete-before', null, InputOption::VALUE_NONE, 'Force deletion of all versions before an update'),
                 new InputOption('update-equal-refs', null, InputOption::VALUE_NONE, 'Force update of all versions even when they already exist'),
                 new InputArgument('package', InputArgument::OPTIONAL, 'Package name to update'),
-            ))
+            ])
             ->setDescription('Updates packages')
         ;
     }
@@ -54,56 +55,58 @@ class UpdatePackagesCommand extends ContainerAwareCommand
         $updateEqualRefs = false;
         $randomTimes = true;
 
-        $locker = $this->getContainer()->get('locker');
-        if (!$locker->lockCommand($this->getName())) {
+        $locker = $this->getContainer()->get(Factory::class)->createLock($this->getName(), null);
+        if (!$locker->acquire()) {
             if ($verbose) {
                 $output->writeln('Aborting, another task is running already');
             }
             return 0;
         }
 
-        if ($package) {
-            $packages = array(array('id' => $doctrine->getRepository('PackagistWebBundle:Package')->findOneByName($package)->getId()));
-            if ($force) {
+        try {
+            if ($package) {
+                $packages = [['id' => $doctrine->getRepository('PackagistWebBundle:Package')->findOneByName($package)->getId()]];
+                if ($force) {
+                    $updateEqualRefs = true;
+                }
+                $randomTimes = false;
+            } elseif ($force) {
+                $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
+                $updateEqualRefs = true;
+            } else {
+                $packages = $doctrine->getRepository('PackagistWebBundle:Package')->getStalePackages();
+            }
+
+            $ids = [];
+            foreach ($packages as $package) {
+                $ids[] = (int) $package['id'];
+            }
+
+            if ($input->getOption('delete-before')) {
+                $deleteBefore = true;
+            }
+            if ($input->getOption('update-equal-refs')) {
                 $updateEqualRefs = true;
             }
-            $randomTimes = false;
-        } elseif ($force) {
-            $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
-            $updateEqualRefs = true;
-        } else {
-            $packages = $doctrine->getRepository('PackagistWebBundle:Package')->getStalePackages();
-        }
 
-        $ids = array();
-        foreach ($packages as $package) {
-            $ids[] = (int) $package['id'];
-        }
+            $scheduler = $this->getContainer()->get('scheduler');
 
-        if ($input->getOption('delete-before')) {
-            $deleteBefore = true;
-        }
-        if ($input->getOption('update-equal-refs')) {
-            $updateEqualRefs = true;
-        }
+            while ($ids) {
+                $idsGroup = array_splice($ids, 0, 100);
 
-        $scheduler = $this->getContainer()->get('scheduler');
-
-        while ($ids) {
-            $idsGroup = array_splice($ids, 0, 100);
-
-            foreach ($idsGroup as $id) {
-                $job = $scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, 1800).'seconds') : null);
-                if ($verbose) {
-                    $output->writeln('Scheduled update job '.$job->getId().' for package '.$id);
+                foreach ($idsGroup as $id) {
+                    $job = $scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, 1800).'seconds') : null);
+                    if ($verbose) {
+                        $output->writeln('Scheduled update job '.$job->getId().' for package '.$id);
+                    }
+                    $doctrine->getManager()->detach($job);
                 }
-                $doctrine->getManager()->detach($job);
+
+                $doctrine->getManager()->clear();
             }
-
-            $doctrine->getManager()->clear();
+        } finally {
+            $locker->release();
         }
-
-        $locker->unlockCommand($this->getName());
 
         return 0;
     }

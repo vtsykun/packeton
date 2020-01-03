@@ -119,7 +119,7 @@ class WebController extends Controller
         $versions = $this->getDoctrine()->getRepository('PackagistWebBundle:Version')
             ->getVersionStatisticsByMonthAndYear();
 
-        $chart = array('versions' => array(), 'packages' => array(), 'months' => array());
+        $chart = array('versions' => [], 'packages' => [], 'months' => []);
 
         // prepare x axis
         $date = new \DateTime($packages[0]['year'] . '-' . $packages[0]['month'] . '-01');
@@ -163,7 +163,7 @@ class WebController extends Controller
             $yesterday = new \DateTime('-2days 00:00:00');
             $dailyGraphStart = new \DateTime('-32days 00:00:00'); // 30 days before yesterday
 
-            $dlChart = $dlChartMonthly = array();
+            $dlChart = $dlChartMonthly = [];
             while ($date <= $yesterday) {
                 if ($date > $dailyGraphStart) {
                     $dlChart[$date->format('Y-m-d')] = 'downloads:'.$date->format('Ymd');
@@ -205,10 +205,10 @@ class WebController extends Controller
      */
     protected function getFilteredOrderedBys(Request $req)
     {
-        $orderBys = $req->query->get('orderBys', array());
+        $orderBys = $req->query->get('orderBys', []);
         if (!$orderBys) {
             $orderBys = $req->query->get('search_query');
-            $orderBys = $orderBys['orderBys'] ?? array();
+            $orderBys = $orderBys['orderBys'] ?? [];
         }
 
         if ($orderBys) {
@@ -222,7 +222,7 @@ class WebController extends Controller
                 'desc' => 1,
             );
 
-            $filteredOrderBys = array();
+            $filteredOrderBys = [];
 
             foreach ($orderBys as $orderBy) {
                 if (isset($orderBy['sort'])
@@ -233,7 +233,7 @@ class WebController extends Controller
                 }
             }
         } else {
-            $filteredOrderBys = array();
+            $filteredOrderBys = [];
         }
 
         return $filteredOrderBys;
@@ -246,7 +246,7 @@ class WebController extends Controller
      */
     protected function getNormalizedOrderBys(array $orderBys)
     {
-        $normalizedOrderBys = array();
+        $normalizedOrderBys = [];
 
         foreach ($orderBys as $sort) {
             $normalizedOrderBys[$sort['sort']] = $sort['order'];
@@ -326,7 +326,7 @@ class WebController extends Controller
     {
         // transform q=search shortcut
         if ($req->query->has('q') || $req->query->has('orderBys')) {
-            $searchQuery = array();
+            $searchQuery = [];
 
             $q = $req->query->get('q');
 

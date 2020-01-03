@@ -10,17 +10,16 @@ Features
 - Compatible with composer.
 - Support update webhook for GitHub, Bitbucket and GitLab.
 - Customers user and groups.
+- Generic Packeton [webhooks](docs/webhook.md)
 - Limit access by vendor and versions.
-- Expire access for user. 
 - Allow to freeze updates for the new releases after expire a customers license.
 - Mirroring for packages' zip files and downloads its from your host.
 - Allow to add ssh keys from UI and use multiple SSH Keys settings for different github/git accounts.
 
 What was changed in this fork?
 -----------------------------
-- Disable anonymously access, registrations, added groups and permissions.
+- Disable anonymously access, registrations, spam/antispam, added groups and permissions.
 - Support MySQL and PostgresSQL.
-- Support Symfony 3.4
 - Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
 Install from Docker
@@ -32,14 +31,15 @@ Demo
 ----
 See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/composer)
 
-[![Demo](docs/demo.png)](docs/demo.png)
+[![Demo](docs/img/demo.png)](docs/img/demo.png)
 
 Requirements
 ------------
 
 - MySQL or PostgresSQL for the main data store.
-- Redis for some functionality (favorites, download statistics).
+- Redis for some functionality (favorites, download statistics, worker queue).
 - git/svn/hg depending on which repositories you want to support.
+- Supervisor to run a background job worker
 
 Installation
 ------------

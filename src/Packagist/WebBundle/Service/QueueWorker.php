@@ -1,7 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Packagist\WebBundle\Service;
 
+use Packagist\WebBundle\Repository\JobRepository;
 use Predis\Client as Redis;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Doctrine\RegistryInterface;
@@ -17,13 +20,15 @@ class QueueWorker
     private $doctrine;
     private $jobWorkers;
     private $processedJobs = 0;
+    private $persister;
 
-    public function __construct(LogResetter $logResetter, Redis $redis, RegistryInterface $doctrine, LoggerInterface $logger, array $jobWorkers)
+    public function __construct(LogResetter $logResetter, Redis $redis, RegistryInterface $doctrine, LoggerInterface $logger, JobPersister $persister, array $jobWorkers)
     {
         $this->logResetter = $logResetter;
         $this->redis = $redis;
         $this->logger = $logger;
         $this->doctrine = $doctrine;
+        $this->persister = $persister;
         $this->jobWorkers = $jobWorkers;
     }
 
@@ -83,22 +88,25 @@ class QueueWorker
             }
         }
 
-        // check for scheduled jobs every 5 minutes at least
-        return time() + 300;
+        // check for scheduled jobs every 1 minutes at least
+        return time() + 60;
     }
 
     /**
      * Calls the configured processor with the job and a callback that must be called to mark the job as processed
+     * @inheritDoc
      */
     private function process(string $jobId, SignalHandler $signal): bool
     {
         $em = $this->doctrine->getEntityManager();
+        /** @var JobRepository|object $repo */
         $repo = $em->getRepository(Job::class);
         if (!$repo->start($jobId)) {
             // race condition, some other worker caught the job first, aborting
             return false;
         }
 
+        /** @var Job $job */
         $job = $repo->findOneById($jobId);
 
         $this->logger->pushProcessor(function ($record) use ($job) {
@@ -136,11 +144,12 @@ class QueueWorker
 
         if ($result['status'] === Job::STATUS_RESCHEDULE) {
             $job->reschedule($result['after']);
-            $em->flush($job);
+            $this->persister->persist($job);
 
             // reset logger
             $this->logResetter->reset();
             $this->logger->popProcessor();
+            $em->clear();
 
             return true;
         }
@@ -156,6 +165,7 @@ class QueueWorker
         if (isset($result['exception'])) {
             $result['exceptionMsg'] = $result['exception']->getMessage();
             $result['exceptionClass'] = get_class($result['exception']);
+            unset($result['exception']);
         }
 
         $job = $repo->findOneById($jobId);
@@ -163,7 +173,7 @@ class QueueWorker
 
         $this->redis->setex('job-'.$job->getId(), 600, json_encode($result));
 
-        $em->flush($job);
+        $this->persister->persist($job);
         $em->clear();
 
         if ($result['status'] === Job::STATUS_FAILED) {

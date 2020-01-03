@@ -5,13 +5,12 @@ namespace Packagist\WebBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\PersistentCollection;
 
 /**
  * Group
  *
  * @ORM\Table(name="user_group")
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\GroupRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\GroupRepository")
  */
 class Group
 {

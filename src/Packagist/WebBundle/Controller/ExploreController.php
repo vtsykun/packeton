@@ -15,6 +15,7 @@ namespace Packagist\WebBundle\Controller;
 use Doctrine\DBAL\ConnectionException;
 use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\PackageRepository;
+use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\VersionRepository;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
@@ -39,7 +40,7 @@ class ExploreController extends Controller
         /** @var PackageRepository $pkgRepo */
         $pkgRepo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
         /** @var VersionRepository $verRepo */
-        $verRepo = $this->get('packagist.version_repository');
+        $verRepo = $this->get('doctrine')->getRepository(Version::class);
         $newSubmitted = $pkgRepo->getQueryBuilderForNewestPackages()->setMaxResults(10)
             ->getQuery()->useResultCache(true, 60)->getResult();
         $newReleases = $verRepo->getLatestReleases(10);
@@ -51,7 +52,7 @@ class ExploreController extends Controller
             ->setMaxResults(10)
             ->getQuery()->getResult();
         try {
-            $popular = array();
+            $popular = [];
             $popularIds = $this->get('snc_redis.default')->zrevrange('downloads:trending', 0, 9);
             if ($popularIds) {
                 $popular = $pkgRepo->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
@@ -61,17 +62,15 @@ class ExploreController extends Controller
                 });
             }
         } catch (ConnectionException $e) {
-            $popular = array();
+            $popular = [];
         }
 
-        $data = array(
+        return [
             'newlySubmitted' => $newSubmitted,
             'newlyReleased' => $newReleases,
             'random' => $random,
             'popular' => $popular,
-        );
-
-        return $data;
+        ];
     }
 
     /**
@@ -111,7 +110,7 @@ class ExploreController extends Controller
             $packages->setMaxPerPage($perPage);
             $packages->setCurrentPage($req->get('page', 1), false, true);
         } catch (ConnectionException $e) {
-            $packages = new Pagerfanta(new FixedAdapter(0, array()));
+            $packages = new Pagerfanta(new FixedAdapter(0, []));
         }
 
         $data = array(
@@ -121,7 +120,7 @@ class ExploreController extends Controller
 
         if ($req->getRequestFormat() === 'json') {
             $result = array(
-                'packages' => array(),
+                'packages' => [],
                 'total' => $packages->getNbResults(),
             );
 

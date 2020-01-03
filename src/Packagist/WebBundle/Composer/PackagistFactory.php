@@ -21,7 +21,7 @@ class PackagistFactory
     {
         $this->repositoryFactory = $repositoryFactory;
         $this->tmpDir = $tmpDir ?: sys_get_temp_dir();
-        $this->githubNoApi = (bool) $this->githubNoApi;
+        $this->githubNoApi = (bool) $githubNoApi;
     }
 
     /**
@@ -33,7 +33,8 @@ class PackagistFactory
         $config = Factory::createConfig();
 
         if (null !== $credentials) {
-            $credentialsFile = rtrim($this->tmpDir, '/') . '/packagist_priv_key_' . $credentials->getId();
+            $uid = @getmyuid();
+            $credentialsFile = rtrim($this->tmpDir, '/') . '/packagist_priv_key_' . $credentials->getId() . '_' . $uid;
             if (!file_exists($credentialsFile)) {
                 file_put_contents($credentialsFile, $credentials->getKey());
                 chmod($credentialsFile, 0600);

@@ -12,10 +12,11 @@
 
 namespace Packagist\WebBundle\Model;
 
+use Doctrine\Persistence\ManagerRegistry;
 use FOS\UserBundle\Model\UserInterface;
 use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\PackageRepository;
-use Packagist\WebBundle\Entity\UserRepository;
+use Packagist\WebBundle\Entity\User;
+use Packagist\WebBundle\Repository\UserRepository;
 use Predis\Client;
 
 /**
@@ -24,14 +25,12 @@ use Predis\Client;
 class FavoriteManager
 {
     protected $redis;
-    protected $packageRepo;
-    protected $userRepo;
+    protected $registry;
 
-    public function __construct(Client $redis, PackageRepository $packageRepo, UserRepository $userRepo)
+    public function __construct(Client $redis, ManagerRegistry $registry)
     {
         $this->redis = $redis;
-        $this->packageRepo = $packageRepo;
-        $this->userRepo = $userRepo;
+        $this->registry = $registry;
     }
 
     public function markFavorite(UserInterface $user, Package $package)
@@ -52,7 +51,7 @@ class FavoriteManager
     {
         $favoriteIds = $this->redis->zrevrange('usr:'.$user->getId().':fav', $offset, $offset + $limit - 1);
 
-        return $this->packageRepo->findById($favoriteIds);
+        return $this->getPackageRepo()->findById($favoriteIds);
     }
 
     public function getFavoriteCount(UserInterface $user)
@@ -64,7 +63,7 @@ class FavoriteManager
     {
         $faverIds = $this->redis->zrevrange('pkg:'.$package->getId().':fav', $offset, $offset + $limit - 1);
 
-        return $this->userRepo->findById($faverIds);
+        return $this->getUserRepo()->findById($faverIds);
     }
 
     public function getFaverCount(Package $package)
@@ -74,7 +73,7 @@ class FavoriteManager
 
     public function getFaverCounts(array $packageIds)
     {
-        $res = array();
+        $res = [];
 
         // TODO should be done with scripting when available
         foreach ($packageIds as $id) {
@@ -83,7 +82,7 @@ class FavoriteManager
             }
         }
 
-        $rows = $this->packageRepo->getGitHubStars($packageIds);
+        $rows = $this->getPackageRepo()->getGitHubStars($packageIds);
         foreach ($rows as $row) {
             $res[$row['id']] += $row['gitHubStars'];
         }
@@ -94,5 +93,21 @@ class FavoriteManager
     public function isMarked(UserInterface $user, Package $package)
     {
         return null !== $this->redis->zrank('usr:'.$user->getId().':fav', $package->getId());
+    }
+
+    /**
+     * @return \Doctrine\ORM\EntityRepository|\Doctrine\Persistence\ObjectRepository|UserRepository|object
+     */
+    private function getUserRepo()
+    {
+        return $this->registry->getRepository(User::class);
+    }
+
+    /**
+     * @return \Doctrine\ORM\EntityRepository|\Doctrine\Persistence\ObjectRepository|\Packagist\WebBundle\Repository\PackageRepository
+     */
+    private function getPackageRepo()
+    {
+        return $this->registry->getRepository(Package::class);
     }
 }

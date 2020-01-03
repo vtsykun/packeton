@@ -31,9 +31,9 @@ class CompileStatsCommand extends ContainerAwareCommand
     {
         $this
             ->setName('packagist:stats:compile')
-            ->setDefinition(array(
+            ->setDefinition([
                 new InputOption('force', null, InputOption::VALUE_NONE, 'Force a re-build of all stats'),
-            ))
+            ])
             ->setDescription('Updates the redis stats indices')
         ;
     }
@@ -65,7 +65,7 @@ class CompileStatsCommand extends ContainerAwareCommand
                 $output->writeln('Clearing aggregated DB');
             }
             $clearDate = clone $date;
-            $keys = array();
+            $keys = [];
             while ($clearDate <= $yesterday) {
                 $keys['downloads:'.$clearDate->format('Ymd')] = true;
                 $keys['downloads:'.$clearDate->format('Ym')] = true;
@@ -112,7 +112,7 @@ class CompileStatsCommand extends ContainerAwareCommand
         // fetch existing ids
         $doctrine = $this->getContainer()->get('doctrine');
         $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
-        $ids = array();
+        $ids = [];
         foreach ($packages as $row) {
             $ids[] = $row['id'];
         }
@@ -136,7 +136,7 @@ class CompileStatsCommand extends ContainerAwareCommand
     protected function sumLastNDays($days, $id, \DateTime $yesterday)
     {
         $date = clone $yesterday;
-        $keys = array();
+        $keys = [];
         for ($i = 0; $i < $days; $i++) {
             $keys[] = 'dl:'.$id.':'.$date->format('Ymd');
             $date->modify('-1day');
@@ -151,7 +151,7 @@ class CompileStatsCommand extends ContainerAwareCommand
 
         while ($ids) {
             $batch = array_splice($ids, 0, 500);
-            $keys = array();
+            $keys = [];
             foreach ($batch as $id) {
                 $keys[] = 'dl:'.$id.':'.$date;
             }

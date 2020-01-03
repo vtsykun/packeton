@@ -1,0 +1,55 @@
+{% extends "PackagistWebBundle::layout.html.twig" %}
+
+{% block scripts %}
+    <script src="{{ asset('bundles/packagistweb/js/hookView.js')}}"></script>
+{% endblock %}
+
+{% block content %}
+
+<section class="row webhook">
+    <div>
+        <div style="float:right">
+            <a class="btn btn-default" href="{{ path('webhook_create') }}">Add webhook</a>
+        </div>
+        <h3>Webhooks</h3>
+        <p style="max-width: 50%">
+            Webhooks allow external services to be notified when certain events happen.
+            If you need to setup a post-receive hook to  trigger for rebuild/update on services
+            like Github, GitLab, see <a href="{{ path('about') }}#how-to-update-packages">Service Webhooks</a>
+        </p>
+    </div>
+
+    <div style="padding-top: 10px; clear: both"></div>
+
+    {% for webhook in webhooks %}
+        <div class="panel panel-default">
+
+            <div class="panel-heading">
+                <a href="{{ path('webhook_update', {id: webhook.id}) }}">{{ webhook.name }}</a>
+            </div>
+            <div class="panel-body">
+                <div style="float: right">
+                    {% if deleteCsrfToken is defined and deleteCsrfToken is not empty %}
+                        <form class="delete-hook" action="{{ path("webhook_delete", {"id": webhook.id}) }}" method="DELETE">
+                            <input type="hidden" name="_token" value="{{ deleteCsrfToken }}" />
+                            <button style="padding: 5px 14px;" class="btn submit btn-danger" type="submit">Delete</button>
+                        </form>
+                    {% endif %}
+                </div>
+                <p>{% if webhook.active == true %}
+                        <i class="fa fa-check" style="color: #28a745" title="Active"></i>
+                    {% else %}
+                        <i class="fa fa-times" style="color: #ba140d"  title="Disabled"></i>
+                    {% endif %}
+                    &nbsp;
+                    {{ webhook.url }}
+                </p>
+                <p style="color: #7b7b7d;font-size: 0.92em">Events: ({{ webhook.events|join(',') }})
+                    &nbsp; <a href="{{ path('webhook_test_action', {id: webhook.id}) }}">test action</a>
+                </p>
+
+            </div>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

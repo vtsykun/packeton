@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Packagist\WebBundle\Service;
 
 use Composer\Factory;
-use Composer\IO\BufferIO;
 use Composer\IO\NullIO;
-use Composer\Repository\VcsRepository;
 use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\Version;
-use Symfony\Component\Console\Output\StreamOutput;
+use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 
@@ -53,6 +51,10 @@ class DistManager
         foreach ($files as $file) {
             $fileName = $file->getFilename();
             if ($version = $this->config->guessesVersion($fileName)) {
+                try {
+                    $this->fileSystem->touch($file->getRealPath());
+                } catch (IOException $exception) {}
+
                 return [$file->getRealPath(), $version];
             }
         }
@@ -81,14 +83,12 @@ class DistManager
         foreach ($versions as $rootVersion) {
             if ($rootVersion->getSourceReference() === $source['reference']) {
                 $fileName = $this->config->getFileName($source['reference'], $version->getVersion());
-                $path = $archiveManager->archive(
+                return $archiveManager->archive(
                     $rootVersion,
                     $this->config->getArchiveFormat(),
                     $this->config->generateTargetDir($version->getName()),
                     $fileName
                 );
-
-                return $path;
             }
         }
 

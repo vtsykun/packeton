@@ -3,13 +3,13 @@
 namespace Packagist\WebBundle\Service;
 
 use Packagist\WebBundle\Composer\PackagistFactory;
+use Packagist\WebBundle\Event\UpdaterErrorEvent;
 use Packagist\WebBundle\Model\ValidatingArrayLoader;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Repository\InvalidRepositoryException;
-use Composer\Repository\VcsRepository;
 use Composer\IO\BufferIO;
 use Symfony\Component\Console\Output\OutputInterface;
 use Packagist\WebBundle\Entity\Package;
@@ -20,37 +20,42 @@ use Packagist\WebBundle\Model\DownloadManager;
 use Seld\Signal\SignalHandler;
 use Composer\Factory;
 use Composer\Downloader\TransportException;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Lock\Factory as LockFactory;
 
 class UpdaterWorker
 {
     private $logger;
     private $doctrine;
     private $updater;
-    private $locker;
+    private $lockFactory;
     /** @var Scheduler */
     private $scheduler;
     private $packageManager;
     private $downloadManager;
     private $packagistFactory;
+    private $dispatcher;
 
     public function __construct(
         LoggerInterface $logger,
         RegistryInterface $doctrine,
         Updater $updater,
-        Locker $locker,
+        LockFactory $lockFactory,
         Scheduler $scheduler,
         PackageManager $packageManager,
         DownloadManager $downloadManager,
-        PackagistFactory $packagistFactory
+        PackagistFactory $packagistFactory,
+        EventDispatcherInterface $dispatcher
     ) {
         $this->logger = $logger;
         $this->doctrine = $doctrine;
         $this->updater = $updater;
-        $this->locker = $locker;
+        $this->lockFactory = $lockFactory;
         $this->scheduler = $scheduler;
         $this->packageManager = $packageManager;
         $this->downloadManager = $downloadManager;
         $this->packagistFactory = $packagistFactory;
+        $this->dispatcher = $dispatcher;
     }
 
     public function process(Job $job, SignalHandler $signal): array
@@ -66,18 +71,19 @@ class UpdaterWorker
             return ['status' => Job::STATUS_PACKAGE_GONE, 'message' => 'Package was deleted, skipped'];
         }
 
-        $lockAcquired = $this->locker->lockPackageUpdate($id);
+        $locker = $this->lockFactory->createLock('package_update_' . $id, null);
+        $lockAcquired = $locker->acquire();
         if (!$lockAcquired) {
-            return ['status' => Job::STATUS_RESCHEDULE, 'after' => new \DateTime('+5 seconds')];
+            return ['status' => Job::STATUS_RESCHEDULE, 'after' => new \DateTime('+30 seconds')];
         }
 
         $this->logger->info('Updating '.$package->getName());
-
-        $config = $this->packagistFactory->createConfig($package->getCredentials());
         $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
-        $io->loadConfiguration($config);
 
         try {
+            $config = $this->packagistFactory->createConfig($package->getCredentials());
+            $io->loadConfiguration($config);
+
             $flags = 0;
             if ($job->getPayload()['update_equal_refs'] === true) {
                 $flags = Updater::UPDATE_EQUAL_REFS;
@@ -104,6 +110,12 @@ class UpdaterWorker
             } else {
                 // reload the package just in case as Updater tends to merge it to a new instance
                 $package = $packageRepository->findOneById($id);
+            }
+
+            try {
+                $this->dispatcher->dispatch(UpdaterErrorEvent::PACKAGE_ERROR, new UpdaterErrorEvent($package, $e, $output));
+            } catch (\Throwable $e) {
+                $this->logger->error('Events trigger fails: ' . $e->getMessage(), ['e' => $e]);
             }
 
             // invalid composer data somehow, notify the owner and then mark the job failed
@@ -173,7 +185,7 @@ class UpdaterWorker
             // unexpected error so mark the job errored
             throw $e;
         } finally {
-            $this->locker->unlockPackageUpdate($id);
+            $locker->release();
         }
 
         return [

@@ -18,7 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Entity\VersionRepository")
+ * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\VersionRepository")
  * @ORM\Table(
  *     name="package_version",
  *     uniqueConstraints={@ORM\UniqueConstraint(name="pkg_ver_idx",columns={"package_id","normalizedVersion"})},
@@ -62,7 +62,7 @@ class Version
     /**
      * @ORM\Column(type="array", nullable=true)
      */
-    private $extra = array();
+    private $extra = [];
 
     /**
      * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Tag", inversedBy="versions")
@@ -213,7 +213,7 @@ class Version
 
     public function toArray(array $versionData = [])
     {
-        $tags = array();
+        $tags = [];
         foreach ($this->getTags() as $tag) {
             /** @var $tag Tag */
             $tags[] = $tag->getName();
@@ -222,7 +222,7 @@ class Version
         if (isset($versionData[$this->id]['authors'])) {
             $authors = $versionData[$this->id]['authors'];
         } else {
-            $authors = array();
+            $authors = [];
             foreach ($this->getAuthors() as $author) {
                 /** @var $author Author */
                 $authors[] = $author->toArray();

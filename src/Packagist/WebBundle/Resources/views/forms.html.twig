@@ -88,6 +88,7 @@
                 <i class="fa fa-info-circle"
                    style="cursor: pointer; color: #0c71d0; padding-right: 8px;"
                    data-placement="top"
+                   data-html="true"
                    data-content="{{ tooltip|trans }}"
                    data-toggle="popover"></i>
             {%- endif -%}
@@ -101,3 +102,13 @@
     {%- endif -%}
 {%- endblock form_label -%}
 
+{%- block choice_widget_expanded -%}
+    <div {{ block('widget_container_attributes') }}>
+        {%- for child in form %}
+            <div style="display: flex; padding-top: 6px">
+                {{- form_widget(child, {attr: {style: 'margin-right: 6px'}}) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
+            </div>
+        {% endfor -%}
+    </div>
+{%- endblock choice_widget_expanded -%}

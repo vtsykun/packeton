@@ -30,6 +30,7 @@ class PackagistWebExtension extends Extension
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
         $loader->load('security.yml');
+        $loader->load('twig_sandbox.yml');
 
         $container->setParameter('packagist_web.rss_max_items', $config['rss_max_items']);
         if (true === $config['archive']) {

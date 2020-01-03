@@ -18,40 +18,9 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.response, method: onResponse }
 
-    packagist.logged_in_user_cannot_register_listener:
-        class: Packagist\WebBundle\EventListener\LoggedInUserCannotRegisterListener
-        arguments:
-            - '@security.authorization_checker'
-            - '@router'
-        tags:
-            - { name: kernel.event_subscriber }
-
-    packagist.registration_listener:
-        class: Packagist\WebBundle\EventListener\RegistrationListener
-        arguments: [ '@fos_user.util.token_generator' ]
-        tags:
-            - { name: kernel.event_subscriber }
-
-    packagist.user_repository:
-        class: Packagist\WebBundle\Entity\UserRepository
-        factory: ['@doctrine', getRepository]
-        arguments: ['PackagistWebBundle:User']
-
-    packagist.package_repository:
-        class: Packagist\WebBundle\Entity\PackageRepository
-        factory: ['@doctrine', getRepository]
-        arguments: ['PackagistWebBundle:Package']
-
-    packagist.version_repository:
-        class: Packagist\WebBundle\Entity\VersionRepository
-        factory: ['@doctrine', getRepository]
-        arguments: ['PackagistWebBundle:Version']
-        calls:
-            - [ setRedis, [ '@snc_redis.cache_client' ]]
-
     packagist.package_updater:
         class: Packagist\WebBundle\Package\Updater
-        arguments: ['@doctrine', '@packagist.dist_config']
+        arguments: ['@doctrine', '@packagist.dist_config', '@event_dispatcher']
 
     packagist.dist_config:
         class: Packagist\WebBundle\Service\DistConfig
@@ -92,14 +61,13 @@ services:
         public: true
         arguments:
             - '@snc_redis.default_client'
-            - '@packagist.package_repository'
+            - '@doctrine'
 
     packagist.favorite_manager:
         class: Packagist\WebBundle\Model\FavoriteManager
         arguments:
             - '@snc_redis.default_client'
-            - '@packagist.package_repository'
-            - '@packagist.user_repository'
+            - '@doctrine'
 
     packagist.package_manager:
         class: Packagist\WebBundle\Model\PackageManager
@@ -113,6 +81,7 @@ services:
             - '@packagist.in_memory_dumper'
             - '@security.authorization_checker'
             - '@packagist_factory'
+            - '@event_dispatcher'
             - '@packagist_cache'
 
     Packagist\WebBundle\Model\PackageManager:
@@ -155,20 +124,19 @@ services:
 
     packagist.queue_worker:
         class: Packagist\WebBundle\Service\QueueWorker
+        public: true
         arguments:
             - "@packagist.log_resetter"
             - "@snc_redis.default_client"
             - "@doctrine"
             - "@logger"
+            - '@Packagist\WebBundle\Service\JobPersister'
             - 'package:updates': '@updater_worker'
+              'webhook:send': '@sender_hook_worker'
 
     scheduler:
         class: Packagist\WebBundle\Service\Scheduler
         arguments: ["@snc_redis.default_client", "@doctrine"]
-
-    locker:
-        class: Packagist\WebBundle\Service\Locker
-        arguments: ["@doctrine"]
 
     updater_worker:
         class: Packagist\WebBundle\Service\UpdaterWorker
@@ -176,11 +144,20 @@ services:
             - "@logger"
             - "@doctrine"
             - "@packagist.package_updater"
-            - "@locker"
+            - '@Symfony\Component\Lock\Factory'
             - "@scheduler"
             - "@packagist.package_manager"
             - "@packagist.download_manager"
             - "@packagist_factory"
+            - '@event_dispatcher'
+
+    sender_hook_worker:
+        class: Packagist\WebBundle\Webhook\SenderWorker
+        arguments:
+            - '@serializer'
+            - '@doctrine'
+            - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
+            - '@Packagist\WebBundle\Service\JobScheduler'
 
     packagist.log_resetter:
         class: Packagist\WebBundle\Service\LogResetter
@@ -221,12 +198,24 @@ services:
         arguments:
             - '@Packagist\WebBundle\Composer\VcsDriverFactory'
 
+    packagist_cache:
+        parent: doctrine_cache.abstract.file_system
+        arguments:
+            - '%kernel.cache_dir%/packagist'
+
     Packagist\WebBundle\Validator\Constraint\PackageUniqueValidator:
         arguments:
             - '@doctrine'
             - '@router'
         tags:
             - { name: validator.constraint_validator }
+
+    Packagist\WebBundle\Form\Type\WebhookType:
+        arguments:
+            - '@security.token_storage'
+            - '@packagist.payload_rendered'
+        tags:
+            - { name: form.type }
 
     Packagist\WebBundle\Command\CreateUserCommand:
         arguments:
@@ -240,7 +229,46 @@ services:
         tags:
             - { name: form.type_extension, extended_type: 'Symfony\Component\Form\Extension\Core\Type\FormType' }
 
-    packagist_cache:
-        parent: doctrine_cache.abstract.file_system
+    Packagist\WebBundle\Webhook\RequestResolver:
         arguments:
-            - '%kernel.cache_dir%/packagist'
+            - '@packagist.payload_rendered'
+
+    Packagist\WebBundle\Webhook\HookRequestExecutor:
+        arguments:
+            - '@Packagist\WebBundle\Webhook\RequestResolver'
+
+    Packagist\WebBundle\Webhook\HookTestAction:
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
+
+    Symfony\Component\Lock\Factory:
+        public: true
+        alias: lock.default.factory
+
+    Packagist\WebBundle\Service\JobPersister:
+        arguments:
+            - '@doctrine'
+
+    Packagist\WebBundle\Service\JobScheduler:
+        arguments:
+            - '@snc_redis.default_client'
+            - '@Packagist\WebBundle\Service\JobPersister'
+
+    Packagist\WebBundle\Webhook\Serializer\JobDataSerializer:
+        arguments:
+            - '@doctrine'
+        tags:
+            - { name: serializer.normalizer }
+
+    Packagist\WebBundle\Webhook\EventListener\HookListener:
+        arguments:
+            - '@doctrine'
+            - '@serializer'
+            - '@Packagist\WebBundle\Service\JobScheduler'
+        tags:
+            - { name: kernel.event_listener, event: packageRefresh }
+            - { name: kernel.event_listener, event: packagePersist }
+            - { name: kernel.event_listener, event: packageError }
+            - { name: kernel.event_listener, event: packageRemove }

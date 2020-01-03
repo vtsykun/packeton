@@ -1,0 +1,73 @@
+parameters:
+    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim']
+    security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range', 'constant']
+    security_policy_methods: []
+    security_policy_forbidden_classes:
+        - 'Packagist\WebBundle\Entity\Job'
+        - 'Packagist\WebBundle\Entity\SshCredentials'
+    security_policy_forbidden_properties:
+        'Packagist\WebBundle\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
+        'Packagist\WebBundle\Entity\Package': ['credentials']
+    security_policy_forbidden_methods:
+        'Packagist\WebBundle\Entity\User': ['getApiToken', 'getGithubToken', 'getPassword', 'getSalt']
+        'Packagist\WebBundle\Entity\Package': ['getCredentials']
+
+services:
+    packagist.twig.webhook_security_policy:
+        class: Twig\Sandbox\SecurityPolicy
+        arguments:
+            # tags
+            - '%security_policy_tags%'
+            # filters
+            - []
+            # methods
+            - '%security_policy_methods%'
+            # properties
+            - []
+            # functions
+            - '%security_policy_functions%'
+
+    packagist.twig.webhook_security_policy.forbidden:
+        class: Packagist\WebBundle\Webhook\Twig\WebhookSecurityPolicy
+        decorates: packagist.twig.webhook_security_policy
+        arguments:
+            - '@packagist.twig.webhook_security_policy.forbidden.inner'
+            - ~  # Parent tags
+            - [] # Allow all filters
+            - ~  # Parent functions
+            - '%security_policy_forbidden_methods%'
+            - '%security_policy_forbidden_properties%'
+            - '%security_policy_forbidden_classes%'
+        calls:
+            - [setAllowedExtension, [!tagged packagist_trusted_extension]]
+
+    packagist.twig.webhook_sandbox:
+        class: Twig\Extension\SandboxExtension
+        arguments:
+            - '@packagist.twig.webhook_security_policy'
+            - true # use sandbox globally in instance
+
+    packagist.twig.webhook_placeholder.extension:
+        class: Packagist\WebBundle\Webhook\Twig\PlaceholderExtension
+        tags:
+            - { name: 'packagist_trusted_extension' }
+
+    packagist.twig.webhook.extension:
+        class: Packagist\WebBundle\Webhook\Twig\WebhookExtension
+        arguments:
+            - '@doctrine'
+            - '@Packagist\WebBundle\Util\ChangelogUtils'
+        tags:
+            - { name: 'packagist_trusted_extension' }
+
+    packagist.payload_rendered:
+        class: Packagist\WebBundle\Webhook\Twig\PayloadRenderer
+        lazy: true
+        public: true
+        arguments:
+            -
+              autoescape: false
+        calls:
+            - [addExtension, ['@packagist.twig.webhook_sandbox']]
+            - [addExtension, ['@packagist.twig.webhook_placeholder.extension']]
+            - [addExtension, ['@packagist.twig.webhook.extension']]
