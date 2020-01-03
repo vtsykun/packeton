@@ -217,7 +217,7 @@ class VersionRepository extends EntityRepository
         $result = null;
         $versions = $versions ? array_column($versions, 'version') : null;
         foreach ($versions as $candidate) {
-            if (version_compare($version, $candidate) < 0) {
+            if (version_compare($version, $candidate) <= 0) {
                 continue;
             }
             if ($result === null || version_compare($result, $candidate) < 0) {

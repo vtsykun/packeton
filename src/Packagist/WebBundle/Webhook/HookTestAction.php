@@ -122,10 +122,11 @@ class HookTestAction
         if (isset($runtimeContext[WebhookContext::CHILD_WEBHOOK])) {
             /** @var Webhook $childHook */
             foreach ($runtimeContext[WebhookContext::CHILD_WEBHOOK] as list($childHook, $childContext)) {
-                if (null !== $childHook->getOwner() && $childHook->getOwner() !== $webhook->getOwner()) {
+                if (null !== $childHook->getOwner() && $childHook->getVisibility() === Webhook::USER_VISIBLE && $childHook->getOwner() !== $webhook->getOwner()) {
+                    $response[] = new HookErrorResponse('You can not call private webhooks of another user owner, please check nesting webhook visibility');
                     continue;
                 }
-                $child = $this->processChildWebhook($webhook, $childContext, $client, $nestingLevel+1);
+                $child = $this->processChildWebhook($childHook, $childContext, $client, $nestingLevel+1);
                 $response = array_merge($response, $child);
             }
         }
@@ -159,7 +160,7 @@ class HookTestAction
             $collection = $collection->filter(function (Version $version) use ($versions) {
                 return in_array($version->getVersion(), $versions);
             });
-            $data['versions'] = $collection->toArray();
+            $data['versions'] = array_values($collection->toArray());
         } elseif ($ver = $collection->first()) {
             $data['versions'] = [$ver];
         } else {

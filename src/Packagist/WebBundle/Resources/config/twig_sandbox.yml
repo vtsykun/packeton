@@ -1,5 +1,5 @@
 parameters:
-    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'apply', 'verbatim']
+    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim']
     security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range', 'constant']
     security_policy_methods: []
     security_policy_forbidden_classes:

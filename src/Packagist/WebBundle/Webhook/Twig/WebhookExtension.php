@@ -67,7 +67,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         }
 
         if (!is_string($fromVersion)) {
-            $toVersion = $this->registry->getRepository(Version::class)
+            $fromVersion = $this->registry->getRepository(Version::class)
                 ->getPreviousRelease($package->getName(), $toVersion);
         }
         if ($toVersion && $fromVersion) {
@@ -77,7 +77,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         return [];
     }
 
-    public function hook_function_preg_match_all($regex, $content, $matchOffset = 1)
+    public function hook_function_preg_match_all($regex, $content, $matchOffset = null)
     {
         try {
             @preg_match_all($regex, $content, $matches);

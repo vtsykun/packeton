@@ -77,7 +77,7 @@ class SenderWorker
     {
         /** @var Webhook $hook */
         foreach ($child as list($hook, $context)) {
-            if (null !== $hook->getOwner() && $hook->getOwner() !== $parent->getOwner()) {
+            if (null !== $hook->getOwner() && $hook->getVisibility() === Webhook::USER_VISIBLE && $hook->getOwner() !== $parent->getOwner()) {
                 continue;
             }
 

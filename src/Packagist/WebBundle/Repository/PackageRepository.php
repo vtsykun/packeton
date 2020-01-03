@@ -461,13 +461,17 @@ class PackageRepository extends EntityRepository
     private function checkExtension($extensionName)
     {
         $conn = $this->getEntityManager()->getConnection();
-        $count = $conn
-            ->executeQuery(
-                'SELECT COUNT(1) as v FROM pg_extension WHERE extname = :name',
-                [
-                    'name' => $extensionName
-                ]
-            )->fetch();
+        try {
+            $count = $conn
+                ->executeQuery(
+                    'SELECT COUNT(1) as v FROM pg_extension WHERE extname = :name',
+                    [
+                        'name' => $extensionName
+                    ]
+                )->fetch();
+        } catch (\Exception $exception) {
+            return false;
+        }
 
         return isset($count['v']) && $count['v'] === 1;
     }
