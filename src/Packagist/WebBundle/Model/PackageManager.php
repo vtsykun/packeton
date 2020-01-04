@@ -7,7 +7,7 @@ namespace Packagist\WebBundle\Model;
 use Doctrine\Common\Cache\Cache;
 use Packagist\WebBundle\Composer\PackagistFactory;
 use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Webhook;
+use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Event\UpdaterEvent;
 use Packagist\WebBundle\Package\InMemoryDumper;
 use Packagist\WebBundle\Repository\VersionRepository;
@@ -61,7 +61,7 @@ class PackageManager
     public function deletePackage(Package $package)
     {
         /** @var VersionRepository $versionRepo */
-        $versionRepo = $this->doctrine->getRepository(VersionRepository::class);
+        $versionRepo = $this->doctrine->getRepository(Version::class);
         $this->dispatcher->dispatch(UpdaterEvent::PACKAGE_REMOVE, new UpdaterEvent($package));
 
         foreach ($package->getVersions() as $version) {

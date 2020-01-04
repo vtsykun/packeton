@@ -17,14 +17,25 @@ Now is supported the next events:
 
 Examples 
 =========
-
+ 
+ - [List of twig variables](#twig-variables)
  - [Telegram notification](#telegram-notification)
  - [Slack notification](#slack-notification)
  - [How to use url placeholder](#use-url-placeholder)
  - [Interrupt request](#interrupt-request)
  - [Nesting webhook](#nesting-webhook)
+ - [Gitlab setup auto webhook](#gitlab-auto-webhook)
  - [JIRA issue fix version](#jira-create-a-new-release-and-set-fix-version)
  - [Packeton twig function](#new-twig-functions)
+
+Twig variables
+---------------
+
+- package - `Package` entity. 
+- versions - `Versions[]` array of versions.
+- webhook - `Webhook` current webhook entity.
+- user    - `User` entity.
+- parentResponse - `HookResponse` object. Only for nesting webhook.
 
 Telegram notification
 ---------------------
@@ -242,6 +253,38 @@ Payload
 ```
 
 ![Jira issue](img/jira_response.png)
+
+Gitlab auto webhook
+-------------------
+You can use event `new_repo` to adds a hook to a specified Gitlab project.
+It can be useful, if you don't have a Gold Gitlab Plan that allow configure webhooks for your group,
+so you need add it manually for each repository.
+
+POST `https://{{ host }}/api/v4/projects/{{ repo }}/hooks?private_token=xxxxxxxxxxxxxxxx`
+
+Payload
+
+```twig
+{% set regex = '#^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\\w.-]+(?:/[\\w.-]+?)+)(?:\\.git|/)?$#i' %}
+{% set repository = preg_match_all(regex, package.repository) %}
+
+{% if repository.path[0] is null or repository.host[0] is null %}
+    {{ interrupt('Regex is not match') }}
+{% endif %}
+
+{% set request = {
+    'url': 'https://pkg.okvpn.org/api/update-package?token=admin:xxxxxxxxxxxxxxxx',
+    'push_events': true,
+    'tag_push_events': true
+} %}
+
+{% placeholder host with repository.host[0] %}
+{% placeholder repo with repository.path[0]|url_encode %}
+
+{{ request|json_encode }}
+```
+
+Here you need replace `request.url` on your packagist. 
 
 New twig functions
 -----------------

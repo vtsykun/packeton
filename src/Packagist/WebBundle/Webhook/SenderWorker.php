@@ -51,6 +51,19 @@ class SenderWorker
         $context = $this->denormalizer->denormalize($payload['context'] ?? [], 'context', 'packagist_job');
         $runtimeContext = new WebhookContext();
         $this->executor->setContext($runtimeContext);
+        if (isset($payload['parentJob'])) {
+            $parentJob = $this->registry->getRepository(Job::class)->find($payload['parentJob']);
+            if ($parentJob instanceof Job) {
+                try {
+                    $response = array_map(
+                        HookResponse::class.'::fromArray',
+                        $parentJob->getResult()['response'] ?? []
+                    );
+                    $context['parentResponse'] = reset($response);
+                } catch (\Throwable $e) {}
+            }
+        }
+
         try {
             $response = $this->executor->executeWebhook($webhook, $context);
         } finally {
@@ -59,7 +72,7 @@ class SenderWorker
 
         $job->setPackageId($webhook->getId());
         if (isset($runtimeContext[WebhookContext::CHILD_WEBHOOK])) {
-            $this->processChildWebhook($webhook, $nestingLevel, $runtimeContext[WebhookContext::CHILD_WEBHOOK]);
+            $this->processChildWebhook($job, $webhook, $nestingLevel, $runtimeContext[WebhookContext::CHILD_WEBHOOK]);
         }
 
         $isSuccess = !array_filter($response, function (HookResponse $response) {
@@ -73,7 +86,7 @@ class SenderWorker
         ];
     }
 
-    private function processChildWebhook(Webhook $parent, int $nestingLevel,  array $child): void
+    private function processChildWebhook(Job $job, Webhook $parent, int $nestingLevel,  array $child): void
     {
         /** @var Webhook $hook */
         foreach ($child as list($hook, $context)) {
@@ -86,7 +99,8 @@ class SenderWorker
             $this->jobScheduler->publish('webhook:send', [
                 'context' => $context,
                 'webhook' => $hook->getId(),
-                'nestingLevel' => $nestingLevel+1
+                'nestingLevel' => $nestingLevel+1,
+                'parentJob' => $job->getId()
             ]);
         }
     }

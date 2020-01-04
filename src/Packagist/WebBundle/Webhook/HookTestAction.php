@@ -116,7 +116,7 @@ class HookTestAction
         $runtimeContext = new WebhookContext();
         $this->executor->setContext($runtimeContext);
 
-        $response = $this->executor->executeWebhook($webhook, $context, $client);
+        $child = $response = $this->executor->executeWebhook($webhook, $context, $client);
         $this->executor->setContext(null);
 
         if (isset($runtimeContext[WebhookContext::CHILD_WEBHOOK])) {
@@ -126,6 +126,8 @@ class HookTestAction
                     $response[] = new HookErrorResponse('You can not call private webhooks of another user owner, please check nesting webhook visibility');
                     continue;
                 }
+
+                $context['parentResponse'] = reset($child);
                 $child = $this->processChildWebhook($childHook, $childContext, $client, $nestingLevel+1);
                 $response = array_merge($response, $child);
             }

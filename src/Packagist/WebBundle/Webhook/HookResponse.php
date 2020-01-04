@@ -34,6 +34,15 @@ class HookResponse implements \JsonSerializable
     }
 
     /**
+     * @return array
+     */
+    public function toArrayResponse(): array
+    {
+        $result = $this->responseBody ? @json_decode($this->responseBody, true) : null;
+        return is_array($result) ? $result : [];
+    }
+
+    /**
      * @return int
      */
     public function getStatusCode(): int
