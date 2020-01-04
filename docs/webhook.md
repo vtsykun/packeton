@@ -262,6 +262,17 @@ so you need add it manually for each repository.
 
 POST `https://{{ host }}/api/v4/projects/{{ repo }}/hooks?private_token=xxxxxxxxxxxxxxxx`
 
+
+Options:
+
+```json
+{
+    "headers": {
+        "Content-Type": "application/json"
+    }
+}
+```
+
 Payload
 
 ```twig
