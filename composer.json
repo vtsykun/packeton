@@ -40,6 +40,7 @@
         "ezyang/htmlpurifier": "^4.6",
         "friendsofsymfony/user-bundle": "^2.1",
         "incenteev/composer-parameter-handler": "^2.0",
+        "nelmio/cors-bundle": "^1.5",
         "knplabs/knp-menu-bundle": "^2.1",
         "okvpn/cron-bundle": "^0.1.0",
         "oro/doctrine-extensions": "^1.2",

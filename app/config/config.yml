@@ -2,6 +2,7 @@ imports:
     - { resource: defaults.yml }
     - { resource: parameters.yml }
     - { resource: security.yml }
+    - { resource: nelmio_cors.yml } # Easy overwrite using docker volume if need allow cors
 
 framework:
     secret:          '%secret%'
