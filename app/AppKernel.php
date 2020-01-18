@@ -18,6 +18,7 @@ class AppKernel extends Kernel
             new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
             new FOS\UserBundle\FOSUserBundle(),
             new Snc\RedisBundle\SncRedisBundle(),
+            new Nelmio\CorsBundle\NelmioCorsBundle(),
             new Okvpn\Bundle\CronBundle\OkvpnCronBundle(),
             new WhiteOctober\PagerfantaBundle\WhiteOctoberPagerfantaBundle(),
             new Knp\Bundle\MenuBundle\KnpMenuBundle(),

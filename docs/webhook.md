@@ -256,12 +256,11 @@ Payload
 
 Gitlab auto webhook
 -------------------
-You can use event `new_repo` to adds a hook to a specified Gitlab project.
-It can be useful, if you don't have a Gold Gitlab Plan that allow configure webhooks for your group,
-so you need add it manually for each repository.
+You can use the event `new_repo` to add a hook to the specified Gitlab project.
+It can be useful, if you don't have a Gold Gitlab Plan that allows configure webhooks for your group,
+so you need add it manually for each a new repository.
 
 POST `https://{{ host }}/api/v4/projects/{{ repo }}/hooks?private_token=xxxxxxxxxxxxxxxx`
-
 
 Options:
 
