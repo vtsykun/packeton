@@ -19,7 +19,7 @@
     {{ form_end(form) }}
 
     <div class="col-md-6">
-        {{ 'submit.guide'|trans({ '%path_about%': path('about') })|raw }}
+        {{ 'submit.guide'|trans({ '%path_about%': path('about'), '%credentials%': path('user_add_sshkey') })|raw }}
     </div>
 </section>
 {% endblock %}

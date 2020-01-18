@@ -1,5 +1,5 @@
 menu:
-    about_packagist: About Packagist
+    about_packagist: About Packeton
     rss_feeds: Atom/RSS Feeds
     about_composer: About Composer
     home: Home
@@ -52,7 +52,8 @@ explore:
 
 search:
     claim_html: |
-        Packagist is the main <a href="https://getcomposer.org/">Composer</a> repository. It aggregates PHP packages installable with Composer.
+        Packeton is the private <a href="https://getcomposer.org/">Composer</a> repository.
+        It aggregates PHP packages installable with Composer.
 
 packages:
     mine: My packages
@@ -78,8 +79,12 @@ submit:
     title: Submit package
     submit: Submit
     guide: |
-        <p>Please make sure you have read the package <a href="%path_about%#naming-your-package">naming conventions</a> before submitting your package. The authoritative name of your package will be taken from the composer.json file inside the master branch or trunk of your repository, and it can not be changed after that.</p>
-        <p><strong>No credentials yet?</strong> If you still need to grant us access to your packages see the Admin > Credentials page.</p>
+        <p>Please make sure you have read the package <a href="%path_about%#naming-your-package">naming conventions</a>
+        before submitting your package. The authoritative name of your package will be taken
+        from the composer.json file inside the master branch or trunk of your repository, and
+        it can not be changed after that.</p>
+        <p><strong>No credentials yet?</strong> If you still need to grant us access
+        to your packages see the Admin > <a href="%credentials%">Credentials page</a>.</p>
 
 abandon:
     submit: Abandon Package
@@ -101,7 +106,8 @@ profile:
     connect_accounts: Connect accounts
     notify_on_failure: Notify me of package update failures
     api_token_explain: |
-        You can use your API token to interact with the Packagist API, see details in <a href="%path_about%#how-to-update-packages">the docs</a>.
+        You can use your API token to interact with the Packeton API,
+        see details in <a href="%path_about%#how-to-update-packages">the docs</a>.
 
 stats:
     title: Install Statistics
@@ -132,7 +138,7 @@ statistics:
 
 api_doc:
     title: API documentation
-    intro: 'Packagist has a public API to consume data. See bellow the most important URIs:'
+    intro: 'Packeton has a public API to consume data. See bellow the most important URIs:'
     listing_names: Listing package names
     changelog_name: 'Get the package git changelog'
     all_packages: All packages
@@ -167,7 +173,7 @@ user:
     packages: "%username%'s packages"
 
 'Search packages...': 'Search packages...'
-brandname: Packagist
+brandname: Packeton
 navclaim: Composer private repository
 Sort: 'Sort'
 Order: 'Order'
