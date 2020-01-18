@@ -5,8 +5,12 @@
         {%- if showSearchDesc == 'show' %}
         <div class="row">
             <div class="col-sm-9 hidden-xs">
-                <img src="{{ asset('bundles/packagistweb/img/logo-small.png') }}" class="logo">
-                <p>{{ 'search.claim_html'|trans|raw }}</p>
+                {% block logo_small_default %}
+                    <a href="{{ path('home') }}">
+                        <img src="{{ asset('bundles/packagistweb/img/logo-small.png') }}" class="logo">
+                    </a>
+                    <p>{{ 'search.claim_html'|trans|raw }}</p>
+                {% endblock %}
             </div>
         </div>
         {%- endif %}
