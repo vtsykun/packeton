@@ -6,6 +6,7 @@ namespace Packagist\WebBundle\Service;
 
 use Packagist\WebBundle\Repository\JobRepository;
 use Predis\Client as Redis;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Packagist\WebBundle\Entity\Job;
@@ -16,20 +17,25 @@ class QueueWorker
     private $logResetter;
     private $redis;
     private $logger;
-    /** @var RegistryInterface */
     private $doctrine;
-    private $jobWorkers;
     private $processedJobs = 0;
     private $persister;
+    private $workersContainer;
 
-    public function __construct(LogResetter $logResetter, Redis $redis, RegistryInterface $doctrine, LoggerInterface $logger, JobPersister $persister, array $jobWorkers)
-    {
+    public function __construct(
+        LogResetter $logResetter,
+        Redis $redis,
+        RegistryInterface $doctrine,
+        LoggerInterface $logger,
+        JobPersister $persister,
+        ContainerInterface $workersContainer
+    ) {
         $this->logResetter = $logResetter;
         $this->redis = $redis;
         $this->logger = $logger;
         $this->doctrine = $doctrine;
         $this->persister = $persister;
-        $this->jobWorkers = $jobWorkers;
+        $this->workersContainer = $workersContainer;
     }
 
     /**
@@ -71,7 +77,7 @@ class QueueWorker
 
     private function checkForTimedoutJobs(): int
     {
-        $this->doctrine->getEntityManager()->getRepository(Job::class)->markTimedOutJobs();
+        $this->doctrine->getManager()->getRepository(Job::class)->markTimedOutJobs();
 
         // check for timed out jobs every 20 min at least
         return time() + 1200;
@@ -79,7 +85,7 @@ class QueueWorker
 
     private function checkForScheduledJobs(SignalHandler $signal): int
     {
-        $em = $this->doctrine->getEntityManager();
+        $em = $this->doctrine->getManager();
         $repo = $em->getRepository(Job::class);
 
         foreach ($repo->getScheduledJobIds() as $jobId) {
@@ -98,7 +104,7 @@ class QueueWorker
      */
     private function process(string $jobId, SignalHandler $signal): bool
     {
-        $em = $this->doctrine->getEntityManager();
+        $em = $this->doctrine->getManager();
         /** @var JobRepository|object $repo */
         $repo = $em->getRepository(Job::class);
         if (!$repo->start($jobId)) {
@@ -115,7 +121,7 @@ class QueueWorker
             return $record;
         });
 
-        $processor = $this->jobWorkers[$job->getType()];
+        $processor = $this->workersContainer->get($job->getType());
 
         // clears/resets all fingers-crossed handlers to avoid dumping info messages that happened between two job executions
         $this->logResetter->reset();
@@ -134,12 +140,12 @@ class QueueWorker
 
         // If an exception is thrown during a transaction the EntityManager is closed
         // and we won't be able to update the job or handle future jobs
-        if (!$this->doctrine->getEntityManager()->isOpen()) {
+        if (!$this->doctrine->getManager()->isOpen()) {
             $this->doctrine->resetManager();
         }
 
         // refetch objects in case the EM was reset during the job run
-        $em = $this->doctrine->getEntityManager();
+        $em = $this->doctrine->getManager();
         $repo = $em->getRepository(Job::class);
 
         if ($result['status'] === Job::STATUS_RESCHEDULE) {

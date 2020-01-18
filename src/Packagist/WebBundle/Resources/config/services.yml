@@ -131,15 +131,22 @@ services:
             - "@doctrine"
             - "@logger"
             - '@Packagist\WebBundle\Service\JobPersister'
-            - 'package:updates': '@updater_worker'
-              'webhook:send': '@sender_hook_worker'
+            - ~
 
     scheduler:
         class: Packagist\WebBundle\Service\Scheduler
         arguments: ["@snc_redis.default_client", "@doctrine"]
 
-    updater_worker:
-        class: Packagist\WebBundle\Service\UpdaterWorker
+    packagist.worker_locator:
+        class: Symfony\Component\DependencyInjection\ServiceLocator
+        public: false
+        arguments:
+            - []
+        tags:
+            - { name: container.service_locator }
+
+    Packagist\WebBundle\Service\UpdaterWorker:
+        public: false
         arguments:
             - "@logger"
             - "@doctrine"
@@ -150,14 +157,32 @@ services:
             - "@packagist.download_manager"
             - "@packagist_factory"
             - '@event_dispatcher'
+        tags:
+            - { name: queue_worker, topic: package:updates }
 
-    sender_hook_worker:
-        class: Packagist\WebBundle\Webhook\SenderWorker
+    Packagist\WebBundle\Webhook\SenderWorker:
+        public: false
         arguments:
             - '@serializer'
             - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
             - '@Packagist\WebBundle\Service\JobScheduler'
+        tags:
+            - { name: queue_worker, topic: webhook:send }
+
+    Packagist\WebBundle\Cron\CronWorker:
+        public: false
+        arguments:
+            - '@okvpn_cron.runner_default'
+        tags:
+            - { name: queue_worker, topic: cron:execute }
+
+    packagist.cron.worker_middleware:
+        class: Packagist\WebBundle\Cron\WorkerMiddleware
+        arguments:
+            - '@Packagist\WebBundle\Service\JobScheduler'
+        tags:
+            - { name: okvpn_cron.middleware }
 
     packagist.log_resetter:
         class: Packagist\WebBundle\Service\LogResetter

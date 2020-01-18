@@ -131,12 +131,12 @@ class PackageRepository extends EntityRepository
                 OR (p.crawledAt < :autocrawled)
             )
             ORDER BY p.id ASC',
-            array(
+            [
                 // crawl packages without auto-update once a hour
                 'crawled' => date('Y-m-d H:i:s', strtotime('-1hour')),
                 // crawl auto-updated packages once a week just in case
-                'autocrawled' => date('Y-m-d H:i:s', strtotime('-1day')),
-            )
+                'autocrawled' => date('Y-m-d H:i:s', strtotime('-7day')),
+            ]
         );
     }
 

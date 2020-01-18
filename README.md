@@ -62,8 +62,7 @@ php bin/console fos:user:promote <username> ROLE_ADMIN
 Enable crontab `crontab -e -u www-data` 
 
 ```
-*/30 * * * * /var/www/packagist/bin/console --env=prod packagist:update >> /dev/null
-0 0 * * * /var/www/packagist/bin/console --env=prod packagist:stats:compile >> /dev/null
+* * * * * /var/www/packagist/bin/console --env=prod okvpn:cron >> /dev/null
 ```
 
 Setup Supervisor to run worker.

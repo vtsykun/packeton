@@ -32,7 +32,7 @@ monolog:
             verbosity_levels:
                 VERBOSITY_VERBOSE: INFO
                 VERBOSITY_VERY_VERBOSE: DEBUG
-            channels: ["!doctrine"]
+            channels: ["!doctrine", "!php"]
         console_very_verbose:
             type:   console
             bubble: false
