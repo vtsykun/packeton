@@ -12,6 +12,7 @@
 
 namespace Packagist\WebBundle;
 
+use Packagist\WebBundle\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packagist\WebBundle\DependencyInjection\Security\ApiHttpBasicFactory;
 use Symfony\Bundle\SecurityBundle\DependencyInjection\SecurityExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -30,5 +31,7 @@ class PackagistWebBundle extends Bundle
         /** @var SecurityExtension $extension */
         $extension = $container->getExtension('security');
         $extension->addSecurityListenerFactory(new ApiHttpBasicFactory());
+
+        $container->addCompilerPass(new WorkerLocatorPass());
     }
 }

@@ -121,6 +121,20 @@ fos_user:
         form:
             type:  Packagist\WebBundle\Form\Type\ProfileFormType
 
+okvpn_cron:
+    tasks:
+        -
+            command: 'packagist:stats:compile'
+            cron:    '0 0 * * *'
+        -
+            command: 'packagist:update'
+            cron:    '*/10 * * * *'
+
+    default_policy:
+        lock: true
+    with_stamps:
+        - Packagist\WebBundle\Cron\WorkerStamp
+
 packagist_web:
     archive: true
     archive_options:

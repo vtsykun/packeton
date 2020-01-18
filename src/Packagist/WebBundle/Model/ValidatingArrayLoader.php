@@ -17,7 +17,7 @@ class ValidatingArrayLoader extends \Composer\Package\Loader\ValidatingArrayLoad
             foreach ($licenses as $key => $license) {
                 if ('proprietary' === $license || !$licenseValidator->validate($license)) {
                     unset($licenses[$key]);
-                };
+                }
             }
 
             if (!$licenses) {
