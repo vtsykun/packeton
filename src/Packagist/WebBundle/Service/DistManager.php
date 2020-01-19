@@ -34,6 +34,10 @@ class DistManager
 
         $path = $this->config->generateDistFileName($version->getName(), $dist['reference'], $version->getVersion());
         if ($this->fileSystem->exists($path)) {
+            try {
+                $this->fileSystem->touch($path);
+            } catch (IOException $exception) {}
+
             return $path;
         }
 

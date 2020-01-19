@@ -297,3 +297,17 @@ services:
             - { name: kernel.event_listener, event: packagePersist }
             - { name: kernel.event_listener, event: packageError }
             - { name: kernel.event_listener, event: packageRemove }
+
+    Packagist\WebBundle\Cron\Handler\CleanupDistDir:
+        arguments:
+            - '@packagist.dist_config'
+            - '@logger'
+        tags:
+            - { name: okvpn.cron, cron: '40 1 */2 * *' }
+
+    Packagist\WebBundle\Cron\Handler\CleanupJobStorage:
+        arguments:
+            - '@doctrine'
+            - '@logger'
+        tags:
+            - { name: okvpn.cron, cron: '49 0 * * *' }

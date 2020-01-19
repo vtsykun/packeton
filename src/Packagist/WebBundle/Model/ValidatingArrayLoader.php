@@ -3,8 +3,9 @@
 namespace Packagist\WebBundle\Model;
 
 use Composer\Spdx\SpdxLicenses;
+use Composer\Package\Loader\ValidatingArrayLoader as ComposerValidatingArrayLoader;
 
-class ValidatingArrayLoader extends \Composer\Package\Loader\ValidatingArrayLoader
+class ValidatingArrayLoader extends ComposerValidatingArrayLoader
 {
     /**
      * {@inheritdoc}
