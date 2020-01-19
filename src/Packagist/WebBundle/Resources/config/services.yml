@@ -268,6 +268,7 @@ services:
             - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
             - '@security.token_storage'
+            - '@request_stack'
 
     Symfony\Component\Lock\Factory:
         public: true

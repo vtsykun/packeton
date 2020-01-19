@@ -157,7 +157,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
             $statusCode = $response->getStatusCode();
             $headers = $response->getHeaders(false);
             $content = $response->getContent(false);
-            $array = $response->toArray(false);
+            $array = $content ? @json_decode($content, true) : null;
         } catch (\Throwable $exception) {}
 
         if (false === $isRaw) {

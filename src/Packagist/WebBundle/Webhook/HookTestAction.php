@@ -12,6 +12,7 @@ use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Webhook\Twig\WebhookContext;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -20,12 +21,14 @@ class HookTestAction
     private $executor;
     private $registry;
     private $tokenStorage;
+    private $requestStack;
 
-    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor, TokenStorageInterface $tokenStorage = null)
+    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor, TokenStorageInterface $tokenStorage = null, RequestStack $requestStack = null)
     {
         $this->registry = $registry;
         $this->executor = $executor;
         $this->tokenStorage = $tokenStorage;
+        $this->requestStack = $requestStack;
     }
 
     public function runTest(Webhook $webhook, array $data)
@@ -79,13 +82,13 @@ class HookTestAction
             case Webhook::HOOK_USER_LOGIN:
                 $context = [
                     'user' => $data['user'],
-                    'client_ip' => '127.0.0.1'
+                    'ip_address' => $data['ip_address']
                 ];
                 break;
             case Webhook::HOOK_HTTP_REQUEST:
                 $context = [
                     'request' => $data['payload'] ?? null,
-                    'client_ip' => '127.0.0.1',
+                    'ip_address' => $data['ip_address'],
                 ];
                 break;
             default:
@@ -210,6 +213,13 @@ class HookTestAction
             } catch (\Throwable $exception) {}
         } else {
             $data['payload'] = [];
+        }
+
+        if (!isset($data['ip_address'])) {
+            $data['ip_address'] = '127.0.0.1';
+            if ($this->requestStack and $req = $this->requestStack->getMasterRequest()) {
+                $data['ip_address'] = $req->getClientIp();
+            }
         }
     }
 }
