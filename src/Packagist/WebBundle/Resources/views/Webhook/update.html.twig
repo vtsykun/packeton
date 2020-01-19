@@ -10,7 +10,29 @@
     <h2 class="title">{{ title }}</h2>
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
-        {{ form_rest(form) }}
+        {% set formBegin %}
+            {{ form_row(form.name) }}
+            {{ form_row(form.url) }}
+            {{ form_row(form.method) }}
+        {% endset %}
+
+        {% set formEnd %}
+            {{ form_row(form.payload) }}
+            {{ form_row(form.active) }}
+            {{ form_row(form.events) }}
+        {% endset %}
+
+        {{ formBegin }}
+        <div class="form-group">
+            <a data-toggle="collapse" href="#moreOptions" aria-expanded="false" aria-controls="moreOptions">
+                More options
+            </a>
+        </div>
+
+        <div class="collapse" id="moreOptions">
+            {{ form_rest(form) }}
+        </div>
+        {{ formEnd }}
 
         <input class="btn btn-block btn-success btn-lg" type="submit" value="Add webhook" />
         {{ form_end(form) }}

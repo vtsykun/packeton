@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packagist\WebBundle\Form\Type;
 
+use Cron\CronExpression;
 use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Validator\Constraint\ValidRegex;
@@ -70,13 +71,19 @@ class WebhookType extends AbstractType
             ])
             ->add('packageRestriction', TextType::class, [
                 'required' => false,
-                'tooltip' => 'Must be a valid regex to filter by a package name.',
+                'label' => 'Name restriction',
+                'tooltip' => 'Must be a valid regex to filter by a package name/path name.',
                 'constraints' => [new ValidRegex()]
             ])
             ->add('versionRestriction', TextType::class, [
                 'required' => false,
                 'tooltip' => 'Must be a valid regex to filter by version.',
                 'constraints' => [new ValidRegex()]
+            ])
+            ->add('cron', TextType::class, [
+                'required' => false,
+                'tooltip' => 'Must be a valid cron expression to trigger by cron.',
+                'constraints' => [new Callback([$this, 'checkCron'])]
             ])
             ->add('options', JsonTextType::class, [
                 'required' => false,
@@ -170,6 +177,21 @@ class WebhookType extends AbstractType
         }
     }
 
+    /**
+     * @param string|null $value
+     * @param ExecutionContextInterface $context
+     */
+    public function checkCron($value, ExecutionContextInterface $context)
+    {
+        if (empty($value)) {
+            return;
+        }
+
+        if (false === CronExpression::isValidExpression($value)) {
+            $context->addViolation('This value is not a valid cron expression.');
+        }
+    }
+
     public static function getEventsChoices(): array
     {
         return [
@@ -181,6 +203,9 @@ class WebhookType extends AbstractType
             'Update tag/branch' => Webhook::HOOK_PUSH_UPDATE,
             'Created a new repository' => Webhook::HOOK_REPO_NEW,
             'Remove repository' => Webhook::HOOK_REPO_DELETE,
+            'By HTTP requests to  https://APP_URL/api/webhook-invoke/{name}' => Webhook::HOOK_HTTP_REQUEST,
+            'User login event' => Webhook::HOOK_USER_LOGIN,
+            'By cron' => Webhook::HOOK_CRON,
         ];
     }
 

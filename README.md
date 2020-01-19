@@ -22,10 +22,21 @@ What was changed in this fork?
 - Support MySQL and PostgresSQL.
 - Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
-Install from Docker
---------------------
+Table of content
+---------------
 
-See https://hub.docker.com/r/okvpn/packeton
+- [Run as Docker container](#install-and-run-in-docker)
+- [Demo](#demo)
+- [Installation from code](#installation)
+- [Outgoing Webhook](/docs/webhook.md)
+    - [Intro](/docs/webhook.md#introduction)
+    - [Examples](/docs/webhook.md#examples)
+        - [Telegram notification](/docs/webhook.md#telegram-notification)
+        - [Slack notification](/docs/webhook.md#slack-notification)
+        - [JIRA issue fix version](/docs/webhook.md#jira-create-a-new-release-and-set-fix-version)
+        - [Gitlab setup auto webhook](/docs/webhook.md#gitlab-auto-webhook)
+- [Ssh key access](#ssh-key-access-and-composer-oauth-token)
+- [Usage](#usage-and-authentication)
 
 Demo
 ----
@@ -33,16 +44,106 @@ See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/c
 
 [![Demo](docs/img/demo.png)](docs/img/demo.png)
 
-Requirements
+Install and Run in Docker
+------------------------
+
+Pull the image from docker hub https://hub.docker.com/r/okvpn/packeton:
+
+```
+docker pull okvpn/packeton
+```
+
+Run the image (with docker-composer):
+
+```yaml
+version: '3'
+
+services:
+    packagist:
+        image: okvpn/packeton:latest
+        container_name: packagist
+        restart: unless-stopped
+        hostname: packagist
+        volumes:
+            - .docker/redis:/var/lib/redis  # Redis data
+            - .docker/zipball:/var/www/packagist/app/zipball # Zipped archive cache for "dist" downloads
+            - .docker/composer:/var/www/.composer  # Composer cache
+            - .docker/ssh:/var/www/.ssh # Share here your ssh keys
+        environment:
+            PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
+            PACKAGIST_HOST: pkg.okvpn.org
+            DATABASE_HOST: 172.17.0.1
+            DATABASE_PORT: 5432
+            DATABASE_DRIVER: pdo_pgsql
+            DATABASE_USER: postgres
+            DATABASE_NAME: packagist
+            DATABASE_PASSWORD: 123456
+            ADMIN_USER: admin
+            ADMIN_PASSWORD: composer
+            ADMIN_EMAIL: admin@example.com
+            GITHUB_NO_API: 'true'
+        ports:
+          - 127.0.0.1:8080:80
+```
+
+Also you can configure Packeton server to run behind a NGINX reverse proxy. 
+For example to enable ssl.
+
+```
+server {
+    listen *:443 ssl http2;
+
+    server_name pkg.okvpn.org;
+
+    ssl_certificate /etc/letsencrypt/live/pkg.okvpn.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pkg.okvpn.org/privkey.pem;
+    ssl_dhparam /etc/nginx/ssl/dh.pem;
+    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
+ 
+    ssl_protocols TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache  builtin:1000  shared:SSL:10m;
+    ssl_session_timeout  5m;
+    access_log  off;
+    error_log  /var/log/nginx/pkg_error.log;
+
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_buffers 16 16k;
+    gzip_http_version 1.1;
+    gzip_min_length 2048;
+    gzip_types text/css image/svg+xml application/octet-stream application/javascript text/javascript application/json;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://127.0.0.1:8080/;
+    }
+}
+
+server {
+    if ($host = pkg.okvpn.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    return 301 https://$host$request_uri;
+    server_name pkg.okvpn.org;
+}
+```
+
+Installation
 ------------
+
+### Requirements
 
 - MySQL or PostgresSQL for the main data store.
 - Redis for some functionality (favorites, download statistics, worker queue).
 - git/svn/hg depending on which repositories you want to support.
 - Supervisor to run a background job worker
-
-Installation
-------------
 
 1. Clone the repository
 2. Copy and edit `app/config/parameters.yml` and change the relevant values for your setup.

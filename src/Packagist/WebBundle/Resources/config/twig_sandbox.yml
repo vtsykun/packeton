@@ -9,8 +9,8 @@ parameters:
         'Packagist\WebBundle\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
         'Packagist\WebBundle\Entity\Package': ['credentials']
     security_policy_forbidden_methods:
-        'Packagist\WebBundle\Entity\User': ['getApiToken', 'getGithubToken', 'getPassword', 'getSalt']
-        'Packagist\WebBundle\Entity\Package': ['getCredentials']
+        'Packagist\WebBundle\Entity\User': ['getApiToken', 'unserialize', 'getGithubToken', 'getPassword', 'getSalt', 'getPlainPassword', '!regex /^(add|set)/']
+        'Packagist\WebBundle\Entity\Package': ['getCredentials', '!regex /^(add|set)/']
 
 services:
     packagist.twig.webhook_security_policy:
@@ -57,6 +57,7 @@ services:
         arguments:
             - '@doctrine'
             - '@Packagist\WebBundle\Util\ChangelogUtils'
+            - '@snc_redis.default'
         tags:
             - { name: 'packagist_trusted_extension' }
 

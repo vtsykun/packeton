@@ -12,17 +12,20 @@ use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Webhook\Twig\WebhookContext;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class HookTestAction
 {
     private $executor;
     private $registry;
+    private $tokenStorage;
 
-    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor)
+    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor, TokenStorageInterface $tokenStorage = null)
     {
         $this->registry = $registry;
         $this->executor = $executor;
+        $this->tokenStorage = $tokenStorage;
     }
 
     public function runTest(Webhook $webhook, array $data)
@@ -30,6 +33,7 @@ class HookTestAction
         $this->selectPackage($data);
         $this->selectVersion($data);
         $this->selectUser($data);
+        $this->selectPayload($data);
 
         switch ($data['event']) {
             case Webhook::HOOK_RL_UPDATE:
@@ -70,6 +74,18 @@ class HookTestAction
                 $context = [
                     'package' => $data['package'],
                     'message' => 'Exception message'
+                ];
+                break;
+            case Webhook::HOOK_USER_LOGIN:
+                $context = [
+                    'user' => $data['user'],
+                    'client_ip' => '127.0.0.1'
+                ];
+                break;
+            case Webhook::HOOK_HTTP_REQUEST:
+                $context = [
+                    'request' => $data['payload'] ?? null,
+                    'client_ip' => '127.0.0.1',
                 ];
                 break;
             default:
@@ -173,8 +189,27 @@ class HookTestAction
     private function selectUser(array &$data): void
     {
         if (!($data['user'] ?? null) instanceof User) {
+            if (null !== $this->tokenStorage) {
+                if ($token = $this->tokenStorage->getToken()) {
+                    $data['user'] = $token->getUser();
+                    return;
+                }
+            }
+
             $data['user'] = $this->registry->getRepository(User::class)
                 ->findOneBy([]);
+        }
+    }
+
+    private function selectPayload(array &$data)
+    {
+        if (isset($data['payload'])) {
+            try {
+                $payload = @json_decode($data['payload'], true);
+                $data['payload'] = $payload ?: $data['payload'];
+            } catch (\Throwable $exception) {}
+        } else {
+            $data['payload'] = [];
         }
     }
 }

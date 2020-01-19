@@ -47,6 +47,12 @@ class HookRequestExecutor implements ContextAwareInterface
             $options = $request->getOptions();
             if ($body = $request->getBody()) {
                 $options['body'] = $request->getBody();
+                try {
+                    if ($json = @json_decode($body, true)) {
+                        $options['json'] = $json;
+                        unset($options['body']);
+                    }
+                } catch (\Throwable $e) {}
             }
 
             try {

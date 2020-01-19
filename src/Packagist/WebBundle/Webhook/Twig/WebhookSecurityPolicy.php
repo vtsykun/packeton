@@ -19,6 +19,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
     private $strictSecurityPolicy;
     private $forbiddenFilters;
     private $forbiddenMethods;
+    private $forbiddenMethodsRegex;
     private $forbiddenProperties;
     private $forbiddenFunctions;
     private $forbiddenClasses;
@@ -96,9 +97,21 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
             return;
         }
 
-        $this->forbiddenMethods = [];
+        $this->forbiddenMethods = $this->forbiddenMethodsRegex = [];
         foreach ($methods as $class => $m) {
-            $this->forbiddenMethods[$class] = array_map('strtolower', \is_array($m) ? $m : [$m]);
+            $m = \array_filter(\is_array($m) ? $m : [$m], function ($value) use ($class) {
+                if (0 === strpos($value, '!regex')) {
+                    $value = trim(str_replace('!regex', '', $value));
+                    if (false !== @preg_match($value, '')) {
+                        $this->forbiddenMethodsRegex[$class][] = $value;
+                    }
+                    return false;
+                }
+
+                return true;
+            });
+
+            $this->forbiddenMethods[$class] = array_map('strtolower', $m);
         }
     }
 
@@ -140,6 +153,18 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
                 $forbid = \in_array($method, $methods);
 
                 break;
+            }
+        }
+
+        if (false === $forbid) {
+            foreach ($this->forbiddenMethodsRegex as $class => $methods) {
+                if ($obj instanceof $class) {
+                    $forbid = (bool) array_filter($methods, function ($regex) use ($method) {
+                        return preg_match($regex, $method);
+                    });
+
+                    break;
+                }
             }
         }
 

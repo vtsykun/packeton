@@ -267,6 +267,7 @@ services:
         arguments:
             - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
+            - '@security.token_storage'
 
     Symfony\Component\Lock\Factory:
         public: true
@@ -287,16 +288,30 @@ services:
         tags:
             - { name: serializer.normalizer }
 
+    Packagist\WebBundle\Webhook\HookBus:
+        arguments:
+            - '@serializer'
+            - '@Packagist\WebBundle\Service\JobScheduler'
+
     Packagist\WebBundle\Webhook\EventListener\HookListener:
         arguments:
             - '@doctrine'
-            - '@serializer'
-            - '@Packagist\WebBundle\Service\JobScheduler'
+            - '@Packagist\WebBundle\Webhook\HookBus'
         tags:
             - { name: kernel.event_listener, event: packageRefresh }
             - { name: kernel.event_listener, event: packagePersist }
             - { name: kernel.event_listener, event: packageError }
             - { name: kernel.event_listener, event: packageRemove }
+            - { name: kernel.event_listener, event: security.interactive_login, method: onUserLogin }
+
+    Packagist\WebBundle\Cron\Handler\ScheduleHookHandler:
+        arguments:
+            - '@Packagist\WebBundle\Webhook\HookBus'
+        tags: [okvpn.cron_service]
+
+    Packagist\WebBundle\Cron\WebhookCronLoader:
+        arguments: ['@doctrine']
+        tags: [okvpn_cron.loader]
 
     Packagist\WebBundle\Cron\Handler\CleanupDistDir:
         arguments:
