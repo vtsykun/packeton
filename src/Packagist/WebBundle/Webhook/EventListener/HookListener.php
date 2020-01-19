@@ -9,20 +9,20 @@ use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Event\UpdaterErrorEvent;
 use Packagist\WebBundle\Event\UpdaterEvent;
-use Packagist\WebBundle\Service\JobScheduler;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Packagist\WebBundle\Webhook\HookBus;
+use Symfony\Component\Security\Core\Authentication\Token\RememberMeToken;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 
 class HookListener
 {
     private $registry;
-    private $normalizer;
-    private $jobScheduler;
+    private $hookBus;
 
-    public function __construct(ManagerRegistry $registry, NormalizerInterface $normalizer, JobScheduler $jobScheduler)
+    public function __construct(ManagerRegistry $registry, HookBus $hookBus)
     {
         $this->registry = $registry;
-        $this->normalizer = $normalizer;
-        $this->jobScheduler = $jobScheduler;
+        $this->hookBus = $hookBus;
     }
 
     /**
@@ -48,11 +48,7 @@ class HookListener
                     'event' => Webhook::HOOK_RL_NEW
                 ];
 
-                $context = $this->normalizer->normalize($context, 'packagist_job');
-                $this->jobScheduler->publish('webhook:send', [
-                    'context' => $context,
-                    'webhook' => $webhook->getId(),
-                ]);
+                $this->hookBus->dispatch($context, $webhook);
             }
         }
     }
@@ -71,11 +67,7 @@ class HookListener
                 'event' => Webhook::HOOK_REPO_NEW
             ];
 
-            $context = $this->normalizer->normalize($context, 'packagist_job');
-            $this->jobScheduler->publish('webhook:send', [
-                'context' => $context,
-                'webhook' => $webhook->getId(),
-            ]);
+            $this->hookBus->dispatch($context, $webhook);
         }
     }
 
@@ -102,10 +94,37 @@ class HookListener
                 'event' => Webhook::HOOK_REPO_DELETE
             ];
 
-            $this->jobScheduler->publish('webhook:send', [
-                'context' => $context,
-                'webhook' => $webhook->getId(),
-            ]);
+            $this->hookBus->dispatch($context, $webhook);
+        }
+    }
+
+    /**
+     * @param InteractiveLoginEvent $event
+     */
+    public function onUserLogin(InteractiveLoginEvent $event)
+    {
+        $token = $event->getAuthenticationToken();
+        $request = $event->getRequest();
+        if ($token instanceof RememberMeToken) {
+            return;
+        }
+
+        /** @var UserInterface $user */
+        if (!$user = $token->getUser() or !$request) {
+            return;
+        }
+
+        $webhooks = $this->registry->getRepository(Webhook::class)
+            ->findActive($user->getUsername(), [Webhook::HOOK_USER_LOGIN]);
+        foreach ($webhooks as $webhook) {
+            $context = [
+                'token' => get_class($token),
+                'user' => $user,
+                'ip_address' => $request->getClientIp(),
+                'event' => Webhook::HOOK_USER_LOGIN
+            ];
+
+            $this->hookBus->dispatch($context, $webhook);
         }
     }
 
@@ -126,11 +145,7 @@ class HookListener
                 'exception_class' => get_class($event->getException()->getMessage())
             ];
 
-            $context = $this->normalizer->normalize($context, 'packagist_job');
-            $this->jobScheduler->publish('webhook:send', [
-                'context' => $context,
-                'webhook' => $webhook->getId(),
-            ]);
+            $this->hookBus->dispatch($context, $webhook);
         }
     }
 

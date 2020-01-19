@@ -7,6 +7,8 @@ use Packagist\WebBundle\Entity\Package;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Util\ChangelogUtils;
+use Predis\Client as Redis;
+use Symfony\Component\HttpClient\HttpClient;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -17,16 +19,19 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
 {
     private $registry;
     private $changelogUtils;
+    private $redis;
 
     /** @var WebhookContext */
     private $context;
 
     public function __construct(
         ManagerRegistry $registry,
-        ChangelogUtils $changelogUtils
+        ChangelogUtils $changelogUtils,
+        Redis $redis
     ) {
         $this->registry = $registry;
         $this->changelogUtils = $changelogUtils;
+        $this->redis = $redis;
     }
 
     /**
@@ -86,6 +91,86 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         }
 
         return is_int($matchOffset) ? $matches[$matchOffset] ?? [] : $matches;
+    }
+
+    /**
+     * Key value storage. Set value
+     *
+     * {@inheritDoc}
+     */
+    public function hook_function_keyvalue_set(string $key, $value, $expire = 86400)
+    {
+        $key = 'hook.' . md5($key);
+        if ($expire) {
+            $this->redis->setex($key, $expire, $value);
+        } else {
+            $this->redis->set($key, $value);
+        }
+    }
+
+    /**
+     * Key value storage. Get value
+     *
+     * {@inheritDoc}
+     */
+    public function hook_function_keyvalue_get(string $key)
+    {
+        $key = 'hook.' . md5($key);
+        return $this->redis->get($key);
+    }
+
+    /**
+     * Json decode function.
+     *
+     * {@inheritDoc}
+     */
+    public function hook_function_json_decode($value)
+    {
+        return json_decode($value, true);
+    }
+
+    /**
+     * Simple wrapper for HttpClient.
+     * Allow make get http request from twig code (ONLY for webhooks).
+     * Don't recommended to use, but this hack can be very useful
+     *
+     * Return decoded as array body, if JSON response.
+     * {@inheritDoc}
+     */
+    public function hook_function_http_request(string $url, array $options = [])
+    {
+        $method = $options['method'] ?? 'GET';
+        $isRaw = $options['raw'] ?? false;
+
+        unset($options['method'], $options['raw']);
+        $client = HttpClient::create(['max_duration' => 60]);
+
+        try {
+            $response = $client->request($method, $url, $options);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+
+        $array = $info = $statusCode = $content = $headers = $array = null;
+        try {
+            $info = $response->getInfo();
+            $statusCode = $response->getStatusCode();
+            $headers = $response->getHeaders(false);
+            $content = $response->getContent(false);
+            $array = $response->toArray(false);
+        } catch (\Throwable $exception) {}
+
+        if (false === $isRaw) {
+            return $array ?: $content;
+        }
+
+        return [
+            'info' => $info,
+            'statusCode' => $statusCode,
+            'content' => $content,
+            'toArray' => $array,
+            'headers' => $headers,
+        ];
     }
 
     /**

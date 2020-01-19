@@ -17,6 +17,9 @@ class Webhook implements OwnerAwareInterface
     public const HOOK_RL_DELETE = 'delete_release';
     public const HOOK_PUSH_NEW = 'push_new_event';
     public const HOOK_PUSH_UPDATE = 'update_new_event';
+    public const HOOK_HTTP_REQUEST = 'http_request';
+    public const HOOK_CRON = 'cron_trigger';
+    public const HOOK_USER_LOGIN = 'user_login';
     public const HOOK_REPO_FAILED = 'update_repo_failed';
     public const HOOK_REPO_NEW = 'new_repo';
     public const HOOK_REPO_DELETE = 'delete_repo';
@@ -114,6 +117,13 @@ class Webhook implements OwnerAwareInterface
      * @ORM\Column(name="visibility", type="string", length=16, nullable=true)
      */
     private $visibility;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="cron", type="string", length=255, nullable=true)
+     */
+    private $cron;
 
     public function __construct()
     {
@@ -428,6 +438,24 @@ class Webhook implements OwnerAwareInterface
     public function setVisibility(?string $visibility): Webhook
     {
         $this->visibility = $visibility;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCron()
+    {
+        return $this->cron;
+    }
+
+    /**
+     * @param string|null $cron
+     * @return Webhook
+     */
+    public function setCron($cron)
+    {
+        $this->cron = $cron;
         return $this;
     }
 }

@@ -14,20 +14,22 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class SenderWorker
 {
-    private const MAX_NESTING_LEVEL = 3;
+    public const MAX_NESTING_LEVEL = 3;
 
     /** @var DenormalizerInterface|NormalizerInterface  */
     private $denormalizer;
     private $registry;
     private $executor;
     private $jobScheduler;
+    private $maxNestingLevel;
 
-    public function __construct(DenormalizerInterface $denormalizer, ManagerRegistry $registry, HookRequestExecutor $executor, JobScheduler $jobScheduler)
+    public function __construct(DenormalizerInterface $denormalizer, ManagerRegistry $registry, HookRequestExecutor $executor, JobScheduler $jobScheduler, $maxNestingLevel = self::MAX_NESTING_LEVEL)
     {
         $this->denormalizer = $denormalizer;
         $this->registry = $registry;
         $this->executor = $executor;
         $this->jobScheduler = $jobScheduler;
+        $this->maxNestingLevel = max($maxNestingLevel, 2);
     }
 
     public function process(Job $job): array
@@ -44,8 +46,8 @@ class SenderWorker
             ];
         }
 
-        if ($nestingLevel >= self::MAX_NESTING_LEVEL) {
-            throw new \RuntimeException('Maximum webhook nesting level of 3 reached');
+        if ($nestingLevel >= $this->maxNestingLevel) {
+            throw new \RuntimeException(sprintf('Maximum webhook nesting level of %s reached', $this->maxNestingLevel));
         }
 
         $context = $this->denormalizer->denormalize($payload['context'] ?? [], 'context', 'packagist_job');

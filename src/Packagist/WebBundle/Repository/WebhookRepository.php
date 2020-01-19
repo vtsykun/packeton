@@ -2,6 +2,7 @@
 
 namespace Packagist\WebBundle\Repository;
 
+use Doctrine\Common\Collections\Criteria;
 use Packagist\WebBundle\Entity\Webhook;
 
 /**
@@ -15,16 +16,20 @@ class WebhookRepository extends \Doctrine\ORM\EntityRepository
     /**
      * @param string|null $package
      * @param array $events
+     * @param Criteria|null $criteria
      *
      * @return Webhook[]
      */
-    public function findActive(string $package = null, array $events = []): array
+    public function findActive(string $package = null, array $events = [], $criteria = null): array
     {
-        $webhooks = $this->createQueryBuilder('w')
-            ->where('w.active = true')
-            ->getQuery()
-            ->getResult();
+        $qb = $this->createQueryBuilder('w')
+            ->where('w.active = true');
 
+        if (null !== $criteria) {
+            $qb->addCriteria($criteria);
+        }
+
+        $webhooks = $qb->getQuery()->getResult();
         if (null !== $package) {
             $webhooks = array_filter($webhooks, function (Webhook $webhook) use ($package) {
                 return $webhook->getPackageRestriction() === null || preg_match($webhook->getPackageRestriction(), $package);

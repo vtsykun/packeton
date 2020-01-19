@@ -13,6 +13,7 @@ use Packagist\WebBundle\Webhook\HookTestAction;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -157,12 +158,11 @@ class WebhookController extends Controller
                 'choice_label' => 'name',
                 'required' => false,
             ])
-            ->add('versions', TextType::class, [
-                'required' => false,
-            ])
+            ->add('versions', TextType::class, ['required' => false])
+            ->add('payload', TextareaType::class, ['required' => false])
             ->add('sendReal', CheckboxType::class, [
                 'required' => false,
-                'label' => 'Send request?'
+                'label' => 'Send real request?'
             ])
             ->getForm();
 

@@ -13,7 +13,9 @@
 namespace Packagist\WebBundle\Controller;
 
 use Packagist\WebBundle\Entity\Package;
+use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Model\PackageManager;
+use Packagist\WebBundle\Webhook\HookBus;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -219,6 +221,35 @@ class ApiController extends Controller
         }
 
         return new JsonResponse(['status' => 'success'], 201);
+    }
+
+    /**
+     * @Route("/api/webhook-invoke/{name}", name="generic_create", defaults={"_format" = "json", "name" = "default"})
+     *
+     * {@inheritdoc}
+     */
+    public function notifyWebhookAction($name, Request $request)
+    {
+        $context = [
+            'event' => Webhook::HOOK_HTTP_REQUEST,
+            'name' => $name,
+            'ip_address' => $request->getClientIp(),
+            'request' => array_merge(
+                $request->request->all(),
+                $request->query->all()
+            )
+        ];
+
+        $jobs = [];
+        $bus = $this->get(HookBus::class);
+        $webhooks = $this->getDoctrine()->getRepository(Webhook::class)
+            ->findActive($name,  [Webhook::HOOK_HTTP_REQUEST]);
+
+        foreach ($webhooks as $webhook) {
+            $jobs[] = $bus->dispatch($context, $webhook)->getId();
+        }
+
+        return new JsonResponse(['status' => 'success', 'jobs' => $jobs], count($jobs) === 0 ? 200 : 202);
     }
 
     /**
