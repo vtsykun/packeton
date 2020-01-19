@@ -3,8 +3,8 @@ Packeton - Private PHP package repository for vendors
 
 [![Docker pulls](https://img.shields.io/docker/pulls/okvpn/packeton.svg?label=docker+pulls)](https://hub.docker.com/repository/docker/okvpn/packeton)
 [![Docker stars](https://img.shields.io/docker/stars/okvpn/packeton.svg?label=docker+stars)](https://hub.docker.com/repository/docker/okvpn/packeton)
-[![Docker version](https://images.microbadger.com/badges/version/okvpn/packeton.svg)](https://microbadger.com/images/okvpn/packeton)
-[![Docker layers](https://images.microbadger.com/badges/image/okvpn/packeton.svg)](https://microbadger.com/images/okvpn/packeton)
+[![Docker version](https://images.microbadger.com/badges/version/okvpn/packeton.svg)](https://hub.docker.com/repository/docker/okvpn/packeton)
+[![Docker layers](https://images.microbadger.com/badges/image/okvpn/packeton.svg)](https://hub.docker.com/repository/docker/okvpn/packeton)
 
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
