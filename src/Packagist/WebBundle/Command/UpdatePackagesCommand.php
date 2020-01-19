@@ -34,6 +34,7 @@ class UpdatePackagesCommand extends ContainerAwareCommand
                 new InputOption('force', null, InputOption::VALUE_NONE, 'Force a re-crawl of all packages, or if a package name is given forces an update of all versions'),
                 new InputOption('delete-before', null, InputOption::VALUE_NONE, 'Force deletion of all versions before an update'),
                 new InputOption('update-equal-refs', null, InputOption::VALUE_NONE, 'Force update of all versions even when they already exist'),
+                new InputOption('update-crawl-interval', null, InputOption::VALUE_OPTIONAL, 'Package update interval in seconds.', 14400),
                 new InputArgument('package', InputArgument::OPTIONAL, 'Package name to update'),
             ])
             ->setDescription('Updates packages')
@@ -54,6 +55,8 @@ class UpdatePackagesCommand extends ContainerAwareCommand
         $updateEqualRefs = false;
         $randomTimes = true;
 
+        $interval = $input->getOption('update-crawl-interval') ?: 14400; // 4 hour
+
         if ($package) {
             $packages = [['id' => $doctrine->getRepository('PackagistWebBundle:Package')->findOneByName($package)->getId()]];
             if ($force) {
@@ -64,7 +67,7 @@ class UpdatePackagesCommand extends ContainerAwareCommand
             $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
             $updateEqualRefs = true;
         } else {
-            $packages = $doctrine->getRepository('PackagistWebBundle:Package')->getStalePackages();
+            $packages = $doctrine->getRepository('PackagistWebBundle:Package')->getStalePackages($interval);
         }
 
         $ids = [];
@@ -85,7 +88,7 @@ class UpdatePackagesCommand extends ContainerAwareCommand
             $idsGroup = array_splice($ids, 0, 100);
 
             foreach ($idsGroup as $id) {
-                $job = $scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, 1800).'seconds') : null);
+                $job = $scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, $interval/2).'seconds') : null);
                 if ($verbose) {
                     $output->writeln('Scheduled update job '.$job->getId().' for package '.$id);
                 }

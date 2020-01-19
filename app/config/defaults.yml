@@ -7,3 +7,4 @@ parameters:
     mailer_auth_mode: login
     fingers_crossed_handlers: []
     github_no_api: ~
+    package_update_interval: 14400

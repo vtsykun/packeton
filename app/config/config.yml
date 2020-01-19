@@ -130,6 +130,7 @@ okvpn_cron:
         -
             command: 'packagist:update'
             cron:    '*/10 * * * *'
+            arguments: {'--update-crawl-interval': '%package_update_interval%' }
 
     default_policy:
         lock: true

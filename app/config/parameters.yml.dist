@@ -43,3 +43,4 @@ parameters:
     # Value of dist composer metadata
     packagist_dist_host: https://example.com
     github_no_api: ~
+    package_update_interval: 14400

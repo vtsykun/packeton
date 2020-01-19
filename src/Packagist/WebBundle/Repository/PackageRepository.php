@@ -118,7 +118,7 @@ class PackageRepository extends EntityRepository
         return $names;
     }
 
-    public function getStalePackages()
+    public function getStalePackages($interval = null)
     {
         $conn = $this->getEntityManager()->getConnection();
 
@@ -133,7 +133,7 @@ class PackageRepository extends EntityRepository
             ORDER BY p.id ASC',
             [
                 // crawl packages without auto-update once a hour
-                'crawled' => date('Y-m-d H:i:s', strtotime('-1hour')),
+                'crawled' => date('Y-m-d H:i:s', time() - ($interval ?: 14400)),
                 // crawl auto-updated packages once a week just in case
                 'autocrawled' => date('Y-m-d H:i:s', strtotime('-7day')),
             ]
