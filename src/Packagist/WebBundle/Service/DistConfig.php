@@ -24,9 +24,15 @@ class DistConfig
     public function generateTargetDir(string $name)
     {
         $intermediatePath = \preg_replace('#[^a-z0-9-_/]#i', '-', $name);
-        $targetDir = \sprintf('%s/%s', $this->config['basedir'], $intermediatePath);
+        return \sprintf('%s/%s', $this->config['basedir'], $intermediatePath);
+    }
 
-        return $targetDir;
+    /**
+     * @return string|null
+     */
+    public function getDistDir(): ?string
+    {
+        return $this->config['basedir'] ?? null;
     }
 
     /**
