@@ -230,14 +230,18 @@ class ApiController extends Controller
      */
     public function notifyWebhookAction($name, Request $request)
     {
+        if ($request->headers->get('Content-Type') === 'application/json') {
+            $payload = json_decode($request->getContent(), true);
+        } else {
+            $payload = array_merge($request->request->all(), $request->query->all());
+            unset($payload['token']);
+        }
+
         $context = [
             'event' => Webhook::HOOK_HTTP_REQUEST,
             'name' => $name,
             'ip_address' => $request->getClientIp(),
-            'request' => array_merge(
-                $request->request->all(),
-                $request->query->all()
-            )
+            'request' => $payload
         ];
 
         $jobs = [];

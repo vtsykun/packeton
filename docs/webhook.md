@@ -1,7 +1,9 @@
 # Generic Packeton webhooks
 
+Introduction
+----------
 Webhooks allow external services to be notified when certain events happen. 
-When the specified events happen, packeton'll send a POST request to each of the URLs you provide.
+When the specified events happen, packeton will send a POST request to each of the URLs you provide.
 Now is supported the next events:
 
 - new_release
@@ -9,14 +11,19 @@ Now is supported the next events:
 - delete_release
 - push_new_event
 - update_new_event
+- http_request
 - update_repo_failed
 - new_repo
 - delete_repo
 
 ![diagram](img/diagram.png)
 
+It may be useful for release/deploy process, for example: Automatically create new Jira release 
+when a new version is created in packagist (triggered when new tag is created in bitbucket) and 
+update "fix version" attribute of all the related issues from that release.
+
 Examples 
-=========
+========
  
  - [List of twig variables](#twig-variables)
  - [Telegram notification](#telegram-notification)
@@ -26,6 +33,7 @@ Examples
  - [Nesting webhook](#nesting-webhook)
  - [Gitlab setup auto webhook](#gitlab-auto-webhook)
  - [JIRA issue fix version](#jira-create-a-new-release-and-set-fix-version)
+ - [Accept external request](#external-request)
  - [Packeton twig function](#new-twig-functions)
 
 Twig variables
@@ -34,8 +42,9 @@ Twig variables
 - package - `Package` entity. 
 - versions - `Versions[]` array of versions.
 - webhook - `Webhook` current webhook entity.
-- user    - `User` entity.
+- user    - `User` entity. Only for user login event.
 - parentResponse - `HookResponse` object. Only for nesting webhook.
+- request - `array` Only for http request event.
 
 Telegram notification
 ---------------------
@@ -253,6 +262,36 @@ Payload
 ```
 
 ![Jira issue](img/jira_response.png)
+
+Http request from code
+---------------------
+
+You can made http request from twig code.
+
+```twig
+{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/okvpn/orocommerce/tags') %}
+
+{{ tags|json_encode }}
+```
+
+External request
+----------------
+Triggered webhook by HTTP requests to `https://PACKEGIST_URL/api/webhook-invoke/{name}`
+
+Optional `name`. If it is specified then this webhook can only be triggered if that name is supplied 
+when invoking `https://PACKEGIST_URL/api/webhook-invoke/{name}` and name restriction is match.
+
+Example payload:
+
+```twig
+{% if request.packageName is null %}
+    {{ interrupt('package name is not found') }}
+{% endif %}
+
+{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/' ~ request.packageName ~'/tags') %}
+
+{{ tags|json_encode }}
+```
 
 Gitlab auto webhook
 -------------------

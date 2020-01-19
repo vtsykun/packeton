@@ -50,7 +50,7 @@ security:
         # Packagist
         - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
         - { path: (^(/packages.json$|/p/|/zipball/|/downloads/))+, role: ROLE_USER }
-        - { path: (^(/api/webhook-trigger/invoke/))+, role: ROLE_USER }
+        - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
         - { path: ^/$, role: ROLE_USER }
 
         # Secured part of the site
