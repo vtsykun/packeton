@@ -1685,8 +1685,7 @@ svg.chart {
 
 .icon-mail:before { content: '\2709'; } /* '✉' */
 
-.webhook .panel-heading a {
-    font-size: 1.2em;
+.webhook a.link {
     color: #373b40;
     text-decoration: none;
 }
