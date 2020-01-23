@@ -167,6 +167,7 @@ services:
             - '@doctrine'
             - '@Packagist\WebBundle\Webhook\HookRequestExecutor'
             - '@Packagist\WebBundle\Service\JobScheduler'
+            - '@logger'
         tags:
             - { name: queue_worker, topic: webhook:send }
 

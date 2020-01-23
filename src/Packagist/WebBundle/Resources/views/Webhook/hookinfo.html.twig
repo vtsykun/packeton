@@ -32,6 +32,14 @@
         </pre>
 
         <b>Payload</b><pre class="github">{% apply spaceless %}{{ hook.request.body }}{% endapply %}</pre>
+        {% if hook.logs|length > 0 %}
+            <b>Logs</b>
+            <pre class="github">
+{% apply spaceless %}
+    {{ hook.logs|map(l => "#{l[0]|upper} #{l[1]}")|join("\n") }}
+{% endapply %}
+            </pre>
+        {% endif %}
     </div>
 
     <div role="tabpanel" class="tab-pane" id="response-{{ uuid }}" style="padding: 5px">

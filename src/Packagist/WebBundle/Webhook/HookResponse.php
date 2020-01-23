@@ -9,9 +9,13 @@ class HookResponse implements \JsonSerializable
     private $request;
     private $responseBody;
     private $options;
+    private $logs = [];
 
     public function __construct(HookRequest $request, $responseBody = null, array $options = [])
     {
+        $this->logs = isset($options['logs']) && is_array($options['logs']) ? $options['logs'] : [];
+        unset($options['logs']);
+
         $this->request = $request;
         $this->responseBody = $responseBody;
         $this->options = $options;
@@ -69,6 +73,22 @@ class HookResponse implements \JsonSerializable
     /**
      * @return array
      */
+    public function getLogs()
+    {
+        return $this->logs;
+    }
+
+    /**
+     * @param array $logs
+     */
+    public function setLogs(array $logs = []): void
+    {
+        $this->logs = $logs;
+    }
+
+    /**
+     * @return array
+     */
     public function getHeaders(): array
     {
         $headers = $this->options['headers'] ?? [];
@@ -101,10 +121,14 @@ class HookResponse implements \JsonSerializable
      */
     public function jsonSerialize()
     {
+        $options = $this->options;
+        $options['logs'] = $this->logs;
+
         return [
             'request' => $this->request,
             'response' => $this->responseBody,
-            'options' => $this->options
+            'options' => $options,
+            'logs' => $this->logs,
         ];
     }
 

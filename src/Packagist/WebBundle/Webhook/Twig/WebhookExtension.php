@@ -8,6 +8,9 @@ use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Util\ChangelogUtils;
 use Predis\Client as Redis;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\HttpClient;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -15,8 +18,10 @@ use Twig\TwigFunction;
 /**
  * This extension only apply for webhook sandbox env.
  */
-class WebhookExtension extends AbstractExtension implements ContextAwareInterface
+class WebhookExtension extends AbstractExtension implements ContextAwareInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     private $registry;
     private $changelogUtils;
     private $redis;
@@ -32,6 +37,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         $this->registry = $registry;
         $this->changelogUtils = $changelogUtils;
         $this->redis = $redis;
+        $this->logger = new NullLogger();
     }
 
     /**
@@ -85,8 +91,10 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
     public function hook_function_preg_match_all($regex, $content, $matchOffset = null)
     {
         try {
-            @preg_match_all($regex, $content, $matches);
+            preg_match_all($regex, $content, $matches);
+            $this->logger->debug(sprintf('preg_match_all result "%s": "%s"', $regex, json_encode($matches)));
         } catch (\Throwable $e) {
+            $this->logger->error(sprintf('Error in regex "%s": %s', $regex, $e->getMessage()));
             return [];
         }
 
@@ -130,6 +138,22 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
     }
 
     /**
+     * PHP hash_mac.
+     *
+     * {@inheritDoc}
+     */
+    public function hook_function_hash_mac($algo, $value, $key)
+    {
+        try {
+            return hash_hmac($algo, $value, $key);
+        } catch (\Throwable $exception) {
+            $this->logger->error('hash_hmac error: ' . $exception->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Simple wrapper for HttpClient.
      * Allow make get http request from twig code (ONLY for webhooks).
      * Don't recommended to use, but this hack can be very useful
@@ -148,6 +172,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         try {
             $response = $client->request($method, $url, $options);
         } catch (\Throwable $exception) {
+            $this->logger->error('Http request failed: ' . $exception->getMessage());
             return null;
         }
 
@@ -158,7 +183,9 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
             $headers = $response->getHeaders(false);
             $content = $response->getContent(false);
             $array = $content ? @json_decode($content, true) : null;
-        } catch (\Throwable $exception) {}
+        } catch (\Throwable $exception) {
+            $this->logger->warning('Http get response failed: ' . $exception->getMessage());
+        }
 
         if (false === $isRaw) {
             return $array ?: $content;
@@ -198,7 +225,23 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
             $this->registry->getRepository(Webhook::class)->find((int) $hookId);
         if (null !== $hook) {
             $this->context[WebhookContext::CHILD_WEBHOOK][] = [$hook, $context];
+        } else {
+            $this->logger->warning(sprintf('webhook %s not found', $hookId));
         }
+    }
+
+    /**
+     * Log event from webhook.
+     *
+     * {@inheritdoc}
+     */
+    public function hook_function_log($level, $value)
+    {
+        if (!is_string($value)) {
+            $value = json_encode($value);
+        }
+
+        $this->logger->log($level, $value);
     }
 
     /**

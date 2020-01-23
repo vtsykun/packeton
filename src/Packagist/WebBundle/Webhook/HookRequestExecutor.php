@@ -8,12 +8,15 @@ use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Webhook\Twig\ContextAwareInterface;
 use Packagist\WebBundle\Webhook\Twig\InterruptException;
 use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class HookRequestExecutor implements ContextAwareInterface
+class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
 {
     private $requestResolver;
+    private $logger;
 
     public function __construct(RequestResolver $requestResolver)
     {
@@ -140,5 +143,14 @@ class HookRequestExecutor implements ContextAwareInterface
     public function setContext(WebhookContext $context = null): void
     {
         $this->requestResolver->setContext($context);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        $this->requestResolver->setLogger($logger);
     }
 }

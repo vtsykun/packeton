@@ -224,17 +224,21 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/api/webhook-invoke/{name}", name="generic_create", defaults={"_format" = "json", "name" = "default"})
+     * @Route("/api/webhook-invoke/{name}", name="generic_webhook_invoke", defaults={"_format" = "json", "name" = "default"})
      *
      * {@inheritdoc}
      */
     public function notifyWebhookAction($name, Request $request)
     {
-        if ($request->headers->get('Content-Type') === 'application/json') {
-            $payload = json_decode($request->getContent(), true);
-        } else {
-            $payload = array_merge($request->request->all(), $request->query->all());
-            unset($payload['token']);
+        $payload = array_merge($request->request->all(), $request->query->all());
+        unset($payload['token']);
+
+        // Always try to decode json
+        if ($content = $request->getContent()) {
+            $content = @json_decode($content, true);
+            if (is_array($content)) {
+                $payload = array_merge($payload, $content);
+            }
         }
 
         $context = [

@@ -9,6 +9,9 @@ use Packagist\WebBundle\Entity\Job;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Service\JobScheduler;
 use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -22,13 +25,15 @@ class SenderWorker
     private $executor;
     private $jobScheduler;
     private $maxNestingLevel;
+    private $logger;
 
-    public function __construct(DenormalizerInterface $denormalizer, ManagerRegistry $registry, HookRequestExecutor $executor, JobScheduler $jobScheduler, $maxNestingLevel = self::MAX_NESTING_LEVEL)
+    public function __construct(DenormalizerInterface $denormalizer, ManagerRegistry $registry, HookRequestExecutor $executor, JobScheduler $jobScheduler, LoggerInterface $logger = null, $maxNestingLevel = self::MAX_NESTING_LEVEL)
     {
         $this->denormalizer = $denormalizer;
         $this->registry = $registry;
         $this->executor = $executor;
         $this->jobScheduler = $jobScheduler;
+        $this->logger = $logger;
         $this->maxNestingLevel = max($maxNestingLevel, 2);
     }
 
@@ -53,12 +58,15 @@ class SenderWorker
         $context = $this->denormalizer->denormalize($payload['context'] ?? [], 'context', 'packagist_job');
         $runtimeContext = new WebhookContext();
         $this->executor->setContext($runtimeContext);
+        $this->executor->setLogger($logger = new WebhookLogger(LogLevel::NOTICE));
+        $logger->setWrapperLogger($this->logger);
+
         if (isset($payload['parentJob'])) {
             $parentJob = $this->registry->getRepository(Job::class)->find($payload['parentJob']);
             if ($parentJob instanceof Job) {
                 try {
                     $response = array_map(
-                        HookResponse::class.'::fromArray',
+                        HookResponse::class . '::fromArray',
                         $parentJob->getResult()['response'] ?? []
                     );
                     $context['parentResponse'] = reset($response);
@@ -68,8 +76,13 @@ class SenderWorker
 
         try {
             $response = $this->executor->executeWebhook($webhook, $context);
+            foreach ($response as $item) {
+                $item->setLogs($logger->getLogs());
+            }
         } finally {
             $this->executor->setContext(null);
+            $this->executor->setLogger(new NullLogger());
+            $logger->clearLogs();
         }
 
         $job->setPackageId($webhook->getId());

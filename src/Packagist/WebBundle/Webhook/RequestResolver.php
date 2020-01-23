@@ -10,9 +10,12 @@ use Packagist\WebBundle\Webhook\Twig\PayloadRenderer;
 use Packagist\WebBundle\Webhook\Twig\PlaceholderContext;
 use Packagist\WebBundle\Webhook\Twig\PlaceholderExtension;
 use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 
-class RequestResolver implements ContextAwareInterface
+class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
 {
+    private $logger;
     private $renderer;
 
     /**
@@ -43,6 +46,11 @@ class RequestResolver implements ContextAwareInterface
     {
         $separator = '-------------' . sha1(random_bytes(10)) . '---------------';
         $context[PlaceholderExtension::VARIABLE_NAME] = $placeholder = new PlaceholderContext();
+
+        if (null !== $this->logger) {
+            $this->renderer->setLogger($this->logger);
+        }
+
         if ($payload = $webhook->getPayload()) {
             $payload = (string) $this->renderer->createTemplate($payload)->render($context);
             $content = $webhook->getUrl() . $separator . trim($payload);
@@ -62,5 +70,13 @@ class RequestResolver implements ContextAwareInterface
     public function setContext(WebhookContext $context = null): void
     {
         $this->renderer->setContext($context);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
 }

@@ -10,6 +10,7 @@ use Packagist\WebBundle\Entity\User;
 use Packagist\WebBundle\Entity\Version;
 use Packagist\WebBundle\Entity\Webhook;
 use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -31,6 +32,12 @@ class HookTestAction
         $this->requestStack = $requestStack;
     }
 
+    /**
+     * @param Webhook $webhook
+     * @param array $data
+     *
+     * @return HookResponse[]
+     */
     public function runTest(Webhook $webhook, array $data)
     {
         $this->selectPackage($data);
@@ -134,8 +141,13 @@ class HookTestAction
 
         $runtimeContext = new WebhookContext();
         $this->executor->setContext($runtimeContext);
-
+        $this->executor->setLogger($logger = new WebhookLogger(LogLevel::DEBUG));
         $child = $response = $this->executor->executeWebhook($webhook, $context, $client);
+        foreach ($response as $item) {
+            $item->setLogs($logger->getLogs());
+        }
+
+        $logger->clearLogs();
         $this->executor->setContext(null);
 
         if (isset($runtimeContext[WebhookContext::CHILD_WEBHOOK])) {
@@ -158,7 +170,8 @@ class HookTestAction
     private function selectPackage(array &$data): void
     {
         if (!($data['package'] ?? null) instanceof Package) {
-            $data['package'] = $this->registry->getRepository(Package::class)
+            $data['package'] = $this->registry
+                ->getRepository(Package::class)
                 ->findOneBy([]);
         }
     }
@@ -199,7 +212,8 @@ class HookTestAction
                 }
             }
 
-            $data['user'] = $this->registry->getRepository(User::class)
+            $data['user'] = $this->registry
+                ->getRepository(User::class)
                 ->findOneBy([]);
         }
     }

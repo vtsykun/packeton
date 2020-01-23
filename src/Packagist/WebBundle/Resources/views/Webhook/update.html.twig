@@ -1,6 +1,6 @@
 {% extends "PackagistWebBundle::layout.html.twig" %}
 
-{% set title  = entity.id ? 'Update webhook ' ~ entity.name : 'Create a new webhook' %}
+{% set title  = entity.id ? 'Update ' ~ entity.name : 'Create a new webhook' %}
 {% block title %}{{ title }}{% endblock %}
 {% block scripts %}
     <script src="{{ asset('bundles/packagistweb/js/hookDelivery.js')}}"></script>
