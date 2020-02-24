@@ -64,7 +64,17 @@ class QueueWorker
                 $nextScheduledJobCheck = $this->checkForScheduledJobs($signal);
             }
 
-            $result = $this->redis->brpop('jobs', 2);
+            try {
+                $result = $this->redis->brpop('jobs', 2);
+            } catch (\Throwable $throwable) {
+                sleep(1);
+                if ($signal->isTriggered()) {
+                    $this->logger->debug('Signal received, aborting');
+                    return;
+                }
+                throw $throwable;
+            }
+
             if (!$result) {
                 $this->logger->debug('No message in queue');
                 continue;
