@@ -84,7 +84,7 @@ class ApiController extends Controller
         }
 
         if (!$payload) {
-            return new JsonResponse(array('status' => 'error', 'message' => 'Missing payload parameter'), 406);
+            return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
         }
 
         if (isset($payload['project']['git_http_url'])) { // gitlab event payload
@@ -99,9 +99,23 @@ class ApiController extends Controller
             $url = $payload['repository']['links']['html']['href'];
         } elseif (isset($payload['canon_url']) && isset($payload['repository']['absolute_url'])) { // bitbucket post hook (deprecated)
             $urlRegex = '{^(?:https?://|git://|git@)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
-            $url = $payload['canon_url'].$payload['repository']['absolute_url'];
+            $url = $payload['canon_url'] . $payload['repository']['absolute_url'];
+        } elseif (isset($payload['composer']['package_name'])) { // custom webhook
+            $packages = [];
+            $packageNames = (array) $payload['composer']['package_name'];
+            $repo = $this->getDoctrine()->getRepository(Package::class);
+            foreach ($packageNames as $packageName) {
+                $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
+            }
+
+            return $this->schedulePostJobs($packages);
         } else {
-            return new JsonResponse(array('status' => 'error', 'message' => 'Missing or invalid payload'), 406);
+            return new JsonResponse(['status' => 'error', 'message' => 'Missing or invalid payload'], 406);
+        }
+
+        // Use the custom regex
+        if (isset($payload['packeton']['regex'])) {
+            $urlRegex = $payload['packeton']['regex'];
         }
 
         return $this->receivePost($request, $url, $urlRegex);
@@ -114,6 +128,7 @@ class ApiController extends Controller
      *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
      *     defaults={"_format" = "json"}
      * )
+     * {@inheritDoc}
      * @ParamConverter("package", options={"mapping": {"package": "name"}})
      * @Method({"PUT"})
      */
@@ -293,15 +308,18 @@ class ApiController extends Controller
             return new Response(json_encode(['status' => 'error', 'message' => 'Could not parse payload repository URL']), 406);
         }
 
-        // find the user
-        $user = $this->getUser();
-        if (!$user) {
-            return new Response(json_encode(['status' => 'error', 'message' => 'Invalid credentials']), 403);
-        }
-
         // try to find the all package
         $packages = $this->findPackagesByUrl($url, $urlRegex);
 
+        return $this->schedulePostJobs($packages);
+    }
+
+    /**
+     * @param Package[] $packages
+     * @return Response
+     */
+    protected function schedulePostJobs(array $packages)
+    {
         if (!$packages) {
             return new Response(json_encode(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)']), 404);
         }
@@ -310,7 +328,6 @@ class ApiController extends Controller
         $em = $this->get('doctrine.orm.entity_manager');
         $jobs = [];
 
-        /** @var Package $package */
         foreach ($packages as $package) {
             $package->setAutoUpdated(true);
             $em->flush($package);
