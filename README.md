@@ -85,7 +85,7 @@ services:
             - .docker/ssh:/var/www/.ssh # Share here your ssh keys
         environment:
             PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
-            PACKAGIST_HOST: pkg.okvpn.org
+            PACKAGIST_DIST_HOST: https://pkg.okvpn.org # Dist url to download the zip package.
             DATABASE_HOST: 172.17.0.1
             DATABASE_PORT: 5432
             DATABASE_DRIVER: pdo_pgsql
@@ -405,7 +405,7 @@ See [twig expression](docs/webhook.md) syntax for details.
 
 Click the "Save button"
 
-Now if you call the url `https://APP_URL/api/webhook-invoke/your-unique-name?token=user:token`
+Now if you call the url `https://APP_URL/api/webhook-invoke/your-unique-name?token=<user>:<token>`
 request will be forward to `https://APP_URL/api/update-package?token=user:token` with converted POST
 payload according to your rules.
 
@@ -417,10 +417,25 @@ The customer users can only see related packages and own profile with instructio
 To authenticate composer access to repository needs add credentials globally into auth.json, for example:
 
 ```
-composer config --global --auth http-basic.pkg.okvpn.org admin Ydmhi1C3XIP5fnRWc3y2
+composer config --global --auth http-basic.pkg.okvpn.org <user> <token>
 ```
 
 API Token you can found in your Profile.
+
+Configure this private repository in your `composer.json`. 
+
+```
+{
+  "repositories": [{
+      "type": "composer",
+      "url": "https://packeton.company.com"
+  }],
+  "require": {
+    "company/name1": "1.0.*",
+    ....
+  }
+}
+```
 
 ### Create admin user.
 
