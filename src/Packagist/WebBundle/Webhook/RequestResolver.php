@@ -17,13 +17,16 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
 {
     private $logger;
     private $renderer;
+    private $storedPrefix;
 
     /**
      * @param PayloadRenderer $renderer
+     * @param string $rootDir
      */
-    public function __construct(PayloadRenderer $renderer)
+    public function __construct(PayloadRenderer $renderer, string $rootDir = null)
     {
         $this->renderer = $renderer;
+        $this->storedPrefix = $rootDir ? rtrim($rootDir, '/') . '/var/webhooks/' : null;
     }
 
     /**
@@ -52,6 +55,12 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
         }
 
         if ($payload = $webhook->getPayload()) {
+            if (preg_match('/^@\w+$/', trim($payload)) && null !== $this->storedPrefix) {
+                $filename = $this->storedPrefix . substr(trim($payload), 1) . '.twig';
+                if (@file_exists($filename)) {
+                    $payload = file_get_contents($filename);
+                }
+            }
             $payload = (string) $this->renderer->createTemplate($payload)->render($context);
             $content = $webhook->getUrl() . $separator . trim($payload);
         } else {

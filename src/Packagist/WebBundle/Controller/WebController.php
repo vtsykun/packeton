@@ -122,7 +122,12 @@ class WebController extends Controller
         $chart = array('versions' => [], 'packages' => [], 'months' => []);
 
         // prepare x axis
-        $date = new \DateTime($packages[0]['year'] . '-' . $packages[0]['month'] . '-01');
+        if (isset($packages[0])) {
+            $date = new \DateTime($packages[0]['year'] . '-' . $packages[0]['month'] . '-01');
+        } else {
+            $date = new \DateTime;
+        }
+
         $now = new \DateTime;
         while ($date < $now) {
             $chart['months'][] = $month = $date->format('Y-m');
@@ -153,7 +158,7 @@ class WebController extends Controller
             $chart['versions'] += array_fill(0, count($chart['months']) - count($chart['versions']), !empty($chart['versions']) ? max($chart['versions']) : 0);
         }
 
-        $downloadsStartDate = '2012-04-13';
+        $downloadsStartDate = '2017-04-13';
 
         try {
             $redis = $this->get('snc_redis.default');

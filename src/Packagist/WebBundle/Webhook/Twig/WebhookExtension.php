@@ -200,6 +200,11 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         ];
     }
 
+    public function hook_function_array_unique($value)
+    {
+        return is_array($value) ? array_unique($value) : null;
+    }
+
     /**
      * Interrupt request
      *

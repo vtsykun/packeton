@@ -258,6 +258,7 @@ services:
     Packagist\WebBundle\Webhook\RequestResolver:
         arguments:
             - '@packagist.payload_rendered'
+            - '%kernel.project_dir%'
 
     Packagist\WebBundle\Webhook\HookRequestExecutor:
         arguments:

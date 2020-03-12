@@ -188,6 +188,19 @@ class Webhook implements OwnerAwareInterface
         return $this->url;
     }
 
+    public function getSchemeAndHttpHost()
+    {
+        $parsed = parse_url($this->url);
+        $scheme = isset($parsed['scheme']) ? $parsed['scheme'] . '://' : '';
+        $host = isset($parsed['host']) ? $parsed['host'] : '';
+        $port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+        $user = isset($parsed['user']) ? $parsed['user'] : '';
+        $pass = isset($parsed['pass']) ? ':' . $parsed['pass']  : '';
+        $pass = ($user || $pass) ? "$pass@" : '';
+
+        return "$scheme$user$pass$host$port";
+    }
+
     /**
      * Set events.
      *
