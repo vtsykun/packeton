@@ -222,6 +222,10 @@ class Updater
                 $em->flush();
                 $em->clear();
                 $package = $em->merge($package);
+                $version = $result['object'] ?? null;
+                if (!isset($result['id']) && $version instanceof Version) {
+                    $result['id'] = $version->getId();
+                }
             } else {
                 $idsToMarkUpdated[] = $result['id'];
             }
