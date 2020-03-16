@@ -31,7 +31,7 @@ class SshCredentials
     /**
      * @var string
      *
-     * @ORM\Column(name="key", type="text")
+     * @ORM\Column(name="ssh_key", type="text")
      */
     private $key;
 
