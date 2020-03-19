@@ -43,6 +43,9 @@ class ApiBasicAuthenticationListener implements ListenerInterface
         if ($username = $request->headers->get('PHP_AUTH_USER')) {
             $credentials = $request->headers->get('PHP_AUTH_PW');
             $this->logger->info('Basic authentication Authorization header found for user.', ['username' => $username]);
+        } elseif ($request->query->get('apiToken') && $request->query->get('username')) {
+            $credentials = $request->query->get('apiToken');
+            $username = $request->query->get('username');
         } elseif ($username = $request->query->get('token')) {
             $username = \explode(':', $username);
             if (2 !== \count($username)) {
