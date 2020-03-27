@@ -171,6 +171,8 @@ Installation
 php bin/console fos:user:create
 # Add admin role
 php bin/console fos:user:promote <username> ROLE_ADMIN
+# Add maintainer role
+php bin/console fos:user:promote <username> ROLE_MAINTAINER
 ```
 
 8. Enable cron tabs and background jobs.
@@ -437,10 +439,11 @@ Configure this private repository in your `composer.json`.
 }
 ```
 
-### Create admin user.
+### Create admin and maintainer users.
 
-Only admin user can submit a new package and create the new customer users. 
-You can create admin user via console using fos user bundle commands.
+Only admin and maintainer user can submit a new package.
+Only admin user can create the new customer users. 
+You can create an user and then promote to admin or maintainer via console using fos user bundle commands.
 
 ```
 php bin/console fos:user:create
