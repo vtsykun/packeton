@@ -4,7 +4,7 @@
 
 {% block fos_user_content %}
 <section class="col-md-9">
-    {% set isAdmin = is_granted('ROLE_ADMIN') %}
+    {% set isMaintainer = is_granted('ROLE_MAINTAINER') %}
     {%- if app.user.apiToken %}
         <h3 class="font-normal profile-title">{{ 'profile.your_api_token'|trans }}</h3>
 
@@ -22,7 +22,7 @@ composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ us
         <p>The storage can be done either globally in the <code>COMPOSER_HOME/auth.json </code> file</p> <hr>
     {%- endif %}
 
-    {% if isAdmin %}
+    {% if isMaintainer %}
         {% embed "PackagistWebBundle:Web:list.html.twig" with {noLayout: 'true', showAutoUpdateWarning: true} %}
             {% block content_title %}
                 <h3 class="font-normal">{{ 'packages.yours'|trans }}</h3>

@@ -90,7 +90,7 @@ class WebController extends Controller
                 $perPage = max(0, min(100, $perPage));
             }
 
-            $allowed = $this->isGranted('ROLE_ADMIN') ? null :
+            $allowed = $this->isGranted('ROLE_MAINTAINER') ? null :
                 $this->getDoctrine()
                     ->getRepository('PackagistWebBundle:Group')
                     ->getAllowedPackagesForUser($this->getUser(), false);
@@ -356,7 +356,7 @@ class WebController extends Controller
         $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
         $qb->from('PackagistWebBundle:Package', 'p');
         $repo = $this->get('doctrine')->getRepository('PackagistWebBundle:Package');
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             $packages = $this->get('doctrine')->getRepository('PackagistWebBundle:Group')
                 ->getAllowedPackagesForUser($this->getUser());
             $qb->andWhere('p.id IN (:ids)')

@@ -39,7 +39,7 @@ class PackageController extends Controller
      */
     public function allAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -53,7 +53,7 @@ class PackageController extends Controller
      */
     public function listAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -89,7 +89,7 @@ class PackageController extends Controller
     public function submitPackageAction(Request $req)
     {
         $user = $this->getUser();
-        if (!$user->isEnabled() || !$this->isGranted('ROLE_ADMIN')) {
+        if (!$user->isEnabled() || !$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException();
         }
 
@@ -127,7 +127,7 @@ class PackageController extends Controller
      */
     public function fetchInfoAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -186,7 +186,7 @@ class PackageController extends Controller
      */
     public function viewVendorAction($vendor)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -219,7 +219,7 @@ class PackageController extends Controller
      */
     public function viewProvidersAction($name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -273,7 +273,7 @@ class PackageController extends Controller
         $req->getSession()->save();
 
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
+            if (!$this->isGranted('ROLE_MAINTAINER')) {
                 throw new AccessDeniedHttpException;
             }
             return $this->{$match['method'].'Action'}($req, $match['pkg']);
@@ -289,7 +289,7 @@ class PackageController extends Controller
             throw new NotFoundHttpException;
         }
 
-        if (!$this->isGranted('ROLE_ADMIN', $package)) {
+        if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
             throw new NotFoundHttpException;
         }
 
@@ -401,7 +401,7 @@ class PackageController extends Controller
         if (null === $package) {
             return new JsonResponse(['error' => 'Not found'], 404);
         }
-        if (!$this->isGranted('ROLE_ADMIN', $package)) {
+        if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
@@ -445,7 +445,7 @@ class PackageController extends Controller
      */
     public function viewPackageDownloadsAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedHttpException;
         }
 
@@ -508,7 +508,7 @@ class PackageController extends Controller
 
         /** @var VersionRepository $repo  */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
-        if (!$this->isGranted('ROLE_ADMIN', $repo->find($versionId))) {
+        if (!$this->isGranted('ROLE_MAINTAINER', $repo->find($versionId))) {
             throw new AccessDeniedHttpException;
         }
 
@@ -532,7 +532,7 @@ class PackageController extends Controller
      */
     public function deletePackageVersionAction(Request $req, $versionId)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -565,7 +565,7 @@ class PackageController extends Controller
      */
     public function updatePackageAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -628,7 +628,7 @@ class PackageController extends Controller
      */
     public function deletePackageAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -664,7 +664,7 @@ class PackageController extends Controller
      */
     public function createMaintainerAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -725,7 +725,7 @@ class PackageController extends Controller
      */
     public function removeMaintainerAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -889,7 +889,7 @@ class PackageController extends Controller
      */
     public function statsAction(Request $req, Package $package)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -936,7 +936,7 @@ class PackageController extends Controller
      */
     public function dependentsAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -969,7 +969,7 @@ class PackageController extends Controller
      */
     public function suggestersAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -1003,7 +1003,7 @@ class PackageController extends Controller
      */
     public function overallStatsAction(Request $req, Package $package, Version $version = null)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
@@ -1082,7 +1082,7 @@ class PackageController extends Controller
      */
     public function versionStatsAction(Request $req, Package $package, $version)
     {
-        if (!$this->isGranted('ROLE_ADMIN')) {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 

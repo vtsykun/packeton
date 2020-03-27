@@ -10,7 +10,7 @@
     <small>
         {%- if not isActualUser %}
             member since: {{ user.createdAt|date('M d, Y') }}
-            {%- if is_granted('ROLE_ADMIN') %}
+            {%- if is_granted('ROLE_MAINTAINER') %}
                 <a href="mailto:{{ user.email }}">{{ user.email }}</a>
             {%- endif %}
         {%- endif %}

@@ -380,6 +380,14 @@ class User extends BaseUser
     }
 
     /**
+     * @return bool
+     */
+    public function isMaintainer()
+    {
+        return $this->hasRole('ROLE_MAINTAINER') || $this->isAdmin() || $this->isSuperAdmin();
+    }
+
+    /**
      * @return \DateTime|null
      */
     public function getExpiredUpdatesAt()

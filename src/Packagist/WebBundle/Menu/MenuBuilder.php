@@ -76,7 +76,7 @@ class MenuBuilder
         $menu->addChild($this->translator->trans('menu.profile'), ['label' => '<span class="fas fa-id-card"></span>' . $this->translator->trans('menu.profile'), 'route' => 'fos_user_profile_show', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.settings'), ['label' => '<span class="fas fa-cogs"></span>' . $this->translator->trans('menu.settings'), 'route' => 'fos_user_profile_edit', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.change_password'), ['label' => '<span class="fas fa-key"></span>' . $this->translator->trans('menu.change_password'), 'route' => 'fos_user_change_password', 'extras' => ['safe_label' => true]]);
-        if ($this->checker->isGranted('ROLE_ADMIN')) {
+        if ($this->checker->isGranted('ROLE_MAINTAINER')) {
             $menu->addChild($this->translator->trans('menu.my_packages'), ['label' => '<span class="fas fa-box-open"></span>' . $this->translator->trans('menu.my_packages'), 'route' => 'user_packages', 'routeParameters' => ['name' => $this->username], 'extras' => ['safe_label' => true]]);
             $menu->addChild($this->translator->trans('menu.my_favorites'), ['label' => '<span class="fas fa-leaf"></span>' . $this->translator->trans('menu.my_favorites'), 'route' => 'user_favorites', 'routeParameters' => ['name' => $this->username], 'extras' => ['safe_label' => true]]);
         }
