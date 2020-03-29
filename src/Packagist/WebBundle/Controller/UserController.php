@@ -59,7 +59,7 @@ class UserController extends Controller
         $paginator->setMaxPerPage(6);
 
         $csrfForm = $this->createFormBuilder([])->getForm();
-
+        /** @var User[] $paginator */
         $paginator->setCurrentPage($page, false, true);
         return [
             'users' => $paginator,

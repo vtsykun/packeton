@@ -1489,6 +1489,35 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     border-radius: 4px;
 }
 
+.s-flex {
+    display: flex;
+}
+.link-gray-dark {
+    color: #24292e!important;
+}
+.link-gray {
+    color: #586069!important;
+}
+
+.no-underline {
+    text-decoration: none!important;
+}
+.user-grid .package-item {
+    border: 1px solid #d1d5da;
+}
+.role-name {
+    display: inline-block;
+    padding: 2px 6px;
+    color: rgba(27,31,35,.6);
+    background-color: #eaf5ff;
+    border-radius: 3px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+.user-grid .role-container {
+    margin: 10px;
+}
+
 .packages .selected .package-item {
     padding: 4px 14px;
     border: 1px solid #0c71d0;
