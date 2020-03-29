@@ -51,7 +51,12 @@ security:
         - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
         - { path: (^(/packages.json$|/p/|/zipball/|/downloads/))+, role: ROLE_USER }
         - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
+        - { path: (^(/explore))+, role: ROLE_USER }
         - { path: ^/$, role: ROLE_USER }
+
+        # Maintainers
+        - { path: (^(/users/(.+)/packages))+, role: ROLE_MAINTAINER }
+        - { path: (^(/users/(.+)/favorites))+, role: ROLE_MAINTAINER }
 
         # Secured part of the site
         # This config requires being logged for the whole site and having the admin role for the admin part.
@@ -63,5 +68,6 @@ security:
         ROLE_DELETE_PACKAGES: ~
         ROLE_EDIT_PACKAGES: ~
 
-        ROLE_ADMIN:       [ ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
+        ROLE_MAINTAINER:  [ ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
+        ROLE_ADMIN:       [ ROLE_MAINTAINER ]
         ROLE_SUPERADMIN:  [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]

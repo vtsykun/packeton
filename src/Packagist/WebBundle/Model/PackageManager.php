@@ -207,7 +207,7 @@ class PackageManager
      */
     public function getPackageJson(?User $user, string $package)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_ADMIN')) {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_MAINTAINER')) {
             $user = null;
         }
 
@@ -236,7 +236,7 @@ class PackageManager
 
     private function dumpInMemory(User $user = null, bool $cache = true)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_ADMIN')) {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_MAINTAINER')) {
             $user = null;
         }
 

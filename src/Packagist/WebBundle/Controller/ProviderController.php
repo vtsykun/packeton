@@ -121,7 +121,7 @@ class ProviderController extends Controller
                             return $versionName === $version->getVersion();
                         }
                 )->first();
-                if ($version && $this->isGranted('ROLE_ADMIN', $version)) {
+                if ($version && $this->isGranted('ROLE_MAINTAINER', $version)) {
                     return new BinaryFileResponse($path);
                 }
             }
@@ -129,7 +129,7 @@ class ProviderController extends Controller
 
         /** @var Version $version */
         foreach ($versions as $version) {
-            if (!$this->isGranted('ROLE_ADMIN', $version)) {
+            if (!$this->isGranted('ROLE_MAINTAINER', $version)) {
                 continue;
             }
 
