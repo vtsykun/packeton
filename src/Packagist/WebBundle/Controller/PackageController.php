@@ -270,8 +270,6 @@ class PackageController extends Controller
      */
     public function viewPackageAction(Request $req, $name)
     {
-        $req->getSession()->save();
-
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
             if (!$this->isGranted('ROLE_MAINTAINER')) {
                 throw new AccessDeniedHttpException;
