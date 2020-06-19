@@ -90,6 +90,9 @@ class ApiController extends Controller
         if (isset($payload['project']['git_http_url'])) { // gitlab event payload
             $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
             $url = $payload['project']['git_http_url'];
+	    } elseif (isset($payload['repository']['html_url'])) { // gitea event payload
+            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+            $url = $payload['repository']['html_url'];
         } elseif (isset($payload['repository']['url'])) { // github/anything hook
             $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
             $url = $payload['repository']['url'];
