@@ -71,7 +71,7 @@ class ApiController extends Controller
      * @Route("/api/update-package", name="generic_postreceive", defaults={"_format" = "json"})
      * @Route("/api/github", name="github_postreceive", defaults={"_format" = "json"})
      * @Route("/api/bitbucket", name="bitbucket_postreceive", defaults={"_format" = "json"})
-     * @Method({"POST"})
+     * @Method({"POST", "GET"})
      *
      * {@inheritdoc}
      */
@@ -83,15 +83,25 @@ class ApiController extends Controller
             $payload = json_decode($request->getContent(), true);
         }
 
-        if (!$payload) {
+        if (!$payload && !$request->get('composer_package_name')) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
+        }
+
+        $packages = [];
+        // Get from query parameter.
+        if ($packageNames = $request->get('composer_package_name')) {
+            $packageNames = explode(',', $packageNames);
+            $repo = $this->getDoctrine()->getRepository(Package::class);
+            foreach ($packageNames as $packageName) {
+                $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
+            }
         }
 
         if (isset($payload['project']['git_http_url'])) { // gitlab event payload
             $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
             $url = $payload['project']['git_http_url'];
-	    } elseif (isset($payload['repository']['html_url'])) { // gitea event payload
-            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+	    } elseif (isset($payload['repository']['html_url']) && !isset($payload['repository']['url'])) { // gitea event payload https://docs.gitea.io/en-us/webhooks/
+            $urlRegex = '{^(?:ssh://(git@|gitea@)|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
             $url = $payload['repository']['html_url'];
         } elseif (isset($payload['repository']['url'])) { // github/anything hook
             $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
@@ -110,10 +120,12 @@ class ApiController extends Controller
             foreach ($packageNames as $packageName) {
                 $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
-
-            return $this->schedulePostJobs($packages);
-        } else {
+        } elseif (empty($packages)) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing or invalid payload'], 406);
+        }
+
+        if ($packages) {
+            return $this->schedulePostJobs($packages);
         }
 
         // Use the custom regex

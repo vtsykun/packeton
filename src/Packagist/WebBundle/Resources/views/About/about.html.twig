@@ -58,6 +58,9 @@ composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ ap
             <p>If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually from a git post-receive hook or similar. You have to do a <code>POST</code> request to <code>{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}</code> with a request body looking like this: <code>{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}</code></p>
             <p>You can do this using curl for example:</p>
             <pre>curl -XPOST -H'content-type:application/json' '{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}' -d'{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'</pre>
+            <br>
+            <p>You can also send a GET request with query parameter <code>composer_package_name</code></p>
+            <pre>curl '{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}&composer_package_name=vender/name'</pre>
         </section>
 
         <section class="col-md-6">
