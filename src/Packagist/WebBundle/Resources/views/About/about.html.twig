@@ -70,6 +70,8 @@ composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ ap
                 Search for Packagist in the list of Project Services.
                 Check the "Active" box, enter your packagist.org username and API token.
                 Save your changes and you're done.
+		<br>
+		If GitLab is running on a local network make sure you enable Admin -> Settings -> Network -> Outbound Requests -> Allow requests to the local network from web-hooks and services
             </p>
 
             <h3>GitLab Group Hooks</h3>
