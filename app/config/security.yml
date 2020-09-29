@@ -51,6 +51,7 @@ security:
         - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
         - { path: (^(/packages.json$|/p/|/zipball/|/downloads/))+, role: ROLE_USER }
         - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
+        - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
         - { path: ^/$, role: ROLE_USER }
 
         # Maintainers
