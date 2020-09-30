@@ -79,7 +79,7 @@
             <div class="col-xs-2 text-xs-left text-sm-right"><strong>Releases</strong></div>
             <div class="col-xs-12 col-sm-10">
                 {% for version in package.versions %}
-                    {%- if version.dist -%}
+                    {%- if (version.dist) and (version.type != 'metapackage') -%}
                         {% set url = '?token=' ~ app.user.username ~ ':' ~ app.user.apiToken %}
                         <a href="{{ version.dist['url'] ~ url }}" title="dist-reference: {{ version.dist['reference'] }}">
                             {{ version.version }}
