@@ -1,7 +1,13 @@
 {% extends "PackagistWebBundle::layout.html.twig" %}
 
 {% block content %}
-    <h2 class="title">Create a new group</h2>
+    <h2 class="title">
+        {%- if app.request.attributes.get('_route') == 'groups_update' %}
+            Update group
+        {%- else %}
+            Create a new group
+        {%- endif %}
+    </h2>
 
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
