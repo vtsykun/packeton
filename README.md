@@ -261,6 +261,10 @@ Host github-org2
 
 ```
 
+If you have the error ```This private key is not valid``` inserting your ssh in admin panel is because the ssh key was generated with newer OpenSSH.
+New keys with OpenSSH private key format can be converted using ssh-keygen utility to the old PEM format.
+```ssh-keygen -p -m PEM -f ~/.ssh/id_rsa```
+
 You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.github.com/jeffersonmartin/d0d4a8dfec90d224d14f250b36c74d2f)
 
 ```
