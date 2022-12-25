@@ -1,0 +1,44 @@
+security:
+    enable_authenticator_manager: true
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+            algorithm: auto
+            migrate_from: [legacy]
+
+        legacy:
+            algorithm:        sha512
+            encode_as_base64: false
+            iterations:       1
+
+    providers:
+        packagist:
+            id: Packeton\Security\Provider\UserProvider
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            pattern:      .*
+            form_login:
+                provider:       packagist
+                login_path:     /login
+                use_forward:    false
+                check_path:     /login
+                failure_path:   null
+
+            remember_me:
+                secret: '%env(APP_SECRET)%'
+                user_providers: packagist
+                name: pauth
+                always_remember_me: true
+                lifetime: 31104000 # 1y
+            logout:       true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        # - { path: ^/admin, roles: ROLE_ADMIN }
+        # - { path: ^/profile, roles: ROLE_USER }

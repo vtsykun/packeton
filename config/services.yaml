@@ -1,0 +1,38 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $redis: '@snc_redis.default'
+
+    Packeton\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Event/'
+            - '../src/Kernel.php'
+            - '../src/Repository/'
+
+    packeton_cache:
+        class: Doctrine\Common\Cache\FilesystemCache
+        arguments:
+            - '%kernel.cache_dir%/packeton'
+    
+    Packeton\Model\PackageManager:
+        arguments:
+            $cache: '@packeton_cache'
+
+    packeton.menu.profile:
+        class: Knp\Menu\MenuItem
+        factory: ['@Packeton\Menu\MenuBuilder', createProfileMenu]
+        tags:
+            - { name: knp_menu.menu, alias: profile_menu }
