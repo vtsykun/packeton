@@ -36,3 +36,15 @@ services:
         factory: ['@Packeton\Menu\MenuBuilder', createProfileMenu]
         tags:
             - { name: knp_menu.menu, alias: profile_menu }
+
+    packeton.menu.admin:
+        class: Knp\Menu\MenuItem
+        factory: ['@Packeton\Menu\MenuBuilder', createAdminMenu]
+        tags:
+            - { name: knp_menu.menu, alias: admin_menu }
+
+    packeton.menu.user:
+        class: Knp\Menu\MenuItem
+        factory: ['@Packeton\Menu\MenuBuilder', createUserMenu]
+        tags:
+            - { name: knp_menu.menu, alias: user_menu }

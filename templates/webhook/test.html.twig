@@ -1,7 +1,7 @@
-{% extends "PackagistWebBundle::layout.html.twig" %}
+{% extends "layout.html.twig" %}
 
 {% block scripts %}
-    <script src="{{ asset('bundles/packagistweb/js/testHook.js')}}"></script>
+    <script src="{{ asset('packeton/js/testHook.js')}}"></script>
 {% endblock %}
 
 {% set title = 'Test webhook ' ~ entity.name %}

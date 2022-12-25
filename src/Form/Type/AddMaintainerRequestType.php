@@ -10,10 +10,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
-use FOS\UserBundle\Form\Type\UsernameFormType;
-use Packagist\WebBundle\Form\Model\MaintainerRequest;
+use Packeton\Form\Model\MaintainerRequest;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -25,7 +24,7 @@ class AddMaintainerRequestType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('user', UsernameFormType::class);
+        $builder->add('user');
     }
 
     public function configureOptions(OptionsResolver $resolver)

@@ -1,20 +1,20 @@
 <?php
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
-use Packagist\WebBundle\Entity\Group;
-use Packagist\WebBundle\Form\Type\GroupType;
+use Packeton\Entity\Group;
+use Packeton\Form\Type\GroupType;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-class GroupController extends Controller
+class GroupController extends AbstractController
 {
     /**
-     * @Template()
+     * todo Template()
      * @Route("/groups/", name="groups_index")
      *
      * @param Request $request
@@ -39,7 +39,7 @@ class GroupController extends Controller
     }
 
     /**
-     * @Template("PackagistWebBundle:Group:update.html.twig")
+     * todo Template("PackagistWebBundle:Group:update.html.twig")
      * @Route("/groups/create", name="groups_create")
      *
      * @param Request $request
@@ -52,7 +52,7 @@ class GroupController extends Controller
     }
 
     /**
-     * @Template()
+     * todo Template()
      * @Route("/groups/{id}/update", name="groups_update")
      *
      * @param Group $group

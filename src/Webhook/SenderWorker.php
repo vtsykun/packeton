@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook;
+namespace Packeton\Webhook;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Job;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Service\JobScheduler;
-use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Packeton\Entity\Job;
+use Packeton\Entity\Webhook;
+use Packeton\Service\JobScheduler;
+use Packeton\Webhook\Twig\WebhookContext;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;

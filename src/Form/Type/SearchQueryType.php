@@ -10,9 +10,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
-use Packagist\WebBundle\Form\Model\SearchQuery;
+use Packeton\Form\Model\SearchQuery;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;

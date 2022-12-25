@@ -1,14 +1,14 @@
 <?php
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\ObjectRepository;
-use Packagist\WebBundle\Repository\VersionRepository;
+use Packeton\Repository\VersionRepository;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\PackageRepository")
+ * @ORM\Entity(repositoryClass="Packeton\Repository\PackageRepository")
  * @ORM\Table(
  *     name="package",
  *     uniqueConstraints={@ORM\UniqueConstraint(name="package_name_idx", columns={"name"})},
@@ -77,7 +77,7 @@ class Package
     private $gitHubOpenIssues;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\Version", mappedBy="package")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\Version", mappedBy="package")
      */
     private $versions;
 
@@ -95,32 +95,32 @@ class Package
     // dist-tags / rel or runtime?
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="createdat")
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="updatedat")
      */
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="crawledat")
      */
     private $crawledAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="indexedat")
      */
     private $indexedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="dumpedat")
      */
     private $dumpedAt;
 
     /**
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", name="autoupdated")
      */
     private $autoUpdated = false;
 
@@ -132,12 +132,12 @@ class Package
 
     /**
      * @var string
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name="replacementpackage")
      */
     private $replacementPackage;
 
     /**
-     * @ORM\Column(type="boolean", options={"default"=false})
+     * @ORM\Column(type="boolean", options={"default"=false}, name="updatefailurenotified")
      */
     private $updateFailureNotified = false;
 
@@ -537,7 +537,7 @@ class Package
     /**
      * Set indexedAt
      *
-     * @param \DateTime $indexedAt
+     * @param \DateTime|null $indexedAt
      */
     public function setIndexedAt($indexedAt)
     {

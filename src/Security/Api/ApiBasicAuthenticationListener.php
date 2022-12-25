@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Security\Api;
+namespace Packeton\Security\Api;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;

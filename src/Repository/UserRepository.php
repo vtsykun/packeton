@@ -10,11 +10,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Repository;
+namespace Packeton\Repository;
 
 use Doctrine\ORM\EntityRepository;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -26,6 +26,18 @@ class UserRepository extends EntityRepository
         $qb = $this->createQueryBuilder('u')
             ->where('u.apiToken IS NULL');
         return $qb->getQuery()->getResult();
+    }
+
+    public function findOneByUsernameOrEmail(string $usernameOrEmail)
+    {
+        if (preg_match('/^.+@\S+\.\S+$/', $usernameOrEmail)) {
+            $user = $this->findOneBy(['emailCanonical' => $usernameOrEmail]);
+            if (null !== $user) {
+                return $user;
+            }
+        }
+
+        return $this->findOneBy(['usernameCanonical' => $usernameOrEmail]);
     }
 
     public function getPackageMaintainersQueryBuilder(Package $package, User $excludeUser=null)

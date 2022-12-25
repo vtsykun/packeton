@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
@@ -40,7 +40,7 @@ class Tag
     private $name;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Version", mappedBy="tags")
+     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Version", mappedBy="tags")
      */
     private $versions;
 

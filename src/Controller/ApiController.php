@@ -10,15 +10,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Model\PackageManager;
-use Packagist\WebBundle\Webhook\HookBus;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Package;
+use Packeton\Entity\Webhook;
+use Packeton\Model\PackageManager;
+use Packeton\Service\Scheduler;
+use Packeton\Webhook\HookBus;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,11 +29,16 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class ApiController extends Controller
+class ApiController extends AbstractController
 {
+    use ControllerTrait;
+
+    public function __construct(
+        protected ManagerRegistry $registry
+    ){}
+
     /**
-     * @Route("/api/create-package", name="generic_create", defaults={"_format" = "json"})
-     * @Method({"POST"})
+     * @Route("/api/create-package", name="generic_create", defaults={"_format" = "json"}, methods={"POST"})
      *
      * {@inheritdoc}
      */
@@ -56,7 +63,7 @@ class ApiController extends Controller
             return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
         }
         try {
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->registry->getManager();
             $em->persist($package);
             $em->flush();
         } catch (\Exception $e) {
@@ -71,7 +78,6 @@ class ApiController extends Controller
      * @Route("/api/update-package", name="generic_postreceive", defaults={"_format" = "json"})
      * @Route("/api/github", name="github_postreceive", defaults={"_format" = "json"})
      * @Route("/api/bitbucket", name="bitbucket_postreceive", defaults={"_format" = "json"})
-     * @Method({"POST", "GET"})
      *
      * {@inheritdoc}
      */
@@ -91,7 +97,7 @@ class ApiController extends Controller
         // Get from query parameter.
         if ($packageNames = $request->get('composer_package_name')) {
             $packageNames = explode(',', $packageNames);
-            $repo = $this->getDoctrine()->getRepository(Package::class);
+            $repo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $packageName) {
                 $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
@@ -116,7 +122,7 @@ class ApiController extends Controller
         } elseif (isset($payload['composer']['package_name'])) { // custom webhook
             $packages = [];
             $packageNames = (array) $payload['composer']['package_name'];
-            $repo = $this->getDoctrine()->getRepository(Package::class);
+            $repo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $packageName) {
                 $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
@@ -141,11 +147,10 @@ class ApiController extends Controller
      *     "/api/packages/{package}",
      *     name="api_edit_package",
      *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
-     *     defaults={"_format" = "json"}
+     *     defaults={"_format" = "json"},
+     *     methods={"PUT"}
      * )
      * {@inheritDoc}
-     * @ParamConverter("package", options={"mapping": {"package": "name"}})
-     * @Method({"PUT"})
      */
     public function editPackageAction(Request $request, Package $package)
     {
@@ -172,7 +177,7 @@ class ApiController extends Controller
 
         $package->setCrawledAt(null);
 
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->registry->getManager();
         $em->persist($package);
         $em->flush();
 
@@ -180,8 +185,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/downloads/{name}", name="track_download", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"})
-     * @Method({"POST"})
+     * @Route("/downloads/{name}", name="track_download", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"}, methods={"POST"})
      * @inheritDoc
      */
     public function trackDownloadAction(Request $request, $name)
@@ -198,8 +202,7 @@ class ApiController extends Controller
     }
 
     /**
-     * @Route("/jobs/{id}", name="get_job", requirements={"id"="[a-f0-9]+"}, defaults={"_format" = "json"})
-     * @Method({"GET"})
+     * @Route("/jobs/{id}", name="get_job", requirements={"id"="[a-f0-9]+"}, defaults={"_format" = "json"}, methods={"GET"})
      * @inheritDoc
      */
     public function getJobAction(Request $request, string $id)
@@ -219,8 +222,7 @@ class ApiController extends Controller
      *
      * The version must be the normalized one
      *
-     * @Route("/downloads/", name="track_download_batch", defaults={"_format" = "json"})
-     * @Method({"POST"})
+     * @Route("/downloads/", name="track_download_batch", defaults={"_format" = "json"}, methods={"POST"})
      * @inheritDoc
      */
     public function trackDownloadsAction(Request $request)
@@ -279,8 +281,8 @@ class ApiController extends Controller
         ];
 
         $jobs = [];
-        $bus = $this->get(HookBus::class);
-        $webhooks = $this->getDoctrine()->getRepository(Webhook::class)
+        $bus = $this->container->get(HookBus::class);
+        $webhooks = $this->registry->getRepository(Webhook::class)
             ->findActive($name,  [Webhook::HOOK_HTTP_REQUEST]);
 
         foreach ($webhooks as $webhook) {
@@ -297,7 +299,7 @@ class ApiController extends Controller
      */
     protected function getPackageAndVersionId($name, $version)
     {
-        return $this->get('doctrine.dbal.default_connection')->fetchAssoc(
+        return $this->getEM()->getConnection()->fetchAssociative(
             'SELECT p.id, v.id as vid
             FROM package p
             LEFT JOIN package_version v ON p.id = v.package_id
@@ -347,7 +349,7 @@ class ApiController extends Controller
             $package->setAutoUpdated(true);
             $em->flush($package);
 
-            $job = $this->get('scheduler')->scheduleUpdate($package);
+            $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
             $jobs[] = $job->getId();
         }
 
@@ -368,7 +370,7 @@ class ApiController extends Controller
         }
 
         $packages = [];
-        $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
+        $repo = $this->registry->getRepository(Package::class);
         foreach ($repo->findAll() as $package) {
             if (preg_match($urlRegex, $package->getRepository(), $candidate)
                 && strtolower($candidate['host']) === strtolower($matched['host'])
@@ -379,5 +381,20 @@ class ApiController extends Controller
         }
 
         return $packages;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function getSubscribedServices()
+    {
+        return array_merge(
+            parent::getSubscribedServices(),
+            [
+                PackageManager::class,
+                Scheduler::class,
+                HookBus::class,
+            ]
+        );
     }
 }

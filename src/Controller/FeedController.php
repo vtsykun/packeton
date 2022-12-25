@@ -10,30 +10,33 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
 use Doctrine\ORM\QueryBuilder;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Version;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Doctrine\Persistence\ManagerRegistry;
+use Laminas\Feed\Writer\Entry;
+use Laminas\Feed\Writer\Feed;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Zend\Feed\Writer\Entry;
-use Zend\Feed\Writer\Feed;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @author Rafael Dohms <rafael@doh.ms>
  *
  * @Route("/feeds")
  */
-class FeedController extends Controller
+class FeedController extends AbstractController
 {
+    public function __construct(
+        protected ManagerRegistry $registry
+    ){}
+
     /**
      * @Route("/", name="feeds")
-     * @Template
      */
     public function feedsAction()
     {
@@ -44,13 +47,13 @@ class FeedController extends Controller
      * @Route(
      *     "/packages.{_format}",
      *     name="feed_packages",
+     *     methods={"GET"},
      *     requirements={"_format"="(rss|atom)"}
      * )
-     * @Method({"GET"})
      */
     public function packagesAction(Request $req)
     {
-        $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
+        $repo = $this->registry->getRepository(Package::class);
         $packages = $this->getLimitedResults(
             $repo->getQueryBuilderForNewestPackages()
         );
@@ -70,13 +73,13 @@ class FeedController extends Controller
      * @Route(
      *     "/releases.{_format}",
      *     name="feed_releases",
+     *     methods={"GET"},
      *     requirements={"_format"="(rss|atom)"}
      * )
-     * @Method({"GET"})
      */
     public function releasesAction(Request $req)
     {
-        $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
+        $repo = $this->registry->getRepository(Version::class);
         $packages = $this->getLimitedResults(
             $repo->getQueryBuilderForLatestVersionWithPackage()
         );
@@ -96,13 +99,13 @@ class FeedController extends Controller
      * @Route(
      *     "/vendor.{vendor}.{_format}",
      *     name="feed_vendor",
+     *     methods={"GET"},
      *     requirements={"_format"="(rss|atom)", "vendor"="[A-Za-z0-9_.-]+"}
      * )
-     * @Method({"GET"})
      */
     public function vendorAction(Request $req, $vendor)
     {
-        $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
+        $repo = $this->registry->getRepository(Version::class);
         $packages = $this->getLimitedResults(
             $repo->getQueryBuilderForLatestVersionWithPackage($vendor)
         );
@@ -111,7 +114,7 @@ class FeedController extends Controller
             $req,
             "$vendor packages",
             "Latest packages updated on Packagist of $vendor.",
-            $this->generateUrl('view_vendor', array('vendor' => $vendor), UrlGeneratorInterface::ABSOLUTE_URL),
+            $this->generateUrl('view_vendor', ['vendor' => $vendor], UrlGeneratorInterface::ABSOLUTE_URL),
             $packages
         );
 
@@ -122,13 +125,13 @@ class FeedController extends Controller
      * @Route(
      *     "/package.{package}.{_format}",
      *     name="feed_package",
+     *     methods={"GET"},
      *     requirements={"_format"="(rss|atom)", "package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}
      * )
-     * @Method({"GET"})
      */
     public function packageAction(Request $req, $package)
     {
-        $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
+        $repo = $this->registry->getRepository(Version::class);
         $packages = $this->getLimitedResults(
             $repo->getQueryBuilderForLatestVersionWithPackage(null, $package)
         );
@@ -137,7 +140,7 @@ class FeedController extends Controller
             $req,
             "$package releases",
             "Latest releases on Packagist of $package.",
-            $this->generateUrl('view_package', array('name' => $package), UrlGeneratorInterface::ABSOLUTE_URL),
+            $this->generateUrl('view_package', ['name' => $package], UrlGeneratorInterface::ABSOLUTE_URL),
             $packages
         );
 
@@ -163,7 +166,7 @@ class FeedController extends Controller
         $query = $queryBuilder
             ->getQuery()
             ->setMaxResults(
-                $this->container->getParameter('packagist_web.rss_max_items')
+                $this->getParameter('packagist_web.rss_max_items')
             );
 
         return $query->getResult();
@@ -176,7 +179,7 @@ class FeedController extends Controller
      * @param string $description
      * @param array  $items
      *
-     * @return \Zend\Feed\Writer\Feed
+     * @return \Laminas\Feed\Writer\Feed
      */
     protected function buildFeed(Request $req, $title, $description, $url, $items)
     {
@@ -211,7 +214,7 @@ class FeedController extends Controller
     /**
      * Receives either a Package or a Version and populates a feed entry.
      *
-     * @param \Zend\Feed\Writer\Entry $entry
+     * @param \Laminas\Feed\Writer\Entry $entry
      * @param Package|Version         $item
      */
     protected function populateEntry(Entry $entry, $item)
@@ -227,7 +230,7 @@ class FeedController extends Controller
     /**
      * Populates a feed entry with data coming from Package objects.
      *
-     * @param \Zend\Feed\Writer\Entry $entry
+     * @param \Laminas\Feed\Writer\Entry $entry
      * @param Package                 $package
      */
     protected function populatePackageData(Entry $entry, Package $package)
@@ -236,7 +239,7 @@ class FeedController extends Controller
         $entry->setLink(
             $this->generateUrl(
                 'view_package',
-                array('name' => $package->getName()),
+                ['name' => $package->getName()],
                 UrlGeneratorInterface::ABSOLUTE_URL
             )
         );
@@ -250,7 +253,7 @@ class FeedController extends Controller
     /**
      * Populates a feed entry with data coming from Version objects.
      *
-     * @param \Zend\Feed\Writer\Entry $entry
+     * @param \Laminas\Feed\Writer\Entry $entry
      * @param Version                 $version
      */
     protected function populateVersionData(Entry $entry, Version $version)
@@ -262,11 +265,11 @@ class FeedController extends Controller
         $entry->setDateCreated($version->getReleasedAt());
 
         foreach ($version->getAuthors() as $author) {
-            /** @var $author \Packagist\WebBundle\Entity\Author */
+            /** @var $author \Packeton\Entity\Author */
             if ($author->getName()) {
-                $entry->addAuthor(array(
+                $entry->addAuthor([
                     'name' => $author->getName()
-                ));
+                ]);
             }
         }
     }
@@ -274,7 +277,7 @@ class FeedController extends Controller
     /**
      * Creates a HTTP Response and exports feed
      *
-     * @param \Zend\Feed\Writer\Feed $feed
+     * {@inheritDoc}
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */

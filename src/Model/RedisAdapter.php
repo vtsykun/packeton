@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Model;
+namespace Packeton\Model;
 
 use Pagerfanta\Adapter\AdapterInterface;
 
@@ -35,7 +35,7 @@ class RedisAdapter implements AdapterInterface
     /**
      * {@inheritDoc}
      */
-    public function getNbResults()
+    public function getNbResults(): int
     {
         return $this->model->{$this->countMethod}($this->instance);
     }
@@ -43,7 +43,7 @@ class RedisAdapter implements AdapterInterface
     /**
      * {@inheritDoc}
      */
-    public function getSlice($offset, $length)
+    public function getSlice($offset, $length): iterable
     {
         return $this->model->{$this->fetchMethod}($this->instance, $length, $offset);
     }

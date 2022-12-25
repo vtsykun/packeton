@@ -1,10 +1,10 @@
 <?php
 
-namespace Packagist\WebBundle\Security\Acl;
+namespace Packeton\Security\Acl;
 
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Version;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
+use Packeton\Entity\Version;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 

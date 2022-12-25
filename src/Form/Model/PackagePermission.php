@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Form\Model;
+namespace Packeton\Form\Model;
 
 class PackagePermission
 {

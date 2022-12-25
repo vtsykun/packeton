@@ -1,9 +1,9 @@
-{% extends "PackagistWebBundle::layout.html.twig" %}
+{% extends "layout.html.twig" %}
 
 {% set title  = entity.id ? 'Update ' ~ entity.name : 'Create a new webhook' %}
 {% block title %}{{ title }}{% endblock %}
 {% block scripts %}
-    <script src="{{ asset('bundles/packagistweb/js/hookDelivery.js')}}"></script>
+    <script src="{{ asset('packeton/js/hookDelivery.js')}}"></script>
 {% endblock %}
 
 {% block content %}
@@ -46,7 +46,7 @@
             <h3 class="title" style="font-size: 1.8em">Recent Deliveries</h3>
             <div id="loader_svg_template" style="display: none">
                 <div style="text-align: center; padding: 12px">
-                    {% include '@PackagistWeb/Webhook/loader_svg.html.twig' %}
+                    {% include 'webhook/loader_svg.html.twig' %}
                 </div>
             </div>
             {% for job in jobs %}

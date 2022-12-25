@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron\Handler;
+namespace Packeton\Cron\Handler;
 
-use Packagist\WebBundle\Service\DistConfig;
+use Packeton\Service\DistConfig;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 

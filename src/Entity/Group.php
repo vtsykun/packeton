@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Group
  *
  * @ORM\Table(name="user_group")
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\GroupRepository")
+ * @ORM\Entity(repositoryClass="Packeton\Repository\GroupRepository")
  */
 class Group
 {
@@ -31,7 +31,7 @@ class Group
     /**
      * @var GroupAclPermission[]|Collection
      *
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\GroupAclPermission", mappedBy="group", cascade={"all"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\GroupAclPermission", mappedBy="group", cascade={"all"}, orphanRemoval=true)
      */
     private $aclPermissions;
 

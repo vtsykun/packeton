@@ -1,13 +1,14 @@
 <?php
 
-namespace Packagist\WebBundle\Security\Acl;
+namespace Packeton\Security\Acl;
 
 use Composer\Package\Version\VersionParser;
 use Composer\Semver\Constraint\Constraint;
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Version;
+use Packeton\Entity\Group;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
+use Packeton\Entity\Version;
 
 class PackagesAclChecker
 {
@@ -85,7 +86,7 @@ class PackagesAclChecker
             return $this->versionCache[$hash];
         }
 
-        $version = $this->registry->getRepository('PackagistWebBundle:Group')
+        $version = $this->registry->getRepository(Group::class)
             ->getAllowedVersionByPackage($user, $package);
         return $this->versionCache[$hash] = $version;
     }

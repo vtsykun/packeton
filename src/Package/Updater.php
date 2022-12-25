@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Package;
+namespace Packeton\Package;
 
 use cebe\markdown\GithubMarkdown;
 use Composer\Factory;
@@ -28,14 +28,14 @@ use Composer\Util\RemoteFilesystem;
 use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Packagist\WebBundle\Entity\Author;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Tag;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Entity\SuggestLink;
-use Packagist\WebBundle\Event\UpdaterEvent;
-use Packagist\WebBundle\Service\DistConfig;
-use Symfony\Bridge\Doctrine\RegistryInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Author;
+use Packeton\Entity\Package;
+use Packeton\Entity\Tag;
+use Packeton\Entity\Version;
+use Packeton\Entity\SuggestLink;
+use Packeton\Event\UpdaterEvent;
+use Packeton\Service\DistConfig;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -49,7 +49,7 @@ class Updater
 
     /**
      * Doctrine
-     * @var RegistryInterface
+     * @var ManagerRegistry
      */
     protected $doctrine;
 
@@ -103,12 +103,12 @@ class Updater
     /**
      * Constructor
      *
-     * @param RegistryInterface $doctrine
+     * @param ManagerRegistry $doctrine
      * @param DistConfig $distConfig
      * @param EventDispatcherInterface $dispatcher
      */
     public function __construct(
-        RegistryInterface $doctrine,
+        ManagerRegistry $doctrine,
         DistConfig $distConfig,
         EventDispatcherInterface $dispatcher
     ) {
@@ -125,7 +125,7 @@ class Updater
      *
      * @param IOInterface $io
      * @param Config $config
-     * @param \Packagist\WebBundle\Entity\Package $package
+     * @param \Packeton\Entity\Package $package
      * @param RepositoryInterface $repository the repository instance used to update from
      * @param int $flags a few of the constants of this class
      * @param \DateTime $start
@@ -526,7 +526,7 @@ class Updater
             }
 
             foreach ($links as $linkPackageName => $linkPackageVersion) {
-                $class = 'Packagist\WebBundle\Entity\\'.$opts['entity'];
+                $class = 'Packeton\Entity\\'.$opts['entity'];
                 $link = new $class;
                 $link->setPackageName($linkPackageName);
                 $link->setPackageVersion($linkPackageVersion);

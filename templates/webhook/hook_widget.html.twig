@@ -10,7 +10,7 @@
             {% if hook.errorMessage is defined %}
                 <pre class="github">{{ hook.errorMessage }}</pre>
             {% else %}
-                {% include '@PackagistWeb/Webhook/hookinfo.html.twig' with {'hook': hook} %}
+                {% include 'webhook/hookinfo.html.twig' with {'hook': hook} %}
             {% endif %}
         </div>
     {% endfor %}

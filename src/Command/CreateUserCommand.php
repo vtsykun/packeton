@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Command;
+namespace Packeton\Command;
 
-use FOS\UserBundle\Model\UserManagerInterface;
-use FOS\UserBundle\Util\UserManipulator;
-use Packagist\WebBundle\Entity\User;
+use Packeton\Entity\User;
+use Packeton\Security\Provider\UserProvider;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,16 +19,10 @@ class CreateUserCommand extends Command
 {
     protected static $defaultName = 'packagist:user:manager';
 
-    private $userManipulator;
-
-    private $userManager;
-
-    public function __construct(UserManipulator $userManipulator, UserManagerInterface $userManager)
-    {
+    public function __construct(
+        protected UserProvider $userProvider
+    ) {
         parent::__construct();
-
-        $this->userManipulator = $userManipulator;
-        $this->userManager = $userManager;
     }
 
     /**
@@ -37,7 +30,7 @@ class CreateUserCommand extends Command
      */
     protected function configure()
     {
-        $this->setName(self::$defaultName)
+        $this
             ->addArgument('username', InputArgument::REQUIRED, 'The username')
             ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'The email')
             ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'The password')
@@ -53,7 +46,7 @@ class CreateUserCommand extends Command
         $username = $input->getArgument('username');
 
         /** @var User $user */
-        if ($user = $this->userManager->findUserByUsername($username)) {
+        if ($user = $this->userProvider->loadUserByIdentifier($username)) {
             if ($input->getOption('admin')) {
                 $this->userManipulator->addRole($username, 'ROLE_ADMIN');
             }

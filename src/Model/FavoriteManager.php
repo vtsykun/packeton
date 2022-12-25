@@ -10,14 +10,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Model;
+namespace Packeton\Model;
 
 use Doctrine\Persistence\ManagerRegistry;
-use FOS\UserBundle\Model\UserInterface;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Repository\UserRepository;
-use Predis\Client;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
+use Packeton\Repository\UserRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -27,7 +26,7 @@ class FavoriteManager
     protected $redis;
     protected $registry;
 
-    public function __construct(Client $redis, ManagerRegistry $registry)
+    public function __construct(\Redis $redis, ManagerRegistry $registry)
     {
         $this->redis = $redis;
         $this->registry = $registry;
@@ -104,7 +103,7 @@ class FavoriteManager
     }
 
     /**
-     * @return \Doctrine\ORM\EntityRepository|\Doctrine\Persistence\ObjectRepository|\Packagist\WebBundle\Repository\PackageRepository
+     * @return \Doctrine\ORM\EntityRepository|\Doctrine\Persistence\ObjectRepository|\Packeton\Repository\PackageRepository
      */
     private function getPackageRepo()
     {

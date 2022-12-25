@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -22,7 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
 class ProvideLink extends PackageLink
 {
     /**
-     * @ORM\ManyToOne(targetEntity="Packagist\WebBundle\Entity\Version", inversedBy="provide")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Version", inversedBy="provide")
      */
     protected $version;
 }

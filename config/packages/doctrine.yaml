@@ -1,6 +1,8 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
+        types:
+            json_array:  Doctrine\DBAL\Types\JsonType
 
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
@@ -10,11 +12,11 @@ doctrine:
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
         auto_mapping: true
         mappings:
-            App:
+            Packeton:
                 is_bundle: false
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'Packeton\Entity'
-                alias: App
+                alias: Packeton
 
 when@test:
     doctrine:

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\DependencyInjection\CompilerPass;
+namespace Packeton\DependencyInjection\CompilerPass;
 
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;

@@ -1,6 +1,6 @@
-{% extends "PackagistWebBundle::layout.html.twig" %}
+{% extends "layout.html.twig" %}
 
-{% import "PackagistWebBundle::macros.html.twig" as macros %}
+{% import "macros.html.twig" as macros %}
 
 {% set isActualUser = app.user and app.user.username is same as(user.username) %}
 

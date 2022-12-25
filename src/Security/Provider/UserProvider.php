@@ -10,40 +10,33 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Security\Provider;
+namespace Packeton\Security\Provider;
 
-use FOS\UserBundle\Model\UserManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\User;
+use Packeton\Repository\UserRepository;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-class UserProvider implements UserProviderInterface
+class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
 {
-    /**
-     * @var UserManagerInterface
-     */
-    private $userManager;
-
-    /**
-     * @var UserProviderInterface
-     */
-    private $userProvider;
-
-    /**
-     * @param UserManagerInterface  $userManager
-     * @param UserProviderInterface $userProvider
-     */
-    public function __construct(UserManagerInterface $userManager, UserProviderInterface $userProvider)
+    public function __construct(protected ManagerRegistry $registry)
     {
-        $this->userManager = $userManager;
-        $this->userProvider = $userProvider;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function loadUserByUsername($usernameOrEmail)
+    public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        $user = $this->userProvider->loadUserByUsername($usernameOrEmail);
+        $user = $this->getRepo()->findOneByUsernameOrEmail($identifier);
+        if (null === $user) {
+            throw new UserNotFoundException('User not found');
+        }
 
         return $user;
     }
@@ -51,9 +44,42 @@ class UserProvider implements UserProviderInterface
     /**
      * {@inheritDoc}
      */
+    public function loadUserByUsername($usernameOrEmail)
+    {
+        return $this->loadUserByIdentifier($usernameOrEmail);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function refreshUser(UserInterface $user)
     {
-        return $this->userProvider->refreshUser($user);
+        if (!$user instanceof User) {
+            throw new UnsupportedUserException('Expected '.User::class.', got '.get_class($user));
+        }
+
+        if (!$user = $this->getRepo()->find($user->getId())) {
+            throw new UserNotFoundException('User not found');
+        }
+
+        return $user;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
+    {
+        if (!$user instanceof User) {
+            throw new \UnexpectedValueException('Expected '.User::class.', got '.get_class($user));
+        }
+
+        $user->setPassword($newHashedPassword);
+        $user->setSalt(null);
+
+        $em = $this->registry->getManager();
+        $em->persist($user);
+        $em->flush();
     }
 
     /**
@@ -61,6 +87,11 @@ class UserProvider implements UserProviderInterface
      */
     public function supportsClass($class)
     {
-        return $this->userProvider->supportsClass($class);
+        return User::class === $class || is_subclass_of($class, User::class);
+    }
+
+    private function getRepo(): UserRepository
+    {
+        return $this->registry->getRepository(User::class);
     }
 }

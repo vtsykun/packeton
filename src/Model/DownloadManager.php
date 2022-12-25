@@ -10,11 +10,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Model;
+namespace Packeton\Model;
 
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Version;
-use Predis\Client;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
 
 /**
  * Manages the download counts for packages.
@@ -24,7 +23,7 @@ class DownloadManager
     protected $redis;
     protected $redisCommandLoaded = false;
 
-    public function __construct(Client $redis)
+    public function __construct(\Redis $redis)
     {
         $this->redis = $redis;
     }
@@ -32,8 +31,8 @@ class DownloadManager
     /**
      * Gets the total, monthly, and daily download counts for an entire package or optionally a version.
      *
-     * @param \Packagist\WebBundle\Entity\Package|int      $package
-     * @param \Packagist\WebBundle\Entity\Version|int|null $version
+     * @param \Packeton\Entity\Package|int      $package
+     * @param \Packeton\Entity\Version|int|null $version
      * @return array
      */
     public function getDownloads($package, $version = null)
@@ -70,7 +69,7 @@ class DownloadManager
     /**
      * Gets the total download count for a package.
      *
-     * @param \Packagist\WebBundle\Entity\Package|int $package
+     * @param \Packeton\Entity\Package|int $package
      * @return int
      */
     public function getTotalDownloads($package)

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Util;
+namespace Packeton\Util;
 
-use Packagist\WebBundle\Composer\PackagistFactory;
-use Packagist\WebBundle\Entity\Package;
+use Packeton\Composer\PackagistFactory;
+use Packeton\Entity\Package;
 
 class ChangelogUtils
 {

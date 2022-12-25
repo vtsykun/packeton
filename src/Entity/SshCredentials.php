@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 

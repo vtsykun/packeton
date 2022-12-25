@@ -10,9 +10,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Command;
+namespace Packeton\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -21,15 +21,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class UpdatePackagesCommand extends ContainerAwareCommand
+class UpdatePackagesCommand extends Command
 {
+    protected static $defaultName = 'packagist:update';
+
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
         $this
-            ->setName('packagist:update')
             ->setDefinition([
                 new InputOption('force', null, InputOption::VALUE_NONE, 'Force a re-crawl of all packages, or if a package name is given forces an update of all versions'),
                 new InputOption('delete-before', null, InputOption::VALUE_NONE, 'Force deletion of all versions before an update'),

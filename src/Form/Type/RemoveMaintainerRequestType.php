@@ -10,12 +10,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
 use Doctrine\ORM\EntityRepository;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Form\Model\MaintainerRequest;
+use Packeton\Entity\User;
+use Packeton\Form\Model\MaintainerRequest;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -28,21 +27,21 @@ class RemoveMaintainerRequestType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('user', EntityType::class, array(
-            'class' => 'PackagistWebBundle:User',
+        $builder->add('user', EntityType::class, [
+            'class' => User::class,
             'query_builder' => function(EntityRepository $er) use ($options) {
                 return $er->getPackageMaintainersQueryBuilder($options['package'], $options['excludeUser']);
             },
-        ));
+        ]);
     }
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setRequired(array('package'));
-        $resolver->setDefaults(array(
+        $resolver->setRequired(['package']);
+        $resolver->setDefaults([
             'excludeUser' => null,
             'data_class' => MaintainerRequest::class
-        ));
+        ]);
     }
 
     /**

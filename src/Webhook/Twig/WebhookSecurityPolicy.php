@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook\Twig;
+namespace Packeton\Webhook\Twig;
 
 use Doctrine\Common\Util\ClassUtils;
 use Twig\Extension\ExtensionInterface;
@@ -45,7 +45,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
     /**
      * {@inheritdoc}
      */
-    public function checkSecurity($tags, $filters, $functions)
+    public function checkSecurity($tags, $filters, $functions): void
     {
         if (null === $this->allowedTags) {
             $this->initExtensions();
@@ -130,7 +130,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
     /**
      * {@inheritdoc}
      */
-    public function checkMethodAllowed($obj, $method)
+    public function checkMethodAllowed($obj, $method): void
     {
         $class = ClassUtils::getClass($obj);
         if (false === $this->checkClassAllowed($obj)) {
@@ -177,7 +177,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
     /**
      * {@inheritdoc}
      */
-    public function checkPropertyAllowed($obj, $property)
+    public function checkPropertyAllowed($obj, $property): void
     {
         $class = ClassUtils::getClass($obj);
         if (false === $this->checkClassAllowed($obj)) {

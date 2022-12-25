@@ -10,13 +10,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\AuthorRepository")
+ * @ORM\Entity(repositoryClass="Packeton\Repository\AuthorRepository")
  * @ORM\Table(name="author")
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
@@ -52,22 +52,22 @@ class Author
     private $role;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Version", mappedBy="authors")
+     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Version", mappedBy="authors")
      */
     private $versions;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Packagist\WebBundle\Entity\User", inversedBy="authors")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\User", inversedBy="authors")
      */
     private $owner;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="createdat")
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="updatedat")
      */
     private $updatedAt;
 
@@ -160,7 +160,7 @@ class Author
     /**
      * Get versions
      *
-     * @return Version[]
+     * @return Version[]|ArrayCollection
      */
     public function getVersions()
     {

@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Event;
+namespace Packeton\Event;
 
-use Packagist\WebBundle\Entity\Package;
-use Symfony\Component\EventDispatcher\Event;
+use Packeton\Entity\Package;
 
 class UpdaterEvent extends Event
 {

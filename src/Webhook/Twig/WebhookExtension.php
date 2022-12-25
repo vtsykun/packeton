@@ -1,13 +1,12 @@
 <?php
 
-namespace Packagist\WebBundle\Webhook\Twig;
+namespace Packeton\Webhook\Twig;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Util\ChangelogUtils;
-use Predis\Client as Redis;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
+use Packeton\Entity\Webhook;
+use Packeton\Util\ChangelogUtils;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -32,7 +31,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
     public function __construct(
         ManagerRegistry $registry,
         ChangelogUtils $changelogUtils,
-        Redis $redis
+        \Redis $redis
     ) {
         $this->registry = $registry;
         $this->changelogUtils = $changelogUtils;

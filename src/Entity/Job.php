@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use DateTimeInterface;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\JobRepository")
+ * @ORM\Entity(repositoryClass="Packeton\Repository\JobRepository")
  * @ORM\Table(
  *     name="job",
  *     indexes={
@@ -44,7 +44,7 @@ class Job
     private $type;
 
     /**
-     * @ORM\Column(type="json_array")
+     * @ORM\Column(type="json")
      */
     private $payload = [];
 
@@ -56,32 +56,32 @@ class Job
     private $status = self::STATUS_QUEUED;
 
     /**
-     * @ORM\Column(type="json_array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
     private $result;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="createdat")
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="startedat")
      */
     private $startedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="completedat")
      */
     private $completedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="executeafter")
      */
     private $executeAfter;
 
     /**
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true, name="packageid")
      */
     private $packageId;
 

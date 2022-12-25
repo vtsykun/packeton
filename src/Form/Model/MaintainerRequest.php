@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Form\Model;
+namespace Packeton\Form\Model;
 
 use FOS\UserBundle\Model\UserInterface;
 

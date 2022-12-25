@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Composer;
+namespace Packeton\Composer;
 
 use Composer\Config;
 use Composer\IO\IOInterface;
 use Composer\Repository\Vcs\VcsDriver;
 use Composer\Repository\Vcs\VcsDriverInterface;
-use Packagist\WebBundle\Composer\Util\ProcessExecutor;
+use Packeton\Composer\Util\ProcessExecutor;
 
 class VcsDriverFactory
 {
@@ -27,7 +27,6 @@ class VcsDriverFactory
             'gitlab' => 'Composer\Repository\Vcs\GitLabDriver',
             'git-bitbucket' => 'Composer\Repository\Vcs\GitBitbucketDriver',
             'git' => 'Composer\Repository\Vcs\GitDriver',
-            'hg-bitbucket' => 'Composer\Repository\Vcs\HgBitbucketDriver',
             'hg' => 'Composer\Repository\Vcs\HgDriver',
             'perforce' => 'Composer\Repository\Vcs\PerforceDriver',
             'fossil' => 'Composer\Repository\Vcs\FossilDriver',

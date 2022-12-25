@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Service;
+namespace Packeton\Service;
 
-use Packagist\WebBundle\Repository\JobRepository;
-use Predis\Client as Redis;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Repository\JobRepository;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Bridge\Doctrine\RegistryInterface;
-use Packagist\WebBundle\Entity\Job;
+use Packeton\Entity\Job;
 use Seld\Signal\SignalHandler;
 
 class QueueWorker
@@ -24,8 +23,8 @@ class QueueWorker
 
     public function __construct(
         LogResetter $logResetter,
-        Redis $redis,
-        RegistryInterface $doctrine,
+        \Redis $redis,
+        ManagerRegistry $doctrine,
         LoggerInterface $logger,
         JobPersister $persister,
         ContainerInterface $workersContainer

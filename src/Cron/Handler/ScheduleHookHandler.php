@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron\Handler;
+namespace Packeton\Cron\Handler;
 
-use Packagist\WebBundle\Webhook\HookBus;
+use Packeton\Webhook\HookBus;
 
 class ScheduleHookHandler
 {

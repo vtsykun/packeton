@@ -10,12 +10,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Model;
+namespace Packeton\Model;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Repository\PackageRepository;
-use Predis\Client;
+use Packeton\Entity\Package;
+use Packeton\Repository\PackageRepository;
 
 class ProviderManager
 {
@@ -23,7 +22,7 @@ class ProviderManager
     protected $registry;
     protected $initializedProviders = false;
 
-    public function __construct(Client $redis, ManagerRegistry $registry)
+    public function __construct(\Redis $redis, ManagerRegistry $registry)
     {
         $this->redis = $redis;
         $this->registry = $registry;

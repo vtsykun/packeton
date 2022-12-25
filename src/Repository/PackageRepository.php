@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Repository;
+namespace Packeton\Repository;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
@@ -41,7 +41,7 @@ class PackageRepository extends EntityRepository
     public function getPackageNames()
     {
         $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name FROM Packagist\WebBundle\Entity\Package p");
+            ->createQuery("SELECT p.name FROM Packeton\Entity\Package p");
 
         $names = $this->getPackageNamesForQuery($query);
 
@@ -52,7 +52,7 @@ class PackageRepository extends EntityRepository
     {
         $query = $this->getEntityManager()
             ->createQuery("SELECT p.packageName AS name
-                FROM Packagist\WebBundle\Entity\ProvideLink p
+                FROM Packeton\Entity\ProvideLink p
                 LEFT JOIN p.version v
                 WHERE v.development = true
                 GROUP BY p.packageName");
@@ -65,7 +65,7 @@ class PackageRepository extends EntityRepository
     public function getPackageNamesByType($type)
     {
         $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name FROM Packagist\WebBundle\Entity\Package p WHERE p.type = :type")
+            ->createQuery("SELECT p.name FROM Packeton\Entity\Package p WHERE p.type = :type")
             ->setParameters(array('type' => $type));
 
         return $this->getPackageNamesForQuery($query);
@@ -74,7 +74,7 @@ class PackageRepository extends EntityRepository
     public function getPackageNamesByVendor($vendor)
     {
         $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name FROM Packagist\WebBundle\Entity\Package p WHERE p.name LIKE :vendor")
+            ->createQuery("SELECT p.name FROM Packeton\Entity\Package p WHERE p.name LIKE :vendor")
             ->setParameters(array('vendor' => $vendor.'/%'));
 
         return $this->getPackageNamesForQuery($query);
@@ -94,7 +94,7 @@ class PackageRepository extends EntityRepository
             $where = 'WHERE '.$where;
         }
         $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name $selector  FROM Packagist\WebBundle\Entity\Package p $where")
+            ->createQuery("SELECT p.name $selector  FROM Packeton\Entity\Package p $where")
             ->setParameters($filters);
 
         $result = [];
@@ -164,7 +164,7 @@ class PackageRepository extends EntityRepository
         // with huge amounts of versions
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('partial p.{id}', 'partial v.{id, version, normalizedVersion, development, releasedAt}', 'partial m.{id, username, email}')
-            ->from('Packagist\WebBundle\Entity\Package', 'p')
+            ->from('Packeton\Entity\Package', 'p')
             ->leftJoin('p.versions', 'v')
             ->leftJoin('p.maintainers', 'm')
             ->orderBy('v.development', 'DESC')
@@ -197,7 +197,7 @@ class PackageRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p', 'm')
-            ->from('Packagist\WebBundle\Entity\Package', 'p')
+            ->from('Packeton\Entity\Package', 'p')
             ->leftJoin('p.maintainers', 'm')
             ->where('p.name = ?0')
             ->setParameters(array($name));
@@ -209,7 +209,7 @@ class PackageRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p', 'v')
-            ->from('Packagist\WebBundle\Entity\Package', 'p')
+            ->from('Packeton\Entity\Package', 'p')
             ->leftJoin('p.versions', 'v')
             ->orderBy('v.development', 'DESC')
             ->addOrderBy('v.releasedAt', 'DESC');
@@ -228,7 +228,7 @@ class PackageRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p.gitHubStars', 'p.id')
-            ->from('Packagist\WebBundle\Entity\Package', 'p')
+            ->from('Packeton\Entity\Package', 'p')
             ->where($qb->expr()->in('p.id', ':ids'))
             ->setParameter('ids', $ids);
 
@@ -239,7 +239,7 @@ class PackageRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p')
-            ->from('Packagist\WebBundle\Entity\Package', 'p');
+            ->from('Packeton\Entity\Package', 'p');
 
         if (isset($filters['tag'])) {
             $qb->leftJoin('p.versions', 'v');
@@ -263,7 +263,7 @@ class PackageRepository extends EntityRepository
         $query = $this->getEntityManager()
             ->createQuery(
                 "SELECT p.name, m.id user_id
-                FROM Packagist\WebBundle\Entity\Package p
+                FROM Packeton\Entity\Package p
                 JOIN p.maintainers m
                 WHERE p.name LIKE :vendor")
             ->setParameters(array('vendor' => $vendor.'/%'));
@@ -292,8 +292,7 @@ class PackageRepository extends EntityRepository
 
         $stmt = $this->getEntityManager()->getConnection()
             ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(7*86400, 'dependents_count_'.$name, $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
-        $result = $stmt->fetchAll();
-        $stmt->closeCursor();
+        $result = $stmt->fetchAllAssociative();
 
         return (int) $result[0]['count'];
     }
@@ -314,10 +313,8 @@ class PackageRepository extends EntityRepository
                 [],
                 new QueryCacheProfile(7*86400, 'dependents_'.$name.'_'.$offset.'_'.$limit, $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
             );
-        $result = $stmt->fetchAll();
-        $stmt->closeCursor();
 
-        return $result;
+        return $stmt->fetchAllAssociative();
     }
 
     public function getSuggestCount($name)
@@ -329,8 +326,7 @@ class PackageRepository extends EntityRepository
 
         $stmt = $this->getEntityManager()->getConnection()
             ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(7*86400, 'suggesters_count_'.$name, $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
-        $result = $stmt->fetchAll();
-        $stmt->closeCursor();
+        $result = $stmt->fetchAllAssociative();
 
         return (int) $result[0]['count'];
     }
@@ -352,8 +348,7 @@ class PackageRepository extends EntityRepository
                 [],
                 new QueryCacheProfile(7*86400, 'suggesters_'.$name.'_'.$offset.'_'.$limit, $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
             );
-        $result = $stmt->fetchAll();
-        $stmt->closeCursor();
+        $result = $stmt->fetchAllAssociative();
 
         return $result;
     }
@@ -397,7 +392,7 @@ class PackageRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p')
-            ->from('Packagist\WebBundle\Entity\Package', 'p')
+            ->from('Packeton\Entity\Package', 'p')
             ->where('p.abandoned = false')
             ->orderBy('p.id', 'DESC');
 

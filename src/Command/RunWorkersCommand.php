@@ -1,18 +1,19 @@
 <?php declare(strict_types=1);
 
-namespace Packagist\WebBundle\Command;
+namespace Packeton\Command;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 
-class RunWorkersCommand extends ContainerAwareCommand
+class RunWorkersCommand extends Command
 {
+    protected static $defaultName = 'packagist:run-workers';
+
     protected function configure()
     {
         $this
-            ->setName('packagist:run-workers')
             ->setDescription('Run worker services')
             ->addOption('messages', null, InputOption::VALUE_OPTIONAL, 'Amount of messages to process before exiting', 5000);
     }

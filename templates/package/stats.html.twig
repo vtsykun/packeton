@@ -1,4 +1,4 @@
-{% extends "PackagistWebBundle::layout.html.twig" %}
+{% extends "layout.html.twig" %}
 
 {% set showSearchDesc = 'hide' %}
 
@@ -61,7 +61,7 @@
                         </svg>
                     </div>
                 </div>
-                {% include 'PackagistWebBundle:Package:versionList.html.twig' with {versions: versions, expandedId: expandedId} %}
+                {% include 'package/versionList.html.twig' with {versions: versions, expandedId: expandedId} %}
             </div>
         </div>
     </section>

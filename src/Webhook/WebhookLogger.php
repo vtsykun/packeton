@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook;
+namespace Packeton\Webhook;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;

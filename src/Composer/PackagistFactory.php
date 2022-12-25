@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Composer;
+namespace Packeton\Composer;
 
 use Composer\Config;
 use Composer\Factory;
 use Composer\IO\IOInterface;
 use Composer\IO\NullIO;
-use Packagist\WebBundle\Composer\Util\ProcessExecutor;
-use Packagist\WebBundle\Entity\SshCredentials;
+use Packeton\Composer\Util\ProcessExecutor;
+use Packeton\Entity\SshCredentials;
 
 class PackagistFactory
 {

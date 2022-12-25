@@ -40,5 +40,36 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # The WDT has to be allowed to anonymous users to avoid requiring the login with the AJAX request
+        - { path: ^/_wdt/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/_profiler/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        - { path: ^/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/reset-password, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    
+        # Packagist
+        - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
+        - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, role: ROLE_USER }
+        - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
+        - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
+        - { path: ^/$, role: ROLE_USER }
+    
+        # Maintainers
+        - { path: (^(/users/(.+)/packages))+, role: ROLE_MAINTAINER }
+        - { path: (^(/users/(.+)/favorites))+, role: ROLE_MAINTAINER }
+        - { path: (^(/explore|/jobs/))+, role: ROLE_MAINTAINER }
+    
+        # Secured part of the site
+        # This config requires being logged for the whole site and having the admin role for the admin part.
+        # Change these rules to adapt them to your needs
+        - { path: ^.*$, role: ROLE_ADMIN }
+
+    role_hierarchy:
+        ROLE_UPDATE_PACKAGES: ~
+        ROLE_DELETE_PACKAGES: ~
+        ROLE_EDIT_PACKAGES: ~
+    
+        ROLE_MAINTAINER:  [ ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
+        ROLE_ADMIN:       [ ROLE_MAINTAINER ]
+        ROLE_SUPERADMIN:  [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]

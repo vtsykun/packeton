@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Model;
+namespace Packeton\Model;
 
 use Composer\Package\BasePackage;
 use Composer\Package\Loader\InvalidPackageException;
@@ -44,7 +44,7 @@ class ValidatingArrayLoader implements LoaderInterface
         $this->flags = $flags;
     }
 
-    public function load(array $config, $class = 'Composer\Package\CompletePackage')
+    public function load(array $config, $class = 'Composer\Package\CompletePackage'): BasePackage
     {
         $this->errors = array();
         $this->warnings = array();
@@ -215,7 +215,7 @@ class ValidatingArrayLoader implements LoaderInterface
                             // check requires for exact constraints
                             ($this->flags & self::CHECK_STRICT_CONSTRAINTS)
                             && 'require' === $linkType
-                            && substr($linkConstraint, 0, 1) === '='
+                            && str_starts_with($linkConstraint, '=')
                             && $stableConstraint->versionCompare($stableConstraint, $linkConstraint, '<=')
                         ) {
                             $this->warnings[] = $linkType.'.'.$package.' : exact version constraints ('.$constraint.') should be avoided if the package follows semantic versioning';
@@ -250,7 +250,7 @@ class ValidatingArrayLoader implements LoaderInterface
                 }
                 if ($type === 'psr-4') {
                     foreach ($typeConfig as $namespace => $dirs) {
-                        if ($namespace !== '' && '\\' !== substr($namespace, -1)) {
+                        if ($namespace !== '' && !str_ends_with($namespace, '\\')) {
                             $this->errors[] = 'autoload.psr-4 : invalid value ('.$namespace.'), namespaces must end with a namespace separator, should be '.$namespace.'\\\\';
                         }
                     }
@@ -281,7 +281,7 @@ class ValidatingArrayLoader implements LoaderInterface
             } else {
                 foreach ($this->config['extra']['branch-alias'] as $sourceBranch => $targetBranch) {
                     // ensure it is an alias to a -dev package
-                    if ('-dev' !== substr($targetBranch, -4)) {
+                    if (!str_ends_with($targetBranch, '-dev')) {
                         $this->warnings[] = 'extra.branch-alias.'.$sourceBranch.' : the target branch ('.$targetBranch.') must end in -dev';
                         unset($this->config['extra']['branch-alias'][$sourceBranch]);
 
@@ -290,7 +290,7 @@ class ValidatingArrayLoader implements LoaderInterface
 
                     // normalize without -dev and ensure it's a numeric branch that is parseable
                     $validatedTargetBranch = $this->versionParser->normalizeBranch(substr($targetBranch, 0, -4));
-                    if ('-dev' !== substr($validatedTargetBranch, -4)) {
+                    if (!str_ends_with($validatedTargetBranch, '-dev')) {
                         $this->warnings[] = 'extra.branch-alias.'.$sourceBranch.' : the target branch ('.$targetBranch.') must be a parseable number like 2.0-dev';
                         unset($this->config['extra']['branch-alias'][$sourceBranch]);
 

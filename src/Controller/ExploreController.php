@@ -10,18 +10,18 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
 use Doctrine\DBAL\ConnectionException;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\PackageRepository;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Entity\VersionRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
+use Packeton\Repository\PackageRepository;
+use Packeton\Repository\VersionRepository;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -29,22 +29,27 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 /**
  * @Route("/explore")
  */
-class ExploreController extends Controller
+class ExploreController extends AbstractController
 {
+    use ControllerTrait;
+
+    public function __construct(
+        protected ManagerRegistry $registry
+    ) {}
+
     /**
-     * @Template()
      * @Route("/", name="browse")
      */
-    public function exploreAction()
+    public function exploreAction(\Redis $redis)
     {
         /** @var PackageRepository $pkgRepo */
-        $pkgRepo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
+        $pkgRepo = $this->registry->getRepository(Package::class);
         /** @var VersionRepository $verRepo */
-        $verRepo = $this->get('doctrine')->getRepository(Version::class);
+        $verRepo = $this->registry->getRepository(Version::class);
         $newSubmitted = $pkgRepo->getQueryBuilderForNewestPackages()->setMaxResults(10)
-            ->getQuery()->useResultCache(true, 60)->getResult();
+            ->getQuery()->getResult();
         $newReleases = $verRepo->getLatestReleases(10);
-        $maxId = $this->getDoctrine()->getConnection()->fetchColumn('SELECT max(id) FROM package');
+        $maxId = $this->getEM()->getConnection()->fetchOne('SELECT max(id) FROM package');
         $random = $pkgRepo
             ->createQueryBuilder('p')->where('p.id >= :randId')->andWhere('p.abandoned = :abandoned')
             ->setParameter('randId', rand(1, $maxId))
@@ -53,7 +58,7 @@ class ExploreController extends Controller
             ->getQuery()->getResult();
         try {
             $popular = [];
-            $popularIds = $this->get('snc_redis.default')->zrevrange('downloads:trending', 0, 9);
+            $popularIds = $redis->zrevrange('downloads:trending', 0, 9);
             if ($popularIds) {
                 $popular = $pkgRepo->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
                     ->getQuery()->useResultCache(true, 900)->getResult();
@@ -65,18 +70,17 @@ class ExploreController extends Controller
             $popular = [];
         }
 
-        return [
+        return $this->render('explore/explore.html.twig', [
             'newlySubmitted' => $newSubmitted,
             'newlyReleased' => $newReleases,
             'random' => $random,
             'popular' => $popular,
-        ];
+        ]);
     }
 
     /**
-     * @Template()
+     * todo Template()
      * @Route("/popular.{_format}", name="browse_popular", defaults={"_format"="html"})
-     * @Cache(smaxage=900)
      */
     public function popularAction(Request $req)
     {
@@ -99,7 +103,7 @@ class ExploreController extends Controller
                 ($req->get('page', 1) - 1) * $perPage,
                 $req->get('page', 1) * $perPage - 1
             );
-            $popular = $this->getDoctrine()->getRepository('PackagistWebBundle:Package')
+            $popular = $this->getDoctrine()->getRepository(Package::class)
                 ->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
                 ->getQuery()->useResultCache(true, 900)->getResult();
             usort($popular, function ($a, $b) use ($popularIds) {

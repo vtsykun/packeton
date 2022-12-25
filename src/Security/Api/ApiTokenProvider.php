@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Security\Api;
+namespace Packeton\Security\Api;
 
-use Packagist\WebBundle\Entity\User;
+use Packeton\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;

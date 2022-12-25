@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook\EventListener;
+namespace Packeton\Webhook\EventListener;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Event\UpdaterErrorEvent;
-use Packagist\WebBundle\Event\UpdaterEvent;
-use Packagist\WebBundle\Webhook\HookBus;
+use Packeton\Entity\Version;
+use Packeton\Entity\Webhook;
+use Packeton\Event\UpdaterErrorEvent;
+use Packeton\Event\UpdaterEvent;
+use Packeton\Webhook\HookBus;
 use Symfony\Component\Security\Core\Authentication\Token\RememberMeToken;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;

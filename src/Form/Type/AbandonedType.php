@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -21,7 +21,7 @@ use Symfony\Component\Form\FormBuilderInterface;
  *
  * Form used to acquire replacement Package information for abandoned package.
  *
- * @package Packagist\WebBundle\Form\Type
+ * @package Packeton\Form\Type
  */
 class AbandonedType extends AbstractType
 {

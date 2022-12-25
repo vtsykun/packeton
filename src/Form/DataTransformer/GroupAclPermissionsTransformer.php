@@ -1,12 +1,12 @@
 <?php
 
-namespace Packagist\WebBundle\Form\DataTransformer;
+namespace Packeton\Form\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\GroupAclPermission;
-use Packagist\WebBundle\Form\Model\PackagePermission;
+use Packeton\Entity\GroupAclPermission;
+use Packeton\Form\Model\PackagePermission;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 

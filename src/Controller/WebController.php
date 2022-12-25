@@ -10,33 +10,33 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
 use Doctrine\ORM\QueryBuilder;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Form\Model\SearchQuery;
-use Packagist\WebBundle\Form\Type\SearchQueryType;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Group;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
+use Packeton\Form\Model\SearchQuery;
+use Packeton\Form\Type\SearchQueryType;
 use Pagerfanta\Adapter\ArrayAdapter;
 use Pagerfanta\Adapter\CallbackAdapter;
 use Pagerfanta\Pagerfanta;
-use Predis\Connection\ConnectionException;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class WebController extends Controller
+class WebController extends AbstractController
 {
+    public function __construct(
+        protected ManagerRegistry $registry
+    ){}
+
     /**
-     * @Template()
      * @Route("/", name="home")
-     *
-     * @param Request $request
-     * @return array
      */
     public function indexAction(Request $request)
     {
@@ -45,9 +45,9 @@ class WebController extends Controller
         $paginator->setMaxPerPage(10);
         $paginator->setCurrentPage($page);
 
-        return [
+        return $this->render('web/index.html.twig', [
             'packages' => $paginator
-        ];
+        ]);
     }
 
     /**
@@ -60,29 +60,26 @@ class WebController extends Controller
         ]);
 
         $filteredOrderBys = $this->getFilteredOrderedBys($req);
-        $normalizedOrderBys = $this->getNormalizedOrderBys($filteredOrderBys);
 
         $this->computeSearchQuery($req, $filteredOrderBys);
 
         $form->handleRequest($req);
 
-        $orderBysViewModel = $this->getOrderBysViewModel($req, $normalizedOrderBys);
-        return $this->render('PackagistWebBundle:Web:searchForm.html.twig', array(
+        return $this->render('web/searchForm.html.twig', [
             'searchQuery' => $req->query->get('search_query')['query'] ?? '',
-        ));
+        ]);
     }
 
     /**
      * @Route("/search/", name="search.ajax")
-     * @Route("/search.{_format}", requirements={"_format"="(html|json)"}, name="search", defaults={"_format"="html"})
-     * @Method({"GET"})
+     * @Route("/search.{_format}", requirements={"_format"="(html|json)"}, name="search", defaults={"_format"="html"}, methods={"GET"})
      */
     public function searchAction(Request $req)
     {
         $packages = [];
         $form = $this->createForm(SearchQueryType::class, new SearchQuery());
         $form->handleRequest($req);
-        if ($form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $query = $form->getData()->getQuery();
 
             $perPage = $req->query->getInt('per_page', 15);
@@ -91,35 +88,33 @@ class WebController extends Controller
             }
 
             $allowed = $this->isGranted('ROLE_MAINTAINER') ? null :
-                $this->getDoctrine()
-                    ->getRepository('PackagistWebBundle:Group')
+                $this->registry
+                    ->getRepository(Group::class)
                     ->getAllowedPackagesForUser($this->getUser(), false);
 
             $page = $req->query->get('page', 1) - 1;
-            $packages = $this->getDoctrine()->getRepository('PackagistWebBundle:Package')
+            $packages = $this->registry->getRepository(Package::class)
                 ->searchPackage($query, $perPage, $page, $allowed);
         }
 
         $paginator = new Pagerfanta(new ArrayAdapter($packages));
         $paginator->setMaxPerPage(10);
 
-        return $this->render('PackagistWebBundle:Web:search.html.twig', ['packages' => $paginator]);
+        return $this->render('web/search.html.twig', ['packages' => $paginator]);
     }
 
     /**
      * @Route("/statistics", name="stats")
-     * @Template
-     * @Cache(smaxage=5)
      */
     public function statsAction()
     {
-        $packages = $this->getDoctrine()->getRepository('PackagistWebBundle:Package')
+        $packages = $this->registry->getRepository(Package::class)
             ->getPackagesStatisticsByMonthAndYear();
 
-        $versions = $this->getDoctrine()->getRepository('PackagistWebBundle:Version')
+        $versions = $this->registry->getRepository(Version::class)
             ->getVersionStatisticsByMonthAndYear();
 
-        $chart = array('versions' => [], 'packages' => [], 'months' => []);
+        $chart = ['versions' => [], 'packages' => [], 'months' => []];
 
         // prepare x axis
         if (isset($packages[0])) {
@@ -190,7 +185,7 @@ class WebController extends Controller
             $dlChart = $dlChartMonthly = null;
         }
 
-        return array(
+        return $this->render('web/stats.html.twig', [
             'chart' => $chart,
             'packages' => !empty($chart['packages']) ? max($chart['packages']) : 0,
             'versions' => !empty($chart['versions']) ? max($chart['versions']) : 0,
@@ -200,7 +195,7 @@ class WebController extends Controller
             'downloadsChartMonthly' => $dlChartMonthly,
             'maxMonthlyDownloads' => !empty($dlChartMonthly) ? max($dlChartMonthly['values']) : null,
             'downloadsStartDate' => $downloadsStartDate,
-        );
+        ]);
     }
 
     /**
@@ -354,8 +349,8 @@ class WebController extends Controller
     {
         /** @var QueryBuilder $qb */
         $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
-        $qb->from('PackagistWebBundle:Package', 'p');
-        $repo = $this->get('doctrine')->getRepository('PackagistWebBundle:Package');
+        $qb->from(Package::class, 'p');
+        $repo = $this->get('doctrine')->getRepository(Package::class);
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             $packages = $this->get('doctrine')->getRepository('PackagistWebBundle:Group')
                 ->getAllowedPackagesForUser($this->getUser());

@@ -1,9 +1,9 @@
 <?php
 
-namespace Packagist\WebBundle\Security\Acl;
+namespace Packeton\Security\Acl;
 
-use Packagist\WebBundle\Entity\OwnerAwareInterface;
-use Packagist\WebBundle\Entity\User;
+use Packeton\Entity\OwnerAwareInterface;
+use Packeton\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 

@@ -10,19 +10,19 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
-use Packagist\WebBundle\Entity\Version;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Packeton\Entity\Version;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @author Jordi Boggiano <j.boggiano@seld.be> 
+ * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class ApiDocController extends Controller
+class ApiDocController extends AbstractController
 {
     /**
-     * @Template()
+     * todo Template()
      * @Route("/apidoc", name="api_doc")
      */
     public function indexAction()

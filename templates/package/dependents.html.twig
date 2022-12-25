@@ -1,4 +1,4 @@
-{% extends "PackagistWebBundle::layout.html.twig" %}
+{% extends "layout.html.twig" %}
 
 {% set showSearchDesc = 'hide' %}
 
@@ -20,7 +20,7 @@
 
     <section class="row">
         <section class="col-md-12">
-        {% embed "PackagistWebBundle:Web:list.html.twig" with {noLayout: 'true', showAutoUpdateWarning: false} %}
+        {% embed "web/list.html.twig" with {noLayout: 'true', showAutoUpdateWarning: false} %}
             {% block content_title %}
             {% endblock %}
         {% endembed %}

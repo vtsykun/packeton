@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron;
+namespace Packeton\Cron;
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 use Okvpn\Bundle\CronBundle\Loader\ScheduleLoaderInterface;
 use Okvpn\Bundle\CronBundle\Model\ScheduleEnvelope;
-use Packagist\WebBundle\Cron\Handler\ScheduleHookHandler;
-use Packagist\WebBundle\Entity\Webhook;
+use Packeton\Cron\Handler\ScheduleHookHandler;
+use Packeton\Entity\Webhook;
 use Okvpn\Bundle\CronBundle\Model;
 
 class WebhookCronLoader implements ScheduleLoaderInterface

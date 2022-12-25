@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook;
+namespace Packeton\Webhook;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
+use Packeton\Entity\Version;
+use Packeton\Entity\Webhook;
+use Packeton\Webhook\Twig\WebhookContext;
 use Psr\Log\LogLevel;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -231,7 +231,7 @@ class HookTestAction
 
         if (!isset($data['ip_address'])) {
             $data['ip_address'] = '127.0.0.1';
-            if ($this->requestStack and $req = $this->requestStack->getMasterRequest()) {
+            if ($this->requestStack and $req = $this->requestStack->getMainRequest()) {
                 $data['ip_address'] = $req->getClientIp();
             }
         }

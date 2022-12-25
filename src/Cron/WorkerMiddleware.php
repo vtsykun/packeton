@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron;
+namespace Packeton\Cron;
 
 use Okvpn\Bundle\CronBundle\Middleware\MiddlewareEngineInterface;
 use Okvpn\Bundle\CronBundle\Middleware\StackInterface;
 use Okvpn\Bundle\CronBundle\Model\ScheduleEnvelope;
-use Packagist\WebBundle\Service\JobScheduler;
+use Packeton\Service\JobScheduler;
 
 class WorkerMiddleware implements MiddlewareEngineInterface
 {

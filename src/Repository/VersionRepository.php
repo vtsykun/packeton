@@ -10,12 +10,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Repository;
+namespace Packeton\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\DBAL\Connection;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Version;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -142,7 +142,7 @@ class VersionRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v', 't', 'a')
-            ->from('Packagist\WebBundle\Entity\Version', 'v')
+            ->from('Packeton\Entity\Version', 'v')
             ->leftJoin('v.tags', 't')
             ->leftJoin('v.authors', 'a')
             ->where('v.id = :id')
@@ -162,7 +162,7 @@ class VersionRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v')
-            ->from('Packagist\WebBundle\Entity\Version', 'v')
+            ->from('Packeton\Entity\Version', 'v')
             ->where('v.development = false')
             ->andWhere('v.releasedAt <= ?0')
             ->orderBy('v.releasedAt', 'DESC');
@@ -188,7 +188,7 @@ class VersionRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v.name, v.version, v.description')
-            ->from('Packagist\WebBundle\Entity\Version', 'v')
+            ->from('Packeton\Entity\Version', 'v')
             ->where('v.development = false')
             ->andWhere('v.releasedAt < :now')
             ->orderBy('v.releasedAt', 'DESC')

@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Validator\Constraint;
+namespace Packeton\Validator\Constraint;
 
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Composer\Util;
+namespace Packeton\Composer\Util;
 
 use Composer\Util\Platform;
 use Composer\Util\ProcessExecutor as ComposerProcessExecutor;
@@ -16,7 +16,7 @@ class ProcessExecutor extends ComposerProcessExecutor
     /**
      * {@inheritdoc}
      */
-    public function execute($command, &$output = null, $cwd = null)
+    public function execute($command, &$output = null, ?string $cwd = null): int
     {
         if ($this->io && $this->io->isDebug()) {
             $safeCommand = preg_replace_callback('{://(?P<user>[^:/\s]+):(?P<password>[^@\s/]+)@}i', function ($m) {

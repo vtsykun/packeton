@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Model;
+namespace Packeton\Model;
 
 use Doctrine\Common\Cache\Cache;
-use Packagist\WebBundle\Composer\PackagistFactory;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Event\UpdaterEvent;
-use Packagist\WebBundle\Package\InMemoryDumper;
-use Packagist\WebBundle\Repository\VersionRepository;
-use Symfony\Bridge\Doctrine\RegistryInterface;
-use Packagist\WebBundle\Entity\Package;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Composer\PackagistFactory;
+use Packeton\Entity\User;
+use Packeton\Entity\Version;
+use Packeton\Event\UpdaterEvent;
+use Packeton\Package\InMemoryDumper;
+use Packeton\Repository\VersionRepository;
+use Packeton\Entity\Package;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 
@@ -24,7 +25,6 @@ class PackageManager
     protected $mailer;
     protected $twig;
     protected $logger;
-    protected $options;
     protected $providerManager;
     protected $dumper;
     protected $cache;
@@ -33,11 +33,10 @@ class PackageManager
     protected $dispatcher;
 
     public function __construct(
-        RegistryInterface $doctrine,
-        \Swift_Mailer $mailer,
+        ManagerRegistry $doctrine,
+        MailerInterface $mailer,
         Environment $twig,
         LoggerInterface $logger,
-        array $options,
         ProviderManager $providerManager,
         InMemoryDumper $dumper,
         AuthorizationCheckerInterface $authorizationChecker,
@@ -49,7 +48,6 @@ class PackageManager
         $this->mailer = $mailer;
         $this->twig = $twig;
         $this->logger = $logger;
-        $this->options = $options;
         $this->providerManager = $providerManager;
         $this->authorizationChecker = $authorizationChecker;
         $this->dumper = $dumper;
@@ -62,7 +60,7 @@ class PackageManager
     {
         /** @var VersionRepository $versionRepo */
         $versionRepo = $this->doctrine->getRepository(Version::class);
-        $this->dispatcher->dispatch(UpdaterEvent::PACKAGE_REMOVE, new UpdaterEvent($package));
+        $this->dispatcher->dispatch(new UpdaterEvent($package), UpdaterEvent::PACKAGE_REMOVE);
 
         foreach ($package->getVersions() as $version) {
             $versionRepo->remove($version);

@@ -1,8 +1,8 @@
 <?php
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
-use Packagist\WebBundle\Entity\Group;
+use Packeton\Entity\Group;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;

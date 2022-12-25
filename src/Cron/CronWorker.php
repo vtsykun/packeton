@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron;
+namespace Packeton\Cron;
 
 use Okvpn\Bundle\CronBundle\Model\OutputStamp;
 use Okvpn\Bundle\CronBundle\Runner\ScheduleRunnerInterface;
-use Packagist\WebBundle\Entity\Job;
+use Packeton\Entity\Job;
 
 class CronWorker
 {

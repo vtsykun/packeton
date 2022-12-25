@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Service;
+namespace Packeton\Service;
 
 use Symfony\Component\Routing\RouterInterface;
 

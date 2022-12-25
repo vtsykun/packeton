@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook;
+namespace Packeton\Webhook;
 
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Service\JobScheduler;
+use Packeton\Entity\Webhook;
+use Packeton\Service\JobScheduler;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class HookBus
@@ -22,7 +22,7 @@ class HookBus
     /**
      * @param Webhook|int $webhook
      * @param mixed $context
-     * @return \Packagist\WebBundle\Entity\Job
+     * @return \Packeton\Entity\Job
      */
     public function dispatch($context, $webhook)
     {

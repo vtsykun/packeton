@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Composer;
+namespace Packeton\Composer;
 
 use Composer\Config;
 use Composer\IO\IOInterface;
-use Packagist\WebBundle\Composer\Repository\VcsRepository;
+use Packeton\Composer\Repository\VcsRepository;
 
 class VcsRepositoryFactory
 {

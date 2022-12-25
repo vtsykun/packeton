@@ -2,40 +2,46 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
-use Packagist\WebBundle\Entity\Job;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Form\Type\WebhookType;
-use Packagist\WebBundle\Webhook\HookResponse;
-use Packagist\WebBundle\Webhook\HookTestAction;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Job;
+use Packeton\Entity\Package;
+use Packeton\Entity\Webhook;
+use Packeton\Form\Type\WebhookType;
+use Packeton\Webhook\HookResponse;
+use Packeton\Webhook\HookTestAction;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * @Route("/webhooks")
  */
-class WebhookController extends Controller
+class WebhookController extends AbstractController
 {
+    public function __construct(
+        protected ManagerRegistry $registry,
+        protected HookTestAction $testAction
+    ){}
+
     /**
-     * @Template("PackagistWebBundle:Webhook:index.html.twig")
+     * todo Template("PackagistWebBundle:Webhook:index.html.twig")
      * @Route("", name="webhook_index")
      *
      * {@inheritdoc}
      */
     public function indexAction(Request $request)
     {
-        $qb = $this->getDoctrine()
+        $qb = $this->registry
             ->getRepository(Webhook::class)
             ->createQueryBuilder('w')
             ->orderBy('w.id');
@@ -56,7 +62,7 @@ class WebhookController extends Controller
     }
 
     /**
-     * @Template("PackagistWebBundle:Webhook:update.html.twig")
+     * todo Template("PackagistWebBundle:Webhook:update.html.twig")
      * @Route("/create", name="webhook_create")
      *
      * {@inheritdoc}
@@ -68,7 +74,7 @@ class WebhookController extends Controller
     }
 
     /**
-     * @Template("PackagistWebBundle:Webhook:update.html.twig")
+     * todo Template("PackagistWebBundle:Webhook:update.html.twig")
      * @Route("/update/{id}", name="webhook_update", requirements={"id"="\d+"})
      *
      * {@inheritdoc}
@@ -81,7 +87,7 @@ class WebhookController extends Controller
 
         $response = $this->handleUpdate($request, $hook, 'Successfully saved.');
         if ($request->getMethod() === 'GET') {
-            $response['jobs'] = $this->getDoctrine()
+            $response['jobs'] = $this->registry
                 ->getRepository(Job::class)
                 ->findJobsByType('webhook:send', $hook->getId());
         }
@@ -102,7 +108,7 @@ class WebhookController extends Controller
             throw new AccessDeniedException;
         }
 
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->registry->getManager();
         $em->remove($hook);
         $em->flush();
         return new Response('', 204);
@@ -115,7 +121,7 @@ class WebhookController extends Controller
      */
     public function jobAction(Job $entity)
     {
-        $hook = $this->getDoctrine()->getRepository(Webhook::class)
+        $hook = $this->registry->getRepository(Webhook::class)
             ->find($entity->getPackageId());
         if ($hook === null || !$this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException();
@@ -135,7 +141,7 @@ class WebhookController extends Controller
     }
 
     /**
-     * @Template("PackagistWebBundle:Webhook:test.html.twig")
+     * todo Template("PackagistWebBundle:Webhook:test.html.twig")
      * @Route("/test/{id}/send", name="webhook_test_action", requirements={"id"="\d+"})
      *
      * {@inheritdoc}
@@ -145,8 +151,6 @@ class WebhookController extends Controller
         if (!$this->isGranted('VIEW', $entity)) {
             throw new AccessDeniedException();
         }
-
-        $testAction = $this->get(HookTestAction::class);
 
         $form = $this->createFormBuilder()
             ->add('event', ChoiceType::class, [
@@ -173,7 +177,7 @@ class WebhookController extends Controller
                 $data = $form->getData();
                 $data['user'] = $this->getUser();
                 try {
-                    $response = $testAction->runTest($entity, $data);
+                    $response = $this->testAction->runTest($entity, $data);
                 } catch (\Throwable $exception) {
                     $errors = $exception->getMessage();
                 }
@@ -202,7 +206,7 @@ class WebhookController extends Controller
      */
     protected function handleUpdate(Request $request, Webhook $entity, string $flashMessage)
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->registry->getManager();
         $form = $this->createForm(WebhookType::class, $entity);
         if ($request->getMethod() === 'POST') {
             $form->handleRequest($request);

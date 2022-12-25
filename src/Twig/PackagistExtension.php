@@ -1,22 +1,16 @@
 <?php
 
-namespace Packagist\WebBundle\Twig;
+namespace Packeton\Twig;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Packeton\Model\ProviderManager;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigTest;
 
 class PackagistExtension extends AbstractExtension
 {
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
-
-    public function __construct(ContainerInterface $container)
+    public function __construct(private readonly ProviderManager $providerManager)
     {
-        $this->container = $container;
     }
 
     public function getTests()
@@ -32,13 +26,18 @@ class PackagistExtension extends AbstractExtension
     {
         return [
             new TwigFilter('prettify_source_reference', [$this, 'prettifySourceReference']),
-            new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash'])
+            new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash']),
+            new TwigFilter('truncate', [$this, 'truncate']),
         ];
     }
 
-    public function getName()
+    public function truncate($string, $length)
     {
-        return 'packagist';
+        if (empty($string)) {
+            return "";
+        }
+
+        return mb_strlen($string) > $length ? mb_substr($string, 0, $length) . '...' : $string;
     }
 
     public function numericTest($val)
@@ -52,12 +51,12 @@ class PackagistExtension extends AbstractExtension
             return false;
         }
 
-        return $this->getProviderManager()->packageExists($package);
+        return $this->providerManager->packageExists($package);
     }
 
     public function providerExistsTest($package)
     {
-        return $this->getProviderManager()->packageIsProvided($package);
+        return $this->providerManager->packageIsProvided($package);
     }
 
     public function prettifySourceReference($sourceReference)
@@ -72,13 +71,5 @@ class PackagistExtension extends AbstractExtension
     public function generateGravatarHash($email)
     {
         return md5(strtolower($email));
-    }
-
-    /**
-     * @return \Packagist\WebBundle\Model\ProviderManager
-     */
-    private function getProviderManager()
-    {
-        return $this->container->get('packagist.provider_manager');
     }
 }

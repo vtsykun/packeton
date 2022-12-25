@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -28,12 +28,12 @@ abstract class PackageLink
     private $id;
 
     /**
-     * @ORM\Column(length=191)
+     * @ORM\Column(length=191, name="packagename")
      */
     private $packageName;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", name="packageversion")
      */
     private $packageVersion;
 

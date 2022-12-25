@@ -1,22 +1,22 @@
 <?php declare(strict_types=1);
 
-namespace Packagist\WebBundle\Service;
+namespace Packeton\Service;
 
-use Packagist\WebBundle\Composer\PackagistFactory;
-use Packagist\WebBundle\Event\UpdaterErrorEvent;
-use Packagist\WebBundle\Model\ValidatingArrayLoader;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Composer\PackagistFactory;
+use Packeton\Event\UpdaterErrorEvent;
+use Packeton\Model\ValidatingArrayLoader;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
-use Symfony\Bridge\Doctrine\RegistryInterface;
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Repository\InvalidRepositoryException;
 use Composer\IO\BufferIO;
 use Symfony\Component\Console\Output\OutputInterface;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Package\Updater;
-use Packagist\WebBundle\Entity\Job;
-use Packagist\WebBundle\Model\PackageManager;
-use Packagist\WebBundle\Model\DownloadManager;
+use Packeton\Entity\Package;
+use Packeton\Package\Updater;
+use Packeton\Entity\Job;
+use Packeton\Model\PackageManager;
+use Packeton\Model\DownloadManager;
 use Seld\Signal\SignalHandler;
 use Composer\Factory;
 use Composer\Downloader\TransportException;
@@ -38,7 +38,7 @@ class UpdaterWorker
 
     public function __construct(
         LoggerInterface $logger,
-        RegistryInterface $doctrine,
+        ManagerRegistry $doctrine,
         Updater $updater,
         LockFactory $lockFactory,
         Scheduler $scheduler,
@@ -60,7 +60,7 @@ class UpdaterWorker
 
     public function process(Job $job, SignalHandler $signal): array
     {
-        $em = $this->doctrine->getEntityManager();
+        $em = $this->doctrine->getManager();
         $id = $job->getPayload()['id'];
         $packageRepository = $em->getRepository(Package::class);
         /** @var Package $package */
@@ -104,16 +104,16 @@ class UpdaterWorker
         } catch (\Throwable $e) {
             $output = $io->getOutput();
 
-            if (!$this->doctrine->getEntityManager()->isOpen()) {
+            if (!$this->doctrine->getManager()->isOpen()) {
                 $this->doctrine->resetManager();
-                $package = $this->doctrine->getEntityManager()->getRepository(Package::class)->findOneById($package->getId());
+                $package = $this->doctrine->getManager()->getRepository(Package::class)->findOneById($package->getId());
             } else {
                 // reload the package just in case as Updater tends to merge it to a new instance
                 $package = $packageRepository->findOneById($id);
             }
 
             try {
-                $this->dispatcher->dispatch(UpdaterErrorEvent::PACKAGE_ERROR, new UpdaterErrorEvent($package, $e, $output));
+                $this->dispatcher->dispatch(new UpdaterErrorEvent($package, $e, $output), UpdaterErrorEvent::PACKAGE_ERROR);
             } catch (\Throwable $e) {
                 $this->logger->error('Events trigger fails: ' . $e->getMessage(), ['e' => $e]);
             }

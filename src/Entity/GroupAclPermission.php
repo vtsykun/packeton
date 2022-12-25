@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -29,7 +29,7 @@ class GroupAclPermission
     /**
      * @var Group
      *
-     * @ORM\ManyToOne(targetEntity="Packagist\WebBundle\Entity\Group", inversedBy="aclPermissions")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Group", inversedBy="aclPermissions")
      * @ORM\JoinColumn(name="group_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $group;
@@ -37,7 +37,7 @@ class GroupAclPermission
     /**
      * @var Package
      *
-     * @ORM\ManyToOne(targetEntity="Packagist\WebBundle\Entity\Package")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Package")
      * @ORM\JoinColumn(name="package_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $package;

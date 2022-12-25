@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Webhook\Twig;
+namespace Packeton\Webhook\Twig;
 
 class WebhookContext extends \ArrayObject
 {

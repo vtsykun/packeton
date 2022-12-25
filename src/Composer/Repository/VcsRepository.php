@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Composer\Repository;
+namespace Packeton\Composer\Repository;
 
 use Composer\Config;
 use Composer\EventDispatcher\EventDispatcher;
@@ -11,7 +11,9 @@ use Composer\Repository\Vcs\VcsDriver;
 use Composer\Repository\Vcs\VcsDriverInterface;
 use Composer\Repository\VcsRepository as ComposerVcsRepository;
 use Composer\Repository\VersionCacheInterface;
-use Packagist\WebBundle\Composer\VcsDriverFactory;
+use Composer\Util\HttpDownloader;
+use Composer\Util\ProcessExecutor;
+use Packeton\Composer\VcsDriverFactory;
 
 class VcsRepository extends ComposerVcsRepository
 {
@@ -23,16 +25,16 @@ class VcsRepository extends ComposerVcsRepository
     /** @var VcsDriverFactory */
     protected $driverFactory;
 
-    public function __construct(array $repoConfig, IOInterface $io, Config $config, VcsDriverFactory $driverFactory, EventDispatcher $dispatcher = null, VersionCacheInterface $versionCache = null)
+    public function __construct(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, VcsDriverFactory $driverFactory, EventDispatcher $dispatcher = null, ?ProcessExecutor $process = null, ?VersionCacheInterface $versionCache = null)
     {
-        parent::__construct($repoConfig, $io, $config, $dispatcher, [], $versionCache);
+        parent::__construct($repoConfig, $io, $config, $httpDownloader, $dispatcher, $process, [], $versionCache);
         $this->driverFactory = $driverFactory;
     }
 
     /**
      * @return VcsDriver|null
      */
-    public function getDriver()
+    public function getDriver(): ?VcsDriverInterface
     {
         if (false !== $this->driver) {
             return $this->driver;

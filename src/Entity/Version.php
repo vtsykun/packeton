@@ -10,7 +10,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Composer\Package\Version\VersionParser;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -18,7 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\VersionRepository")
+ * @ORM\Entity(repositoryClass="Packeton\Repository\VersionRepository")
  * @ORM\Table(
  *     name="package_version",
  *     uniqueConstraints={@ORM\UniqueConstraint(name="pkg_ver_idx",columns={"package_id","normalizedVersion"})},
@@ -55,7 +55,7 @@ class Version
     private $type;
 
     /**
-     * @ORM\Column(nullable=true)
+     * @ORM\Column(nullable=true, name="targetdir")
      */
     private $targetDir;
 
@@ -65,7 +65,7 @@ class Version
     private $extra = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Tag", inversedBy="versions")
+     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Tag", inversedBy="versions")
      * @ORM\JoinTable(name="version_tag",
      *     joinColumns={@ORM\JoinColumn(name="version_id", referencedColumnName="id")},
      *     inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id")}
@@ -74,8 +74,8 @@ class Version
     private $tags;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Packagist\WebBundle\Entity\Package", fetch="EAGER", inversedBy="versions")
-     * @Assert\Type(type="Packagist\WebBundle\Entity\Package")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Package", fetch="EAGER", inversedBy="versions")
+     * @Assert\Type(type="Packeton\Entity\Package")
      */
     private $package;
 
@@ -92,7 +92,7 @@ class Version
     private $version;
 
     /**
-     * @ORM\Column(length=191)
+     * @ORM\Column(length=191, name="normalizedversion")
      * @Assert\NotBlank()
      */
     private $normalizedVersion;
@@ -109,7 +109,7 @@ class Version
     private $license;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Author", inversedBy="versions")
+     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Author", inversedBy="versions")
      * @ORM\JoinTable(name="version_author",
      *     joinColumns={@ORM\JoinColumn(name="version_id", referencedColumnName="id")},
      *     inverseJoinColumns={@ORM\JoinColumn(name="author_id", referencedColumnName="id")}
@@ -118,32 +118,32 @@ class Version
     private $authors;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\RequireLink", mappedBy="version")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\RequireLink", mappedBy="version")
      */
     private $require;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\ReplaceLink", mappedBy="version")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\ReplaceLink", mappedBy="version")
      */
     private $replace;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\ConflictLink", mappedBy="version")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\ConflictLink", mappedBy="version")
      */
     private $conflict;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\ProvideLink", mappedBy="version")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\ProvideLink", mappedBy="version")
      */
     private $provide;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\DevRequireLink", mappedBy="version")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\DevRequireLink", mappedBy="version")
      */
     private $devRequire;
 
     /**
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\SuggestLink", mappedBy="version")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\SuggestLink", mappedBy="version")
      */
     private $suggest;
 
@@ -168,7 +168,7 @@ class Version
     private $binaries;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="text", nullable=true, name="includepaths")
      */
     private $includePaths;
 
@@ -178,22 +178,22 @@ class Version
     private $support;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="createdat")
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="softdeletedat")
      */
     private $softDeletedAt;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="updatedat")
      */
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, name="releasedat")
      */
     private $releasedAt;
 

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
 use Cron\CronExpression;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Validator\Constraint\ValidRegex;
-use Packagist\WebBundle\Webhook\Twig\PayloadRenderer;
+use Packeton\Entity\User;
+use Packeton\Entity\Webhook;
+use Packeton\Validator\Constraint\ValidRegex;
+use Packeton\Webhook\Twig\PayloadRenderer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -18,7 +18,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -26,7 +26,7 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 class WebhookType extends AbstractType
 {
     /**
-     * @var TokenStorage
+     * @var TokenStorageInterface
      */
     private $tokenStorage;
 
@@ -36,10 +36,10 @@ class WebhookType extends AbstractType
     private $renderer;
 
     /**
-     * @param TokenStorage $tokenStorage
+     * @param TokenStorageInterface $tokenStorage
      * @param PayloadRenderer $renderer
      */
-    public function __construct(TokenStorage $tokenStorage, PayloadRenderer $renderer)
+    public function __construct(TokenStorageInterface $tokenStorage, PayloadRenderer $renderer)
     {
         $this->tokenStorage = $tokenStorage;
         $this->renderer = $renderer;

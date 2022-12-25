@@ -10,9 +10,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Command;
+namespace Packeton\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,9 +20,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class CompileStatsCommand extends ContainerAwareCommand
+class CompileStatsCommand extends Command
 {
     protected $redis;
+
+    protected static $defaultName = 'packagist:stats:compile';
 
     /**
      * {@inheritdoc}
@@ -30,12 +32,10 @@ class CompileStatsCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('packagist:stats:compile')
             ->setDefinition([
                 new InputOption('force', null, InputOption::VALUE_NONE, 'Force a re-build of all stats'),
             ])
-            ->setDescription('Updates the redis stats indices')
-        ;
+            ->setDescription('Updates the redis stats indices');
     }
 
     /**

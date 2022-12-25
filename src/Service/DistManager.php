@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Service;
+namespace Packeton\Service;
 
 use Composer\Factory;
 use Composer\IO\NullIO;
-use Packagist\WebBundle\Composer\PackagistFactory;
-use Packagist\WebBundle\Entity\Version;
+use Packeton\Composer\PackagistFactory;
+use Packeton\Entity\Version;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;

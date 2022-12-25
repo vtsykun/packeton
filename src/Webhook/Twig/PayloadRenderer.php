@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook\Twig;
+namespace Packeton\Webhook\Twig;
 
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;

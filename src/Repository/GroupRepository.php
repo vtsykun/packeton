@@ -1,9 +1,10 @@
 <?php
 
-namespace Packagist\WebBundle\Repository;
+namespace Packeton\Repository;
 
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * GruopRepository
@@ -25,7 +26,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         $qb
             ->select('acl.version')
             ->distinct(true)
-            ->from('PackagistWebBundle:User', 'u')
+            ->from(User::class, 'u')
             ->innerJoin('u.groups', 'g')
             ->innerJoin('g.aclPermissions', 'acl')
             ->innerJoin('acl.package', 'p')
@@ -41,18 +42,18 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
     }
 
     /**
-     * @param User $user
+     * @param User|UserInterface $user
      * @param bool $hydration
      *
      * @return Package[]
      */
-    public function getAllowedPackagesForUser(User $user, $hydration = true)
+    public function getAllowedPackagesForUser(UserInterface $user, $hydration = true)
     {
         $qb = $this->_em->createQueryBuilder();
         $qb
             ->select('p.id')
-            ->distinct(true)
-            ->from('PackagistWebBundle:User', 'u')
+            ->distinct()
+            ->from(User::class, 'u')
             ->innerJoin('u.groups', 'g')
             ->innerJoin('g.aclPermissions', 'acl')
             ->innerJoin('acl.package', 'p')
@@ -62,7 +63,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         if ($hydration && $result) {
             $qb = $this->_em->createQueryBuilder();
             $qb->select('p')
-                ->from('PackagistWebBundle:Package', 'p')
+                ->from(User::class, 'p')
                 ->where('p.id IN (:ids)')
                 ->setParameter('ids', array_column($result, 'id'));
 

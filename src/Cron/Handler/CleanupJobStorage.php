@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron\Handler;
+namespace Packeton\Cron\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Job;
+use Packeton\Entity\Job;
 use Psr\Log\LoggerInterface;
 
 /**

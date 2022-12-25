@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Webhook;
+namespace Packeton\Webhook;
 
-use Packagist\WebBundle\Entity\Webhook;
-use Packagist\WebBundle\Webhook\Twig\ContextAwareInterface;
-use Packagist\WebBundle\Webhook\Twig\PayloadRenderer;
-use Packagist\WebBundle\Webhook\Twig\PlaceholderContext;
-use Packagist\WebBundle\Webhook\Twig\PlaceholderExtension;
-use Packagist\WebBundle\Webhook\Twig\WebhookContext;
+use Packeton\Entity\Webhook;
+use Packeton\Webhook\Twig\ContextAwareInterface;
+use Packeton\Webhook\Twig\PayloadRenderer;
+use Packeton\Webhook\Twig\PlaceholderContext;
+use Packeton\Webhook\Twig\PlaceholderExtension;
+use Packeton\Webhook\Twig\WebhookContext;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 

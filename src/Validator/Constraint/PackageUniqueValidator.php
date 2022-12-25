@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Validator\Constraint;
+namespace Packeton\Validator\Constraint;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Package;
+use Packeton\Entity\Package;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;

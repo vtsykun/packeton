@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Validator\Constraint;
+namespace Packeton\Validator\Constraint;
 
-use Packagist\WebBundle\Entity\Package;
+use Packeton\Entity\Package;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;

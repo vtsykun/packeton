@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Cron;
+namespace Packeton\Cron;
 
 use Okvpn\Bundle\CronBundle\Model\CommandStamp;
 

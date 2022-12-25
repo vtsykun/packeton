@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Service;
+namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Job;
+use Packeton\Entity\Job;
 
 class JobPersister
 {

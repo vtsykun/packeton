@@ -1,9 +1,9 @@
 <?php
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
 use Composer\Semver\VersionParser;
-use Packagist\WebBundle\Form\Model\PackagePermission;
+use Packeton\Form\Model\PackagePermission;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;

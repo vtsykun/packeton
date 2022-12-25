@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Webhook
  *
  * @ORM\Table(name="webhook")
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\WebhookRepository")
+ * @ORM\Entity(repositoryClass="Packeton\Repository\WebhookRepository")
  */
 class Webhook implements OwnerAwareInterface
 {
@@ -78,7 +78,7 @@ class Webhook implements OwnerAwareInterface
     /**
      * @var array|null
      *
-     * @ORM\Column(name="options", type="json_array", nullable=true)
+     * @ORM\Column(name="options", type="json", nullable=true)
      */
     private $options;
 
@@ -106,7 +106,7 @@ class Webhook implements OwnerAwareInterface
     /**
      * @var User|null
      *
-     * @ORM\ManyToOne(targetEntity="Packagist\WebBundle\Entity\User")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\User")
      * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL")
      */
     private $owner;
@@ -192,9 +192,9 @@ class Webhook implements OwnerAwareInterface
     {
         $parsed = parse_url($this->url);
         $scheme = isset($parsed['scheme']) ? $parsed['scheme'] . '://' : '';
-        $host = isset($parsed['host']) ? $parsed['host'] : '';
+        $host = $parsed['host'] ?? '';
         $port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
-        $user = isset($parsed['user']) ? $parsed['user'] : '';
+        $user = $parsed['user'] ?? '';
         $pass = isset($parsed['pass']) ? ':' . $parsed['pass']  : '';
         $pass = ($user || $pass) ? "$pass@" : '';
 

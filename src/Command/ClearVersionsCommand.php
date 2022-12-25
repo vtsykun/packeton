@@ -10,9 +10,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Command;
+namespace Packeton\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,25 +20,21 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class ClearVersionsCommand extends ContainerAwareCommand
+class ClearVersionsCommand extends Command
 {
+    protected static $defaultName = 'packagist:clear:versions';
+
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
         $this
-            ->setName('packagist:clear:versions')
-            ->setDefinition(array(
+            ->setDefinition([
                 new InputOption('force', null, InputOption::VALUE_NONE, 'Force execution, by default it runs in dry-run mode'),
                 new InputOption('filter', null, InputOption::VALUE_NONE, 'Filter (regex) against "<version name> <version number>"'),
-            ))
-            ->setDescription('Clears all versions from the databases')
-            ->setHelp(<<<EOF
-
-EOF
-            )
-        ;
+            ])
+            ->setDescription('Clears all versions from the databases');
     }
 
     /**

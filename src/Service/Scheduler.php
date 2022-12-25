@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Packagist\WebBundle\Service;
+namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Predis\Client as RedisClient;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Job;
+use Packeton\Entity\Package;
+use Packeton\Entity\Job;
 
 class Scheduler
 {

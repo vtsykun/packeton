@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Util;
+namespace Packeton\Util;
 
 class SshKeyHelper
 {

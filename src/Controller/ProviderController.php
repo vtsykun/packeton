@@ -1,22 +1,20 @@
 <?php
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Service\DistManager;
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
+use Packeton\Service\DistManager;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
-class ProviderController extends Controller
+class ProviderController extends AbstractController
 {
     /**
-     * @Route("/packages.json", name="root_packages", defaults={"_format" = "json"})
-     * @Method({"GET"})
+     * @Route("/packages.json", name="root_packages", defaults={"_format" = "json"}, methods={"GET"})
      */
     public function packagesAction()
     {
@@ -30,13 +28,12 @@ class ProviderController extends Controller
      * @Route(
      *     "/p/providers${hash}.json",
      *     requirements={"hash"="[a-f0-9]+"},
-     *     name="root_providers", defaults={"_format" = "json"}
+     *     name="root_providers", defaults={"_format" = "json"},
+     *     methods={"GET"}
      * )
      *
      * @param string $hash
      * @return Response
-     *
-     * @Method({"GET"})
      */
     public function providersAction($hash)
     {
@@ -53,13 +50,12 @@ class ProviderController extends Controller
      * @Route(
      *     "/p/{package}.json",
      *     requirements={"package"="[\w+\/\-\$]+"},
-     *     name="root_package", defaults={"_format" = "json"}
+     *     name="root_package", defaults={"_format" = "json"},
+     *     methods={"GET"}
      * )
      *
      * @param string $package
      * @return Response
-     *
-     * @Method({"GET"})
      */
     public function packageAction($package)
     {
@@ -86,10 +82,10 @@ class ProviderController extends Controller
      * @Route(
      *     "/zipball/{package}/{hash}",
      *     name="download_dist_package",
-     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "hash"="[a-f0-9]{40}\.[a-z]+?"}
+     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "hash"="[a-f0-9]{40}\.[a-z]+?"},
+     *     methods={"GET"}
      * )
-     * @Method({"GET"})
-     * @ParamConverter("package", options={"mapping": {"package": "name"}})
+     * todo ParamConverter("package", options={"mapping": {"package": "name"}})
      *
      * @param Package $package
      * @param string $hash

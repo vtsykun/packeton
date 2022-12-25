@@ -10,23 +10,20 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Controller;
+namespace Packeton\Controller;
 
 use Doctrine\ORM\NoResultException;
-use FOS\UserBundle\Model\UserInterface;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\SshCredentials;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Form\Type\CustomerUserType;
-use Packagist\WebBundle\Form\Type\SshKeyCredentialType;
-use Packagist\WebBundle\Model\RedisAdapter;
-use Packagist\WebBundle\Util\SshKeyHelper;
+use Packeton\Entity\Package;
+use Packeton\Entity\SshCredentials;
+use Packeton\Entity\User;
+use Packeton\Form\Type\CustomerUserType;
+use Packeton\Form\Type\SshKeyCredentialType;
+use Packeton\Model\RedisAdapter;
+use Packeton\Util\SshKeyHelper;
 use Pagerfanta\Adapter\DoctrineORMAdapter;
 use Pagerfanta\Pagerfanta;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,10 +34,39 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class UserController extends Controller
+class UserController extends AbstractController
 {
     /**
-     * @Template()
+     * Show the user.
+     * @Route("/profile", name="profile_show")
+     */
+    public function showAction()
+    {
+        return $this->render('profile/show.html.twig', [
+            'user' => $this->getUser(),
+        ]);
+    }
+
+    /**
+     * Show the user.
+     * @Route("/profile/edit", name="profile_edit")
+     */
+    public function editAction(Request $request)
+    {
+        throw new \LogicException('Not impls');
+    }
+
+    /**
+     * Change pass
+     * @Route("/change-password", name="change_password", methods={"GET", "POST"})
+     */
+    public function changePasswordAction(Request $request)
+    {
+        throw new \LogicException('Not impls');
+    }
+
+    /**
+     * todo Template()
      * @Route("/users/", name="users_list")
      *
      * @param Request $request
@@ -68,9 +94,9 @@ class UserController extends Controller
     }
 
     /**
-     * @Template()
+     * todo Template()
      * @Route("/users/{name}/update", name="users_update")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      *
      * @param User $user
      * @param  Request $request
@@ -87,7 +113,7 @@ class UserController extends Controller
     }
 
     /**
-     * @Template("PackagistWebBundle:User:update.html.twig")
+     * todo Template("PackagistWebBundle:User:update.html.twig")
      * @Route("/users/create", name="users_create")
      *
      * @param Request $request
@@ -121,9 +147,9 @@ class UserController extends Controller
     }
 
     /**
-     * @Template()
+     * todo Template()
      * @Route("/users/{name}/packages/", name="user_packages")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      */
     public function packagesAction(Request $req, User $user)
     {
@@ -160,7 +186,7 @@ class UserController extends Controller
     }
 
     /**
-     * @Template("PackagistWebBundle:User:sshkey.html.twig")
+     * todo Template("PackagistWebBundle:User:sshkey.html.twig")
      * @Route("/users/sshkey", name="user_add_sshkey")
      * {@inheritdoc}
      */
@@ -191,9 +217,9 @@ class UserController extends Controller
     }
 
     /**
-     * @Template()
+     * todo Template()
      * @Route("/users/{name}/", name="user_profile")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      */
     public function profileAction(Request $req, User $user)
     {
@@ -212,7 +238,7 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{name}/delete", name="user_delete")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      */
     public function deleteAction(Request $request, User $user)
     {
@@ -231,10 +257,9 @@ class UserController extends Controller
     }
 
     /**
-     * @Template()
-     * @Route("/users/{name}/favorites/", name="user_favorites")
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
-     * @Method({"GET"})
+     * todo Template()
+     * @Route("/users/{name}/favorites/", name="user_favorites", methods={"GET"})
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      */
     public function favoritesAction(Request $req, User $user)
     {
@@ -260,9 +285,8 @@ class UserController extends Controller
     }
 
     /**
-     * @Route("/users/{name}/favorites/", name="user_add_fav", defaults={"_format" = "json"})
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
-     * @Method({"POST"})
+     * @Route("/users/{name}/favorites/", name="user_add_fav", defaults={"_format" = "json"}, methods={"POST"})
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      */
     public function postFavoriteAction(Request $req, User $user)
     {
@@ -273,7 +297,7 @@ class UserController extends Controller
         $package = $req->request->get('package');
         try {
             $package = $this->getDoctrine()
-                ->getRepository('PackagistWebBundle:Package')
+                ->getRepository(Package::class)
                 ->findOneByName($package);
         } catch (NoResultException $e) {
             throw new NotFoundHttpException('The given package "'.$package.'" was not found.');
@@ -285,10 +309,15 @@ class UserController extends Controller
     }
 
     /**
-     * @Route("/users/{name}/favorites/{package}", name="user_remove_fav", defaults={"_format" = "json"}, requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"})
-     * @ParamConverter("user", options={"mapping": {"name": "username"}})
-     * @ParamConverter("package", options={"mapping": {"package": "name"}})
-     * @Method({"DELETE"})
+     * @Route(
+     *     "/users/{name}/favorites/{package}",
+     *     name="user_remove_fav",
+     *     defaults={"_format" = "json"},
+     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
+     *     methods={"DELETE"}
+     * )
+     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
+     * todo ParamConverter("package", options={"mapping": {"package": "name"}})
      */
     public function deleteFavoriteAction(User $user, Package $package)
     {
@@ -309,7 +338,7 @@ class UserController extends Controller
     protected function getUserPackages($req, $user)
     {
         $packages = $this->getDoctrine()
-            ->getRepository('PackagistWebBundle:Package')
+            ->getRepository(Package::class)
             ->getFilteredQueryBuilder(['maintainer' => $user->getId()], true);
 
         $paginator = new Pagerfanta(new DoctrineORMAdapter($packages, true));

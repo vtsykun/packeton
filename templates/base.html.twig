@@ -121,8 +121,7 @@
         <section class="wrapper wrapper-search">
             {% set showSearchDesc = showSearchDesc|default('show') %}
             <div class="container {% if showSearchDesc == 'show' %}with-description{% endif %}">
-{#                todo: #}
-{#                {{ render(controller('PackagistWebBundle:Web:searchForm', { req: app.request })) }}#}
+                {{ render(controller('Packeton\\Controller\\WebController::searchFormAction', { req: app.request })) }}
                 {%- if showSearchDesc == 'show' %}
                     <div class="row">
                         <div class="col-sm-9 hidden-xs">

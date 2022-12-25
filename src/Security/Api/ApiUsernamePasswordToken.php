@@ -1,9 +1,8 @@
 <?php
 
-namespace Packagist\WebBundle\Security\Api;
+namespace Packeton\Security\Api;
 
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
-use Symfony\Component\Security\Core\Role\RoleInterface;
 
 class ApiUsernamePasswordToken extends AbstractToken
 {
@@ -14,7 +13,7 @@ class ApiUsernamePasswordToken extends AbstractToken
      * @param string|object            $user        The username (like a nickname, email address, etc.), or a UserInterface instance or an object implementing a __toString method
      * @param mixed                    $credentials This usually is the password of the user
      * @param string                   $providerKey The provider key
-     * @param RoleInterface[]|string[] $roles       An array of roles
+     * @param string[] $roles       An array of roles
      *
      * @throws \InvalidArgumentException
      */
@@ -64,17 +63,17 @@ class ApiUsernamePasswordToken extends AbstractToken
     /**
      * {@inheritdoc}
      */
-    public function serialize()
+    public function __serialize(): array
     {
-        return serialize([$this->credentials, $this->providerKey, parent::serialize()]);
+        return [$this->credentials, $this->providerKey, parent::__serialize()];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function unserialize($serialized)
+    public function __unserialize(array $serialized): void
     {
-        list($this->credentials, $this->providerKey, $parentStr) = unserialize($serialized);
-        parent::unserialize($parentStr);
+        list($this->credentials, $this->providerKey, $parentStr) = $serialized;
+        parent::__unserialize($parentStr);
     }
 }

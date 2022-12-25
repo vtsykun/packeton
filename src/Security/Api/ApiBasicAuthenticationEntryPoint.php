@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Security\Api;
+namespace Packeton\Security\Api;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

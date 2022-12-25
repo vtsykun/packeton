@@ -1,9 +1,9 @@
 <?php
 
-namespace Packagist\WebBundle\Repository;
+namespace Packeton\Repository;
 
 use Doctrine\Common\Collections\Criteria;
-use Packagist\WebBundle\Entity\Webhook;
+use Packeton\Entity\Webhook;
 
 /**
  * WebhookRepository

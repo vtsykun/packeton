@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Package;
+namespace Packeton\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\Group;
-use Packagist\WebBundle\Entity\Package;
-use Packagist\WebBundle\Entity\User;
-use Packagist\WebBundle\Entity\Version;
-use Packagist\WebBundle\Security\Acl\PackagesAclChecker;
+use Packeton\Entity\Group;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
+use Packeton\Entity\Version;
+use Packeton\Security\Acl\PackagesAclChecker;
 use Symfony\Component\Routing\RouterInterface;
 
 class InMemoryDumper

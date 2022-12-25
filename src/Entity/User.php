@@ -10,53 +10,31 @@
  * file that was distributed with this source code.
  */
 
-namespace Packagist\WebBundle\Entity;
+namespace Packeton\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Packeton\Model\BaseUser;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use FOS\UserBundle\Model\User as BaseUser;
+use Symfony\Component\Security\Core\User\LegacyPasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @ORM\Entity(repositoryClass="Packagist\WebBundle\Repository\UserRepository")
- * @ORM\Table(name="fos_user")
- * @UniqueEntity(fields={"email"})
+ * @ORM\Entity(repositoryClass="Packeton\Repository\UserRepository")
+ * @ORM\Table(
+ *     name="fos_user",
+ *     uniqueConstraints={
+ *         @ORM\UniqueConstraint(columns={"email_canonical"}),
+ *         @ORM\UniqueConstraint(columns={"username_canonical"}),
+ *         @ORM\UniqueConstraint(columns={"confirmation_token"})
+ *      }
+ * )
  * @UniqueEntity(fields={"username"})
- * @ORM\AttributeOverrides({
- *     @ORM\AttributeOverride(name="username",
- *         column=@ORM\Column(
- *             name="username",
- *             type="string",
- *             length=191
- *         )
- *     ),
- *     @ORM\AttributeOverride(name="usernameCanonical",
- *         column=@ORM\Column(
- *             name="username_canonical",
- *             type="string",
- *             length=191,
- *             unique=true
- *         )
- *     ),
- *     @ORM\AttributeOverride(name="email",
- *         column=@ORM\Column(
- *             name="email",
- *             type="string",
- *             length=191
- *         )
- *     ),
- *     @ORM\AttributeOverride(name="emailCanonical",
- *         column=@ORM\Column(
- *             name="email_canonical",
- *             type="string",
- *             length=191,
- *             unique=true
- *         )
- *     )
- * })
+ * @UniqueEntity(fields={"email"})
  */
-class User extends BaseUser
+class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserInterface, LegacyPasswordAuthenticatedUserInterface
 {
     /**
      * @ORM\Id
@@ -66,9 +44,31 @@ class User extends BaseUser
     protected $id;
 
     /**
+     * @var string
+     * @ORM\Column(name="username", type="string", length=191)
+     */
+    protected $username;
+
+    /**
+     * @var string
+     * @ORM\Column(name="username_canonical", type="string", length=191)
+     */
+    protected $usernameCanonical;
+
+    /**
+     * @ORM\Column(name="email", type="string", length=191)
+     */
+    protected $email;
+
+    /**
+     * @ORM\Column(name="email_canonical", type="string", length=191)
+     */
+    protected $emailCanonical;
+
+    /**
      * @var Group[]|Collection
      *
-     * @ORM\ManyToMany(targetEntity="Packagist\WebBundle\Entity\Group")
+     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Group")
      * @ORM\JoinTable(name="fos_user_access_group",
      *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id", onDelete="CASCADE")}
@@ -86,35 +86,35 @@ class User extends BaseUser
     /**
      * @var Author[]
      *
-     * @ORM\OneToMany(targetEntity="Packagist\WebBundle\Entity\Author", mappedBy="owner")
+     * @ORM\OneToMany(targetEntity="Packeton\Entity\Author", mappedBy="owner")
      */
     private $authors;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", name="createdat")
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="string", length=20, nullable=true)
+     * @ORM\Column(type="string", length=20, nullable=true, name="apitoken")
      * @var string
      */
     private $apiToken;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name="githubid")
      * @var string
      */
     private $githubId;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name="githubtoken")
      * @var string
      */
     private $githubToken;
 
     /**
-     * @ORM\Column(type="boolean", options={"default"=true})
+     * @ORM\Column(type="boolean", options={"default"=true}, name="failurenotifications")
      * @var string
      */
     private $failureNotifications = true;

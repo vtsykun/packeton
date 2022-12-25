@@ -1,12 +1,12 @@
 <?php
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
-use Packagist\WebBundle\Entity\GroupAclPermission;
-use Packagist\WebBundle\Form\DataTransformer\GroupAclPermissionsTransformer;
+use Packeton\Entity\GroupAclPermission;
+use Packeton\Form\DataTransformer\GroupAclPermissionsTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;

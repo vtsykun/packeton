@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packagist\WebBundle\Repository;
+namespace Packeton\Repository;
 
 use Doctrine\ORM\EntityRepository;
-use Packagist\WebBundle\Entity\Job;
+use Packeton\Entity\Job;
 
 class JobRepository extends EntityRepository
 {
@@ -13,7 +13,7 @@ class JobRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        return 1 === $conn->executeUpdate('UPDATE job SET status = :status, startedAt = :now WHERE id = :id AND startedAt IS NULL', [
+        return 1 === $conn->executeStatement('UPDATE job SET status = :status, startedAt = :now WHERE id = :id AND startedAt IS NULL', [
             'id' => $jobId,
             'status' => Job::STATUS_STARTED,
             'now' => (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
@@ -24,7 +24,7 @@ class JobRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        $conn->executeUpdate('UPDATE job SET status = :newstatus WHERE status = :status AND startedAt < :timeout', [
+        $conn->executeStatement('UPDATE job SET status = :newstatus WHERE status = :status AND startedAt < :timeout', [
             'status' => Job::STATUS_STARTED,
             'newstatus' => Job::STATUS_TIMEOUT,
             'timeout' => (new \DateTime('-30 minutes', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
@@ -40,7 +40,7 @@ class JobRepository extends EntityRepository
             'now' => (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
         ]);
 
-        while ($row = $stmt->fetch(\PDO::FETCH_COLUMN)) {
+        while ($row = $stmt->fetchOne()) {
             yield $row;
         }
     }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Packagist\WebBundle\Form\Type;
+namespace Packeton\Form\Type;
 
-use Packagist\WebBundle\Entity\SshCredentials;
+use Packeton\Entity\SshCredentials;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\OptionsResolver\OptionsResolver;

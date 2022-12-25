@@ -1,6 +1,6 @@
 <?php
 
-namespace Packagist\WebBundle\Security;
+namespace Packeton\Security;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Firewall\ExceptionListener as BaseExceptionListener;
