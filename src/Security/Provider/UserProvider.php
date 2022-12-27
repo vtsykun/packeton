@@ -1,14 +1,6 @@
 <?php
 
-/*
- * This file is part of Packagist.
- *
- * (c) Jordi Boggiano <j.boggiano@seld.be>
- *     Nils Adermann <naderman@naderman.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Packeton\Security\Provider;
 
@@ -85,9 +77,9 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
     /**
      * {@inheritDoc}
      */
-    public function supportsClass($class)
+    public function supportsClass($class): bool
     {
-        return User::class === $class || is_subclass_of($class, User::class);
+        return User::class === $class;
     }
 
     private function getRepo(): UserRepository

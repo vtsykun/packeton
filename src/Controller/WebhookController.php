@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Attribute\Vars;
 use Packeton\Entity\Job;
 use Packeton\Entity\Package;
 use Packeton\Entity\Webhook;
@@ -22,6 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * @Route("/webhooks")
@@ -30,11 +32,11 @@ class WebhookController extends AbstractController
 {
     public function __construct(
         protected ManagerRegistry $registry,
-        protected HookTestAction $testAction
+        protected HookTestAction $testAction,
+        protected CsrfTokenManagerInterface $csrfTokenManager,
     ){}
 
     /**
-     * todo Template("PackagistWebBundle:Webhook:index.html.twig")
      * @Route("", name="webhook_index")
      *
      * {@inheritdoc}
@@ -53,16 +55,15 @@ class WebhookController extends AbstractController
 
         /** @var Webhook[] $webhooks */
         $webhooks = $qb->getQuery()->getResult();
-        $deleteCsrfToken = $this->get('security.csrf.token_manager')->getToken('webhook_delete');
+        $deleteCsrfToken = $this->csrfTokenManager->getToken('webhook_delete');
 
-        return [
+        return $this->render('webhook/index.html.twig', [
             'webhooks' => $webhooks,
             'deleteCsrfToken' => $deleteCsrfToken,
-        ];
+        ]);
     }
 
     /**
-     * todo Template("PackagistWebBundle:Webhook:update.html.twig")
      * @Route("/create", name="webhook_create")
      *
      * {@inheritdoc}
@@ -70,36 +71,37 @@ class WebhookController extends AbstractController
     public function createAction(Request $request)
     {
         $hook = new Webhook();
-        return $this->handleUpdate($request, $hook, 'Successfully saved.');
+        $data = $this->handleUpdate($request, $hook, 'Successfully saved.');
+
+        return $this->render('webhook/update.html.twig', $data);
     }
 
     /**
-     * todo Template("PackagistWebBundle:Webhook:update.html.twig")
      * @Route("/update/{id}", name="webhook_update", requirements={"id"="\d+"})
      *
      * {@inheritdoc}
      */
-    public function updateAction(Request $request, Webhook $hook)
+    public function updateAction(Request $request, #[Vars] Webhook $hook)
     {
         if (!$this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException();
         }
 
-        $response = $this->handleUpdate($request, $hook, 'Successfully saved.');
+        $data = $this->handleUpdate($request, $hook, 'Successfully saved.');
         if ($request->getMethod() === 'GET') {
-            $response['jobs'] = $this->registry
+            $data['jobs'] = $this->registry
                 ->getRepository(Job::class)
                 ->findJobsByType('webhook:send', $hook->getId());
         }
 
-        return $response;
+        return $this->render('webhook/update.html.twig', $data);
     }
 
     /**
      * @Route("/delete/{id}", name="webhook_delete")
      * {@inheritdoc}
      */
-    public function deleteAction(Request $request, Webhook $hook)
+    public function deleteAction(Request $request, #[Vars] Webhook $hook)
     {
         if (!$this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException;
@@ -134,19 +136,18 @@ class WebhookController extends AbstractController
             $response = null;
         }
 
-        return $this->render('@PackagistWeb/Webhook/hook_widget.html.twig', [
+        return $this->render('webhook/hook_widget.html.twig', [
             'response' => $response,
             'errors' => $result['exceptionMsg'] ?? null
         ]);
     }
 
     /**
-     * todo Template("PackagistWebBundle:Webhook:test.html.twig")
      * @Route("/test/{id}/send", name="webhook_test_action", requirements={"id"="\d+"})
      *
      * {@inheritdoc}
      */
-    public function testAction(Request $request, Webhook $entity)
+    public function testAction(Request $request, #[Vars] Webhook $entity)
     {
         if (!$this->isGranted('VIEW', $entity)) {
             throw new AccessDeniedException();
@@ -185,16 +186,16 @@ class WebhookController extends AbstractController
                 $errors = $form->getErrors(true);
             }
 
-            return $this->render('@PackagistWeb/Webhook/hook_widget.html.twig', [
+            return $this->render('webhook/hook_widget.html.twig', [
                 'response' => $response,
                 'errors' => $errors
             ]);
         }
 
-        return [
+        return $this->render('webhook/test.html.twig', [
             'form' => $form->createView(),
             'entity' => $entity,
-        ];
+        ]);
     }
 
     /**

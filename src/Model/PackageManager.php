@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Packeton\Model;
 
-use Doctrine\Common\Cache\Cache;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\User;
@@ -21,40 +20,18 @@ use Twig\Environment;
 
 class PackageManager
 {
-    protected $doctrine;
-    protected $mailer;
-    protected $twig;
-    protected $logger;
-    protected $providerManager;
-    protected $dumper;
-    protected $cache;
-    protected $authorizationChecker;
-    protected $packagistFactory;
-    protected $dispatcher;
-
     public function __construct(
-        ManagerRegistry $doctrine,
-        MailerInterface $mailer,
-        Environment $twig,
-        LoggerInterface $logger,
-        ProviderManager $providerManager,
-        InMemoryDumper $dumper,
-        AuthorizationCheckerInterface $authorizationChecker,
-        PackagistFactory $packagistFactory,
-        EventDispatcherInterface $dispatcher,
-        Cache $cache
-    ) {
-        $this->doctrine = $doctrine;
-        $this->mailer = $mailer;
-        $this->twig = $twig;
-        $this->logger = $logger;
-        $this->providerManager = $providerManager;
-        $this->authorizationChecker = $authorizationChecker;
-        $this->dumper = $dumper;
-        $this->packagistFactory = $packagistFactory;
-        $this->dispatcher = $dispatcher;
-        $this->cache = $cache;
-    }
+        protected ManagerRegistry $doctrine,
+        protected MailerInterface $mailer,
+        protected Environment $twig,
+        protected LoggerInterface $logger,
+        protected ProviderManager $providerManager,
+        protected InMemoryDumper $dumper,
+        protected AuthorizationCheckerInterface $authorizationChecker,
+        protected PackagistFactory $packagistFactory,
+        protected EventDispatcherInterface $dispatcher,
+        protected \Redis $redis,
+    ) {}
 
     public function deletePackage(Package $package)
     {
@@ -145,7 +122,7 @@ class PackageManager
             }
 
             $package->setUpdateFailureNotified(true);
-            $this->doctrine->getEntityManager()->flush();
+            $this->doctrine->getManager()->flush();
         }
 
         return true;
@@ -238,13 +215,13 @@ class PackageManager
             $user = null;
         }
 
-        $cacheKey = 'user_' . ($user ? $user->getId() : 0);
-        if ($cache && $this->cache->contains($cacheKey)) {
-            return $this->cache->fetch($cacheKey);
+        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getId() : 0);
+        if ($cache and $data = $this->redis->get($cacheKey)) {
+            return $data;
         }
 
         $data = $this->dumper->dump($user);
-        $this->cache->save($cacheKey, $data, 600);
+        $this->redis->setex($cacheKey, 3600, $data);
         return $data;
     }
 }

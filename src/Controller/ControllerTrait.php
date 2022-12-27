@@ -18,7 +18,6 @@ trait ControllerTrait
     protected function getPackagesMetadata($packages)
     {
         $ids = [];
-
         if (!count($packages)) {
             return [];
         }
@@ -26,10 +25,7 @@ trait ControllerTrait
         $favs = [];
         $solarium = false;
         foreach ($packages as $package) {
-            if ($package instanceof \Solarium_Document_ReadOnly) {
-                $solarium = true;
-                $ids[] = $package->id;
-            } elseif ($package instanceof Package) {
+            if ($package instanceof Package) {
                 $ids[] = $package->getId();
                 $favs[$package->getId()] = $this->favoriteManager->getFaverCount($package);
             } elseif (is_array($package)) {

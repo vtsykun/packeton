@@ -12,6 +12,7 @@
 
 namespace Packeton\Command;
 
+use Packeton\Entity\Package;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -45,7 +46,7 @@ class UpdatePackagesCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $verbose = $input->getOption('verbose');
         $force = $input->getOption('force');
@@ -59,7 +60,7 @@ class UpdatePackagesCommand extends Command
         $interval = $input->getOption('update-crawl-interval') ?: 14400; // 4 hour
 
         if ($package) {
-            $packages = [['id' => $doctrine->getRepository('PackagistWebBundle:Package')->findOneByName($package)->getId()]];
+            $packages = [['id' => $doctrine->getRepository(Package::class)->findOneByName($package)->getId()]];
             if ($force) {
                 $updateEqualRefs = true;
             }
@@ -68,7 +69,7 @@ class UpdatePackagesCommand extends Command
             $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
             $updateEqualRefs = true;
         } else {
-            $packages = $doctrine->getRepository('PackagistWebBundle:Package')->getStalePackages($interval);
+            $packages = $doctrine->getRepository(Package::class)->getStalePackages($interval);
         }
 
         $ids = [];

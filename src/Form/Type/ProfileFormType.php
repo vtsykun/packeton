@@ -12,21 +12,35 @@
 
 namespace Packeton\Form\Type;
 
-use FOS\UserBundle\Form\Type\ProfileFormType as BaseType;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class ProfileFormType extends BaseType
+class ProfileFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        parent::buildForm($builder, $options);
+        $builder
+            ->add('username', TextType::class, ['label' => 'Username', 'required' => true])
+            ->add('email', EmailType::class, ['label' => 'Email'])
+            ->add('current_password', PasswordType::class, [
+                'label' => 'Current password',
+                'mapped' => false,
+                'constraints' => [
+                    new NotBlank(),
+                    new UserPassword(),
+                ],
+            ]);
 
-        $builder->add('failureNotifications', null, array(
-            'required' => false,
-        ));
+        $builder->add('failureNotifications', CheckboxType::class, ['required' => false]);
     }
 
     /**

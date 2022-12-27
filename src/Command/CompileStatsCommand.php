@@ -41,7 +41,7 @@ class CompileStatsCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $verbose = $input->getOption('verbose');
         $force = $input->getOption('force');
@@ -130,6 +130,8 @@ class CompileStatsCommand extends Command
 
         $redis->rename('downloads:trending:new', 'downloads:trending');
         $redis->rename('downloads:absolute:new', 'downloads:absolute');
+
+        return 0;
     }
 
     // TODO could probably run faster with lua scripting

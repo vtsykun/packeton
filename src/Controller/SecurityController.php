@@ -1,14 +1,6 @@
-<?php declare(strict_types=1);
+<?php
 
-/*
- * This file is part of Packagist.
- *
- * (c) Jordi Boggiano <j.boggiano@seld.be>
- *     Nils Adermann <naderman@naderman.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Packeton\Controller;
 
@@ -39,7 +31,7 @@ class SecurityController extends AbstractController
      */
     public function request(Request $request, MailerInterface $mailer, \Redis $redis)
     {
-        throw new \LogicException('reset-password not supported');
+        throw new \LogicException('reset-password not supported, please contact to admin');
     }
 
     /**

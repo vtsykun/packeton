@@ -2,8 +2,10 @@
 
 namespace Packeton\Controller;
 
+use Packeton\Attribute\Vars;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
+use Packeton\Model\PackageManager;
 use Packeton\Service\DistManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -13,15 +15,18 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProviderController extends AbstractController
 {
+    public function __construct(
+        private readonly PackageManager $packageManager,
+    ){}
+
     /**
      * @Route("/packages.json", name="root_packages", defaults={"_format" = "json"}, methods={"GET"})
      */
     public function packagesAction()
     {
-        $manager = $this->container->get('packagist.package_manager');
-        $rootPackages = $manager->getRootPackagesJson($this->getUser());
+        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser());
 
-        return new Response(\json_encode($rootPackages), 200, ['Content-Type' => 'application/json']);
+        return new JsonResponse($rootPackages);
     }
 
     /**
@@ -37,13 +42,12 @@ class ProviderController extends AbstractController
      */
     public function providersAction($hash)
     {
-        $manager = $this->container->get('packagist.package_manager');
-        $providers = $manager->getProvidersJson($this->getUser(), $hash);
+        $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash);
         if (!$providers) {
             return $this->createNotFound();
         }
 
-        return new Response(\json_encode($providers), 200, ['Content-Type' => 'application/json']);
+        return new JsonResponse($providers);
     }
 
     /**
@@ -60,22 +64,20 @@ class ProviderController extends AbstractController
     public function packageAction($package)
     {
         $package = \explode('$', $package);
-        $manager = $this->container->get('packagist.package_manager');
         if (\count($package) !== 2) {
-            $package = $manager->getPackageJson($this->getUser(), $package[0]);
+            $package = $this->packageManager->getPackageJson($this->getUser(), $package[0]);
             if ($package) {
                 return new Response(\json_encode($package), 200, ['Content-Type' => 'application/json']);
             }
             return $this->createNotFound();
         }
 
-        $manager = $this->container->get('packagist.package_manager');
-        $package = $manager->getCachedPackageJson($this->getUser(), $package[0], $package[1]);
+        $package = $this->packageManager->getCachedPackageJson($this->getUser(), $package[0], $package[1]);
         if (!$package) {
             return $this->createNotFound();
         }
 
-        return new Response(\json_encode($package), 200, ['Content-Type' => 'application/json']);
+        return new JsonResponse($package);
     }
 
     /**
@@ -85,13 +87,12 @@ class ProviderController extends AbstractController
      *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "hash"="[a-f0-9]{40}\.[a-z]+?"},
      *     methods={"GET"}
      * )
-     * todo ParamConverter("package", options={"mapping": {"package": "name"}})
      *
      * @param Package $package
      * @param string $hash
      * @return Response
      */
-    public function zipballAction(Package $package, $hash)
+    public function zipballAction(#[Vars('name')] Package $package, $hash)
     {
         $distManager = $this->container->get(DistManager::class);
         if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match)) {
@@ -141,5 +142,19 @@ class ProviderController extends AbstractController
     protected function createNotFound()
     {
         return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function getSubscribedServices()
+    {
+        return array_merge(
+            parent::getSubscribedServices(),
+            [
+                DistManager::class
+            ]
+        );
     }
 }

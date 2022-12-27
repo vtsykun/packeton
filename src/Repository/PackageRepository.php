@@ -17,6 +17,8 @@ use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
+use Packeton\Entity\Package;
+use Packeton\Entity\User;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -122,7 +124,7 @@ class PackageRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        return $conn->fetchAll(
+        return $conn->fetchAllAssociative(
             'SELECT p.id FROM package p
             WHERE p.abandoned = false
             AND (
@@ -144,14 +146,14 @@ class PackageRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        return $conn->fetchAll('SELECT p.id FROM package p WHERE p.indexedAt IS NULL OR p.indexedAt <= p.crawledAt ORDER BY p.id ASC');
+        return $conn->fetchAllAssociative('SELECT p.id FROM package p WHERE p.indexedAt IS NULL OR p.indexedAt <= p.crawledAt ORDER BY p.id ASC');
     }
 
     public function getStalePackagesForDumping()
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        return $conn->fetchAll('SELECT p.id FROM package p WHERE p.dumpedAt IS NULL OR p.dumpedAt <= p.crawledAt AND p.crawledAt < NOW() ORDER BY p.id ASC');
+        return $conn->fetchAllAssociative('SELECT p.id FROM package p WHERE p.dumpedAt IS NULL OR p.dumpedAt <= p.crawledAt AND p.crawledAt < NOW() ORDER BY p.id ASC');
     }
 
     public function getPartialPackageByNameWithVersions($name)
@@ -410,7 +412,7 @@ class PackageRepository extends EntityRepository
                     'MONTH(p.createdAt) as month'
                 ]
             )
-            ->from('PackagistWebBundle:Package', 'p')
+            ->from(Package::class, 'p')
             ->groupBy('year, month');
 
         return $qb->getQuery()->getResult();
@@ -434,7 +436,7 @@ class PackageRepository extends EntityRepository
                 function ($item) {
                     return $this->find($item['id']);
                 },
-                $conn->executeQuery($sql, $params, ['ids' => Connection::PARAM_INT_ARRAY])->fetchAll()
+                $conn->executeQuery($sql, $params, ['ids' => Connection::PARAM_INT_ARRAY])->fetchAllAssociative()
             );
         }
 
@@ -463,8 +465,8 @@ class PackageRepository extends EntityRepository
                     [
                         'name' => $extensionName
                     ]
-                )->fetch();
-        } catch (\Exception $exception) {
+                )->fetchAssociative();
+        } catch (\Exception) {
             return false;
         }
 

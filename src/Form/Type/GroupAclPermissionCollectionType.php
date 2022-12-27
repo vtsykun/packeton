@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\GroupAclPermission;
+use Packeton\Entity\Package;
 use Packeton\Form\DataTransformer\GroupAclPermissionsTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
@@ -64,7 +65,7 @@ class GroupAclPermissionCollectionType extends AbstractType
             }
         );
 
-        $allPackages = $this->registry->getRepository('PackagistWebBundle:Package')
+        $allPackages = $this->registry->getRepository(Package::class)
             ->findAll();
 
         foreach ($allPackages as $package) {

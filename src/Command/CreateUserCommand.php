@@ -41,7 +41,7 @@ class CreateUserCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $username = $input->getArgument('username');
 
@@ -55,7 +55,7 @@ class CreateUserCommand extends Command
             }
 
             $output->writeln("User $username was updated successfully");
-            return;
+            return 0;
         }
 
         $password = $input->getOption('password') ?: $username;
@@ -64,5 +64,7 @@ class CreateUserCommand extends Command
         $this->userManipulator->addRole($username, 'ROLE_ADMIN');
 
         $output->writeln("User $username was created successfully");
+
+        return 0;
     }
 }

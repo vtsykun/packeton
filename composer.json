@@ -43,6 +43,7 @@
         "laminas/laminas-feed": "^2.20",
         "nelmio/cors-bundle": "^2.2",
         "okvpn/cron-bundle": "^0.1.1",
+        "oro/doctrine-extensions": "^2.0",
         "pagerfanta/core": "^3.7",
         "pagerfanta/doctrine-orm-adapter": "^3.7",
         "pagerfanta/twig": "^3.7",
@@ -103,6 +104,10 @@
     "replace": {
         "symfony/polyfill-ctype": "*",
         "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php81": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php74": "*",
+        "symfony/polyfill-php73": "*",
         "symfony/polyfill-php72": "*"
     },
     "scripts": {

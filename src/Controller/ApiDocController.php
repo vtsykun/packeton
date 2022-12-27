@@ -12,6 +12,7 @@
 
 namespace Packeton\Controller;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Version;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
@@ -21,13 +22,16 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ApiDocController extends AbstractController
 {
+    public function __construct(
+        protected ManagerRegistry $registry
+    ){}
+
     /**
-     * todo Template()
      * @Route("/apidoc", name="api_doc")
      */
     public function indexAction()
     {
-        $qb = $this->getDoctrine()->getRepository(Version::class)
+        $qb = $this->registry->getRepository(Version::class)
             ->createQueryBuilder('v');
 
         $qb->select(['v.name'])
@@ -41,8 +45,8 @@ class ApiDocController extends AbstractController
             $examplePackage = 'monolog/monolog';
         }
 
-        return [
+        return $this->render('apidoc/index.html.twig', [
             'examplePackage' => $examplePackage
-        ];
+        ]);
     }
 }

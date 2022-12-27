@@ -13,16 +13,24 @@
 namespace Packeton\Controller;
 
 use Doctrine\ORM\NoResultException;
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Attribute\Vars;
 use Packeton\Entity\Package;
 use Packeton\Entity\SshCredentials;
 use Packeton\Entity\User;
+use Packeton\Form\Type\ChangePasswordFormType;
 use Packeton\Form\Type\CustomerUserType;
+use Packeton\Form\Type\ProfileFormType;
 use Packeton\Form\Type\SshKeyCredentialType;
+use Packeton\Model\DownloadManager;
+use Packeton\Model\FavoriteManager;
 use Packeton\Model\RedisAdapter;
 use Packeton\Util\SshKeyHelper;
-use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,20 +38,33 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
 class UserController extends AbstractController
 {
+    use ControllerTrait;
+
+    public function __construct(
+        protected ManagerRegistry $registry,
+        protected FavoriteManager $favoriteManager,
+        protected DownloadManager $downloadManager,
+    ){}
+
     /**
      * Show the user.
      * @Route("/profile", name="profile_show")
      */
-    public function showAction()
+    public function showAction(Request $request)
     {
+        $packages = $this->getUserPackages($request, $this->getUser());
+
         return $this->render('profile/show.html.twig', [
             'user' => $this->getUser(),
+            'meta' => $this->getPackagesMetadata($packages),
+            'packages' => $packages,
         ]);
     }
 
@@ -53,7 +74,21 @@ class UserController extends AbstractController
      */
     public function editAction(Request $request)
     {
-        throw new \LogicException('Not impls');
+        $user = $this->getUser();
+        $form = $this->createForm(ProfileFormType::class, $user);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->getEM()->persist($user);
+            $this->getEM()->flush();
+
+            return $this->redirectToRoute('profile_show');
+        }
+
+        return $this->render('profile/edit_content.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
 
     /**
@@ -62,58 +97,69 @@ class UserController extends AbstractController
      */
     public function changePasswordAction(Request $request)
     {
-        throw new \LogicException('Not impls');
+        /** @var User $user */
+        $user = $this->getUser();
+        $form = $this->createForm(ChangePasswordFormType::class, $user);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $user->setPassword(
+                $this->container->get(UserPasswordHasherInterface::class)->hashPassword(
+                    $user,
+                    $form->get('plainPassword')->getData()
+                )
+            );
+
+            $this->getEM()->persist($user);
+            $this->getEM()->flush();
+
+            return $this->redirectToRoute('profile_show');
+        }
+
+        return $this->render('user/change_password.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
 
     /**
-     * todo Template()
      * @Route("/users/", name="users_list")
-     *
-     * @param Request $request
-     * @return array
      */
     public function listAction(Request $request)
     {
         $page = $request->query->get('page', 1);
 
-        $qb = $this->getDoctrine()->getRepository('PackagistWebBundle:User')
+        $qb = $this->registry->getRepository(User::class)
             ->createQueryBuilder('u');
         $qb->where("u.roles NOT LIKE '%ADMIN%'")
             ->orderBy('u.id', 'DESC');
 
-        $paginator = new Pagerfanta(new DoctrineORMAdapter($qb, false));
+        $paginator = new Pagerfanta(new QueryAdapter($qb, false));
         $paginator->setMaxPerPage(6);
 
         $csrfForm = $this->createFormBuilder([])->getForm();
+        $paginator->setCurrentPage($page);
+
         /** @var User[] $paginator */
-        $paginator->setCurrentPage($page, false, true);
-        return [
+        return $this->render('user/list.html.twig', [
             'users' => $paginator,
             'csrfForm' => $csrfForm
-        ];
+        ]);
     }
 
     /**
-     * todo Template()
      * @Route("/users/{name}/update", name="users_update")
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
-     *
-     * @param User $user
-     * @param  Request $request
-     * @return mixed
      */
-    public function updateAction(Request $request, User $user)
+    public function updateAction(Request $request, #[Vars(['name' => 'username'])] User $user)
     {
-        $token = $this->get('security.token_storage')->getToken();
-        if ($token && $token->getUsername() !== $user->getUsername() && !$user->isAdmin()) {
-            return $this->handleUpdate($request, $user, 'User has been saved.');
+        $currentUser = $this->getUser();
+        if ($currentUser->getUsername() !== $user->getUsername() && !$user->isAdmin()) {
+            return  $this->handleUpdate($request, $user, 'User has been saved.');
         }
 
-        throw new AccessDeniedHttpException('You can not update yourself');
+        throw new AccessDeniedHttpException('You can not update yourself or admin user');
     }
 
     /**
-     * todo Template("PackagistWebBundle:User:update.html.twig")
      * @Route("/users/create", name="users_create")
      *
      * @param Request $request
@@ -123,6 +169,7 @@ class UserController extends AbstractController
     {
         $user = new User();
         $user->generateApiToken();
+
         return $this->handleUpdate($request, $user, 'User has been saved.');
     }
 
@@ -133,60 +180,41 @@ class UserController extends AbstractController
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
                 $user = $form->getData();
-                $this->get('fos_user.user_manager')->updateUser($user);
+                if ($planPassword = $user->getPlainPassword()) {
+                    $user->setPassword(
+                        $this->container->get(UserPasswordHasherInterface::class)->hashPassword($user, $planPassword)
+                    );
+                }
+
+                $this->getEM()->persist($user);
+                $this->getEM()->flush();
 
                 $this->addFlash('success', $flashMessage);
                 return new RedirectResponse($this->generateUrl('users_list'));
             }
         }
 
-        return [
+        return $this->render('user/update.html.twig', [
             'form' => $form->createView(),
             'entity' => $user
-        ];
+        ]);
     }
 
     /**
-     * todo Template()
-     * @Route("/users/{name}/packages/", name="user_packages")
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
+     * @Route("/users/{name}/packages", name="user_packages")
      */
-    public function packagesAction(Request $req, User $user)
+    public function packagesAction(Request $req, #[Vars(['name' => 'username'])] User $user)
     {
         $packages = $this->getUserPackages($req, $user);
 
-        return [
+        return $this->render('user/packages.html.twig', [
             'packages' => $packages,
             'meta' => $this->getPackagesMetadata($packages),
             'user' => $user,
-        ];
+        ]);
     }
 
     /**
-     * @param Request $req
-     * @return Response
-     */
-    public function myProfileAction(Request $req)
-    {
-        $user = $this->container->get('security.token_storage')->getToken()->getUser();
-        if (!is_object($user) || !$user instanceof UserInterface) {
-            throw new AccessDeniedException('This user does not have access to this section.');
-        }
-
-        $packages = $this->getUserPackages($req, $user);
-
-        return $this->container->get('templating')->renderResponse(
-            'FOSUserBundle:Profile:show.html.twig',
-            [
-                'packages' => $packages,
-                'meta' => $this->getPackagesMetadata($packages),
-                'user' => $user,
-            ]
-        );
-    }
-
-    /**
-     * todo Template("PackagistWebBundle:User:sshkey.html.twig")
      * @Route("/users/sshkey", name="user_add_sshkey")
      * {@inheritdoc}
      */
@@ -199,7 +227,7 @@ class UserController extends AbstractController
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
                 $sshKey = $form->getData();
-                $em = $this->getDoctrine()->getManager();
+                $em = $this->registry->getManager();
                 $fingerprint = SshKeyHelper::getFingerprint($sshKey->getKey());
                 $sshKey->setFingerprint($fingerprint);
 
@@ -211,42 +239,37 @@ class UserController extends AbstractController
             }
         }
 
-        return [
+        return $this->render('user/sshkey.html.twig', [
             'form' => $form->createView(),
-        ];
+        ]);
     }
 
     /**
-     * todo Template()
-     * @Route("/users/{name}/", name="user_profile")
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
+     * @Route("/users/{name}", name="user_profile")
      */
-    public function profileAction(Request $req, User $user)
+    public function profileAction(Request $req, #[Vars(['name' => 'username'])] User $user)
     {
         $deleteForm = $this->createFormBuilder([])->getForm();
         $packages = $this->getUserPackages($req, $user);
 
-        $data = [
+        return $this->render('user/profile.html.twig', [
             'packages' => $packages,
             'meta' => $this->getPackagesMetadata($packages),
             'user' => $user,
             'deleteForm' => $deleteForm->createView()
-        ];
-
-        return $data;
+        ]);
     }
 
     /**
      * @Route("/users/{name}/delete", name="user_delete")
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
      */
-    public function deleteAction(Request $request, User $user)
+    public function deleteAction(Request $request, #[Vars(['name' => 'username'])] User $user)
     {
         $form = $this->createFormBuilder([])->getForm();
         $form->submit($request->request->get('form'));
         if ($form->isValid()) {
             $request->getSession()->save();
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->registry->getManager();
             $em->remove($user);
             $em->flush();
 
@@ -257,38 +280,27 @@ class UserController extends AbstractController
     }
 
     /**
-     * todo Template()
-     * @Route("/users/{name}/favorites/", name="user_favorites", methods={"GET"})
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
+     * @Route("/users/{name}/favorites", name="user_favorites", methods={"GET"})
      */
-    public function favoritesAction(Request $req, User $user)
+    public function favoritesAction(Request $req, #[Vars(['name' => 'username'])] User $user)
     {
-        try {
-            if (!$this->get('snc_redis.default')->isConnected()) {
-                $this->get('snc_redis.default')->connect();
-            }
-        } catch (\Exception $e) {
-            $this->get('session')->getFlashBag()->set('error', 'Could not connect to the Redis database.');
-            $this->get('logger')->notice($e->getMessage(), ['exception' => $e]);
-
-            return ['user' => $user, 'packages' => []];
-        }
-
         $paginator = new Pagerfanta(
-            new RedisAdapter($this->get('packagist.favorite_manager'), $user, 'getFavorites', 'getFavoriteCount')
+            new RedisAdapter($this->favoriteManager, $user, 'getFavorites', 'getFavoriteCount')
         );
 
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($req->query->get('page', 1), false, true);
+        $paginator->setCurrentPage($req->query->get('page', 1));
 
-        return ['packages' => $paginator, 'user' => $user];
+        return $this->render('user/favorites.html.twig', [
+            'packages' => $paginator,
+            'user' => $user
+        ]);
     }
 
     /**
-     * @Route("/users/{name}/favorites/", name="user_add_fav", defaults={"_format" = "json"}, methods={"POST"})
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
+     * @Route("/users/{name}/favorites", name="user_add_fav", defaults={"_format" = "json"}, methods={"POST"})
      */
-    public function postFavoriteAction(Request $req, User $user)
+    public function postFavoriteAction(Request $req, #[Vars(['name' => 'username'])] User $user)
     {
         if ($user->getId() !== $this->getUser()->getId()) {
             throw new AccessDeniedException('You can only change your own favorites');
@@ -296,16 +308,16 @@ class UserController extends AbstractController
 
         $package = $req->request->get('package');
         try {
-            $package = $this->getDoctrine()
+            $package = $this->registry
                 ->getRepository(Package::class)
                 ->findOneByName($package);
-        } catch (NoResultException $e) {
+        } catch (NoResultException) {
             throw new NotFoundHttpException('The given package "'.$package.'" was not found.');
         }
 
-        $this->get('packagist.favorite_manager')->markFavorite($user, $package);
+        $this->favoriteManager->markFavorite($user, $package);
 
-        return new Response('{"status": "success"}', 201);
+        return new JsonResponse(['status' => 'success'], 201);
     }
 
     /**
@@ -316,35 +328,46 @@ class UserController extends AbstractController
      *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
      *     methods={"DELETE"}
      * )
-     * todo ParamConverter("user", options={"mapping": {"name": "username"}})
-     * todo ParamConverter("package", options={"mapping": {"package": "name"}})
      */
-    public function deleteFavoriteAction(User $user, Package $package)
+    public function deleteFavoriteAction(#[Vars(['name' => 'username'])] User $user, #[Vars('name')] Package $package)
     {
         if ($user->getId() !== $this->getUser()->getId()) {
             throw new AccessDeniedException('You can only change your own favorites');
         }
 
-        $this->get('packagist.favorite_manager')->removeFavorite($user, $package);
+        $this->favoriteManager->removeFavorite($user, $package);
 
-        return new Response('{"status": "success"}', 204);
+        return new JsonResponse(['status' => 'success'], 204);
     }
 
     /**
      * @param Request $req
-     * @param User $user
+     * @param User|UserInterface $user
      * @return Pagerfanta
      */
     protected function getUserPackages($req, $user)
     {
-        $packages = $this->getDoctrine()
+        $packages = $this->registry
             ->getRepository(Package::class)
             ->getFilteredQueryBuilder(['maintainer' => $user->getId()], true);
 
-        $paginator = new Pagerfanta(new DoctrineORMAdapter($packages, true));
+        $paginator = new Pagerfanta(new QueryAdapter($packages, true));
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($req->query->get('page', 1), false, true);
+        $paginator->setCurrentPage($req->query->get('page', 1));
 
         return $paginator;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function getSubscribedServices()
+    {
+        return array_merge(
+            parent::getSubscribedServices(),
+            [
+                UserPasswordHasherInterface::class
+            ]
+        );
     }
 }

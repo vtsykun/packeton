@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\GroupAclPermission;
+use Packeton\Entity\Package;
 use Packeton\Form\Model\PackagePermission;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
@@ -59,7 +60,7 @@ class GroupAclPermissionsTransformer implements DataTransformerInterface
             $value = new ArrayCollection($value);
         }
 
-        $repo = $this->registry->getRepository('PackagistWebBundle:Package');
+        $repo = $this->registry->getRepository(Package::class);
         if ($value instanceof Collection) {
             $value = $value->filter(function (PackagePermission $permission) { return $permission->getSelected(); });
             $value = $value->map(

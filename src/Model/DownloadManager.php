@@ -21,7 +21,7 @@ use Packeton\Entity\Version;
 class DownloadManager
 {
     protected $redis;
-    protected $redisCommandLoaded = false;
+    protected $redisCommandSha = false;
 
     public function __construct(\Redis $redis)
     {
@@ -50,20 +50,18 @@ class DownloadManager
         }
 
         $date = new \DateTime();
-        $keys = array('dl:'.$package . $version);
+        $keys = ['dl:'.$package . $version];
         for ($i = 0; $i < 30; $i++) {
             $keys[] = 'dl:' . $package . $version . ':' . $date->format('Ymd');
             $date->modify('-1 day');
         }
 
         $vals = $this->redis->mget($keys);
-        $result = array(
+        return [
             'total' => (int) array_shift($vals) ?: 0,
             'monthly' => (int) array_sum($vals) ?: 0,
             'daily' => (int) $vals[0] ?: 0,
-        );
-
-        return $result;
+        ];
     }
 
     /**
@@ -108,16 +106,15 @@ class DownloadManager
     /**
      * Tracks downloads by updating the relevant keys.
      *
-     * @param array[] an array of arrays containing id (package id), vid (version id) and ip keys
+     * @param $jobs array[] an array of arrays containing id (package id), vid (version id) and ip keys
      */
     public function addDownloads(array $jobs)
     {
         $day = date('Ymd');
         $month = date('Ym');
 
-        if (!$this->redisCommandLoaded) {
-            $this->redis->getProfile()->defineCommand('downloadsIncr', 'Packagist\Redis\DownloadsIncr');
-            $this->redisCommandLoaded = true;
+        if (!$this->redisCommandSha) {
+            $this->loadScript();
         }
 
         $args = ['downloads'];
@@ -137,6 +134,39 @@ class DownloadManager
             $args[] = 'dl:'.$package.'-'.$version.':'.$day;
         }
 
-        $this->redis->downloadsIncr(...$args);
+        $this->redis->evalSha($this->redisCommandSha, $args, count($args));
+    }
+
+    protected function loadScript()
+    {
+        $script = <<<LUA
+local doIncr = false;
+local successful = 0;
+for i, key in ipairs(KEYS) do
+    if i == 1 then
+        -- nothing
+    elseif ((i - 2) % 7) == 0 then
+        local requests = redis.call("INCR", key);
+        if 1 == requests then
+            redis.call("EXPIRE", key, 86400);
+        end
+
+        doIncr = false;
+        if requests <= 10 then
+            doIncr = true;
+            successful = successful + 1;
+        end
+    elseif doIncr then
+        redis.call("INCR", key);
+    end
+end
+
+if successful > 0 then
+    redis.call("INCRBY", KEYS[1], successful);
+end
+
+return redis.status_reply("OK");
+LUA;
+        $this->redisCommandSha = $this->redis->script('load', $script);
     }
 }

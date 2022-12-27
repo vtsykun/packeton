@@ -91,7 +91,7 @@ class FavoriteManager
 
     public function isMarked(UserInterface $user, Package $package)
     {
-        return null !== $this->redis->zrank('usr:'.$user->getId().':fav', $package->getId());
+        return false !== $this->redis->zrank('usr:'.$user->getId().':fav', $package->getId());
     }
 
     /**

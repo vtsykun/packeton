@@ -16,6 +16,8 @@ use Doctrine\DBAL\ConnectionException;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
+use Packeton\Model\DownloadManager;
+use Packeton\Model\FavoriteManager;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 use Pagerfanta\Adapter\FixedAdapter;
@@ -34,7 +36,9 @@ class ExploreController extends AbstractController
     use ControllerTrait;
 
     public function __construct(
-        protected ManagerRegistry $registry
+        protected ManagerRegistry $registry,
+        protected DownloadManager $downloadManager,
+        protected FavoriteManager $favoriteManager,
     ) {}
 
     /**
@@ -56,12 +60,15 @@ class ExploreController extends AbstractController
             ->setParameter('abandoned', false)
             ->setMaxResults(10)
             ->getQuery()->getResult();
+
         try {
             $popular = [];
             $popularIds = $redis->zrevrange('downloads:trending', 0, 9);
             if ($popularIds) {
-                $popular = $pkgRepo->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
-                    ->getQuery()->useResultCache(true, 900)->getResult();
+                $popular = $pkgRepo->createQueryBuilder('p')
+                    ->where('p.id IN (:ids)')
+                    ->setParameter('ids', $popularIds)
+                    ->getQuery()->getResult();
                 usort($popular, function ($a, $b) use ($popularIds) {
                     return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;
                 });
@@ -103,9 +110,9 @@ class ExploreController extends AbstractController
                 ($req->get('page', 1) - 1) * $perPage,
                 $req->get('page', 1) * $perPage - 1
             );
-            $popular = $this->getDoctrine()->getRepository(Package::class)
+            $popular = $this->registry->getRepository(Package::class)
                 ->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
-                ->getQuery()->useResultCache(true, 900)->getResult();
+                ->getQuery()->getResult();
             usort($popular, function ($a, $b) use ($popularIds) {
                 return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;
             });

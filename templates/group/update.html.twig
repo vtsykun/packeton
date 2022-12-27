@@ -1,12 +1,11 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
-    <h2 class="title">Create a new group</h2>
-
+    <h2 class="title">Create a new ACL group</h2>
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
         {{ form_row(form.name) }}
-        <h3>Packages</h3>
+        <h3>Access matrix</h3>
             <div>
                 {% for permission in form.aclPermissions %}
                     <div>{{ form_row(permission) }}</div>

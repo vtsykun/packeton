@@ -106,7 +106,7 @@ class WebController extends AbstractController
     /**
      * @Route("/statistics", name="stats")
      */
-    public function statsAction()
+    public function statsAction(\Redis $redis)
     {
         $packages = $this->registry->getRepository(Package::class)
             ->getPackagesStatisticsByMonthAndYear();
@@ -155,35 +155,30 @@ class WebController extends AbstractController
 
         $downloadsStartDate = '2017-04-13';
 
-        try {
-            $redis = $this->get('snc_redis.default');
-            $downloads = $redis->get('downloads') ?: 0;
+        $downloads = $redis->get('downloads') ?: 0;
 
-            $date = new \DateTime($downloadsStartDate.' 00:00:00');
-            $yesterday = new \DateTime('-2days 00:00:00');
-            $dailyGraphStart = new \DateTime('-32days 00:00:00'); // 30 days before yesterday
+        $date = new \DateTime($downloadsStartDate.' 00:00:00');
+        $yesterday = new \DateTime('-2days 00:00:00');
+        $dailyGraphStart = new \DateTime('-32days 00:00:00'); // 30 days before yesterday
 
-            $dlChart = $dlChartMonthly = [];
-            while ($date <= $yesterday) {
-                if ($date > $dailyGraphStart) {
-                    $dlChart[$date->format('Y-m-d')] = 'downloads:'.$date->format('Ymd');
-                }
-                $dlChartMonthly[$date->format('Y-m')] = 'downloads:'.$date->format('Ym');
-                $date->modify('+1day');
+        $dlChart = $dlChartMonthly = [];
+        while ($date <= $yesterday) {
+            if ($date > $dailyGraphStart) {
+                $dlChart[$date->format('Y-m-d')] = 'downloads:'.$date->format('Ymd');
             }
-
-            $dlChart = array(
-                'labels' => array_keys($dlChart),
-                'values' => $redis->mget(array_values($dlChart))
-            );
-            $dlChartMonthly = array(
-                'labels' => array_keys($dlChartMonthly),
-                'values' => $redis->mget(array_values($dlChartMonthly))
-            );
-        } catch (ConnectionException $e) {
-            $downloads = 'N/A';
-            $dlChart = $dlChartMonthly = null;
+            $dlChartMonthly[$date->format('Y-m')] = 'downloads:'.$date->format('Ym');
+            $date->modify('+1day');
         }
+
+        $dlChart = [
+            'labels' => array_keys($dlChart),
+            'values' => $redis->mget(array_values($dlChart))
+        ];
+        $dlChartMonthly = [
+            'labels' => array_keys($dlChartMonthly),
+            'values' => $redis->mget(array_values($dlChartMonthly))
+        ];
+
 
         return $this->render('web/stats.html.twig', [
             'chart' => $chart,
@@ -212,15 +207,15 @@ class WebController extends AbstractController
         }
 
         if ($orderBys) {
-            $allowedSorts = array(
+            $allowedSorts = [
                 'downloads' => 1,
                 'favers' => 1
-            );
+            ];
 
-            $allowedOrders = array(
+            $allowedOrders = [
                 'asc' => 1,
                 'desc' => 1,
-            );
+            ];
 
             $filteredOrderBys = [];
 
@@ -291,31 +286,31 @@ class WebController extends AbstractController
             $query = $req->query->get('search_query');
             $query = $query['query'] ?? '';
 
-            return '?' . http_build_query(array(
+            return '?' . http_build_query([
                 'q' => $query,
-                'orderBys' => array(
-                    array(
+                'orderBys' => [
+                    [
                         'sort' => $sort,
                         'order' => $order
-                    )
-                )
-            ));
+                    ]
+                ]
+            ]);
         };
 
-        return array(
-            'downloads' => array(
+        return [
+            'downloads' => [
                 'title' => 'Sort by downloads',
                 'class' => 'glyphicon-arrow-down',
                 'arrowClass' => $makeDefaultArrow('downloads'),
                 'href' => $makeDefaultHref('downloads')
-            ),
-            'favers' => array(
+            ],
+            'favers' => [
                 'title' => 'Sort by favorites',
                 'class' => 'glyphicon-star',
                 'arrowClass' => $makeDefaultArrow('favers'),
                 'href' => $makeDefaultHref('favers')
-            ),
-        );
+            ],
+        ];
     }
 
     /**
@@ -348,11 +343,11 @@ class WebController extends AbstractController
     private function createAdapter()
     {
         /** @var QueryBuilder $qb */
-        $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
+        $qb = $this->registry->getManager()->createQueryBuilder();
         $qb->from(Package::class, 'p');
-        $repo = $this->get('doctrine')->getRepository(Package::class);
+        $repo = $this->registry->getRepository(Package::class);
         if (!$this->isGranted('ROLE_MAINTAINER')) {
-            $packages = $this->get('doctrine')->getRepository('PackagistWebBundle:Group')
+            $packages = $this->registry->getRepository(Group::class)
                 ->getAllowedPackagesForUser($this->getUser());
             $qb->andWhere('p.id IN (:ids)')
                 ->setParameter('ids', $packages);

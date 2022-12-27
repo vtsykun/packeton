@@ -1,40 +1,34 @@
 <?php
 
-/*
- * This file is part of Packagist.
- *
- * (c) Jordi Boggiano <j.boggiano@seld.be>
- *     Nils Adermann <naderman@naderman.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace Packeton\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\Webhook;
+use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
 use Packeton\Service\Scheduler;
 use Packeton\Webhook\HookBus;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-/**
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
 class ApiController extends AbstractController
 {
     use ControllerTrait;
 
     public function __construct(
-        protected ManagerRegistry $registry
+        protected ManagerRegistry $registry,
+        protected DownloadManager $downloadManager,
+        protected LoggerInterface $logger,
+        protected ValidatorInterface $validator,
     ){}
 
     /**
@@ -53,8 +47,8 @@ class ApiController extends AbstractController
         $user = $this->getUser();
         $package->addMaintainer($user);
         $package->setRepository($url);
-        $this->get(PackageManager::class)->updatePackageUrl($package);
-        $errors = $this->get('validator')->validate($package, null, ['Create']);
+        $this->container->get(PackageManager::class)->updatePackageUrl($package);
+        $errors = $this->validator->validate($package, null, ['Create']);
         if (count($errors) > 0) {
             $errorArray = [];
             foreach ($errors as $error) {
@@ -67,7 +61,7 @@ class ApiController extends AbstractController
             $em->persist($package);
             $em->flush();
         } catch (\Exception $e) {
-            $this->get('logger')->critical($e->getMessage(), array('exception', $e));
+            $this->logger->critical($e->getMessage(), ['exception', $e]);
             return new JsonResponse(['status' => 'error', 'message' => 'Error saving package'], 500);
         }
 
@@ -165,8 +159,8 @@ class ApiController extends AbstractController
         }
 
         $package->setRepository($payload['repository']);
-        $this->get(PackageManager::class)->updatePackageUrl($package);
-        $errors = $this->get('validator')->validate($package, null, ["Update"]);
+        $this->container->get(PackageManager::class)->updatePackageUrl($package);
+        $errors = $this->validator->validate($package, null, ["Update"]);
         if (count($errors) > 0) {
             $errorArray = [];
             foreach ($errors as $error) {
@@ -196,7 +190,7 @@ class ApiController extends AbstractController
             return new JsonResponse(['status' => 'error', 'message' => 'Package not found'], 200);
         }
 
-        $this->get('packagist.download_manager')->addDownloads(['id' => $result['id'], 'vid' => $result['vid'], 'ip' => $request->getClientIp()]);
+        $this->downloadManager->addDownloads(['id' => $result['id'], 'vid' => $result['vid'], 'ip' => $request->getClientIp()]);
 
         return new JsonResponse(['status' => 'success'], 201);
     }
@@ -205,9 +199,9 @@ class ApiController extends AbstractController
      * @Route("/jobs/{id}", name="get_job", requirements={"id"="[a-f0-9]+"}, defaults={"_format" = "json"}, methods={"GET"})
      * @inheritDoc
      */
-    public function getJobAction(Request $request, string $id)
+    public function getJobAction(string $id)
     {
-        return new JsonResponse($this->get('scheduler')->getJobStatus($id), 200);
+        return new JsonResponse($this->container->get(Scheduler::class)->getJobStatus($id), 200);
     }
 
     /**
@@ -246,7 +240,7 @@ class ApiController extends AbstractController
 
             $jobs[] = ['id' => $result['id'], 'vid' => $result['vid'], 'ip' => $ip];
         }
-        $this->get('packagist.download_manager')->addDownloads($jobs);
+        $this->downloadManager->addDownloads($jobs);
 
         if ($failed) {
             return new JsonResponse(['status' => 'partial', 'message' => 'Packages '.json_encode($failed).' not found'], 200);
@@ -341,13 +335,11 @@ class ApiController extends AbstractController
             return new Response(json_encode(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)']), 404);
         }
 
-        // put both updating the database and scanning the repository in a transaction
-        $em = $this->get('doctrine.orm.entity_manager');
         $jobs = [];
 
         foreach ($packages as $package) {
             $package->setAutoUpdated(true);
-            $em->flush($package);
+            $this->getEM()->flush($package);
 
             $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
             $jobs[] = $job->getId();

@@ -18,6 +18,7 @@ use Packeton\Entity\Version;
 use Packeton\Form\Type\AddMaintainerRequestType;
 use Packeton\Form\Type\PackageType;
 use Packeton\Form\Type\RemoveMaintainerRequestType;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,6 +32,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Composer\Package\Version\VersionParser;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class PackageController extends AbstractController
 {
@@ -41,6 +43,7 @@ class PackageController extends AbstractController
         protected DownloadManager $downloadManager,
         protected FavoriteManager $favoriteManager,
         protected ProviderManager $providerManager,
+        protected LoggerInterface $logger,
     ){}
 
     /**
@@ -90,7 +93,6 @@ class PackageController extends AbstractController
     }
 
     /**
-     * todo Template()
      * @Route("/packages/submit", name="submit")
      */
     public function submitPackageAction(Request $req)
@@ -108,24 +110,26 @@ class PackageController extends AbstractController
         $package->addMaintainer($user);
 
         $form->handleRequest($req);
-        if ($form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             try {
                 $em = $this->registry->getManager();
                 $em->persist($package);
                 $em->flush();
 
                 $this->providerManager->insertPackage($package);
-
-                $this->get('session')->getFlashBag()->set('success', $package->getName().' has been added to the package list, the repository will now be crawled.');
+                $this->addFlash('success', $package->getName().' has been added to the package list, the repository will now be crawled.');
 
                 return new RedirectResponse($this->generateUrl('view_package', ['name' => $package->getName()]));
             } catch (\Exception $e) {
-                $this->get('logger')->critical($e->getMessage(),['exception', $e]);
-                $this->get('session')->getFlashBag()->set('error', $package->getName().' could not be saved.');
+                $this->logger->critical($e->getMessage(), ['exception', $e]);
+                $this->addFlash('error', $package->getName().' could not be saved.');
             }
         }
 
-        return ['form' => $form->createView(), 'page' => 'submit'];
+        return $this->render(
+            'package/submitPackage.html.twig',
+            ['form' => $form->createView(), 'page' => 'submit']
+        );
     }
 
     /**
@@ -270,7 +274,7 @@ class PackageController extends AbstractController
      *     methods={"GET"}
      * )
      */
-    public function viewPackageAction(Request $req, $name)
+    public function viewPackageAction(Request $req, $name, CsrfTokenManagerInterface $csrfTokenManager)
     {
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
             if (!$this->isGranted('ROLE_MAINTAINER')) {
@@ -302,10 +306,10 @@ class PackageController extends AbstractController
             $data['favers'] = $this->favoriteManager->getFaverCount($package);
 
             if (empty($data['versions'])) {
-                $data['versions'] = new \stdClass;
+                $data['versions'] = [];
             }
 
-            $response = new JsonResponse(array('package' => $data));
+            $response = new JsonResponse(['package' => $data]);
             $response->setSharedMaxAge(12*3600);
 
             return $response;
@@ -367,7 +371,7 @@ class PackageController extends AbstractController
                 $this->isGranted('ROLE_DELETE_PACKAGES')
                 || $package->getMaintainers()->contains($this->getUser())
             )) {
-            $data['deleteVersionCsrfToken'] = $this->get('security.csrf.token_manager')->getToken('delete_version');
+            $data['deleteVersionCsrfToken'] = $csrfTokenManager->getToken('delete_version');
         }
 
         return $this->render('package/viewPackage.html.twig', $data);
@@ -962,7 +966,7 @@ class PackageController extends AbstractController
 
         $paginator = new Pagerfanta(new FixedAdapter($suggestCount, $packages));
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($page, false, true);
+        $paginator->setCurrentPage($page);
 
         $data['packages'] = $paginator;
         $data['count'] = $suggestCount;

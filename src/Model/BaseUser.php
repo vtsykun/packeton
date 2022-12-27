@@ -104,7 +104,7 @@ abstract class BaseUser
     public function __construct()
     {
         $this->enabled = false;
-        $this->roles = array();
+        $this->roles = [];
     }
 
     /**
@@ -299,6 +299,7 @@ abstract class BaseUser
     public function setUsername($username)
     {
         $this->username = $username;
+        $this->usernameCanonical = mb_strtolower($username);
 
         return $this;
     }
@@ -329,6 +330,7 @@ abstract class BaseUser
     public function setEmail($email)
     {
         $this->email = $email;
+        $this->emailCanonical = mb_strtolower($email);
 
         return $this;
     }
@@ -441,7 +443,7 @@ abstract class BaseUser
      */
     public function setRoles(array $roles)
     {
-        $this->roles = array();
+        $this->roles = [];
 
         foreach ($roles as $role) {
             $this->addRole($role);

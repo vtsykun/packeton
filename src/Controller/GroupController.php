@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packeton\Controller;
 
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Attribute\Vars;
 use Packeton\Entity\Group;
 use Packeton\Form\Type\GroupType;
-use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
@@ -13,8 +17,11 @@ use Symfony\Component\HttpFoundation\Request;
 
 class GroupController extends AbstractController
 {
+    public function __construct(
+        protected ManagerRegistry $registry
+    ){}
+
     /**
-     * todo Template()
      * @Route("/groups/", name="groups_index")
      *
      * @param Request $request
@@ -23,23 +30,23 @@ class GroupController extends AbstractController
     public function indexAction(Request $request)
     {
         $page = $request->query->get('page', 1);
-        $qb = $this->getDoctrine()->getRepository('PackagistWebBundle:Group')
+        $qb = $this->registry->getRepository(Group::class)
             ->createQueryBuilder('g');
         $qb->orderBy('g.id', 'DESC');
 
-        $paginator = new Pagerfanta(new DoctrineORMAdapter($qb, false));
-        $paginator->setMaxPerPage(6);
+        $paginator = new Pagerfanta(new QueryAdapter($qb, false));
+        $paginator->setMaxPerPage(10);
         $csrfForm = $this->createFormBuilder([])->getForm();
 
-        $paginator->setCurrentPage($page, false, true);
-        return [
+        $paginator->setCurrentPage($page);
+
+        return $this->render('group/index.html.twig', [
             'groups' => $paginator,
             'csrfForm' => $csrfForm
-        ];
+        ]);
     }
 
     /**
-     * todo Template("PackagistWebBundle:Group:update.html.twig")
      * @Route("/groups/create", name="groups_create")
      *
      * @param Request $request
@@ -48,20 +55,23 @@ class GroupController extends AbstractController
     public function createAction(Request $request)
     {
         $group = new Group();
-        return $this->handleUpdate($request, $group, 'Group has been saved successfully');
+        $data = $this->handleUpdate($request, $group, 'Group has been saved successfully');
+
+        return $this->render('group/update.html.twig', $data);
     }
 
     /**
-     * todo Template()
      * @Route("/groups/{id}/update", name="groups_update")
      *
      * @param Group $group
      * @param Request $request
      * @return mixed
      */
-    public function updateAction(Request $request, Group $group)
+    public function updateAction(Request $request, #[Vars] Group $group)
     {
-        return $this->handleUpdate($request, $group, 'Group has been saved successfully');
+        $data = $this->handleUpdate($request, $group, 'Group has been saved successfully');
+
+        return $this->render('group/update.html.twig', $data);
     }
 
     /**
@@ -71,12 +81,12 @@ class GroupController extends AbstractController
      * @param Request $request
      * @return mixed
      */
-    public function deleteAction(Request $request, Group $group)
+    public function deleteAction(Request $request, #[Vars] Group $group)
     {
         $form = $this->createFormBuilder([])->getForm();
         $form->submit($request->get('form'));
-        if ($form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em = $this->registry->getManager();
             $em->remove($group);
             $em->flush();
             $this->addFlash('success', 'Group ' . $group->getName() . ' has been deleted successfully');
@@ -96,7 +106,7 @@ class GroupController extends AbstractController
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
                 $group = $form->getData();
-                $em = $this->getDoctrine()->getManager();
+                $em = $this->registry->getManager();
                 $em->persist($group);
                 $em->flush();
 

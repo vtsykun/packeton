@@ -12,6 +12,8 @@
 
 namespace Packeton\Command;
 
+use Packeton\Entity\Package;
+use Packeton\Entity\Version;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,13 +42,13 @@ class ClearVersionsCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $force = $input->getOption('force');
         $filter = $input->getOption('filter');
         $doctrine = $this->getContainer()->get('doctrine');
 
-        $versionRepo = $doctrine->getRepository('PackagistWebBundle:Version');
+        $versionRepo = $doctrine->getRepository(Version::class);
 
         $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
         $ids = [];
@@ -82,7 +84,7 @@ class ClearVersionsCommand extends Command
 
         if ($force) {
             // mark packages as recently crawled so that they get updated
-            $packageRepo = $doctrine->getRepository('PackagistWebBundle:Package');
+            $packageRepo = $doctrine->getRepository(Package::class);
             foreach ($packageNames as $name) {
                 $package = $packageRepo->findOneByName($name);
                 $package->setCrawledAt(new \DateTime);
@@ -90,5 +92,7 @@ class ClearVersionsCommand extends Command
 
             $doctrine->getManager()->flush();
         }
+
+        return 0;
     }
 }

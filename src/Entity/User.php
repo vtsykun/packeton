@@ -74,7 +74,7 @@ class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserI
      *      inverseJoinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id", onDelete="CASCADE")}
      * )
      */
-    protected $groups;
+    private $groups;
 
     /**
      * @var Package[]
@@ -321,6 +321,26 @@ class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserI
     }
 
     /**
+     * @return ArrayCollection|Group[]
+     */
+    public function getGroups()
+    {
+        return $this->groups;
+    }
+
+    public function addGroup($group)
+    {
+        if (!$this->groups->contains($group)) {
+            $this->groups->add($group);
+        }
+    }
+
+    public function removeGroup($group)
+    {
+        $this->groups->removeElement($group);
+    }
+
+    /**
      * Returns the user roles
      *
      * @return array The roles
@@ -354,7 +374,7 @@ class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserI
 
     public function generateApiToken()
     {
-        $this->apiToken = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $this->apiToken = str_replace(['+', '/', '='], '', base64_encode(random_bytes(32)));
         $this->apiToken = substr($this->apiToken, 0, 20);
         return $this->apiToken;
     }

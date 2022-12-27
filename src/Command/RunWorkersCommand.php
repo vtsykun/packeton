@@ -18,7 +18,7 @@ class RunWorkersCommand extends Command
             ->addOption('messages', null, InputOption::VALUE_OPTIONAL, 'Amount of messages to process before exiting', 5000);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $logger = $this->getContainer()->get('logger');
         $worker = $this->getContainer()->get('packagist.queue_worker');
@@ -29,5 +29,7 @@ class RunWorkersCommand extends Command
         $worker->processMessages((int) $input->getOption('messages'));
 
         $logger->notice('Worker exiting successfully');
+
+        return 0;
     }
 }

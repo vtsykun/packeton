@@ -2,44 +2,14 @@
 
 namespace Packeton\DependencyInjection\Security;
 
-use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\SecurityFactoryInterface;
+use Packeton\Security\Api\ApiTokenAuthenticator;
+use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\AuthenticatorFactoryInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 
-class ApiHttpBasicFactory implements SecurityFactoryInterface
+class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function create(ContainerBuilder $container, $id, $config, $userProvider, $defaultEntryPoint)
-    {
-        $provider = 'packagist.security.authentication.provider.' . $id;
-        $container
-            ->setDefinition($provider, new ChildDefinition('packagist.security.authentication.provider'))
-            ->replaceArgument(1, new Reference('security.user_checker.'.$id));
-
-        // entry point
-        $entryPointId = $this->createEntryPoint($container, $id, $config, $defaultEntryPoint);
-
-        // listener
-        $listenerId = 'packagist.security.authentication.listener.'.$id;
-        $listener = $container->setDefinition($listenerId, new ChildDefinition('packagist.security.authentication.listener'));
-        $listener->replaceArgument(2, $id)
-            ->replaceArgument(3, new Reference($entryPointId));
-
-        return [$provider, $listenerId, $entryPointId];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPosition()
-    {
-        return 'http';
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -48,20 +18,31 @@ class ApiHttpBasicFactory implements SecurityFactoryInterface
         return 'api-basic';
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function addConfiguration(NodeDefinition $builder)
     {
     }
 
-    protected function createEntryPoint(ContainerBuilder $container, $id, $config, $defaultEntryPoint)
+    /**
+     * {@inheritdoc}
+     */
+    public function createAuthenticator(ContainerBuilder $container, string $firewallName, array $config, string $userProviderId)
     {
-        if (null !== $defaultEntryPoint) {
-            return $defaultEntryPoint;
-        }
+        $authenticatorId = 'packeton.security.authentication.' . $firewallName;
 
-        $entryPointId = 'packagist.authentication.entry_point.'.$id;
         $container
-            ->setDefinition($entryPointId, new ChildDefinition('packagist.authentication.entry_point'));
+            ->setDefinition($authenticatorId, new ChildDefinition(ApiTokenAuthenticator::class));
 
-        return $entryPointId;
+        return $authenticatorId;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPriority()
+    {
+        return 0;
     }
 }

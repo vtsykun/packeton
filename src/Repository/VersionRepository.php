@@ -96,7 +96,7 @@ class VersionRepository extends EntityRepository
         }
 
         foreach ($links as $link => $table) {
-            $rows = $this->getEntityManager()->getConnection()->fetchAll(
+            $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
                 'SELECT version_id, packageName as name, packageVersion as version FROM '.$table.' WHERE version_id IN (:ids)',
                 ['ids' => $versionIds],
                 ['ids' => Connection::PARAM_INT_ARRAY]
@@ -106,7 +106,7 @@ class VersionRepository extends EntityRepository
             }
         }
 
-        $rows = $this->getEntityManager()->getConnection()->fetchAll(
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
             'SELECT va.version_id, name, email, homepage, role FROM author a JOIN version_author va ON va.author_id = a.id WHERE va.version_id IN (:ids)',
             ['ids' => $versionIds],
             ['ids' => Connection::PARAM_INT_ARRAY]
@@ -122,7 +122,7 @@ class VersionRepository extends EntityRepository
 
     public function getVersionMetadataForUpdate(Package $package)
     {
-        $rows = $this->getEntityManager()->getConnection()->fetchAll(
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
             'SELECT id, normalizedVersion as normalized_version, source, softDeletedAt as soft_deleted_at FROM package_version v WHERE v.package_id = :id',
             ['id' => $package->getId()]
         );
@@ -239,7 +239,7 @@ class VersionRepository extends EntityRepository
                     'MONTH(v.releasedAt) as month'
                 ]
             )
-            ->from('PackagistWebBundle:Version', 'v')
+            ->from(Version::class, 'v')
             ->groupBy('year, month');
 
         return $qb->getQuery()->getResult();

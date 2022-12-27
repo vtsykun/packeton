@@ -22,16 +22,15 @@ class CustomerUserType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('email', EmailType::class, ['label' => 'form.email', 'translation_domain' => 'FOSUserBundle'])
-            ->add('username', null, ['label' => 'form.username', 'translation_domain' => 'FOSUserBundle'])
+            ->add('email', EmailType::class)
+            ->add('username', null)
             ->add('enabled', CheckboxType::class, ['required' => false])
             ->add('plainPassword', RepeatedType::class, [
                 'required' => false,
                 'type' => PasswordType::class,
-                'options' => ['translation_domain' => 'FOSUserBundle'],
-                'first_options' => ['label' => 'form.password'],
-                'second_options' => ['label' => 'form.password_confirmation'],
-                'invalid_message' => 'fos_user.password.mismatch',
+                'first_options' => ['label' => 'Password'],
+                'second_options' => ['label' => 'Repeat Password'],
+                'invalid_message' => 'The entered passwords do not match.',
             ])
             ->add('expiresAt', DateType::class, [
                 'required' => false,
@@ -47,6 +46,7 @@ class CustomerUserType extends AbstractType
             ->add('groups', EntityType::class, [
                 'choice_label' => 'name',
                 'class' => Group::class,
+                'label' => 'ACL Group',
                 'multiple' => true,
                 'required' => false
             ]);

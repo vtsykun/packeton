@@ -19,6 +19,12 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        packages:
+            pattern: (^(.+\.json$|/p/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/downloads/|/api/))+
+            api_basic: true
+            stateless: true
+            context: main
+
         main:
             lazy: true
             pattern:      .*
@@ -49,7 +55,7 @@ security:
         - { path: ^/reset-password, role: IS_AUTHENTICATED_ANONYMOUSLY }
     
         # Packagist
-        - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
+        - { path: (^(/change-password|/profile/?|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
         - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, role: ROLE_USER }
         - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
         - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
@@ -70,6 +76,7 @@ security:
         ROLE_DELETE_PACKAGES: ~
         ROLE_EDIT_PACKAGES: ~
     
-        ROLE_MAINTAINER:  [ ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
+        ROLE_FULL_CUSTOMER: [ ROLE_USER ] # Access to all packages without ACL group restriction
+        ROLE_MAINTAINER:  [ ROLE_FULL_CUSTOMER, ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
         ROLE_ADMIN:       [ ROLE_MAINTAINER ]
         ROLE_SUPERADMIN:  [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]

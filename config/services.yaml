@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    packagist_web.archive: []
 
 services:
     # default configuration for services in *this* file
@@ -22,15 +23,6 @@ services:
             - '../src/Kernel.php'
             - '../src/Repository/'
 
-    packeton_cache:
-        class: Doctrine\Common\Cache\FilesystemCache
-        arguments:
-            - '%kernel.cache_dir%/packeton'
-    
-    Packeton\Model\PackageManager:
-        arguments:
-            $cache: '@packeton_cache'
-
     packeton.menu.profile:
         class: Knp\Menu\MenuItem
         factory: ['@Packeton\Menu\MenuBuilder', createProfileMenu]
@@ -48,3 +40,16 @@ services:
         factory: ['@Packeton\Menu\MenuBuilder', createUserMenu]
         tags:
             - { name: knp_menu.menu, alias: user_menu }
+
+    Packeton\Resolver\ControllerArgumentResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 105 }
+
+    Packeton\Service\DistConfig:
+        arguments:
+            $config: '%packagist_web.archive%'
+
+    Packeton\Security\Api\ApiTokenAuthenticator:
+        abstract: true
+        arguments:
+            $userProvider: '@Packeton\Security\Provider\UserProvider'

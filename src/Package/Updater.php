@@ -181,7 +181,7 @@ class Updater
             return version_compare($aVersion, $bVersion);
         });
 
-        $versionRepository = $this->doctrine->getRepository('PackagistWebBundle:Version');
+        $versionRepository = $this->doctrine->getRepository(Version::class);
 
         if ($flags & self::DELETE_BEFORE) {
             foreach ($package->getVersions() as $version) {
@@ -329,7 +329,7 @@ class Updater
     ) {
         /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
-        $versionRepo = $this->doctrine->getRepository('PackagistWebBundle:Version');
+        $versionRepo = $this->doctrine->getRepository(Version::class);
         $version = new Version();
 
         $normVersion = $data->getVersion();
