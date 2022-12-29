@@ -4,7 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    packagist_web.archive: []
+    env(APP_COMPOSER_HOME): null
 
 services:
     # default configuration for services in *this* file
@@ -47,9 +47,24 @@ services:
 
     Packeton\Service\DistConfig:
         arguments:
-            $config: '%packagist_web.archive%'
+            $config: '%packeton_archive_opts%'
 
     Packeton\Security\Api\ApiTokenAuthenticator:
         abstract: true
         arguments:
             $userProvider: '@Packeton\Security\Provider\UserProvider'
+
+    Packeton\Composer\PackagistFactory:
+        arguments:
+            $composerHome: '%env(resolve:APP_COMPOSER_HOME)%'
+            $githubNoApi: '%packeton_github_no_api%'
+
+    Packeton\Service\UpdaterWorker:
+        tags:
+            - { name: queue_worker, topic: package:updates }
+
+    Packeton\Cron\CronWorker:
+        arguments:
+            - '@okvpn_cron.runner_default'
+        tags:
+            - { name: queue_worker, topic: cron:execute }

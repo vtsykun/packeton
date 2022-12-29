@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\Model;
 
+use Composer\MetadataMinifier\MetadataMinifier;
+use Composer\Semver\VersionParser;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\User;
@@ -189,16 +191,49 @@ class PackageManager
         return $this->dumper->dumpPackage($user, $package);
     }
 
+    public function getPackageV2Json(?User $user, string $package, bool $isDev = true, &$lastModified = null): array
+    {
+        if (!$metadata = $this->getCachedPackageJson($user, $package)) {
+            $metadata = $this->getPackageJson($user, $package);
+        }
+
+        $packages = $metadata['packages'] ?? [];
+        $metadata['minified'] = 'composer/2.0';
+
+        $obj = new \stdClass();
+        $obj->time = '1970-01-01T00:00:00+00:00';
+
+        foreach ($packages as $packName => $versions) {
+            $versions = array_filter($versions, fn($v) => $this->isValidStability($v, $isDev));
+
+            usort($versions, fn($v1, $v2) => -1 * version_compare($v1['version_normalized'], $v2['version_normalized']));
+            array_map(fn($v) => $obj->time < $v['time'] ? $obj->time = $v['time'] : null, $versions);
+
+            $metadata['packages'][$packName] = MetadataMinifier::minify(array_values($versions));
+        }
+
+        $lastModified = $obj->time;
+
+        return $metadata;
+    }
+
+    private function isValidStability($version, bool $isDev)
+    {
+        $stab = VersionParser::parseStability($version['version']);
+
+        return $isDev ? $stab === 'dev' : $stab !== 'dev';
+    }
+
     /**
      * @param User|null|object $user
      * @param string $package
-     * @param string $hash
+     * @param string|null $hash
      *
      * @return mixed
      */
-    public function getCachedPackageJson(?User $user, string $package, string $hash)
+    public function getCachedPackageJson(?User $user, string $package, string $hash = null)
     {
-        list($root, $providers, $packages) = $this->dumpInMemory($user);
+        [$root, $providers, $packages] = $this->dumpInMemory($user);
 
         if (false === isset($providers['providers'][$package]) ||
             ($hash && $providers['providers'][$package]['sha256'] !== $hash)
@@ -217,11 +252,11 @@ class PackageManager
 
         $cacheKey = 'pkg_user_cache_' . ($user ? $user->getId() : 0);
         if ($cache and $data = $this->redis->get($cacheKey)) {
-            return $data;
+            return json_decode($data, true);
         }
 
         $data = $this->dumper->dump($user);
-        $this->redis->setex($cacheKey, 3600, $data);
+        $this->redis->setex($cacheKey, 3600, json_encode($data));
         return $data;
     }
 }

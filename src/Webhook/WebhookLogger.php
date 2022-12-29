@@ -34,11 +34,9 @@ class WebhookLogger extends AbstractLogger
     /**
      * {@inheritdoc}
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
-        if (null !== $this->wrapperLogger) {
-            $this->wrapperLogger->log($level, $message, $context);
-        }
+        $this->wrapperLogger?->log($level, $message, $context);
 
         if (self::$levels[$level] >= $this->logLevel) {
             $this->logs[] = [$level, $message];

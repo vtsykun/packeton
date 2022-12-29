@@ -100,7 +100,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
         $this->forbiddenMethods = $this->forbiddenMethodsRegex = [];
         foreach ($methods as $class => $m) {
             $m = \array_filter(\is_array($m) ? $m : [$m], function ($value) use ($class) {
-                if (0 === strpos($value, '!regex')) {
+                if (str_starts_with($value, '!regex')) {
                     $value = trim(str_replace('!regex', '', $value));
                     if (false !== @preg_match($value, '')) {
                         $this->forbiddenMethodsRegex[$class][] = $value;

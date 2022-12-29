@@ -13,28 +13,17 @@ use Seld\Signal\SignalHandler;
 
 class QueueWorker
 {
-    private $logResetter;
-    private $redis;
-    private $logger;
-    private $doctrine;
     private $processedJobs = 0;
-    private $persister;
-    private $workersContainer;
+    private $logResetter;
 
     public function __construct(
-        LogResetter $logResetter,
-        \Redis $redis,
-        ManagerRegistry $doctrine,
-        LoggerInterface $logger,
-        JobPersister $persister,
-        ContainerInterface $workersContainer
+        private readonly \Redis $redis,
+        private readonly ManagerRegistry $doctrine,
+        private readonly LoggerInterface $logger,
+        private readonly JobPersister $persister,
+        private readonly ContainerInterface $workersContainer
     ) {
-        $this->logResetter = $logResetter;
-        $this->redis = $redis;
-        $this->logger = $logger;
-        $this->doctrine = $doctrine;
-        $this->persister = $persister;
-        $this->workersContainer = $workersContainer;
+        $this->logResetter = new LogResetter($logger);
     }
 
     /**
@@ -64,7 +53,7 @@ class QueueWorker
             }
 
             try {
-                $result = $this->redis->brpop('jobs', 2);
+                $result = $this->redis->brpop('jobs', 1);
             } catch (\Throwable $throwable) {
                 sleep(1);
                 if ($signal->isTriggered()) {
@@ -138,7 +127,7 @@ class QueueWorker
         $this->logger->debug('Processing ' . $job->getType() . ' job', ['job' => $job->getPayload()]);
 
         try {
-            $result = $processor->process($job, $signal);
+            $result = $processor($job, $signal);
         } catch (\Throwable $e) {
             $result = [
                 'status' => Job::STATUS_ERRORED,
@@ -183,7 +172,7 @@ class QueueWorker
             unset($result['exception']);
         }
 
-        $job = $repo->findOneById($jobId);
+        $job = $repo->find($jobId);
         $job->complete($result);
 
         $this->redis->setex('job-'.$job->getId(), 600, json_encode($result));

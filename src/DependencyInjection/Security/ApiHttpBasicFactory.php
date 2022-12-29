@@ -28,7 +28,7 @@ class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createAuthenticator(ContainerBuilder $container, string $firewallName, array $config, string $userProviderId)
+    public function createAuthenticator(ContainerBuilder $container, string $firewallName, array $config, string $userProviderId): string|array
     {
         $authenticatorId = 'packeton.security.authentication.' . $firewallName;
 

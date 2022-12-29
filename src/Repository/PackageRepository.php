@@ -68,7 +68,7 @@ class PackageRepository extends EntityRepository
     {
         $query = $this->getEntityManager()
             ->createQuery("SELECT p.name FROM Packeton\Entity\Package p WHERE p.type = :type")
-            ->setParameters(array('type' => $type));
+            ->setParameters(['type' => $type]);
 
         return $this->getPackageNamesForQuery($query);
     }
@@ -77,7 +77,7 @@ class PackageRepository extends EntityRepository
     {
         $query = $this->getEntityManager()
             ->createQuery("SELECT p.name FROM Packeton\Entity\Package p WHERE p.name LIKE :vendor")
-            ->setParameters(array('vendor' => $vendor.'/%'));
+            ->setParameters(['vendor' => $vendor.'/%']);
 
         return $this->getPackageNamesForQuery($query);
     }
@@ -89,9 +89,18 @@ class PackageRepository extends EntityRepository
             $selector .= ', p.'.$field;
         }
         $where = '';
+
+        $vendor = $filters['vendor'] ?? null;
+        unset($filters['vendor']);
+
         foreach ($filters as $filter => $val) {
-            $where .= 'p.'.$filter.' = :'.$filter;
+            $where .= ' p.'.$filter.' = :'.$filter;
         }
+        if ($vendor) {
+            $where .= ' p.name LIKE :vendor ';
+            $filters['vendor'] = $vendor .'/%';
+        }
+
         if ($where) {
             $where = 'WHERE '.$where;
         }

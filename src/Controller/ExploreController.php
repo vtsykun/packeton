@@ -12,7 +12,6 @@
 
 namespace Packeton\Controller;
 
-use Doctrine\DBAL\ConnectionException;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
@@ -42,7 +41,7 @@ class ExploreController extends AbstractController
     ) {}
 
     /**
-     * @Route("/", name="browse")
+     * @Route("", name="browse")
      */
     public function exploreAction(\Redis $redis)
     {
@@ -61,20 +60,16 @@ class ExploreController extends AbstractController
             ->setMaxResults(10)
             ->getQuery()->getResult();
 
-        try {
-            $popular = [];
-            $popularIds = $redis->zrevrange('downloads:trending', 0, 9);
-            if ($popularIds) {
-                $popular = $pkgRepo->createQueryBuilder('p')
-                    ->where('p.id IN (:ids)')
-                    ->setParameter('ids', $popularIds)
-                    ->getQuery()->getResult();
-                usort($popular, function ($a, $b) use ($popularIds) {
-                    return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;
-                });
-            }
-        } catch (ConnectionException $e) {
-            $popular = [];
+        $popular = [];
+        $popularIds = $redis->zrevrange('downloads:trending', 0, 9);
+        if ($popularIds) {
+            $popular = $pkgRepo->createQueryBuilder('p')
+                ->where('p.id IN (:ids)')
+                ->setParameter('ids', $popularIds)
+                ->getQuery()->getResult();
+            usort($popular, function ($a, $b) use ($popularIds) {
+                return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;
+            });
         }
 
         return $this->render('explore/explore.html.twig', [
@@ -86,73 +81,64 @@ class ExploreController extends AbstractController
     }
 
     /**
-     * todo Template()
      * @Route("/popular.{_format}", name="browse_popular", defaults={"_format"="html"})
      */
-    public function popularAction(Request $req)
+    public function popularAction(Request $req, \Redis $redis)
     {
-        try {
-            $redis = $this->get('snc_redis.default');
-            $perPage = $req->query->getInt('per_page', 15);
-            if ($perPage <= 0 || $perPage > 100) {
-                if ($req->getRequestFormat() === 'json') {
-                    return new JsonResponse(array(
-                        'status' => 'error',
-                        'message' => 'The optional packages per_page parameter must be an integer between 1 and 100 (default: 15)',
-                    ), 400);
-                }
-
-                $perPage = max(0, min(100, $perPage));
+        $perPage = $req->query->getInt('per_page', 15);
+        if ($perPage <= 0 || $perPage > 100) {
+            if ($req->getRequestFormat() === 'json') {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'The optional packages per_page parameter must be an integer between 1 and 100 (default: 15)',
+                ], 400);
             }
 
-            $popularIds = $redis->zrevrange(
-                'downloads:trending',
-                ($req->get('page', 1) - 1) * $perPage,
-                $req->get('page', 1) * $perPage - 1
-            );
-            $popular = $this->registry->getRepository(Package::class)
-                ->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
-                ->getQuery()->getResult();
-            usort($popular, function ($a, $b) use ($popularIds) {
-                return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;
-            });
-
-            $packages = new Pagerfanta(new FixedAdapter($redis->zcard('downloads:trending'), $popular));
-            $packages->setMaxPerPage($perPage);
-            $packages->setCurrentPage($req->get('page', 1), false, true);
-        } catch (ConnectionException $e) {
-            $packages = new Pagerfanta(new FixedAdapter(0, []));
+            $perPage = max(0, min(100, $perPage));
         }
 
-        $data = array(
-            'packages' => $packages,
+        $popularIds = $redis->zrevrange(
+            'downloads:trending',
+            ($req->get('page', 1) - 1) * $perPage,
+            $req->get('page', 1) * $perPage - 1
         );
+        $popular = $this->registry->getRepository(Package::class)
+            ->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
+            ->getQuery()->getResult();
+        usort($popular, function ($a, $b) use ($popularIds) {
+            return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;
+        });
+
+        $packages = new Pagerfanta(new FixedAdapter($redis->zcard('downloads:trending'), $popular));
+        $packages->setMaxPerPage($perPage);
+        $packages->setCurrentPage($req->get('page', 1));
+
+        $data = ['packages' => $packages];
         $data['meta'] = $this->getPackagesMetadata($data['packages']);
 
         if ($req->getRequestFormat() === 'json') {
-            $result = array(
+            $result = [
                 'packages' => [],
                 'total' => $packages->getNbResults(),
-            );
+            ];
 
             /** @var Package $package */
             foreach ($packages as $package) {
-                $url = $this->generateUrl('view_package', array('name' => $package->getName()), UrlGeneratorInterface::ABSOLUTE_URL);
-
-                $result['packages'][] = array(
+                $url = $this->generateUrl('view_package', ['name' => $package->getName()], UrlGeneratorInterface::ABSOLUTE_URL);
+                $result['packages'][] = [
                     'name' => $package->getName(),
                     'description' => $package->getDescription() ?: '',
                     'url' => $url,
                     'downloads' => $data['meta']['downloads'][$package->getId()],
                     'favers' => $data['meta']['favers'][$package->getId()],
-                );
+                ];
             }
 
             if ($packages->hasNextPage()) {
-                $params = array(
+                $params = [
                     '_format' => 'json',
                     'page' => $packages->getNextPage(),
-                );
+                ];
                 if ($perPage !== 15) {
                     $params['per_page'] = $perPage;
                 }
@@ -162,6 +148,6 @@ class ExploreController extends AbstractController
             return new JsonResponse($result);
         }
 
-        return $data;
+        return $this->render('explore/popular.html.twig', $data);
     }
 }

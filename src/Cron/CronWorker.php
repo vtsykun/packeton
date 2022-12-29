@@ -21,7 +21,7 @@ class CronWorker
      * @param Job $job
      * @return array
      */
-    public function process(Job $job): array
+    public function __invoke(Job $job): array
     {
         $payload = $job->getPayload();
         $envelope = unserialize($payload['envelope']);

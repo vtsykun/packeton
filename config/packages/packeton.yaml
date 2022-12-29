@@ -1,0 +1,8 @@
+packeton:
+    github_no_api: true
+    rss_max_items: 30
+    archive: true
+    archive_options:
+        format: zip
+        basedir: '%kernel.project_dir%/var/zipball'
+        endpoint: dist_host

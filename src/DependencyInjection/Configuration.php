@@ -17,11 +17,12 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder('packagist_web');
+        $treeBuilder = new TreeBuilder('packeton');
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
             ->children()
+                ->booleanNode('github_no_api')->end()
                 ->scalarNode('rss_max_items')->defaultValue(40)->end()
                 ->booleanNode('archive')
                     ->defaultFalse()
@@ -35,6 +36,16 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end();
+
+        $rootNode
+            ->validate()
+            ->always(function ($values) {
+                if (($values['archive'] ?? false) && !isset($values['archive_options'])) {
+                    throw new \InvalidArgumentException('archive_options is required if archive: true');
+                }
+
+                return $values;
+            })->end();
 
         return $treeBuilder;
     }

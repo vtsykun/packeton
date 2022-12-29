@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Packeton\Service;
 
-use Composer\Factory;
 use Composer\IO\NullIO;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\Version;
@@ -14,14 +13,12 @@ use Symfony\Component\Finder\Finder;
 
 class DistManager
 {
-    private $config;
     private $fileSystem;
-    private $packagistFactory;
 
-    public function __construct(DistConfig $config, PackagistFactory $packagistFactory)
-    {
-        $this->config = $config;
-        $this->packagistFactory = $packagistFactory;
+    public function __construct(
+        private readonly DistConfig $config,
+        private readonly PackagistFactory $packagistFactory
+    ) {
         $this->fileSystem = new Filesystem();
     }
 
@@ -36,7 +33,7 @@ class DistManager
         if ($this->fileSystem->exists($path)) {
             try {
                 $this->fileSystem->touch($path);
-            } catch (IOException $exception) {}
+            } catch (IOException) {}
 
             return $path;
         }
@@ -57,7 +54,7 @@ class DistManager
             if ($version = $this->config->guessesVersion($fileName)) {
                 try {
                     $this->fileSystem->touch($file->getRealPath());
-                } catch (IOException $exception) {}
+                } catch (IOException) {}
 
                 return [$file->getRealPath(), $version];
             }
@@ -77,9 +74,7 @@ class DistManager
             $package->getCredentials()
         );
 
-        $factory = new Factory();
-        $dm = $factory->createDownloadManager($io, $repository->getConfig());
-        $archiveManager = $factory->createArchiveManager($repository->getConfig(), $dm);
+        $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository);
         $archiveManager->setOverwriteFiles(false);
 
         $versions = $repository->getPackages();

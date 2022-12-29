@@ -40,7 +40,7 @@ class FeedController extends AbstractController
      */
     public function feedsAction()
     {
-        return [];
+        return $this->render('feed/feeds.html.twig');
     }
 
     /**

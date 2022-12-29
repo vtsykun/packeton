@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Event;
 
 use Packeton\Entity\Package;
+use Symfony\Contracts\EventDispatcher\Event;
 
 class UpdaterEvent extends Event
 {

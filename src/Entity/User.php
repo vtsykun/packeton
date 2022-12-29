@@ -142,6 +142,14 @@ class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserI
         parent::__construct();
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getUserIdentifier(): string
+    {
+        return $this->username;
+    }
+
     public function toArray()
     {
         return array(

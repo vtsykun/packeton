@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Packeton\Service;
 
@@ -16,62 +18,38 @@ use Packeton\Entity\Package;
 use Packeton\Package\Updater;
 use Packeton\Entity\Job;
 use Packeton\Model\PackageManager;
-use Packeton\Model\DownloadManager;
 use Seld\Signal\SignalHandler;
 use Composer\Factory;
 use Composer\Downloader\TransportException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Lock\Factory as LockFactory;
+use Symfony\Component\Lock\LockFactory;
 
 class UpdaterWorker
 {
-    private $logger;
-    private $doctrine;
-    private $updater;
-    private $lockFactory;
-    /** @var Scheduler */
-    private $scheduler;
-    private $packageManager;
-    private $downloadManager;
-    private $packagistFactory;
-    private $dispatcher;
-
     public function __construct(
-        LoggerInterface $logger,
-        ManagerRegistry $doctrine,
-        Updater $updater,
-        LockFactory $lockFactory,
-        Scheduler $scheduler,
-        PackageManager $packageManager,
-        DownloadManager $downloadManager,
-        PackagistFactory $packagistFactory,
-        EventDispatcherInterface $dispatcher
-    ) {
-        $this->logger = $logger;
-        $this->doctrine = $doctrine;
-        $this->updater = $updater;
-        $this->lockFactory = $lockFactory;
-        $this->scheduler = $scheduler;
-        $this->packageManager = $packageManager;
-        $this->downloadManager = $downloadManager;
-        $this->packagistFactory = $packagistFactory;
-        $this->dispatcher = $dispatcher;
-    }
+        private readonly LoggerInterface $logger,
+        private readonly ManagerRegistry $doctrine,
+        private readonly Updater $updater,
+        private readonly LockFactory $lockFactory,
+        private readonly PackageManager $packageManager,
+        private readonly PackagistFactory $packagistFactory,
+        private readonly EventDispatcherInterface $dispatcher
+    ) {}
 
-    public function process(Job $job, SignalHandler $signal): array
+    public function __invoke(Job $job, SignalHandler $signal): array
     {
         $em = $this->doctrine->getManager();
         $id = $job->getPayload()['id'];
         $packageRepository = $em->getRepository(Package::class);
         /** @var Package $package */
-        $package = $packageRepository->findOneById($id);
+        $package = $packageRepository->find($id);
         if (!$package) {
             $this->logger->info('Package is gone, skipping', ['id' => $id]);
 
             return ['status' => Job::STATUS_PACKAGE_GONE, 'message' => 'Package was deleted, skipped'];
         }
 
-        $locker = $this->lockFactory->createLock('package_update_' . $id, null);
+        $locker = $this->lockFactory->createLock('package_update_' . $id, 1800);
         $lockAcquired = $locker->acquire();
         if (!$lockAcquired) {
             return ['status' => Job::STATUS_RESCHEDULE, 'after' => new \DateTime('+30 seconds')];
@@ -109,7 +87,7 @@ class UpdaterWorker
                 $package = $this->doctrine->getManager()->getRepository(Package::class)->findOneById($package->getId());
             } else {
                 // reload the package just in case as Updater tends to merge it to a new instance
-                $package = $packageRepository->findOneById($id);
+                $package = $packageRepository->find($id);
             }
 
             try {

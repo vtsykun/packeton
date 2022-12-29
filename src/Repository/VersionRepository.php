@@ -92,6 +92,7 @@ class VersionRepository extends EntityRepository
                 'conflict' => [],
                 'provide' => [],
                 'replace' => [],
+                'keywords' => []
             ];
         }
 
@@ -115,6 +116,17 @@ class VersionRepository extends EntityRepository
             $versionId = $row['version_id'];
             unset($row['version_id']);
             $result[$versionId]['authors'][] = array_filter($row);
+        }
+
+        $keywords = $this->createQueryBuilder('v')
+            ->resetDQLPart('select')
+            ->select(['v.id as version_id', 'tag.name'])
+            ->leftJoin('v.tags', 'tag')
+            ->where('v.id  IN (:ids)')
+            ->setParameter('ids', $versionIds)
+            ->getQuery()->getArrayResult();
+        foreach ($keywords as $row) {
+            $result[$row['version_id']]['keywords'][] = $row['name'];
         }
 
         return $result;

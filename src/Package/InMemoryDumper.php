@@ -14,16 +14,11 @@ use Symfony\Component\Routing\RouterInterface;
 
 class InMemoryDumper
 {
-    private $registry;
-    private $checker;
-    private $router;
-
-    public function __construct(ManagerRegistry $registry, PackagesAclChecker $checker, RouterInterface $router)
-    {
-        $this->router = $router;
-        $this->registry = $registry;
-        $this->checker = $checker;
-    }
+    public function __construct(
+        private readonly ManagerRegistry $registry,
+        private readonly PackagesAclChecker $checker,
+        private readonly RouterInterface $router
+    ) {}
 
     /**
      * @param User|null $user
@@ -37,10 +32,11 @@ class InMemoryDumper
     /**
      * @param null|User $user
      * @param string|Package $package
+     * @param array $versionData
      *
      * @return array
      */
-    public function dumpPackage(?User $user, $package): array
+    public function dumpPackage(?User $user, $package, array $versionData = null): array
     {
         if (is_string($package)) {
             $package = $this->registry
@@ -65,7 +61,7 @@ class InMemoryDumper
         }
 
         $versionRepo = $this->registry->getRepository(Version::class);
-        $versionData = $versionRepo->getVersionData(\array_keys($versionIds));
+        $versionData = $versionData === null ? $versionRepo->getVersionData(\array_keys($versionIds)) : $versionData;
         foreach ($versionIds as $version) {
             $packageData[$version->getVersion()] = \array_merge(
                 $version->toArray($versionData),
@@ -78,13 +74,16 @@ class InMemoryDumper
 
     private function dumpRootPackages(User $user = null)
     {
-        list($providers, $packagesData) = $this->dumpUserPackages($user);
+        [$providers, $packagesData, $availablePackages] = $this->dumpUserPackages($user);
 
         $rootFile = ['packages' => []];
         $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
         $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
         $rootFile['notify-batch'] = $this->router->generate('track_download_batch');
         $rootFile['providers-url'] = '/p/%package%$%hash%.json';
+
+        $rootFile['metadata-url'] = '/p2/%package%.json';
+        $rootFile['available-packages'] = $availablePackages;
 
         $userHash = \hash('sha256', \json_encode($providers));
         $rootFile['provider-includes'] = [
@@ -103,9 +102,12 @@ class InMemoryDumper
                 ->getAllowedPackagesForUser($user) :
             $this->registry->getRepository(Package::class)->findAll();
 
-        $providers = $packagesData = $packagesData = [];
+        $providers = $packagesData = [];
+        $versionData = $this->getVersionData($packages);
+        $availablePackages = array_map(fn(Package $pkg) => $pkg->getName(), $packages);
+
         foreach ($packages as $package) {
-            if (!$packageData = $this->dumpPackage($user, $package)) {
+            if (!$packageData = $this->dumpPackage($user, $package, $versionData)) {
                 continue;
             }
 
@@ -118,6 +120,25 @@ class InMemoryDumper
             ];
         }
 
-        return [['providers' => $providers], $packagesData];
+        return [['providers' => $providers], $packagesData, $availablePackages];
+    }
+
+
+    private function getVersionData(array $packages)
+    {
+        $allPackagesIds = array_map(fn(Package $pkg) => $pkg->getId(), $packages);
+
+        $repo = $this->registry->getRepository(Version::class);
+
+        $allVersionsIds = $repo
+            ->createQueryBuilder('v')
+            ->resetDQLPart('select')
+            ->select('v.id')
+            ->where('IDENTITY(v.package) IN (:ids)')
+            ->setParameter('ids', $allPackagesIds)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return $repo->getVersionData($allVersionsIds);
     }
 }

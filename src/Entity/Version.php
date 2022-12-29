@@ -214,9 +214,12 @@ class Version
     public function toArray(array $versionData = [])
     {
         $tags = [];
-        foreach ($this->getTags() as $tag) {
-            /** @var $tag Tag */
-            $tags[] = $tag->getName();
+        if (isset($versionData[$this->id]['keywords'])) {
+            $tags = array_values(array_filter($versionData[$this->id]['keywords']));
+        } else {
+            foreach ($this->getTags() as $tag) {
+                $tags[] = $tag->getName();
+            }
         }
 
         if (isset($versionData[$this->id]['authors'])) {
@@ -229,7 +232,7 @@ class Version
             }
         }
 
-        $data = array(
+        $data = [
             'name' => $this->getName(),
             'description' => (string) $this->getDescription(),
             'keywords' => $tags,
@@ -241,7 +244,7 @@ class Version
             'source' => $this->getSource(),
             'dist' => $this->getDist(),
             'type' => $this->getType(),
-        );
+        ];
 
         if ($this->getReleasedAt()) {
             $data['time'] = $this->getReleasedAt()->format('Y-m-d\TH:i:sP');
@@ -262,14 +265,14 @@ class Version
             $data['bin'] = $this->getBinaries();
         }
 
-        $supportedLinkTypes = array(
+        $supportedLinkTypes = [
             'require'    => 'require',
             'devRequire' => 'require-dev',
             'suggest'    => 'suggest',
             'conflict'   => 'conflict',
             'provide'    => 'provide',
             'replace'    => 'replace',
-        );
+        ];
 
         foreach ($supportedLinkTypes as $method => $linkType) {
             if (isset($versionData[$this->id][$method])) {
@@ -449,13 +452,13 @@ class Version
      */
     public function getLicense()
     {
-        return json_decode($this->license, true);
+        return $this->license ? json_decode($this->license, true) : null;
     }
 
     /**
      * Set source
      *
-     * @param array $source
+     * @param array|null $source
      */
     public function setSource($source)
     {
@@ -469,13 +472,13 @@ class Version
      */
     public function getSource()
     {
-        return json_decode($this->source, true);
+        return $this->source ? json_decode($this->source, true) : null;
     }
 
     /**
      * Set dist
      *
-     * @param array $dist
+     * @param array|null $dist
      */
     public function setDist($dist)
     {
@@ -489,7 +492,7 @@ class Version
      */
     public function getDist()
     {
-        return json_decode($this->dist, true);
+        return $this->dist ? json_decode($this->dist, true) : null;
     }
 
     /**
@@ -524,7 +527,7 @@ class Version
      */
     public function getAutoload()
     {
-        return json_decode($this->autoload, true);
+        return $this->autoload ? json_decode($this->autoload, true) : null;
     }
 
     /**
@@ -544,7 +547,7 @@ class Version
      */
     public function getBinaries()
     {
-        return json_decode($this->binaries, true);
+        return $this->binaries ? json_decode($this->binaries, true) : null;
     }
 
     /**
@@ -564,7 +567,7 @@ class Version
      */
     public function getIncludePaths()
     {
-        return json_decode($this->includePaths, true);
+        return $this->includePaths ? json_decode($this->includePaths, true) : null;
     }
 
     /**
@@ -584,7 +587,7 @@ class Version
      */
     public function getSupport()
     {
-        return json_decode($this->support, true);
+        return $this->support ? json_decode($this->support, true) : null;
     }
 
     /**
@@ -610,7 +613,7 @@ class Version
     /**
      * Set releasedAt
      *
-     * @param \DateTime $releasedAt
+     * @param \DateTime|null $releasedAt
      */
     public function setReleasedAt($releasedAt)
     {

@@ -29,6 +29,7 @@ use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\Author;
 use Packeton\Entity\Package;
 use Packeton\Entity\Tag;
@@ -48,30 +49,9 @@ class Updater
     const DELETE_BEFORE = 2;
 
     /**
-     * Doctrine
-     * @var ManagerRegistry
-     */
-    protected $doctrine;
-
-    /**
-     * @var Factory
-     */
-    protected $factory;
-
-    /**
-     * @var DistConfig
-     */
-    protected $distConfig;
-
-    /**
      * @var ArchiveManager
      */
     protected $archiveManager;
-
-    /**
-     * @var EventDispatcherInterface
-     */
-    protected $dispatcher;
 
     /**
      * Supported link types
@@ -100,23 +80,12 @@ class Updater
         ],
     ];
 
-    /**
-     * Constructor
-     *
-     * @param ManagerRegistry $doctrine
-     * @param DistConfig $distConfig
-     * @param EventDispatcherInterface $dispatcher
-     */
     public function __construct(
-        ManagerRegistry $doctrine,
-        DistConfig $distConfig,
-        EventDispatcherInterface $dispatcher
+        protected ManagerRegistry $doctrine,
+        protected DistConfig $distConfig,
+        protected PackagistFactory $packagistFactory,
+        protected EventDispatcherInterface $dispatcher,
     ) {
-        $this->doctrine = $doctrine;
-        $this->distConfig = $distConfig;
-        $this->dispatcher = $dispatcher;
-        $this->factory = new Factory();
-
         ErrorHandler::register();
     }
 
@@ -139,6 +108,7 @@ class Updater
         if (null === $start) {
             $start = new \DateTime();
         }
+
         $deleteDate = clone $start;
         $deleteDate->modify('-1day');
 
@@ -146,8 +116,8 @@ class Updater
         $em = $this->doctrine->getManager();
         $rootIdentifier = null;
 
-        $downloadManager = $this->factory->createDownloadManager($io, $config);
-        $archiveManager = $this->factory->createArchiveManager($config, $downloadManager);
+        $downloadManager = $this->packagistFactory->createDownloadManager($io, $repository);
+        $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository, $downloadManager);
         $archiveManager->setOverwriteFiles(false);
 
         if ($repository instanceof VcsRepository) {
@@ -158,14 +128,14 @@ class Updater
         usort($versions, function (PackageInterface $a, PackageInterface $b) {
             $aVersion = $a->getVersion();
             $bVersion = $b->getVersion();
-            if ($aVersion === '9999999-dev' || 'dev-' === substr($aVersion, 0, 4)) {
+            if ($aVersion === '9999999-dev' || str_starts_with($aVersion, 'dev-')) {
                 $aVersion = 'dev';
             }
-            if ($bVersion === '9999999-dev' || 'dev-' === substr($bVersion, 0, 4)) {
+            if ($bVersion === '9999999-dev' || str_starts_with($bVersion, 'dev-')) {
                 $bVersion = 'dev';
             }
-            $aIsDev = $aVersion === 'dev' || substr($aVersion, -4) === '-dev';
-            $bIsDev = $bVersion === 'dev' || substr($bVersion, -4) === '-dev';
+            $aIsDev = $aVersion === 'dev' || str_ends_with($aVersion, '-dev');
+            $bIsDev = $bVersion === 'dev' || str_ends_with($bVersion, '-dev');
 
             // push dev versions to the end
             if ($aIsDev !== $bIsDev) {
@@ -221,7 +191,7 @@ class Updater
             if ($lastUpdated) {
                 $em->flush();
                 $em->clear();
-                $package = $em->merge($package);
+                $package = $em->find(Package::class, $package->getId());
                 $version = $result['object'] ?? null;
                 if (!isset($result['id']) && $version instanceof Version) {
                     $result['id'] = $version->getId();
@@ -243,7 +213,7 @@ class Updater
         }
 
         // mark versions that did not update as updated to avoid them being pruned
-        $em->getConnection()->executeUpdate(
+        $em->getConnection()->executeStatement(
             'UPDATE package_version SET updatedAt = :now, softDeletedAt = NULL WHERE id IN (:ids)',
             ['now' => date('Y-m-d H:i:s'), 'ids' => $idsToMarkUpdated],
             ['ids' => Connection::PARAM_INT_ARRAY]
@@ -256,7 +226,7 @@ class Updater
             } else {
                 // set it to be soft-deleted so next update that occurs after deleteDate (1day) if the
                 // version is still missing it will be really removed
-                $em->getConnection()->executeUpdate(
+                $em->getConnection()->executeStatement(
                     'UPDATE package_version SET softDeletedAt = :now WHERE id = :id',
                     ['now' => date('Y-m-d H:i:s'), 'id' => $version['id']]
                 );
@@ -268,8 +238,8 @@ class Updater
             $isNewPackage = true;
         } elseif ($deletedVersions || $updatedVersions || $newVersions) {
             $this->dispatcher->dispatch(
-                UpdaterEvent::VERSIONS_UPDATE,
-                new UpdaterEvent($package, $flags, $newVersions, $updatedVersions, $deletedVersions)
+                new UpdaterEvent($package, $flags, $newVersions, $updatedVersions, $deletedVersions),
+                UpdaterEvent::VERSIONS_UPDATE
             );
         }
 
@@ -291,7 +261,7 @@ class Updater
         }
 
         if (true === $isNewPackage) {
-            $this->dispatcher->dispatch(UpdaterEvent::PACKAGE_PERSIST, new UpdaterEvent($package, $flags));
+            $this->dispatcher->dispatch(new UpdaterEvent($package, $flags), UpdaterEvent::PACKAGE_PERSIST);
         }
 
         return $package;
@@ -445,14 +415,14 @@ class Updater
             $version->getTags()->clear();
         }
 
-        $authorRepository = $this->doctrine->getRepository('PackagistWebBundle:Author');
+        $authorRepository = $this->doctrine->getRepository(Author::class);
 
         $version->getAuthors()->clear();
         if ($data->getAuthors()) {
             foreach ($data->getAuthors() as $authorData) {
                 $author = null;
 
-                foreach (array('email', 'name', 'homepage', 'role') as $field) {
+                foreach (['email', 'name', 'homepage', 'role'] as $field) {
                     if (isset($authorData[$field])) {
                         $authorData[$field] = trim($authorData[$field]);
                         if ('' === $authorData[$field]) {
@@ -468,19 +438,19 @@ class Updater
                     continue;
                 }
 
-                $author = $authorRepository->findOneBy(array(
+                $author = $authorRepository->findOneBy([
                     'email' => $authorData['email'],
                     'name' => $authorData['name'],
                     'homepage' => $authorData['homepage'],
                     'role' => $authorData['role'],
-                ));
+                ]);
 
                 if (!$author) {
                     $author = new Author();
                     $em->persist($author);
                 }
 
-                foreach (array('email', 'name', 'homepage', 'role') as $field) {
+                foreach (['email', 'name', 'homepage', 'role'] as $field) {
                     if (isset($authorData[$field])) {
                         $author->{'set'.$field}($authorData[$field]);
                     }
@@ -501,7 +471,7 @@ class Updater
             $links = [];
             foreach ($data->{$opts['method']}() as $link) {
                 $constraint = $link->getPrettyConstraint();
-                if (false !== strpos($constraint, ',') && false !== strpos($constraint, '@')) {
+                if (str_contains($constraint, ',') && str_contains($constraint, '@')) {
                     $constraint = preg_replace_callback('{([><]=?\s*[^@]+?)@([a-z]+)}i', function ($matches) {
                         if ($matches[2] === 'stable') {
                             return $matches[1];
@@ -550,7 +520,7 @@ class Updater
             }
 
             foreach ($suggests as $linkPackageName => $linkPackageVersion) {
-                $link = new SuggestLink;
+                $link = new SuggestLink();
                 $link->setPackageName($linkPackageName);
                 $link->setPackageVersion($linkPackageVersion);
                 $version->addSuggestLink($link);
@@ -635,11 +605,7 @@ class Updater
         try {
             $driver = $repository->getDriver();
             $composerInfo = $driver->getComposerInformation($driver->getRootIdentifier());
-            if (isset($composerInfo['readme'])) {
-                $readmeFile = $composerInfo['readme'];
-            } else {
-                $readmeFile = 'README.md';
-            }
+            $readmeFile = $composerInfo['readme'] ?? 'README.md';
 
             $ext = substr($readmeFile, strrpos($readmeFile, '.'));
             if ($ext === $readmeFile) {
@@ -727,7 +693,7 @@ class Updater
      */
     private function prepareReadme($readme, $isGithub = false, $owner = null, $repo = null)
     {
-        $elements = array(
+        $elements = [
             'p',
             'br',
             'small',
@@ -744,14 +710,14 @@ class Updater
             'table', 'thead', 'tbody', 'th', 'tr', 'td',
             'a', 'span',
             'img',
-        );
+        ];
 
-        $attributes = array(
+        $attributes = [
             'img.src', 'img.title', 'img.alt', 'img.width', 'img.height', 'img.style',
             'a.href', 'a.target', 'a.rel', 'a.id',
             'td.colspan', 'td.rowspan', 'th.colspan', 'th.rowspan',
             '*.class'
-        );
+        ];
 
         $config = \HTMLPurifier_Config::createDefault();
         $config->set('HTML.AllowedElements', implode(',', $elements));
@@ -768,11 +734,11 @@ class Updater
         $links = $dom->getElementsByTagName('a');
         foreach ($links as $link) {
             $link->setAttribute('rel', 'nofollow noindex noopener external');
-            if ('#' === substr($link->getAttribute('href'), 0, 1)) {
+            if (str_starts_with($link->getAttribute('href'), '#')) {
                 $link->setAttribute('href', '#user-content-'.substr($link->getAttribute('href'), 1));
-            } elseif ('mailto:' === substr($link->getAttribute('href'), 0, 7)) {
+            } elseif (str_starts_with($link->getAttribute('href'), 'mailto:')) {
                 // do nothing
-            } elseif ($isGithub && false === strpos($link->getAttribute('href'), '//')) {
+            } elseif ($isGithub && !str_contains($link->getAttribute('href'), '//')) {
                 $link->setAttribute(
                     'href',
                     'https://github.com/'.$owner.'/'.$repo.'/blob/HEAD/'.$link->getAttribute('href')
@@ -784,7 +750,7 @@ class Updater
             // convert relative to absolute images
             $images = $dom->getElementsByTagName('img');
             foreach ($images as $img) {
-                if (false === strpos($img->getAttribute('src'), '//')) {
+                if (!str_contains($img->getAttribute('src'), '//')) {
                     $img->setAttribute(
                         'src',
                         'https://raw.github.com/'.$owner.'/'.$repo.'/HEAD/'.$img->getAttribute('src')

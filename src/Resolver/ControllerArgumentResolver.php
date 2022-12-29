@@ -35,7 +35,9 @@ class ControllerArgumentResolver implements ArgumentValueResolverInterface
 
         $mapping = [];
         if (is_string($attr->map)) {
-            $mapping[$attr->map] = $request->attributes->get($argument->getName());
+            $mapping[$attr->map] = $request->attributes->has($argument->getName()) ?
+                $request->attributes->get($argument->getName()) :
+                $request->attributes->get($attr->map);
         } elseif (is_array($attr->map)) {
             foreach ($attr->map as $name => $field) {
                 $mapping[$field] = $request->attributes->get($name);

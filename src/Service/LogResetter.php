@@ -2,31 +2,27 @@
 
 namespace Packeton\Service;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Monolog\Handler\FingersCrossedHandler;
+use Psr\Log\LoggerInterface;
 
 class LogResetter
 {
-    private $handlers;
+    private $handlers = [];
 
-    public function __construct(ContainerInterface $container, array $fingersCrossedHandlerNames)
+    public function __construct(LoggerInterface $logger)
     {
-        $this->handlers = [];
+        $this->initLogger($logger);
+    }
 
-        foreach ($fingersCrossedHandlerNames as $name) {
-            $handler = $container->get('monolog.handler.'.$name);
-            if (!$handler instanceof FingersCrossedHandler) {
-                throw new \RuntimeException('Misconfiguration: '.$name.' given as a fingers_crossed handler type but '.get_class($handler).' was found');
-            }
-
-            $this->handlers[] = $handler;
-        }
+    private function initLogger(LoggerInterface $logger)
+    {
     }
 
     public function reset()
     {
         foreach ($this->handlers as $handler) {
-            $handler->clear();
+            if (method_exists($handler, 'clear')) {
+                $handler->clear();
+            }
         }
     }
 }

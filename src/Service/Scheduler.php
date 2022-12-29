@@ -3,7 +3,6 @@
 namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Predis\Client as RedisClient;
 use Packeton\Entity\Package;
 use Packeton\Entity\Job;
 
@@ -13,7 +12,7 @@ class Scheduler
     private $doctrine;
     private $redis;
 
-    public function __construct(RedisClient $redis, ManagerRegistry $doctrine)
+    public function __construct(\Redis $redis, ManagerRegistry $doctrine)
     {
         $this->doctrine = $doctrine;
         $this->redis = $redis;
@@ -63,7 +62,7 @@ class Scheduler
 
     private function getPendingUpdateJob(int $packageId, $updateEqualRefs = false, $deleteBefore = false)
     {
-        $result = $this->doctrine->getManager()->getConnection()->fetchAssoc(
+        $result = $this->doctrine->getManager()->getConnection()->fetchAssociative(
             'SELECT id, payload FROM job WHERE packageId = :package AND status = :status AND type = :type LIMIT 1',
             [
                 'package' => $packageId,
