@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\DependencyInjection\CompilerPass;
 
+use Packeton\Service\QueueWorker;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -28,7 +29,7 @@ final class WorkerLocatorPass implements CompilerPassInterface
         }
         $workersServiceLocator = ServiceLocatorTagPass::register($container, $workersReferences);
 
-        $container->getDefinition('packagist.queue_worker')
-            ->replaceArgument(5, $workersServiceLocator);
+        $container->getDefinition(QueueWorker::class)
+            ->setArgument('$workersContainer', $workersServiceLocator);
     }
 }

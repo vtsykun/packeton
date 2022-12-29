@@ -2,6 +2,8 @@
 
 namespace Packeton\Command;
 
+use Packeton\Service\QueueWorker;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -10,6 +12,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 class RunWorkersCommand extends Command
 {
     protected static $defaultName = 'packagist:run-workers';
+
+    public function __construct(
+        protected LoggerInterface $logger,
+        protected QueueWorker $queueWorker,
+    ) {
+        parent::__construct();
+    }
 
     protected function configure()
     {
@@ -20,15 +29,11 @@ class RunWorkersCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $logger = $this->getContainer()->get('logger');
-        $worker = $this->getContainer()->get('packagist.queue_worker');
+        $this->logger->notice('Worker started successfully');
 
-        $logger->notice('Worker started successfully');
-        $this->getContainer()->get('packagist.log_resetter')->reset();
+        $this->queueWorker->processMessages((int) $input->getOption('messages'));
 
-        $worker->processMessages((int) $input->getOption('messages'));
-
-        $logger->notice('Worker exiting successfully');
+        $this->logger->notice('Worker exiting successfully');
 
         return 0;
     }

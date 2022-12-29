@@ -2,8 +2,13 @@
 
 namespace Packeton\Composer\Util;
 
+use Composer\IO\IOInterface;
+use Composer\Pcre\Preg;
 use Composer\Util\Platform;
 use Composer\Util\ProcessExecutor as ComposerProcessExecutor;
+use Seld\Signal\SignalHandler;
+use Symfony\Component\Process\Exception\ProcessSignaledException;
+use Symfony\Component\Process\Exception\RuntimeException;
 use Symfony\Component\Process\Process;
 
 class ProcessExecutor extends ComposerProcessExecutor
@@ -14,49 +19,114 @@ class ProcessExecutor extends ComposerProcessExecutor
     protected static $inheritEnv = [];
 
     /**
+     * @var int
+     */
+    protected static $timeout = 600;
+
+    /**
      * {@inheritdoc}
      */
     public function execute($command, &$output = null, ?string $cwd = null): int
     {
-        if ($this->io && $this->io->isDebug()) {
-            $safeCommand = preg_replace_callback('{://(?P<user>[^:/\s]+):(?P<password>[^@\s/]+)@}i', function ($m) {
-                if (preg_match('{^[a-f0-9]{12,}$}', $m['user'])) {
-                    return '://***:***@';
-                }
-
-                return '://'.$m['user'].':***@';
-            }, $command);
-            $safeCommand = preg_replace("{--password (.*[^\\\\]\') }", '--password \'***\' ', $safeCommand);
-            $this->io->writeError('Executing command ('.($cwd ?: 'CWD').'): '.$safeCommand);
+        if (func_num_args() > 1) {
+            return $this->doExecute($command, $cwd, false, $output);
         }
 
-        // make sure that null translate to the proper directory in case the dir is a symlink
-        // and we call a git command, because msysgit does not handle symlinks properly
-        if (null === $cwd && Platform::isWindows() && false !== strpos($command, 'git') && getcwd()) {
-            $cwd = realpath(getcwd());
+        return $this->doExecute($command, $cwd, false);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function executeTty($command, ?string $cwd = null): int
+    {
+        if (Platform::isTty()) {
+            return $this->doExecute($command, $cwd, true);
         }
 
-        $this->captureOutput = func_num_args() > 1;
-        $this->errorOutput = null;
+        return $this->doExecute($command, $cwd, false);
+    }
+
+    /**
+     * @param  string|list<string> $command
+     * @param  mixed   $output
+     */
+    private function doExecute($command, ?string $cwd, bool $tty, &$output = null): int
+    {
+        $this->outputCommandRun($command, $cwd, false);
+
+        $this->captureOutput = func_num_args() > 3;
+        $this->errorOutput = '';
+
         $env = $this->getInheritedEnv();
 
-        // in v3, commands should be passed in as arrays of cmd + args
-        if (method_exists('Symfony\Component\Process\Process', 'fromShellCommandline')) {
+        if (is_string($command)) {
             $process = Process::fromShellCommandline($command, $cwd, $env, null, static::getTimeout());
         } else {
             $process = new Process($command, $cwd, $env, null, static::getTimeout());
         }
 
-        $callback = is_callable($output) ? $output : array($this, 'outputHandler');
-        $process->run($callback);
-
-        if ($this->captureOutput && !is_callable($output)) {
-            $output = $process->getOutput();
+        if (!Platform::isWindows() && $tty) {
+            try {
+                $process->setTty(true);
+            } catch (RuntimeException $e) {
+                // ignore TTY enabling errors
+            }
         }
 
-        $this->errorOutput = $process->getErrorOutput();
+        $callback = is_callable($output) ? $output : function (string $type, string $buffer): void {
+            $this->outputHandler($type, $buffer);
+        };
+
+        $signalHandler = SignalHandler::create([SignalHandler::SIGINT, SignalHandler::SIGTERM, SignalHandler::SIGHUP], function (string $signal) {
+            $this->io?->writeError('Received ' . $signal . ', aborting when child process is done', true, IOInterface::DEBUG);
+        });
+
+        try {
+            $process->run($callback);
+
+            if ($this->captureOutput && !is_callable($output)) {
+                $output = $process->getOutput();
+            }
+
+            $this->errorOutput = $process->getErrorOutput();
+        } catch (ProcessSignaledException $e) {
+            if ($signalHandler->isTriggered()) {
+                // exiting as we were signaled and the child process exited too due to the signal
+                $signalHandler->exitWithLastSignal();
+            }
+        } finally {
+            $signalHandler->unregister();
+        }
 
         return $process->getExitCode();
+    }
+
+    /**
+     * @param string|list<string> $command
+     */
+    private function outputCommandRun($command, ?string $cwd, bool $async): void
+    {
+        if (null === $this->io || !$this->io->isDebug()) {
+            return;
+        }
+
+        $commandString = is_string($command) ? $command : implode(' ', array_map(self::class.'::escape', $command));
+        $safeCommand = Preg::replaceCallback('{://(?P<user>[^:/\s]+):(?P<password>[^@\s/]+)@}i', static function ($m): string {
+            assert(is_string($m['user']));
+
+            // if the username looks like a long (12char+) hex string, or a modern github token (e.g. ghp_xxx) we obfuscate that
+            if (Preg::isMatch('{^([a-f0-9]{12,}|gh[a-z]_[a-zA-Z0-9_]+)$}', $m['user'])) {
+                return '://***:***@';
+            }
+            if (Preg::isMatch('{^[a-f0-9]{12,}$}', $m['user'])) {
+                return '://***:***@';
+            }
+
+            return '://'.$m['user'].':***@';
+        }, $commandString);
+        $safeCommand = Preg::replace("{--password (.*[^\\\\]\') }", '--password \'***\' ', $safeCommand);
+        $this->io->writeError('Executing'.($async ? ' async' : '').' command ('.($cwd ?: 'CWD').'): '.$safeCommand);
     }
 
     /**

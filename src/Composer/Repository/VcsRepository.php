@@ -44,9 +44,27 @@ class VcsRepository extends ComposerVcsRepository
             $this->repoConfig,
             $this->io,
             $this->config,
+            $this->httpDownloader,
+            $this->processExecutor,
             $this->type,
             ['url' => $this->url]
         );
+    }
+
+    /**
+     * @return HttpDownloader
+     */
+    public function getHttpDownloader()
+    {
+        return $this->httpDownloader;
+    }
+
+    /**
+     * @return ProcessExecutor
+     */
+    public function getProcessExecutor()
+    {
+        return $this->processExecutor;
     }
 
     /**

@@ -3,13 +3,13 @@
 namespace Packeton\Controller;
 
 use Packeton\Attribute\Vars;
+use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Model\PackageManager;
 use Packeton\Service\DistManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -61,13 +61,13 @@ class ProviderController extends AbstractController
      * @param string $package
      * @return Response
      */
-    public function packageAction($package)
+    public function packageAction(string $package)
     {
         $package = \explode('$', $package);
         if (\count($package) !== 2) {
             $package = $this->packageManager->getPackageJson($this->getUser(), $package[0]);
             if ($package) {
-                return new Response(\json_encode($package), 200, ['Content-Type' => 'application/json']);
+                return new JsonResponse($package);
             }
             return $this->createNotFound();
         }
@@ -78,6 +78,33 @@ class ProviderController extends AbstractController
         }
 
         return new JsonResponse($package);
+    }
+
+    /**
+     * @Route(
+     *     "/p2/{package}.json",
+     *     requirements={"package"="[\w+\/\-\~]+"},
+     *     name="root_package_v2", defaults={"_format" = "json"},
+     *     methods={"GET"}
+     * )
+     *
+     * @param string $package
+     * @return Response
+     */
+    public function packageV2Action(string $package)
+    {
+        $isDev = str_ends_with($package, '~dev');
+        $package = preg_replace('/~dev$/', '', $package);
+
+        $package = $this->packageManager->getPackageV2Json($this->getUser(), $package, $isDev, $lastModified);
+        if (!$package) {
+            return $this->createNotFound();
+        }
+
+        $response = new JsonResponse($package);
+        $response->setLastModified(new \DateTime($lastModified));
+
+        return $response;
     }
 
     /**
@@ -148,7 +175,7 @@ class ProviderController extends AbstractController
     /**
      * {@inheritDoc}
      */
-    public static function getSubscribedServices()
+    public static function getSubscribedServices(): array
     {
         return array_merge(
             parent::getSubscribedServices(),

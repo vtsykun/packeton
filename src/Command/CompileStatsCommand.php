@@ -49,13 +49,13 @@ class CompileStatsCommand extends Command
         $doctrine = $this->getContainer()->get('doctrine');
         $this->redis = $redis = $this->getContainer()->get('snc_redis.default');
 
-        $minMax = $doctrine->getManager()->getConnection()->fetchAssoc('SELECT MAX(id) maxId, MIN(id) minId FROM package');
+        $minMax = $doctrine->getManager()->getConnection()->fetchAssociative('SELECT MAX(id) maxId, MIN(id) minId FROM package');
         if (!isset($minMax['minId'])) {
             return 0;
         }
 
         $ids = range($minMax['minId'], $minMax['maxId']);
-        $res = $doctrine->getManager()->getConnection()->fetchAssoc('SELECT MIN(createdAt) minDate FROM package');
+        $res = $doctrine->getManager()->getConnection()->fetchAssociative('SELECT MIN(createdAt) minDate FROM package');
         $date = new \DateTime($res['minDate']);
         $date->modify('00:00:00');
         $yesterday = new \DateTime('yesterday 00:00:00');
