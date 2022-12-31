@@ -1,0 +1,26 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <h2 class="title">
+        {%- if app.request.attributes.get('_route') == 'groups_update' %}
+            Update group
+        {%- else %}
+            Create a ACL new group
+        {%- endif %}
+    </h2>
+
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+        {{ form_row(form.name) }}
+        <h3>Access matrix</h3>
+            <div>
+                {% for permission in form.aclPermissions %}
+                    <div>{{ form_row(permission) }}</div>
+                {% endfor %}
+            </div>
+        <input class="btn btn-block btn-success btn-lg" type="submit" value="{{ 'submit.submit'|trans }}" />
+        {{ form_end(form) }}
+        <div class="col-md-6">
+        </div>
+    </section>
+{% endblock %}

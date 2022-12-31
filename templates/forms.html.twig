@@ -1,0 +1,114 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{% block textarea_widget %}
+{% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+{{ parent() }}
+{% endblock textarea_widget %}
+
+{%- block choice_widget_collapsed -%}
+    {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+    {{ parent() }}
+{%- endblock choice_widget_collapsed -%}
+
+{% block form_widget_simple %}
+{% apply spaceless %}
+    {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+    {% set type = type|default('text') %}
+
+    {{ parent() }}
+{% endapply %}
+{% endblock form_widget_simple %}
+
+{% block form_row %}
+{% apply spaceless %}
+    <div class="form-group{% if errors|length > 0 %} has-error{% endif %}">
+        {{ form_label(form) }}
+
+        {{ form_widget(form) }}
+
+        {% for error in errors %}
+            <span class="help-block form-error">
+                {{
+                    error.messagePluralization is null
+                    ? error.messageTemplate|trans(error.messageParameters, 'validators')
+                    : error.messageTemplate|trans(error.messagePluralization, error.messageParameters, 'validators')
+                }}
+            </span>
+        {% endfor %}
+    </div>
+{% endapply %}
+{% endblock form_row %}
+
+{% block form_errors %}
+{% apply spaceless %}
+    {% if errors|length > 0 %}
+        {% for error in errors %}
+            <div class="alert alert-danger">{{ error.message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endapply %}
+{% endblock form_errors %}
+
+{%- block package_permission_widget -%}
+    <div class="collection-item">
+        <div class="input-group">
+            <div class="input-group-addon" style="width: 75%;">{% if value is not empty %}{{ value.name }}{% endif %}</div>
+            <div class="input-group-addon" style="width: 11%">
+                {{ form_widget(form.selected) }}
+            </div>
+            <div style="width: 15%; float: right" class="package-permission">{{ form_widget(form.version) }}</div>
+            {{ form_widget(form.name) }}
+        </div>
+        {{ form_errors(form.version) }}
+        {{ form_errors(form.selected) }}
+        {{ form_errors(form.name) }}
+    </div>
+{%- endblock package_permission_widget -%}
+
+{%- block form_label -%}
+    {% if label is not same as(false) -%}
+        {% if not compound -%}
+            {% set label_attr = label_attr|merge({'for': id}) %}
+        {%- endif -%}
+        {% if required -%}
+            {% set label_attr = label_attr|merge({'class': (label_attr.class|default('') ~ ' required')|trim}) %}
+        {%- endif -%}
+        {% if label is empty -%}
+            {%- if label_format is not empty -%}
+                {% set label = label_format|replace({
+                    '%name%': name,
+                    '%id%': id,
+                }) %}
+            {%- else -%}
+                {% set label = name|humanize %}
+            {%- endif -%}
+        {%- endif -%}
+        <{{ element|default('label') }}{% if label_attr %}{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}>
+            {%- if tooltip is defined and tooltip -%}
+                <i class="fa fa-info-circle"
+                   style="cursor: pointer; color: #0c71d0; padding-right: 8px;"
+                   data-placement="top"
+                   data-html="true"
+                   data-content="{{ tooltip|trans }}"
+                   data-toggle="popover"></i>
+            {%- endif -%}
+
+            {%- if translation_domain is same as(false) -%}
+                {{- label -}}
+            {%- else -%}
+                {{- label|trans({}, translation_domain) -}}
+            {%- endif -%}
+        </{{ element|default('label') }}>
+    {%- endif -%}
+{%- endblock form_label -%}
+
+{%- block choice_widget_expanded -%}
+    <div {{ block('widget_container_attributes') }}>
+        {%- for child in form %}
+            <div style="display: flex; padding-top: 6px">
+                {{- form_widget(child, {attr: {style: 'margin-right: 6px'}}) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
+            </div>
+        {% endfor -%}
+    </div>
+{%- endblock choice_widget_expanded -%}
