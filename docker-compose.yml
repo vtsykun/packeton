@@ -1,0 +1,24 @@
+version: '3.6'
+
+services:
+    packagist:
+        build:
+            context: .
+        image: okvpn/packeton:latest
+        container_name: packagist
+        hostname: packagist
+        environment:
+            PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
+            PACKAGIST_DIST_HOST: https://pkg.okvpn.org
+            DATABASE_HOST: postgres
+            DATABASE_PORT: 5432
+            DATABASE_DRIVER: pdo_pgsql
+            DATABASE_USER: postgres
+            DATABASE_NAME: packagist
+            DATABASE_PASSWORD: 123456
+            ADMIN_USER: admin
+            ADMIN_PASSWORD: composer
+            ADMIN_EMAIL: admin@example.com
+            GITHUB_NO_API: 'true'
+        ports:
+            - '127.0.0.1:8088:80'

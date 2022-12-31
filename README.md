@@ -1,10 +1,10 @@
 Packeton - Private PHP package repository for vendors
 ======================================================
 
+[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
 [![Docker pulls](https://img.shields.io/docker/pulls/okvpn/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/okvpn/packeton)
 [![Docker stars](https://img.shields.io/docker/stars/okvpn/packeton.svg?label=docker+stars)](https://hub.docker.com/r/okvpn/packeton)
-[![Docker version](https://images.microbadger.com/badges/version/okvpn/packeton.svg)](https://hub.docker.com/r/okvpn/packeton)
-[![Docker layers](https://images.microbadger.com/badges/image/okvpn/packeton.svg)](https://hub.docker.com/r/okvpn/packeton)
+[![License](http://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
 
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
@@ -12,9 +12,8 @@ The Open Source alternative of [Private Packagist for vendors](https://packagist
 Features
 --------
 
-- Compatible with composer.
-- Support update webhook for GitHub, Bitbucket and GitLab.
-- Support custom webhook format.
+- Compatible with composer v2.
+- Support update webhook for GitHub, Bitbucket and GitLab or custom format.
 - Customers user and groups.
 - Generic Packeton [webhooks](docs/webhook.md)
 - Limit access by vendor and versions.
@@ -24,7 +23,7 @@ Features
 
 What was changed in this fork?
 -----------------------------
-- Disable anonymously access, registrations, spam/antispam, added groups and permissions.
+- Disable anonymously access, registrations, spam/antispam, added ACL permissions.
 - Support MySQL and PostgresSQL.
 - Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
