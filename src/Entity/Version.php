@@ -158,6 +158,11 @@ class Version
     private $dist;
 
     /**
+     * @var string
+     */
+    public $distNormalized;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $autoload;
@@ -242,7 +247,7 @@ class Version
             'license' => $this->getLicense(),
             'authors' => $authors,
             'source' => $this->getSource(),
-            'dist' => $this->getDist(),
+            'dist' => $this->distNormalized ?: $this->getDist(),
             'type' => $this->getType(),
         ];
 
@@ -482,6 +487,7 @@ class Version
      */
     public function setDist($dist)
     {
+        $this->distNormalized = null;
         $this->dist = null === $dist ? $dist : json_encode($dist);
     }
 

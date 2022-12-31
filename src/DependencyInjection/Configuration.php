@@ -31,7 +31,7 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('format')->defaultValue('zip')->end()
                         ->scalarNode('basedir')->cannotBeEmpty()->end()
-                        ->scalarNode('endpoint')->cannotBeEmpty()->end()
+                        ->scalarNode('endpoint')->defaultNull()->end()
                         ->booleanNode('include_archive_checksum')->defaultFalse()->end()
                     ->end()
                 ->end()

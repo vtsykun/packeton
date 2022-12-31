@@ -8,6 +8,8 @@ use Symfony\Component\Routing\RouterInterface;
 
 class DistConfig
 {
+    public const HOSTNAME_PLACEHOLDER = '__host_unset__';
+
     private $config;
     private $router;
 
@@ -103,12 +105,14 @@ class DistConfig
      */
     public function generateRoute(string $name, string $reference): string
     {
+        $hostName = !isset($this->config['endpoint']) ? self::HOSTNAME_PLACEHOLDER : rtrim($this->config['endpoint'], '/');
+        
         $uri = $this->router->generate(
             'download_dist_package',
             ['package' => $name, 'hash' => $reference . '.' . $this->getArchiveFormat()]
         );
 
-        return rtrim($this->config['endpoint'], '/') . $uri;
+        return $hostName . $uri;
     }
 
     /**

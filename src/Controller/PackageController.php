@@ -826,7 +826,7 @@ class PackageController extends AbstractController
      *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
      * )
      */
-    public function abandonAction(Request $request, Package $package)
+    public function abandonAction(Request $request, #[Vars] Package $package)
     {
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
@@ -860,7 +860,7 @@ class PackageController extends AbstractController
      *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
      * )
      */
-    public function unabandonAction(Package $package)
+    public function unabandonAction(#[Vars] Package $package)
     {
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;

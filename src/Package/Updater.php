@@ -543,7 +543,13 @@ class Updater
         ];
     }
 
-    private function updateArchive(ArchiveManager $archiveManager, PackageInterface $data)
+    /**
+     * @param ArchiveManager $archiveManager
+     * @param PackageInterface|CompletePackageInterface $data
+     *
+     * @return array|null
+     */
+    private function updateArchive(ArchiveManager $archiveManager, PackageInterface $data): ?array
     {
         if ($this->distConfig->isEnable() === false) {
             return null;

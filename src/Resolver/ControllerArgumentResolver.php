@@ -45,7 +45,15 @@ class ControllerArgumentResolver implements ArgumentValueResolverInterface
         } else {
             $metadata = $this->registry->getManagerForClass($argument->getType())->getClassMetadata($argument->getType());
             $identifier = $metadata->getIdentifier()[0];
-            $mapping[$identifier] = $request->attributes->get($identifier);
+
+            if ($request->attributes->has($identifier)) {
+                $mapping[$identifier] = $request->attributes->get($identifier);
+            } elseif (count($params = $request->attributes->get('_route_params', [])) === 1) {
+                $identifier = array_key_first($params);
+                if ($metadata->hasField($identifier)) {
+                    $mapping[$identifier] = $params[$identifier];
+                }
+            }
         }
 
         if (empty($mapping)) {

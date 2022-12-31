@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Packeton\Entity\Job;
-use Predis\Client as RedisClient;
 
 class JobScheduler
 {
     private $persister;
     private $redis;
 
-    public function __construct(RedisClient $redis, JobPersister $persister)
+    public function __construct(\Redis $redis, JobPersister $persister)
     {
         $this->persister = $persister;
         $this->redis = $redis;

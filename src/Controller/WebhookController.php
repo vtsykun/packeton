@@ -73,7 +73,7 @@ class WebhookController extends AbstractController
         $hook = new Webhook();
         $data = $this->handleUpdate($request, $hook, 'Successfully saved.');
 
-        return $this->render('webhook/update.html.twig', $data);
+        return $data instanceof Response ? $data : $this->render('webhook/update.html.twig', $data);
     }
 
     /**
@@ -94,7 +94,7 @@ class WebhookController extends AbstractController
                 ->findJobsByType('webhook:send', $hook->getId());
         }
 
-        return $this->render('webhook/update.html.twig', $data);
+        return $data instanceof Response ? $data : $this->render('webhook/update.html.twig', $data);
     }
 
     /**
@@ -121,7 +121,7 @@ class WebhookController extends AbstractController
      *
      * {@inheritdoc}
      */
-    public function jobAction(Job $entity)
+    public function jobAction(#[Vars] Job $entity)
     {
         $hook = $this->registry->getRepository(Webhook::class)
             ->find($entity->getPackageId());
