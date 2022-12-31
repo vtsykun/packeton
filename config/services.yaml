@@ -5,6 +5,21 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     env(APP_COMPOSER_HOME): null
+    env(PACKAGIST_DIST_HOST): null
+
+    # twig sandbox
+    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim']
+    security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range', 'constant']
+    security_policy_methods: []
+    security_policy_forbidden_classes:
+        - 'Packeton\Entity\Job'
+        - 'Packeton\Entity\SshCredentials'
+    security_policy_forbidden_properties:
+        'Packeton\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
+        'Packeton\Entity\Package': ['credentials']
+    security_policy_forbidden_methods:
+        'Packeton\Entity\User': ['getApiToken', 'unserialize', 'getGithubToken', 'getPassword', 'getSalt', 'getPlainPassword', '!regex /^(add|set)/']
+        'Packeton\Entity\Package': ['getCredentials', '!regex /^(add|set)/']
 
 services:
     # default configuration for services in *this* file
@@ -22,6 +37,7 @@ services:
             - '../src/Event/'
             - '../src/Kernel.php'
             - '../src/Repository/'
+            - '../src/Webhook/Twig/'
 
     packeton.menu.profile:
         class: Knp\Menu\MenuItem
@@ -68,3 +84,73 @@ services:
             - '@okvpn_cron.runner_default'
         tags:
             - { name: queue_worker, topic: cron:execute }
+
+    Packeton\EventListener\DoctrineListener:
+        tags:
+            - { name: doctrine.orm.entity_listener, event: postLoad, entity: Packeton\Entity\Version }
+
+    Packeton\Webhook\EventListener\HookListener:
+        tags:
+            - { name: kernel.event_listener, event: packageRefresh }
+            - { name: kernel.event_listener, event: packagePersist }
+            - { name: kernel.event_listener, event: packageError }
+            - { name: kernel.event_listener, event: packageRemove }
+            - { name: kernel.event_listener, event: security.interactive_login, method: onUserLogin }
+
+    packeton.twig.webhook_security_policy:
+        class: Twig\Sandbox\SecurityPolicy
+        autoconfigure: false
+        arguments:
+            # tags
+            - '%security_policy_tags%'
+            # filters
+            - []
+            # methods
+            - '%security_policy_methods%'
+            # properties
+            - []
+            # functions
+            - '%security_policy_functions%'
+
+    Packeton\Webhook\Twig\WebhookSecurityPolicy:
+        decorates: packeton.twig.webhook_security_policy
+        autoconfigure: false
+        arguments:
+            - '@.inner'
+            - ~  # Parent tags
+            - [] # Allow all filters
+            - ~  # Parent functions
+            - '%security_policy_forbidden_methods%'
+            - '%security_policy_forbidden_properties%'
+            - '%security_policy_forbidden_classes%'
+        calls:
+            - [setAllowedExtension, [!tagged trusted_extension]]
+
+    packeton.twig.webhook_sandbox:
+        class: Twig\Extension\SandboxExtension
+        autoconfigure: false
+        arguments:
+            - '@packeton.twig.webhook_security_policy'
+            - true # use sandbox globally in instance
+
+    Packeton\Webhook\Twig\PlaceholderExtension:
+        autoconfigure: false
+        tags:
+            - { name: trusted_extension }
+
+    Packeton\Webhook\Twig\WebhookExtension:
+        autoconfigure: false
+        arguments:
+            - '@doctrine'
+            - '@Packeton\Util\ChangelogUtils'
+            - '@snc_redis.default'
+        tags:
+            - { name: trusted_extension }
+
+    Packeton\Webhook\Twig\PayloadRenderer:
+        arguments:
+            - !tagged trusted_extension
+            -
+                autoescape: false
+        calls:
+            - [addExtension, ['@packeton.twig.webhook_sandbox']]

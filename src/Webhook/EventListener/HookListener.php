@@ -110,7 +110,7 @@ class HookListener
         }
 
         /** @var UserInterface $user */
-        if (!$user = $token->getUser() or !$request) {
+        if (!$user = $token->getUser()) {
             return;
         }
 
@@ -142,7 +142,7 @@ class HookListener
                 'event' => Webhook::HOOK_REPO_FAILED,
                 'output' => $event->getOutput(),
                 'exception_message' => $event->getException()->getMessage(),
-                'exception_class' => get_class($event->getException()->getMessage())
+                'exception_class' => get_class($event->getException())
             ];
 
             $this->hookBus->dispatch($context, $webhook);
@@ -160,8 +160,7 @@ class HookListener
             ->getQuery()
             ->getResult();
 
-        $versions = $versions ? array_combine(array_column($versions, 'id'), $versions) : [];
-        return $versions;
+        return $versions ? array_combine(array_column($versions, 'id'), $versions) : [];
     }
 
     private function matchVersions(array $versionInfo, UpdaterEvent $event, Webhook $hook)

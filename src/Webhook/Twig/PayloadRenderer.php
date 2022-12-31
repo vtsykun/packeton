@@ -7,14 +7,13 @@ namespace Packeton\Webhook\Twig;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Twig\Environment;
-use Twig\Extension\ExtensionInterface;
 use Twig\Loader\ArrayLoader;
 
 class PayloadRenderer extends Environment implements LoggerAwareInterface
 {
-    private $extensions = [];
+    private $init = false;
 
-    public function __construct($options = [])
+    public function __construct(private readonly iterable $extensions, $options = [])
     {
         $loader = new ArrayLoader();
         parent::__construct($loader, $options);
@@ -44,12 +43,16 @@ class PayloadRenderer extends Environment implements LoggerAwareInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addExtension(ExtensionInterface $extension)
+    public function init()
     {
-        $this->extensions[] = $extension;
-        parent::addExtension($extension);
+        if ($this->init === true) {
+            return;
+        }
+
+        foreach ($this->extensions as $extension) {
+            $this->addExtension($extension);
+        }
+
+        $this->init = true;
     }
 }

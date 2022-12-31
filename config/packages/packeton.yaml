@@ -5,4 +5,4 @@ packeton:
     archive_options:
         format: zip
         basedir: '%kernel.project_dir%/var/zipball'
-        endpoint: dist_host
+        endpoint: '%env(PACKAGIST_DIST_HOST)%'

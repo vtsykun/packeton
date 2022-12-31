@@ -47,7 +47,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         $functions = [];
         $reflect = new \ReflectionClass(__CLASS__);
         foreach ($reflect->getMethods() as $method) {
-            if ($method->isPublic() && strpos($method->getName(), 'hook_function_') === 0) {
+            if ($method->isPublic() && str_starts_with($method->getName(), 'hook_function_')) {
                 $functions[] = new TwigFunction(substr($method->getName(), 14), [$this, $method->getName()]);
             }
         }

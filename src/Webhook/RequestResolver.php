@@ -50,6 +50,7 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
         $separator = '-------------' . sha1(random_bytes(10)) . '---------------';
         $context[PlaceholderExtension::VARIABLE_NAME] = $placeholder = new PlaceholderContext();
 
+        $this->renderer->init();
         if (null !== $this->logger) {
             $this->renderer->setLogger($this->logger);
         }
