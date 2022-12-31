@@ -98,7 +98,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Packeton\\": "src/"
+            "Packeton\\": "src/",
+            "Oro\\": "doctrine/"
         }
     },
     "replace": {

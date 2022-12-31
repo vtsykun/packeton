@@ -12,7 +12,7 @@
 
 namespace Packeton\Form\Model;
 
-use FOS\UserBundle\Model\UserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class MaintainerRequest
 {

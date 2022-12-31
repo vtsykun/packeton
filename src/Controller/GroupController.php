@@ -11,6 +11,7 @@ use Packeton\Form\Type\GroupType;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,7 +58,7 @@ class GroupController extends AbstractController
         $group = new Group();
         $data = $this->handleUpdate($request, $group, 'Group has been saved successfully');
 
-        return $this->render('group/update.html.twig', $data);
+        return $data instanceof Response ? $data : $this->render('group/update.html.twig', $data);
     }
 
     /**
@@ -71,7 +72,7 @@ class GroupController extends AbstractController
     {
         $data = $this->handleUpdate($request, $group, 'Group has been saved successfully');
 
-        return $this->render('group/update.html.twig', $data);
+        return $data instanceof Response ? $data : $this->render('group/update.html.twig', $data);
     }
 
     /**

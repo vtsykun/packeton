@@ -24,7 +24,7 @@ Features
 What was changed in this fork?
 -----------------------------
 - Disable anonymously access, registrations, spam/antispam, added ACL permissions.
-- Support MySQL and PostgresSQL.
+- Support MySQL, PostgresSQL or SQLite.
 - Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
 
 Table of content
