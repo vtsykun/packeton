@@ -8,7 +8,6 @@ services:
         container_name: packagist
         hostname: packagist
         environment:
-            PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
             ADMIN_USER: admin
             ADMIN_PASSWORD: 123456
             ADMIN_EMAIL: admin@example.com

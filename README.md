@@ -60,121 +60,62 @@ See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/c
 Install and Run in Docker
 ------------------------
 
-Pull the image from docker hub https://hub.docker.com/r/okvpn/packeton:
+Build and run docker container
 
 ```
-docker pull okvpn/packeton
+docker-compose build
+docker-compose up -d
 ```
-
-Run the image (with docker-composer):
 
 ```yaml
-version: '3'
+version: '3.6'
 
 services:
     packagist:
+        build:
+            context: .
         image: okvpn/packeton:latest
         container_name: packagist
-        restart: unless-stopped
         hostname: packagist
-        volumes:
-            - .docker/redis:/var/lib/redis  # Redis data
-            - .docker/zipball:/var/www/packagist/app/zipball # Zipped archive cache for "dist" downloads
-            - .docker/composer:/var/www/.composer  # Composer cache
-            - .docker/ssh:/var/www/.ssh # Share here your ssh keys
         environment:
-            PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
-            PACKAGIST_DIST_HOST: https://pkg.okvpn.org # Dist url to download the zip package.
-            DATABASE_HOST: 172.17.0.1
-            DATABASE_PORT: 5432
-            DATABASE_DRIVER: pdo_pgsql
-            DATABASE_USER: postgres
-            DATABASE_NAME: packagist
-            DATABASE_PASSWORD: 123456
-            ADMIN_USER: admin
-            ADMIN_PASSWORD: composer
+            ADMIN_USER: admin # create user admin on the first install
+            ADMIN_PASSWORD: 123456
             ADMIN_EMAIL: admin@example.com
-            GITHUB_NO_API: 'true'
         ports:
-          - 127.0.0.1:8080:80
+            - '127.0.0.1:8088:80'
+        volumes:
+            - .docker:/data
 ```
 
-Also you can configure Packeton server to run behind a NGINX reverse proxy. 
-For example to enable ssl.
+#### Docker Environment variables
 
-```
-server {
-    listen *:443 ssl http2;
-
-    server_name pkg.okvpn.org;
-
-    ssl_certificate /etc/letsencrypt/live/pkg.okvpn.org/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/pkg.okvpn.org/privkey.pem;
-    ssl_dhparam /etc/nginx/ssl/dh.pem;
-    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
- 
-    ssl_protocols TLSv1.1 TLSv1.2;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache  builtin:1000  shared:SSL:10m;
-    ssl_session_timeout  5m;
-    access_log  off;
-    error_log  /var/log/nginx/pkg_error.log;
-
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_buffers 16 16k;
-    gzip_http_version 1.1;
-    gzip_min_length 2048;
-    gzip_types text/css image/svg+xml application/octet-stream application/javascript text/javascript application/json;
-
-    location / {
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_pass http://127.0.0.1:8080/;
-    }
-}
-
-server {
-    if ($host = pkg.okvpn.org) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
-    listen 80;
-    return 301 https://$host$request_uri;
-    server_name pkg.okvpn.org;
-}
-```
+- `APP_COMPOSER_HOME` - composer home, default /data/composer
+- `DATABASE_URL` - Database DSN, default sqlite:////data/app.db. Example for postgres "postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&charset=utf8"
+- `PACKAGIST_DIST_PATH` - Default /data/zipball, path to storage zipped versions
+- `REDIS_URL` - Redis DB, default redis://localhost
+- `PACKAGIST_DIST_HOST` - Hostname, (auto) default use the current host header in the request.
 
 Installation
 ------------
 
 ### Requirements
 
-- MySQL or PostgresSQL for the main data store.
 - Redis for some functionality (favorites, download statistics, worker queue).
 - git/svn/hg depending on which repositories you want to support.
 - Supervisor to run a background job worker
+- (optional) MySQL or PostgresSQL for the main data store, default SQLite
 
 1. Clone the repository
-2. Copy and edit `app/config/parameters.yml` and change the relevant values for your setup.
-3. Install dependencies: `composer install`
+2. Install dependencies: `composer install`
+3. Create .env.local and copy needed environment variables into it, see docker Environment variables section
 4. Run `bin/console doctrine:schema:create` to setup the DB
-5. Run `bin/console assets:install web` to deploy the assets on the web dir.
-6. Run `bin/console cache:warmup --env=prod` and `app/console cache:warmup --env=prod` to warmup cache
-7. Create admin user via console.
+5. Create admin user via console.
 
 ```
-php bin/console fos:user:create
-# Add admin role
-php bin/console fos:user:promote <username> ROLE_ADMIN
-# Add maintainer role
-php bin/console fos:user:promote <username> ROLE_MAINTAINER
+php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
 ```
 
-8. Enable cron tabs and background jobs.
+6. Enable cron tabs and background jobs.
 Enable crontab `crontab -e -u www-data` 
 
 ```
@@ -210,13 +151,13 @@ priority=1
 user=www-data
 ```
 
-9. **IMPORTANT** Make sure that web-server, cron and supervisor run under the same user, that should have an ssh key 
+7. **IMPORTANT** Make sure that web-server, cron and supervisor run under the same user, that should have an ssh key 
 that gives it read (clone) access to your git/svn/hg repositories. If you run application under `www-data` 
 you can add your ssh keys to /var/www/.ssh/
 
 You should now be able to access the site, create a user, etc.
 
-10. Make a VirtualHost with DocumentRoot pointing to web/
+8. Make a VirtualHost with DocumentRoot pointing to public/
 
 Ssh key access and composer oauth token.
 -----------------------
@@ -276,9 +217,9 @@ You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.g
 
 #### Don't use GitHub Api.
 
-By default composer will use GitHub API to get metadata for your GitHub repository, you can add 
-`use-github-api` to composer config.json to always use ssh key and clone the repository as 
-it would with any other git repository, [see here](https://getcomposer.org/doc/06-config.md#use-github-api)
+We disable usage GitHub API by default to force use ssh key or clone the repository via https as
+it would with any other git repository. You can enable it again with env option `GITHUB_NO_API` 
+[see here](https://getcomposer.org/doc/06-config.md#use-github-api).
 
 Update Webhooks
 ---------------
@@ -449,10 +390,9 @@ Only admin user can create the new customer users.
 You can create an user and then promote to admin or maintainer via console using fos user bundle commands.
 
 ```
-php bin/console fos:user:create
-php bin/console fos:user:promote <username> ROLE_ADMIN
+php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin # create admin user
+php bin/console packagist:user:manager user1 --add-role=ROLE_MAINTAINER # Add ROLE_MAINTAINER to user user1
 ```
-
 
 LICENSE
 ------

@@ -39,7 +39,9 @@ class CreateUserCommand extends Command
             ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'The email')
             ->addOption('enabled', null, InputOption::VALUE_OPTIONAL, 'Set user enable/disable, example --enabled=1, --enabled=0')
             ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'The password')
-            ->addOption('only-if-not-exists', null, InputOption::VALUE_OPTIONAL, 'Only create a new user without update existing (use in docker init)')
+            ->addOption('add-role', null, InputOption::VALUE_OPTIONAL, 'Add the user role, example --add-role=ROLE_MAINTAINER')
+            ->addOption('remove-role', null, InputOption::VALUE_OPTIONAL, 'Remove the user role, example --remove-role=ROLE_MAINTAINER')
+            ->addOption('only-if-not-exists', null, InputOption::VALUE_NONE, 'Only create a new user without update existing (use in docker init)')
             ->addOption('admin', null, InputOption::VALUE_NONE, 'Is admin user?')
             ->setDescription('Change or create user');
     }
@@ -71,6 +73,12 @@ class CreateUserCommand extends Command
                 $user->setPassword($this->passwordHasher->hashPassword($user, $password));
             }
 
+            if ($input->hasOption('enabled')) {
+                $user->setEnabled((bool) $input->getOption('enabled'));
+            }
+
+            $this->updateRoles($user, $input, $output);
+
             $manager->flush();
             $output->writeln("User $username was updated successfully");
             return 0;
@@ -90,11 +98,26 @@ class CreateUserCommand extends Command
             $user->addRole('ROLE_ADMIN');
         }
 
+        $this->updateRoles($user, $input, $output);
+
         $manager->persist($user);
         $manager->flush();
 
         $output->writeln("User $username was created successfully, api token: {$user->getApiToken()}");
 
         return 0;
+    }
+
+    public function updateRoles(User $user, InputInterface $input, OutputInterface $output)
+    {
+        if ($role = $input->getOption('add-role')) {
+            $user->addRole($role);
+            $output->writeln("Added role $role");
+        }
+
+        if ($role = $input->getOption('remove-role')) {
+            $user->removeRole($role);
+            $output->writeln("Unset role $role ");
+        }
     }
 }
