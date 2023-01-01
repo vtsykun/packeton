@@ -11,7 +11,7 @@ The Open Source alternative of [Private Packagist for vendors](https://packagist
 
 ### Legacy Symfony 3.4 version
 
-[See docs](../blob/1.4/README.md)
+[See docs](../1.4/README.md)
 
 Features
 --------
