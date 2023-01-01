@@ -72,7 +72,7 @@
                         {%- if app.user %}
                             <li class="nav-user">
                                 <section>
-                                    <a href="{{ path('fos_user_profile_show') }}">{{ app.user.username }}</a>
+                                    <a href="{{ path('profile_show') }}">{{ app.user.username }}</a>
 
                                     <section class="nav-user-menu">
                                         {{ knp_menu_render('user_menu', {'allow_safe_labels': true}) }}
@@ -146,7 +146,7 @@
                     {%- for flashMessage in flashMessages %}
                         {%- if 'fos_user_' in type %}
                             <div class="alert alert-{{ type|replace({'fos_user_': ''}) }}">
-                                <p>{{ flashMessage|trans({}, 'FOSUserBundle') }}</p>
+                                <p>{{ flashMessage|trans }}</p>
                             </div>
                         {%- else %}
                             <div class="alert alert-{{ type }}">

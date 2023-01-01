@@ -63,7 +63,7 @@ RUN set -eux; \
     mkdir -p /run/php/ /data; \
     chmod +x /usr/local/bin/app /usr/local/bin/docker-entrypoint.sh; \
     usermod -d /var/www www-data; \
-    echo "dir /data/redis" >> redis.conf; \
+    echo "dir /data/redis" >> /etc/redis.conf; \
     chown www-data:www-data /var/lib/nginx /var/lib/nginx/tmp /data
 
 ENV DATABASE_URL sqlite:////data/app.db

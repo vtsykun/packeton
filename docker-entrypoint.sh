@@ -34,7 +34,9 @@ if [ -f /var/tmp/data/handler.sh ]; then
     bash /var/tmp/data/handler.sh
 fi
 
+mkdir var/cache var/log
 rm -rf var/cache/*
+
 app cache:clear
 app doctrine:schema:update --force -v
 
@@ -44,6 +46,8 @@ fi
 
 [[ "$DATABASE_URL" == *"postgresql"* ]] && app doctrine:query:sql "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch" -vvv || true
 
-chown www-data:www-data -R var
+chown www-data:www-data -R var /data
+chown redis:redis -R /data/redis
+chmod -R 600 /var/www/.ssh/*
 
 exec "$@"

@@ -117,9 +117,9 @@ class HookResponse implements \JsonSerializable
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         $options = $this->options;
         $options['logs'] = $this->logs;

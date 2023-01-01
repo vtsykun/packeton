@@ -9,5 +9,10 @@ services:
         hostname: packagist
         environment:
             PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
+            ADMIN_USER: admin
+            ADMIN_PASSWORD: 123456
+            ADMIN_EMAIL: admin@example.com
         ports:
             - '127.0.0.1:8088:80'
+        volumes:
+            - .docker:/data
