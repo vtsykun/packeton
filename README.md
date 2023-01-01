@@ -9,10 +9,14 @@ Packeton - Private PHP package repository for vendors
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
 
+### Legacy Symfony 3.4 version
+
+(../blob/1.4/README.md)
+
 Features
 --------
 
-- Compatible with composer v2.
+- Compatible with Composer API V2 and bases on Symfony 5.4.
 - Support update webhook for GitHub, Bitbucket and GitLab or custom format.
 - Customers user and groups.
 - Generic Packeton [webhooks](docs/webhook.md)
