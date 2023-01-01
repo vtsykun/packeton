@@ -10,11 +10,8 @@ use Packeton\Entity\Job;
 
 class CronWorker
 {
-    private $scheduleRunner;
-
-    public function __construct(ScheduleRunnerInterface $scheduleRunner)
+    public function __construct(private readonly ScheduleRunnerInterface $scheduleRunner)
     {
-        $this->scheduleRunner = $scheduleRunner;
     }
 
     /**

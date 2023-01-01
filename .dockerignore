@@ -11,5 +11,5 @@
 /.idea
 /.phan
 /docs
-/exclude
+/excluded
 .DS_Store

@@ -8,6 +8,7 @@ parameters:
     env(PACKAGIST_DIST_HOST): null
     env(GITHUB_NO_API): true
     env(PACKAGIST_DIST_PATH): '%kernel.project_dir%/var/zipball'
+    env(PACKAGE_UPDATE_INTERVAL): 14400
 
     # twig sandbox
     security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim']
@@ -86,6 +87,10 @@ services:
             - '@okvpn_cron.runner_default'
         tags:
             - { name: queue_worker, topic: cron:execute }
+
+    Packeton\Webhook\SenderWorker:
+        tags:
+            - { name: queue_worker, topic: webhook:send }
 
     Packeton\EventListener\DoctrineListener:
         tags:

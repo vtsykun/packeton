@@ -37,7 +37,7 @@ class SenderWorker
         $this->maxNestingLevel = max($maxNestingLevel, 2);
     }
 
-    public function process(Job $job): array
+    public function __invoke(Job $job): array
     {
         $payload = $job->getPayload();
         $webhook = $this->registry->getRepository(Webhook::class)
