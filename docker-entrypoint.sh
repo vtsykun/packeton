@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
 set -x
 
+[ ! -d /data/redis ] && mkdir -p /data/redis
+[ ! -d /data/composer ] && mkdir /data/composer
+[ ! -d /data/zipball ] && mkdir /data/zipball
+[ ! -d /data/ssh ] && mkdir /data/ssh
+
+if [ ! -f /data/.env ]; then
+    touch /data/.env
+    echo "APP_SECRET=$(tr -dc 0-9a-f </dev/urandom | head -c 32)" >> /data/.env
+fi
+
+[ ! -f .env.local ] && ln -s /data/.env .env.local
+[ ! -d /var/www/.ssh ] && ln -s /data/ssh /var/www/.ssh
+
 touch /var/www/.ssh/known_hosts
-chmod -R 600 /var/www/.ssh/*
 
 echo " >> Creating the correct known_hosts file"
 for _DOMAIN in $PRIVATE_REPO_DOMAIN_LIST ; do
@@ -16,22 +28,21 @@ for _DOMAIN in $PRIVATE_REPO_DOMAIN_LIST ; do
 done
 
 cp -r /var/www/.ssh/* /root/.ssh && chmod -R 600 /root/.ssh/*
-chown www-data:www-data -R /var/www/.ssh
 
 # Additional script handler
 if [ -f /var/tmp/data/handler.sh ]; then
     bash /var/tmp/data/handler.sh
 fi
 
-echo 'Updating parameters.yml'
-
 rm -rf var/cache/*
-app cache:clear --env=prod
+app cache:clear
 app doctrine:schema:update --force -v
 
 if [[ -n ${ADMIN_USER} ]]; then
-  app packagist:user:manager "$ADMIN_USER" --email="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --admin
+  app packagist:user:manager "$ADMIN_USER" --email="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --admin --only-if-not-exists
 fi
+
+[[ "$DATABASE_URL" == *"postgresql"* ]] && app doctrine:query:sql "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch" -vvv || true
 
 chown www-data:www-data -R var
 

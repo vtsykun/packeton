@@ -1,8 +1,8 @@
 packeton:
-    github_no_api: true
+    github_no_api: '%env(bool:GITHUB_NO_API)%'
     rss_max_items: 30
     archive: true
     archive_options:
         format: zip
-        basedir: '%kernel.project_dir%/var/zipball'
+        basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'
         endpoint: '%env(PACKAGIST_DIST_HOST)%'

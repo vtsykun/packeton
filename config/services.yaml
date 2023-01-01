@@ -6,6 +6,8 @@
 parameters:
     env(APP_COMPOSER_HOME): null
     env(PACKAGIST_DIST_HOST): null
+    env(GITHUB_NO_API): true
+    env(PACKAGIST_DIST_PATH): '%kernel.project_dir%/var/zipball'
 
     # twig sandbox
     security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim']

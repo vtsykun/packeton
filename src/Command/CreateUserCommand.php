@@ -39,6 +39,7 @@ class CreateUserCommand extends Command
             ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'The email')
             ->addOption('enabled', null, InputOption::VALUE_OPTIONAL, 'Set user enable/disable, example --enabled=1, --enabled=0')
             ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'The password')
+            ->addOption('only-if-not-exists', null, InputOption::VALUE_OPTIONAL, 'Only create a new user without update existing (use in docker init)')
             ->addOption('admin', null, InputOption::VALUE_NONE, 'Is admin user?')
             ->setDescription('Change or create user');
     }
@@ -58,6 +59,10 @@ class CreateUserCommand extends Command
 
         $manager = $this->registry->getManager();
         if ($user instanceof User) {
+            if ($input->getOption('only-if-not-exists')) {
+                return 0;
+            }
+
             if ($input->getOption('admin')) {
                 $user->addRole('ROLE_ADMIN');
             }

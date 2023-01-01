@@ -60,10 +60,17 @@ RUN set -eux; \
     cp docker/php/index.php public/index.php; \
     cp docker/php/app /usr/local/bin/app; \
     cp docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh; \
-    mkdir -p /run/php/; \
+    mkdir -p /run/php/ /data; \
     chmod +x /usr/local/bin/app /usr/local/bin/docker-entrypoint.sh; \
     usermod -d /var/www www-data; \
-    chown www-data:www-data /var/lib/nginx /var/lib/nginx/tmp
+    echo "dir /data/redis" >> redis.conf; \
+    chown www-data:www-data /var/lib/nginx /var/lib/nginx/tmp /data
+
+ENV DATABASE_URL sqlite:////data/app.db
+ENV APP_COMPOSER_HOME /data/composer
+ENV PACKAGIST_DIST_PATH /data/zipball
+
+VOLUME ["/data"]
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 

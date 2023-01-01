@@ -3,13 +3,13 @@
 /.env.local
 /.env.local.php
 /.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
 /vendor/
-
+/.docker
 /.vscode
 /.idea
 /.phan
 /docs
+/exclude
 .DS_Store
