@@ -10,6 +10,7 @@ use Packeton\Model\PackageManager;
 use Packeton\Service\DistManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -87,11 +88,8 @@ class ProviderController extends AbstractController
      *     name="root_package_v2", defaults={"_format" = "json"},
      *     methods={"GET"}
      * )
-     *
-     * @param string $package
-     * @return Response
      */
-    public function packageV2Action(string $package)
+    public function packageV2Action(Request $request, string $package)
     {
         $isDev = str_ends_with($package, '~dev');
         $package = preg_replace('/~dev$/', '', $package);
@@ -103,6 +101,7 @@ class ProviderController extends AbstractController
 
         $response = new JsonResponse($package);
         $response->setLastModified(new \DateTime($lastModified));
+        $response->isNotModified($request);
 
         return $response;
     }

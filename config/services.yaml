@@ -84,7 +84,8 @@ services:
 
     Packeton\Cron\CronWorker:
         arguments:
-            - '@okvpn_cron.runner_default'
+            $consoleHandler: '@?monolog.handler.console'
+            $scheduleRunner: '@okvpn_cron.runner_default'
         tags:
             - { name: queue_worker, topic: cron:execute }
 

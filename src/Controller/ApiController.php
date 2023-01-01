@@ -78,10 +78,7 @@ class ApiController extends AbstractController
     public function updatePackageAction(Request $request)
     {
         // parse the payload
-        $payload = json_decode($request->request->get('payload'), true);
-        if (!$payload && 0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
-            $payload = json_decode($request->getContent(), true);
-        }
+        $payload = $this->getJsonPayload($request);
 
         if (!$payload && !$request->get('composer_package_name')) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
@@ -162,10 +159,7 @@ class ApiController extends AbstractController
             throw new AccessDeniedException();
         }
 
-        $payload = json_decode($request->request->get('payload'), true);
-        if (!$payload && 0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
-            $payload = json_decode($request->getContent(), true);
-        }
+        $payload = $this->getJsonPayload($request);
 
         $package->setRepository($payload['repository']);
         $this->container->get(PackageManager::class)->updatePackageUrl($package);
@@ -311,6 +305,16 @@ class ApiController extends AbstractController
             LIMIT 1',
             array($name, $version)
         );
+    }
+
+    protected function getJsonPayload(Request $request)
+    {
+        $payload = $request->request->get('payload') ? json_decode($request->request->get('payload'), true) : null;
+        if (!$payload and $content = $request->getContent()) {
+            $payload = @json_decode($content, true);
+        }
+
+        return $payload ?: null;
     }
 
     /**

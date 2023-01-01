@@ -697,7 +697,6 @@ class PackageController extends AbstractController
                 if (!empty($user)) {
                     if (!$package->getMaintainers()->contains($user)) {
                         $package->addMaintainer($user);
-                        $this->container->get(PackageManager::class)->notifyNewMaintainer($user, $package);
                     }
 
                     $em->persist($package);
@@ -880,9 +879,9 @@ class PackageController extends AbstractController
 
     /**
      * @Route(
-     *      "/packages/{package}/stats.{_format}",
+     *      "/packages/{name}/stats.{_format}",
      *      name="view_package_stats",
-     *      requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "_format"="(json)"},
+     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "_format"="(json)"},
      *      defaults={"_format"="html"}
      * )
      */
@@ -994,9 +993,9 @@ class PackageController extends AbstractController
 
     /**
      * @Route(
-     *      "/packages/{package}/stats/all.json",
+     *      "/packages/{name}/stats/all.json",
      *      name="package_stats",
-     *      requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
+     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
      * )
      */
     public function overallStatsAction(Request $req, \Redis $redis, #[Vars('name')] Package $package, Version $version = null)

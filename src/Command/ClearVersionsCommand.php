@@ -12,6 +12,8 @@
 
 namespace Packeton\Command;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Symfony\Component\Console\Command\Command;
@@ -25,6 +27,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ClearVersionsCommand extends Command
 {
     protected static $defaultName = 'packagist:clear:versions';
+
+    public function __construct(protected ManagerRegistry $registry) {
+        parent::__construct();
+    }
 
     /**
      * {@inheritdoc}
@@ -46,11 +52,12 @@ class ClearVersionsCommand extends Command
     {
         $force = $input->getOption('force');
         $filter = $input->getOption('filter');
-        $doctrine = $this->getContainer()->get('doctrine');
 
-        $versionRepo = $doctrine->getRepository(Version::class);
+        /** @var EntityManagerInterface $em */
+        $em = $this->registry->getManager();
+        $versionRepo = $this->registry->getRepository(Version::class);
 
-        $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
+        $packages = $em->getConnection()->fetchAllAssociative('SELECT id FROM package ORDER BY id ASC');
         $ids = [];
         foreach ($packages as $package) {
             $ids[] = $package['id'];
@@ -77,20 +84,20 @@ class ClearVersionsCommand extends Command
                 }
             }
 
-            $doctrine->getManager()->flush();
-            $doctrine->getManager()->clear();
+            $em->flush();
+            $em->clear();
             unset($versions);
         }
 
         if ($force) {
             // mark packages as recently crawled so that they get updated
-            $packageRepo = $doctrine->getRepository(Package::class);
+            $packageRepo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $name) {
                 $package = $packageRepo->findOneByName($name);
                 $package->setCrawledAt(new \DateTime);
             }
 
-            $doctrine->getManager()->flush();
+            $em->flush();
         }
 
         return 0;

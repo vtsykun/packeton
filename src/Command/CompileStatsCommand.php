@@ -12,6 +12,8 @@
 
 namespace Packeton\Command;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -22,9 +24,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class CompileStatsCommand extends Command
 {
-    protected $redis;
-
     protected static $defaultName = 'packagist:stats:compile';
+
+    public function __construct(
+        protected ManagerRegistry $registry,
+        protected \Redis $redis,
+    ) {
+        parent::__construct();
+    }
 
     /**
      * {@inheritdoc}
@@ -46,16 +53,17 @@ class CompileStatsCommand extends Command
         $verbose = $input->getOption('verbose');
         $force = $input->getOption('force');
 
-        $doctrine = $this->getContainer()->get('doctrine');
-        $this->redis = $redis = $this->getContainer()->get('snc_redis.default');
 
-        $minMax = $doctrine->getManager()->getConnection()->fetchAssociative('SELECT MAX(id) maxId, MIN(id) minId FROM package');
+        /** @var EntityManagerInterface $em */
+        $em = $this->registry->getManager();
+
+        $minMax = $em->getConnection()->fetchAssociative('SELECT MAX(id) maxId, MIN(id) minId FROM package');
         if (!isset($minMax['minId'])) {
             return 0;
         }
 
         $ids = range($minMax['minId'], $minMax['maxId']);
-        $res = $doctrine->getManager()->getConnection()->fetchAssociative('SELECT MIN(createdAt) minDate FROM package');
+        $res = $em->getConnection()->fetchAssociative('SELECT MIN(createdAt) minDate FROM package');
         $date = new \DateTime($res['minDate']);
         $date->modify('00:00:00');
         $yesterday = new \DateTime('yesterday 00:00:00');
@@ -71,13 +79,13 @@ class CompileStatsCommand extends Command
                 $keys['downloads:'.$clearDate->format('Ym')] = true;
                 $clearDate->modify('+1day');
             }
-            $redis->del(array_keys($keys));
+            $this->redis->del(array_keys($keys));
         }
 
         while ($date <= $yesterday) {
             // skip months already computed
             if (null !== $this->getMonthly($date) && $date->format('m') !== $yesterday->format('m')) {
-                $date->setDate($date->format('Y'), $date->format('m')+1, 1);
+                $date->setDate($date->format('Y'), ((int)$date->format('m')) + 1, 1);
                 continue;
             }
 
@@ -88,7 +96,7 @@ class CompileStatsCommand extends Command
             }
 
             $sum = $this->sum($date->format('Ymd'), $ids);
-            $redis->set('downloads:'.$date->format('Ymd'), $sum);
+            $this->redis->set('downloads:'.$date->format('Ymd'), $sum);
 
             if ($verbose) {
                 $output->writeln('Wrote daily data for '.$date->format('Y-m-d').': '.$sum);
@@ -99,7 +107,7 @@ class CompileStatsCommand extends Command
             // update the monthly total if we just computed the last day of the month or the last known day
             if ($date->format('Ymd') === $yesterday->format('Ymd') || $date->format('Ym') !== $nextDay->format('Ym')) {
                 $sum = $this->sum($date->format('Ym'), $ids);
-                $redis->set('downloads:'.$date->format('Ym'), $sum);
+                $this->redis->set('downloads:'.$date->format('Ym'), $sum);
 
                 if ($verbose) {
                     $output->writeln('Wrote monthly data for '.$date->format('Y-m').': '.$sum);
@@ -109,9 +117,7 @@ class CompileStatsCommand extends Command
             $date = $nextDay;
         }
 
-        // fetch existing ids
-        $doctrine = $this->getContainer()->get('doctrine');
-        $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
+        $packages = $em->getConnection()->fetchAllAssociative('SELECT id FROM package ORDER BY id ASC');
         $ids = [];
         foreach ($packages as $row) {
             $ids[] = $row['id'];
@@ -124,12 +130,12 @@ class CompileStatsCommand extends Command
         while ($id = array_shift($ids)) {
             $trendiness = $this->sumLastNDays(7, $id, $yesterday);
 
-            $redis->zadd('downloads:trending:new', $trendiness, $id);
-            $redis->zadd('downloads:absolute:new', $redis->get('dl:'.$id), $id);
+            $this->redis->zadd('downloads:trending:new', $trendiness, $id);
+            $this->redis->zadd('downloads:absolute:new', $this->redis->get('dl:'.$id) ?: 0, $id);
         }
 
-        $redis->rename('downloads:trending:new', 'downloads:trending');
-        $redis->rename('downloads:absolute:new', 'downloads:absolute');
+        $this->redis->rename('downloads:trending:new', 'downloads:trending');
+        $this->redis->rename('downloads:absolute:new', 'downloads:absolute');
 
         return 0;
     }

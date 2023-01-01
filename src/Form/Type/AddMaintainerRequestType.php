@@ -12,8 +12,12 @@
 
 namespace Packeton\Form\Type;
 
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\User;
 use Packeton\Form\Model\MaintainerRequest;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
+use Symfony\Component\Form\Exception\TransformationFailedException;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -22,16 +26,39 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class AddMaintainerRequestType extends AbstractType
 {
+    public function __construct(private readonly ManagerRegistry $registry)
+    {
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add('user');
+        $builder->get('user')
+            ->addModelTransformer(new CallbackTransformer(
+                function ($user) {
+                    if ($user instanceof User) {
+                        return $user->getUsername();
+                    }
+                    return null;
+                },
+                function ($username) {
+                    if (empty($username)) {
+                        return null;
+                    }
+
+                    if (!$user = $this->registry->getRepository(User::class)->findOneBy(['username' => $username])) {
+                        throw new TransformationFailedException("User $username not found");
+                    }
+                    return $user;
+                }
+            ));
     }
 
     public function configureOptions(OptionsResolver $resolver)
     {
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'data_class' => MaintainerRequest::class,
-        ));
+        ]);
     }
 
     /**

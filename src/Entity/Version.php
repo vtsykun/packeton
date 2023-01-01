@@ -243,7 +243,8 @@ class Version
             'keywords' => $tags,
             'homepage' => (string) $this->getHomepage(),
             'version' => $this->getVersion(),
-            'version_normalized' => $this->getNormalizedVersion(),
+            'version_normalized' => $this->getNormalizedVersionV1(),
+            'version_normalized_v2' => $this->getNormalizedVersion(),
             'license' => $this->getLicense(),
             'authors' => $authors,
             'source' => $this->getSource(),
@@ -297,6 +298,15 @@ class Version
         }
 
         return $data;
+    }
+
+    public function getNormalizedVersionV1()
+    {
+        if (in_array($this->normalizedVersion, ['dev-master', 'dev-default', 'dev-trunk'], true)) {
+            return '9999999-dev';
+        }
+
+        return $this->normalizedVersion;
     }
 
     public function equals(Version $version)

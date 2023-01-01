@@ -12,7 +12,10 @@
 
 namespace Packeton\Command;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
+use Packeton\Service\Scheduler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,6 +28,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 class UpdatePackagesCommand extends Command
 {
     protected static $defaultName = 'packagist:update';
+
+    public function __construct(
+        protected ManagerRegistry $registry,
+        protected Scheduler $scheduler,
+    ) {
+        parent::__construct();
+    }
 
     /**
      * {@inheritdoc}
@@ -52,24 +62,25 @@ class UpdatePackagesCommand extends Command
         $force = $input->getOption('force');
         $package = $input->getArgument('package');
 
-        $doctrine = $this->getContainer()->get('doctrine');
         $deleteBefore = false;
         $updateEqualRefs = false;
         $randomTimes = true;
 
+        /** @var EntityManagerInterface $em */
+        $em = $this->registry->getManager();
         $interval = $input->getOption('update-crawl-interval') ?: 14400; // 4 hour
 
         if ($package) {
-            $packages = [['id' => $doctrine->getRepository(Package::class)->findOneByName($package)->getId()]];
+            $packages = [['id' => $this->registry->getRepository(Package::class)->findOneByName($package)->getId()]];
             if ($force) {
                 $updateEqualRefs = true;
             }
             $randomTimes = false;
         } elseif ($force) {
-            $packages = $doctrine->getManager()->getConnection()->fetchAll('SELECT id FROM package ORDER BY id ASC');
+            $packages = $em->getConnection()->fetchAllAssociative('SELECT id FROM package ORDER BY id ASC');
             $updateEqualRefs = true;
         } else {
-            $packages = $doctrine->getRepository(Package::class)->getStalePackages($interval);
+            $packages = $this->registry->getRepository(Package::class)->getStalePackages($interval);
         }
 
         $ids = [];
@@ -84,20 +95,19 @@ class UpdatePackagesCommand extends Command
             $updateEqualRefs = true;
         }
 
-        $scheduler = $this->getContainer()->get('scheduler');
 
         while ($ids) {
             $idsGroup = array_splice($ids, 0, 100);
 
             foreach ($idsGroup as $id) {
-                $job = $scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, (int) ($interval/1.5)).'seconds') : null);
+                $job = $this->scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, (int) ($interval/1.5)).'seconds') : null);
                 if ($verbose) {
                     $output->writeln('Scheduled update job '.$job->getId().' for package '.$id);
                 }
-                $doctrine->getManager()->detach($job);
+                $em->detach($job);
             }
 
-            $doctrine->getManager()->clear();
+            $em->clear();
         }
 
         return 0;

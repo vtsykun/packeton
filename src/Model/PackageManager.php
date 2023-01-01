@@ -17,6 +17,7 @@ use Packeton\Entity\Package;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 
@@ -95,60 +96,33 @@ class PackageManager
             $recipients = [];
             foreach ($package->getMaintainers() as $maintainer) {
                 if ($maintainer->isNotifiableForFailures()) {
-                    $recipients[$maintainer->getEmail()] = $maintainer->getUsername();
+                    $recipients[] = $maintainer->getEmail();
                 }
             }
 
             if ($recipients) {
-                $body = $this->twig->render('PackagistWebBundle:Email:update_failed.txt.twig', array(
+                $body = $this->twig->render('email/update_failed.txt.twig', [
                     'package' => $package,
                     'exception' => get_class($e),
                     'exceptionMessage' => $e->getMessage(),
                     'details' => strip_tags($details),
-                ));
-
-                $message = \Swift_Message::newInstance()
-                    ->setSubject($package->getName().' failed to update, invalid composer.json data')
-                    ->setFrom($this->options['from'], $this->options['fromName'])
-                    ->setTo($recipients)
-                    ->setBody($body)
-                ;
+                ]);
 
                 try {
-                    $this->mailer->send($message);
-                } catch (\Swift_TransportException $e) {
-                    $this->logger->error('['.get_class($e).'] '.$e->getMessage());
+                    $email = (new Email())
+                        ->to(...$recipients)
+                        ->subject($package->getName().' failed to update, invalid composer.json data')
+                        ->html($body);
 
+                    $this->mailer->send($email);
+                } catch (\Throwable $e) {
+                    $this->logger->error('['.get_class($e).'] ' . $e->getMessage(), ['e' => $e]);
                     return false;
                 }
             }
 
             $package->setUpdateFailureNotified(true);
             $this->doctrine->getManager()->flush();
-        }
-
-        return true;
-    }
-
-    public function notifyNewMaintainer($user, Package $package)
-    {
-        $body = $this->twig->render('PackagistWebBundle:Email:maintainer_added.txt.twig', array(
-            'package_name' => $package->getName()
-        ));
-
-        $message = \Swift_Message::newInstance()
-            ->setSubject('You have been added to ' . $package->getName() . ' as a maintainer')
-            ->setFrom($this->options['from'], $this->options['fromName'])
-            ->setTo($user->getEmail())
-            ->setBody($body)
-        ;
-
-        try {
-            $this->mailer->send($message);
-        } catch (\Swift_TransportException $e) {
-            $this->logger->error('['.get_class($e).'] '.$e->getMessage());
-
-            return false;
         }
 
         return true;
@@ -208,6 +182,15 @@ class PackageManager
 
             usort($versions, fn($v1, $v2) => -1 * version_compare($v1['version_normalized'], $v2['version_normalized']));
             array_map(fn($v) => $obj->time < $v['time'] ? $obj->time = $v['time'] : null, $versions);
+
+            foreach ($versions as $i => $v) {
+                if (isset($v['version_normalized_v2'])) {
+                    $v['version_normalized'] = $v['version_normalized_v2'];
+                    unset($v['version_normalized_v2']);
+                }
+
+                $versions[$i] = $v;
+            }
 
             $metadata['packages'][$packName] = MetadataMinifier::minify(array_values($versions));
         }
