@@ -4,7 +4,7 @@ services:
     packagist:
         build:
             context: .
-        image: okvpn/packeton:latest
+        image: packeton/packeton:latest
         container_name: packagist
         hostname: packagist
         environment:

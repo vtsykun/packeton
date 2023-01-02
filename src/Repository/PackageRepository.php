@@ -302,7 +302,7 @@ class PackageRepository extends EntityRepository
             ) x';
 
         $stmt = $this->getEntityManager()->getConnection()
-            ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(7*86400, 'dependents_count_'.$name, $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
+            ->executeQuery($sql, ['name' => $name], [], new QueryCacheProfile(86400, sha1('dependents_count_'.$name), $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
         $result = $stmt->fetchAllAssociative();
 
         return (int) $result[0]['count'];
@@ -322,7 +322,7 @@ class PackageRepository extends EntityRepository
                 $sql,
                 ['name' => $name],
                 [],
-                new QueryCacheProfile(7*86400, 'dependents_'.$name.'_'.$offset.'_'.$limit, $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
+                new QueryCacheProfile(86400, sha1('dependents_'.$name.$offset.'_'.$limit), $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
             );
 
         return $stmt->fetchAllAssociative();
@@ -336,7 +336,7 @@ class PackageRepository extends EntityRepository
             WHERE s.packageName = :name';
 
         $stmt = $this->getEntityManager()->getConnection()
-            ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(7*86400, 'suggesters_count_'.$name, $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
+            ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(86400, sha1('suggesters_count_'.$name), $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
         $result = $stmt->fetchAllAssociative();
 
         return (int) $result[0]['count'];
@@ -357,7 +357,7 @@ class PackageRepository extends EntityRepository
                 $sql,
                 ['name' => $name],
                 [],
-                new QueryCacheProfile(7*86400, 'suggesters_'.$name.'_'.$offset.'_'.$limit, $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
+                new QueryCacheProfile(86400, sha1('suggesters_'.$name.$offset.'_'.$limit), $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
             );
         $result = $stmt->fetchAllAssociative();
 
