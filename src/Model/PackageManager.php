@@ -158,7 +158,7 @@ class PackageManager
      */
     public function getPackageJson(?User $user, string $package)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_MAINTAINER')) {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
@@ -229,7 +229,7 @@ class PackageManager
 
     private function dumpInMemory(User $user = null, bool $cache = true)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_MAINTAINER')) {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
@@ -239,7 +239,7 @@ class PackageManager
         }
 
         $data = $this->dumper->dump($user);
-        $this->redis->setex($cacheKey, 3600, json_encode($data));
+        $this->redis->setex($cacheKey, 900, json_encode($data));
         return $data;
     }
 }

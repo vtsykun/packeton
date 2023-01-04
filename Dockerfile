@@ -48,7 +48,6 @@ COPY --chown=82:82 . /var/www/packagist/
 
 RUN composer run-script auto-scripts && \
     mkdir var/composer var/zipball && \
-    chown www-data:www-data -R public var && \
     rm -rf /root/.composer var/cache
 
 RUN set -eux; \

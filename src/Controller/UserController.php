@@ -179,12 +179,16 @@ class UserController extends AbstractController
         if ($request->getMethod() === 'POST') {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
+                /** @var User $user */
                 $user = $form->getData();
                 if ($planPassword = $user->getPlainPassword()) {
                     $user->setPassword(
                         $this->container->get(UserPasswordHasherInterface::class)->hashPassword($user, $planPassword)
                     );
                 }
+
+                $form->get('fullAccess')->getData() ? $user->addRole('ROLE_FULL_CUSTOMER') :
+                    $user->removeRole('ROLE_FULL_CUSTOMER');
 
                 $this->getEM()->persist($user);
                 $this->getEM()->flush();
@@ -226,15 +230,27 @@ class UserController extends AbstractController
         if ($request->getMethod() === 'POST') {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
+                /** @var SshCredentials $sshKey */
                 $sshKey = $form->getData();
                 $em = $this->registry->getManager();
-                $fingerprint = SshKeyHelper::getFingerprint($sshKey->getKey());
-                $sshKey->setFingerprint($fingerprint);
+
+                if ($sshKey->getKey()) {
+                    $fingerprint = SshKeyHelper::getFingerprint($sshKey->getKey());
+                    $sshKey->setFingerprint($fingerprint);
+                }
+
+                if ($parent = $form->get('replace')->getData()) {
+                    $parent->setFingerprint($sshKey->getFingerprint());
+                    $parent->setKey($sshKey->getKey());
+                    $parent->setName($sshKey->getName());
+                    $parent->setComposerConfig($sshKey->getComposerConfig());
+                    $sshKey = $parent;
+                }
 
                 $em->persist($sshKey);
                 $em->flush();
 
-                $this->addFlash('success', 'Ssh key was added successfully');
+                $this->addFlash('success', $parent ? 'Existing ssh key was updated successfully' : 'Ssh key was added successfully');
                 return new RedirectResponse('/');
             }
         }

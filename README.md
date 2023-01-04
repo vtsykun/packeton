@@ -78,7 +78,7 @@ services:
     packagist:
         build:
             context: .
-        image: okvpn/packeton:latest
+        image: packeton/packeton:latest
         container_name: packagist
         hostname: packagist
         environment:
@@ -209,13 +209,26 @@ If you have the error ```This private key is not valid``` inserting your ssh in 
 New keys with OpenSSH private key format can be converted using ssh-keygen utility to the old PEM format.
 ```ssh-keygen -p -m PEM -f ~/.ssh/id_rsa```
 
-You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.github.com/jeffersonmartin/d0d4a8dfec90d224d14f250b36c74d2f)
+You can add GitHub/GitLab access token to `auth.json` of composer home dir 
+(default `APP_COMPOSER_HOME="%kernel.project_dir%/var/.composer"`) or use UI credentials,
+see [here](https://getcomposer.org/doc/articles/authentication-for-private-packages.md) 
 
-```
+```json
 {
     "github-oauth": {
         "github.com": "xxxxxxxxxxxxx"
     }
+}
+```
+
+#### Allow connections to http
+
+You can create `config.json` in the composer home (see `APP_COMPOSER_HOME` env var) or add this option
+in the UI credentials form.
+
+```json
+{
+    "secure-http": false
 }
 ```
 

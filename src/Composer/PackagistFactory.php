@@ -78,20 +78,26 @@ class PackagistFactory
     {
         $config = ConfigFactory::createConfig();
 
-        if (null !== $credentials) {
-            $uid = @getmyuid();
-            $credentialsFile = rtrim($this->tmpDir, '/') . '/packeton_priv_key_' . $credentials->getId() . '_' . $uid;
-            if (!file_exists($credentialsFile)) {
-                file_put_contents($credentialsFile, $credentials->getKey());
-                chmod($credentialsFile, 0600);
-            }
-            putenv("GIT_SSH_COMMAND=ssh -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $credentialsFile");
-            ProcessExecutor::inheritEnv(['GIT_SSH_COMMAND']);
+        ProcessExecutor::inheritEnv([]);
+        putenv('GIT_SSH_COMMAND');
 
-            $config->merge(['config' => ['ssh-key-file' => $credentialsFile]]);
-        } else {
-            ProcessExecutor::inheritEnv([]);
-            putenv('GIT_SSH_COMMAND');
+        if (null !== $credentials) {
+            if ($credentials->getComposerConfig()) {
+                $config->merge(['config' => $credentials->getComposerConfig()]);
+            }
+
+            if ($credentials->getKey()) {
+                $uid = @getmyuid();
+                $credentialsFile = rtrim($this->tmpDir, '/') . '/packeton_priv_key_' . $credentials->getId() . '_' . $uid;
+                if (!file_exists($credentialsFile)) {
+                    file_put_contents($credentialsFile, $credentials->getKey());
+                    chmod($credentialsFile, 0600);
+                }
+                putenv("GIT_SSH_COMMAND=ssh -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $credentialsFile");
+                ProcessExecutor::inheritEnv(['GIT_SSH_COMMAND']);
+
+                $config->merge(['config' => ['ssh-key-file' => $credentialsFile]]);
+            }
         }
 
         return $config;

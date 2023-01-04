@@ -12,6 +12,8 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class CustomerUserType extends AbstractType
@@ -43,6 +45,12 @@ class CustomerUserType extends AbstractType
                 'label' => 'Update expiration',
                 'tooltip' => 'A new release updates will be frozen after this date. But the user can uses the versions released before'
             ])
+            ->add('fullAccess', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Full read access',
+                'mapped' => false,
+                'tooltip' => 'Read access to all packages without ACL Group restriction'
+            ])
             ->add('groups', EntityType::class, [
                 'choice_label' => 'name',
                 'class' => Group::class,
@@ -50,6 +58,20 @@ class CustomerUserType extends AbstractType
                 'multiple' => true,
                 'required' => false
             ]);
+
+        $builder->addEventListener(FormEvents::POST_SET_DATA, $this->postSetData(...));
+    }
+
+    public function postSetData(FormEvent $event)
+    {
+        $user = $event->getData();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        if ($user->hasRole('ROLE_FULL_CUSTOMER')) {
+            $event->getForm()->get('fullAccess')->setData(true);
+        }
     }
 
     /**

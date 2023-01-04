@@ -31,9 +31,16 @@ class SshCredentials
     /**
      * @var string
      *
-     * @ORM\Column(name="ssh_key", type="text")
+     * @ORM\Column(name="ssh_key", type="text", nullable=true)
      */
     private $key;
+
+    /**
+     * @var array|null
+     *
+     * @ORM\Column(name="composer_config", type="json", nullable=true)
+     */
+    private $composerConfig;
 
     /**
      * @var \DateTime
@@ -45,7 +52,7 @@ class SshCredentials
     /**
      * @var string
      *
-     * @ORM\Column(name="fingerprint", type="string", length=255)
+     * @ORM\Column(name="fingerprint", type="string", length=255, nullable=true)
      */
     private $fingerprint;
 
@@ -69,7 +76,7 @@ class SshCredentials
      *
      * @param string $name
      *
-     * @return SshCredentials
+     * @return $this
      */
     public function setName($name)
     {
@@ -93,7 +100,7 @@ class SshCredentials
      *
      * @param string $key
      *
-     * @return SshCredentials
+     * @return $this
      */
     public function setKey($key)
     {
@@ -117,7 +124,7 @@ class SshCredentials
      *
      * @param \DateTime $createdAt
      *
-     * @return SshCredentials
+     * @return $this
      */
     public function setCreatedAt($createdAt)
     {
@@ -141,7 +148,7 @@ class SshCredentials
      *
      * @param string $fingerprint
      *
-     * @return SshCredentials
+     * @return $this
      */
     public function setFingerprint($fingerprint)
     {
@@ -159,5 +166,22 @@ class SshCredentials
     {
         return $this->fingerprint;
     }
-}
 
+    /**
+     * @return array|null
+     */
+    public function getComposerConfig(): ?array
+    {
+        return $this->composerConfig;
+    }
+
+    /**
+     * @param array|null $composerConfig
+     * @return $this
+     */
+    public function setComposerConfig(?array $composerConfig)
+    {
+        $this->composerConfig = $composerConfig;
+        return $this;
+    }
+}

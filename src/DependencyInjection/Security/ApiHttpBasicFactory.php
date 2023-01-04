@@ -13,7 +13,7 @@ class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getKey()
+    public function getKey(): string
     {
         return 'api-basic';
     }
@@ -41,7 +41,7 @@ class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return 0;
     }

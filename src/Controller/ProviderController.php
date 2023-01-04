@@ -144,7 +144,7 @@ class ProviderController extends AbstractController
                             return $versionName === $version->getVersion();
                         }
                 )->first();
-                if ($version && $this->isGranted('ROLE_MAINTAINER', $version)) {
+                if ($version && $this->isGranted('ROLE_FULL_CUSTOMER', $version)) {
                     return new BinaryFileResponse($path);
                 }
             }
@@ -152,7 +152,7 @@ class ProviderController extends AbstractController
 
         /** @var Version $version */
         foreach ($versions as $version) {
-            if (!$this->isGranted('ROLE_MAINTAINER', $version)) {
+            if (!$this->isGranted('ROLE_FULL_CUSTOMER', $version)) {
                 continue;
             }
 

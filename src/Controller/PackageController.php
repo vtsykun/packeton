@@ -66,7 +66,7 @@ class PackageController extends AbstractController
      */
     public function listAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 
@@ -296,7 +296,7 @@ class PackageController extends AbstractController
     public function viewPackageAction(Request $req, $name, CsrfTokenManagerInterface $csrfTokenManager)
     {
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
-            if (!$this->isGranted('ROLE_MAINTAINER')) {
+            if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
                 throw new AccessDeniedHttpException;
             }
             return $this->{$match['method'].'Action'}($req, $match['pkg']);
@@ -312,7 +312,7 @@ class PackageController extends AbstractController
             throw new NotFoundHttpException;
         }
 
-        if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER', $package)) {
             throw new NotFoundHttpException;
         }
 
@@ -419,7 +419,7 @@ class PackageController extends AbstractController
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
-        $changelogBuilder = $this->get(ChangelogUtils::class);
+        $changelogBuilder = $this->container->get(ChangelogUtils::class);
         $fromVersion = $request->get('from');
         $toVersion = $request->get('to');
         if (!$toVersion) {
@@ -509,11 +509,9 @@ class PackageController extends AbstractController
      */
     public function viewPackageVersionAction(Request $req, $versionId)
     {
-        $req->getSession()->save();
-
         /** @var VersionRepository $repo  */
         $repo = $this->registry->getRepository(Version::class);
-        if (!$this->isGranted('ROLE_MAINTAINER', $repo->find($versionId))) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER', $repo->find($versionId))) {
             throw new AccessDeniedHttpException;
         }
 
