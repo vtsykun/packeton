@@ -73,7 +73,7 @@ docker run -d --name packeton \
     packeton/packeton:latest
 ```
 
-After container is running, you may wish to create a admin user via command `packagist:user:manager`
+After container is running, you may wish to create an admin user via command `packagist:user:manager`
 ```
 docker exec -it packeton bin/console packagist:user:manager admin --password=123456 --admin
 ```
@@ -100,6 +100,7 @@ docker-compose up -f docker-compose-prod.yml -d # Or split
 - `PACKAGIST_DIST_PATH` - Default /data/zipball, path to storage zipped versions
 - `REDIS_URL` - Redis DB, default redis://localhost
 - `PACKAGIST_DIST_HOST` - Hostname, (auto) default use the current host header in the request.
+- `TRUSTED_PROXIES` - Ips for Reverse Proxy. See [Symfony docs](https://symfony.com/doc/current/deployment/proxies.html)
 
 Installation
 ------------
