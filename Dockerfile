@@ -11,7 +11,7 @@ RUN set -eux; \
 		postgresql-dev \
 		icu-dev \
 		coreutils \
-		libxml2-dev \
+		libxml2-dev openldap-dev \
 		bzip2-dev libzip-dev \
 		libxslt-dev \
         oniguruma-dev \
@@ -23,7 +23,7 @@ RUN set -eux; \
 	\
 	pecl install -o -f redis apcu; \
 	docker-php-ext-enable redis apcu; \
-    docker-php-ext-install xsl zip sockets pdo pdo_pgsql pdo_mysql intl sysvsem opcache \
+    docker-php-ext-install ldap xsl zip sockets pdo pdo_pgsql pdo_mysql intl sysvsem opcache \
         bz2 mbstring pcntl; \
     runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
