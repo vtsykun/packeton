@@ -152,7 +152,7 @@ class UserController extends AbstractController
     public function updateAction(Request $request, #[Vars(['name' => 'username'])] User $user)
     {
         $currentUser = $this->getUser();
-        if ($currentUser->getUsername() !== $user->getUsername() && !$user->isAdmin()) {
+        if ($currentUser->getUserIdentifier() !== $user->getUserIdentifier() && !$user->isAdmin()) {
             return  $this->handleUpdate($request, $user, 'User has been saved.');
         }
 

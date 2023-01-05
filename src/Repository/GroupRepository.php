@@ -49,8 +49,12 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
      *
      * @return Package[]
      */
-    public function getAllowedPackagesForUser(UserInterface $user, $hydration = true)
+    public function getAllowedPackagesForUser(?UserInterface $user, $hydration = true)
     {
+        if (!$user instanceof User) {
+            return [];
+        }
+
         $qb = $this->_em->createQueryBuilder();
         $qb
             ->select('p.id')

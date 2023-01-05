@@ -153,7 +153,7 @@ class User extends BaseUser
     public function toArray()
     {
         return array(
-            'name' => $this->getUsername(),
+            'name' => $this->getUserIdentifier(),
             'avatar_url' => $this->getGravatarUrl(),
         );
     }

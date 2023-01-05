@@ -116,7 +116,6 @@ class PackageController extends AbstractController
      */
     public function submitPackageAction(Request $req)
     {
-        $user = $this->getUser();
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException();
         }
@@ -126,7 +125,10 @@ class PackageController extends AbstractController
             'action' => $this->generateUrl('submit'),
             'validation_groups' => ['Create']
         ]);
-        $package->addMaintainer($user);
+
+        if ($this->getUser() instanceof User) {
+            $package->addMaintainer($this->getUser());
+        }
 
         $form->handleRequest($req);
         if ($form->isSubmitted() && $form->isValid()) {
@@ -163,8 +165,10 @@ class PackageController extends AbstractController
 
         $package = new Package;
         $form = $this->createForm(PackageType::class, $package, ['validation_groups' => ['Create']]);
-        $user = $this->getUser();
-        $package->addMaintainer($user);
+
+        if ($this->getUser() instanceof User) {
+            $package->addMaintainer($this->getUser());
+        }
 
         $form->handleRequest($req);
         if ($form->isSubmitted() && $form->isValid()) {

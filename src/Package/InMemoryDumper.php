@@ -11,6 +11,7 @@ use Packeton\Entity\User;
 use Packeton\Entity\Version;
 use Packeton\Security\Acl\PackagesAclChecker;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class InMemoryDumper
 {
@@ -21,22 +22,22 @@ class InMemoryDumper
     ) {}
 
     /**
-     * @param User|null $user
+     * @param UserInterface|null $user
      * @return array
      */
-    public function dump(User $user = null): array
+    public function dump(UserInterface $user = null): array
     {
         return $this->dumpRootPackages($user);
     }
 
     /**
-     * @param null|User $user
+     * @param null|UserInterface $user
      * @param string|Package $package
      * @param array $versionData
      *
      * @return array
      */
-    public function dumpPackage(?User $user, $package, array $versionData = null): array
+    public function dumpPackage(?UserInterface $user, $package, array $versionData = null): array
     {
         if (is_string($package)) {
             $package = $this->registry
@@ -48,7 +49,7 @@ class InMemoryDumper
             return [];
         }
 
-        if ($user !== null && $this->checker->isGrantedAccessForPackage($user, $package) === false) {
+        if ($user !== null && (!$user instanceof User || $this->checker->isGrantedAccessForPackage($user, $package) === false)) {
             return [];
         }
 
@@ -72,7 +73,7 @@ class InMemoryDumper
         return $packageData;
     }
 
-    private function dumpRootPackages(User $user = null)
+    private function dumpRootPackages(UserInterface $user = null)
     {
         [$providers, $packagesData, $availablePackages] = $this->dumpUserPackages($user);
 
@@ -95,7 +96,7 @@ class InMemoryDumper
         return [$rootFile, $providers, $packagesData];
     }
 
-    private function dumpUserPackages(User $user = null): array
+    private function dumpUserPackages(UserInterface $user = null): array
     {
         $packages = $user ?
             $this->registry->getRepository(Group::class)
