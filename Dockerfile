@@ -58,7 +58,8 @@ RUN set -eux; \
     cp docker/nginx/nginx.conf /etc/nginx/nginx.conf; \
     cp docker/php/index.php public/index.php; \
     cp docker/php/app /usr/local/bin/app; \
-    cp docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh; \
+    cp docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh; \
+    cp docker/php/wait-for-it.sh /usr/local/bin/wait-for-it.sh; \
     mkdir -p /run/php/ /data; \
     chmod +x /usr/local/bin/app /usr/local/bin/docker-entrypoint.sh; \
     usermod -d /var/www www-data; \

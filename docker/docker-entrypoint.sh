@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -x
 
+if [[ ! -z "$WAIT_FOR_HOST" ]]; then
+  wait-for-it.sh $WAIT_FOR_HOST
+fi
+
+if [[ "$SKIP_INIT" == "1" ]]; then
+  echo "Skip init application"
+  exec "$@"
+fi
+
 [ ! -d /data/redis ] && mkdir -p /data/redis
 [ ! -d /data/composer ] && mkdir /data/composer
 [ ! -d /data/zipball ] && mkdir /data/zipball
@@ -44,7 +53,7 @@ if [[ -n ${ADMIN_USER} ]]; then
   app packagist:user:manager "$ADMIN_USER" --email="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --admin --only-if-not-exists
 fi
 
-[[ "$DATABASE_URL" == *"postgresql"* ]] && app doctrine:query:sql "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch" -vvv || true
+[[ "$DATABASE_URL" == *"postgresql"* ]] && app dbal:run-sql "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch" -vvv || true
 
 chown www-data:www-data -R var /data
 chown redis:redis -R /data/redis

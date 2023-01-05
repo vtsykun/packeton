@@ -64,31 +64,28 @@ See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/c
 Install and Run in Docker
 ------------------------
 
-Build and run docker container
+You can use [packeton/packeton](https://hub.docker.com/r/packeton/packeton) image
+
+```
+docker run -d --name packeton \
+    --mount type=volume,src=packeton-data,dst=/data \
+    -p 8080:80 \
+    packeton/packeton:latest
+```
+
+Or build and run docker container with docker-compose:
+
+- [docker-compose.yml](./docker-compose.yml) Single container example, here the container runs supervisor that to start 
+over jobs: nginx, redis, php-fpm, cron, worker. However, it does not follow the docker best-practises 
+where 1 service must be per container. But it is very easy to use and KISS principle 
+
+- [docker-compose-prod.yml](./docker-compose-prod.yml) - multiple containers, where 1 service per container
 
 ```
 docker-compose build
-docker-compose up -d
-```
 
-```yaml
-version: '3.6'
-
-services:
-    packagist:
-        build:
-            context: .
-        image: packeton/packeton:latest
-        container_name: packagist
-        hostname: packagist
-        environment:
-            ADMIN_USER: admin # create user admin on the first install
-            ADMIN_PASSWORD: 123456
-            ADMIN_EMAIL: admin@example.com
-        ports:
-            - '127.0.0.1:8088:80'
-        volumes:
-            - .docker:/data
+docker-compose up -d # Run with single supervisor container 
+docker-compose up -f docker-compose-prod.yml -d # Or split 
 ```
 
 #### Docker Environment variables
