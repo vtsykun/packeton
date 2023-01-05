@@ -19,6 +19,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Twig\Environment;
 
 class PackageManager
@@ -128,7 +129,7 @@ class PackageManager
         return true;
     }
 
-    public function getRootPackagesJson(User $user = null)
+    public function getRootPackagesJson(UserInterface $user = null)
     {
         $packagesData = $this->dumpInMemory($user, false);
         return $packagesData[0];
@@ -139,7 +140,7 @@ class PackageManager
      * @param string $hash
      * @return bool
      */
-    public function getProvidersJson(?User $user, $hash)
+    public function getProvidersJson(?UserInterface $user, $hash)
     {
         list($root, $providers) = $this->dumpInMemory($user);
         $rootHash = \reset($root['provider-includes']);
@@ -151,21 +152,21 @@ class PackageManager
     }
 
     /**
-     * @param null|User|object $user
+     * @param null|UserInterface|object $user
      * @param string $package
      *
      * @return array
      */
-    public function getPackageJson(?User $user, string $package)
+    public function getPackageJson(?UserInterface $user, string $package)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_MAINTAINER')) {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
         return $this->dumper->dumpPackage($user, $package);
     }
 
-    public function getPackageV2Json(?User $user, string $package, bool $isDev = true, &$lastModified = null): array
+    public function getPackageV2Json(?UserInterface $user, string $package, bool $isDev = true, &$lastModified = null): array
     {
         if (!$metadata = $this->getCachedPackageJson($user, $package)) {
             $metadata = $this->getPackageJson($user, $package);
@@ -208,13 +209,13 @@ class PackageManager
     }
 
     /**
-     * @param User|null|object $user
+     * @param UserInterface|null|object $user
      * @param string $package
      * @param string|null $hash
      *
      * @return mixed
      */
-    public function getCachedPackageJson(?User $user, string $package, string $hash = null)
+    public function getCachedPackageJson(?UserInterface $user, string $package, string $hash = null)
     {
         [$root, $providers, $packages] = $this->dumpInMemory($user);
 
@@ -227,19 +228,19 @@ class PackageManager
         return $packages[$package];
     }
 
-    private function dumpInMemory(User $user = null, bool $cache = true)
+    private function dumpInMemory(UserInterface $user = null, bool $cache = true)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_MAINTAINER')) {
+        if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
-        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getId() : 0);
+        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0);
         if ($cache and $data = $this->redis->get($cacheKey)) {
             return json_decode($data, true);
         }
 
         $data = $this->dumper->dump($user);
-        $this->redis->setex($cacheKey, 3600, json_encode($data));
+        $this->redis->setex($cacheKey, 900, json_encode($data));
         return $data;
     }
 }

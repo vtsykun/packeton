@@ -18,11 +18,17 @@ class CredentialType extends AbstractType
             ->setDefaults([
                 'class' => SshCredentials::class,
                 'choice_label' => function (SshCredentials $credentials) {
-                    return $credentials->getName() . ($credentials->getFingerprint() ?
-                        (' (' . $credentials->getFingerprint() . ')') : '');
+                    $label = $credentials->getName();
+                    if ($credentials->getFingerprint()) {
+                        $label = $label . "(SSH_KEY {$credentials->getFingerprint()})";
+                    } elseif ($credentials->getComposerConfig()) {
+                        $label = $label . "(Composer Auth)";
+                    }
+
+                    return $label;
                 },
-                'label' => 'Overwrite SSH Credentials',
-                'tooltip' => 'Optional, support only for Git 2.3+, to use other IdentityFile from env. GIT_SSH_COMMAND. By default will be used system ssh key',
+                'label' => 'Overwrite Composer/SSH Credentials',
+                'tooltip' => 'Optional, SSH overwrite support only for Git 2.3+, to use other IdentityFile from env. GIT_SSH_COMMAND. By default will be used system ssh key',
                 'required' => false,
             ]);
     }

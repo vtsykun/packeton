@@ -9,11 +9,12 @@
     <h2 class="title">{{ title }}</h2>
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
-        {{ form_row(form.email) }}
         {{ form_row(form.username) }}
+        {{ form_row(form.email) }}
         {{ form_row(form.plainPassword) }}
         {{ form_row(form.expiredUpdatesAt) }}
         {{ form_row(form.enabled) }}
+        {{ form_row(form.fullAccess) }}
         {{ form_row(form.expiresAt) }}
         {{ form_row(form.groups) }}
         <input class="btn btn-block btn-success btn-lg" type="submit" value="{{ 'submit.submit'|trans }}" />

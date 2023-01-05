@@ -24,10 +24,12 @@ security:
             api_basic: true
             stateless: true
             context: main
+            user_checker: Packeton\Security\UserChecker
 
         main:
             lazy: true
             pattern:      .*
+            user_checker: Packeton\Security\UserChecker
             form_login:
                 provider:       packagist
                 login_path:     /login

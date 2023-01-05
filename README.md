@@ -64,31 +64,28 @@ See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/c
 Install and Run in Docker
 ------------------------
 
-Build and run docker container
+You can use [packeton/packeton](https://hub.docker.com/r/packeton/packeton) image
+
+```
+docker run -d --name packeton \
+    --mount type=volume,src=packeton-data,dst=/data \
+    -p 8080:80 \
+    packeton/packeton:latest
+```
+
+Or build and run docker container with docker-compose:
+
+- [docker-compose.yml](./docker-compose.yml) Single container example, here the container runs supervisor that to start 
+over jobs: nginx, redis, php-fpm, cron, worker. However, it does not follow the docker best-practises 
+where 1 service must be per container. But it is very easy to use and KISS principle 
+
+- [docker-compose-prod.yml](./docker-compose-prod.yml) - multiple containers, where 1 service per container
 
 ```
 docker-compose build
-docker-compose up -d
-```
 
-```yaml
-version: '3.6'
-
-services:
-    packagist:
-        build:
-            context: .
-        image: okvpn/packeton:latest
-        container_name: packagist
-        hostname: packagist
-        environment:
-            ADMIN_USER: admin # create user admin on the first install
-            ADMIN_PASSWORD: 123456
-            ADMIN_EMAIL: admin@example.com
-        ports:
-            - '127.0.0.1:8088:80'
-        volumes:
-            - .docker:/data
+docker-compose up -d # Run with single supervisor container 
+docker-compose up -f docker-compose-prod.yml -d # Or split 
 ```
 
 #### Docker Environment variables
@@ -209,13 +206,26 @@ If you have the error ```This private key is not valid``` inserting your ssh in 
 New keys with OpenSSH private key format can be converted using ssh-keygen utility to the old PEM format.
 ```ssh-keygen -p -m PEM -f ~/.ssh/id_rsa```
 
-You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.github.com/jeffersonmartin/d0d4a8dfec90d224d14f250b36c74d2f)
+You can add GitHub/GitLab access token to `auth.json` of composer home dir 
+(default `APP_COMPOSER_HOME="%kernel.project_dir%/var/.composer"`) or use UI credentials,
+see [here](https://getcomposer.org/doc/articles/authentication-for-private-packages.md) 
 
-```
+```json
 {
     "github-oauth": {
         "github.com": "xxxxxxxxxxxxx"
     }
+}
+```
+
+#### Allow connections to http
+
+You can create `config.json` in the composer home (see `APP_COMPOSER_HOME` env var) or add this option
+in the UI credentials form.
+
+```json
+{
+    "secure-http": false
 }
 ```
 

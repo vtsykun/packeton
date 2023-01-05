@@ -87,7 +87,7 @@ class WebController extends AbstractController
                 $perPage = max(0, min(100, $perPage));
             }
 
-            $allowed = $this->isGranted('ROLE_MAINTAINER') ? null :
+            $allowed = $this->isGranted('ROLE_FULL_CUSTOMER') ? null :
                 $this->registry
                     ->getRepository(Group::class)
                     ->getAllowedPackagesForUser($this->getUser(), false);
@@ -346,7 +346,7 @@ class WebController extends AbstractController
         $qb = $this->registry->getManager()->createQueryBuilder();
         $qb->from(Package::class, 'p');
         $repo = $this->registry->getRepository(Package::class);
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             $packages = $this->registry->getRepository(Group::class)
                 ->getAllowedPackagesForUser($this->getUser());
             $qb->andWhere('p.id IN (:ids)')

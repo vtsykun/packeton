@@ -14,7 +14,7 @@ class JsonDataTransformer implements DataTransformerInterface
      */
     public function transform($data)
     {
-        if (null === $data || empty($data)) {
+        if (empty($data)) {
             return null;
         }
 
@@ -30,7 +30,7 @@ class JsonDataTransformer implements DataTransformerInterface
      */
     public function reverseTransform($data)
     {
-        if (empty($data)) {
+        if (empty($data) || !is_string($data)) {
             return null;
         }
 

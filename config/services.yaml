@@ -31,6 +31,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $redis: '@snc_redis.default'
+            'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:
         resource: '../src/'

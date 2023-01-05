@@ -25,13 +25,15 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         $qb = $this->_em->createQueryBuilder();
         $qb
             ->select('acl.version')
-            ->distinct(true)
+            ->distinct()
             ->from(User::class, 'u')
             ->innerJoin('u.groups', 'g')
             ->innerJoin('g.aclPermissions', 'acl')
             ->innerJoin('acl.package', 'p')
-            ->where($qb->expr()->eq('u.id', $user->getId()))
-            ->andWhere($qb->expr()->eq('p.id', $package->getId()));
+            ->where('u.id = :uid')
+            ->andWhere('p.id = :pid')
+            ->setParameter('pid', $package->getId())
+            ->setParameter('uid', $user->getId());
 
         $result = $qb->getQuery()->getResult();
         if ($result) {
@@ -47,8 +49,12 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
      *
      * @return Package[]
      */
-    public function getAllowedPackagesForUser(UserInterface $user, $hydration = true)
+    public function getAllowedPackagesForUser(?UserInterface $user, $hydration = true)
     {
+        if (!$user instanceof User) {
+            return [];
+        }
+
         $qb = $this->_em->createQueryBuilder();
         $qb
             ->select('p.id')
@@ -63,7 +69,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         if ($hydration && $result) {
             $qb = $this->_em->createQueryBuilder();
             $qb->select('p')
-                ->from(User::class, 'p')
+                ->from(Package::class, 'p')
                 ->where('p.id IN (:ids)')
                 ->setParameter('ids', array_column($result, 'id'));
 

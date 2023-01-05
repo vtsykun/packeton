@@ -34,7 +34,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @UniqueEntity(fields={"username"})
  * @UniqueEntity(fields={"email"})
  */
-class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserInterface, LegacyPasswordAuthenticatedUserInterface
+class User extends BaseUser
 {
     /**
      * @ORM\Id
@@ -153,7 +153,7 @@ class User extends BaseUser implements UserInterface, PasswordAuthenticatedUserI
     public function toArray()
     {
         return array(
-            'name' => $this->getUsername(),
+            'name' => $this->getUserIdentifier(),
             'avatar_url' => $this->getGravatarUrl(),
         );
     }
