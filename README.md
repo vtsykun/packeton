@@ -1,9 +1,9 @@
 Packeton - Private PHP package repository for vendors
 ======================================================
 
-[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
-[![Docker pulls](https://img.shields.io/docker/pulls/okvpn/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/okvpn/packeton)
-[![Docker stars](https://img.shields.io/docker/stars/okvpn/packeton.svg?label=docker+stars)](https://hub.docker.com/r/okvpn/packeton)
+[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/packeton/packeton)
+[![Docker pulls](https://img.shields.io/docker/pulls/okvpn/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/packeton/packeton)
+[![Docker stars](https://img.shields.io/docker/stars/okvpn/packeton.svg?label=docker+stars)](https://hub.docker.com/r/packeton/packeton)
 [![License](http://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
 
 Fork of [Packagist](https://github.com/composer/packagist). 
@@ -57,7 +57,7 @@ Table of content
 
 Demo
 ----
-See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/composer)
+See our [Administration Demo](https://demo.packeton.org). Username/password (admin/123456)
 
 [![Demo](docs/img/demo.png)](docs/img/demo.png)
 
@@ -73,10 +73,15 @@ docker run -d --name packeton \
     packeton/packeton:latest
 ```
 
+After container is running, you may wish to create a admin user via command `packagist:user:manager`
+```
+docker exec -it packeton bin/console packagist:user:manager admin --password=123456 --admin
+```
+
 Or build and run docker container with docker-compose:
 
 - [docker-compose.yml](./docker-compose.yml) Single container example, here the container runs supervisor that to start 
-over jobs: nginx, redis, php-fpm, cron, worker. However, it does not follow the docker best-practises 
+other jobs: nginx, redis, php-fpm, cron, worker. However, it does not follow the docker best-practises 
 where 1 service must be per container. But it is very easy to use and KISS principle 
 
 - [docker-compose-prod.yml](./docker-compose-prod.yml) - multiple containers, where 1 service per container
@@ -170,16 +175,12 @@ structure must be like this.
 
 ```
     └── /var/www/
-        ├── .ssh/ # ssh keys directory
-        │   ├── config
-        │   ├── id_rsa # main ssh key
-        │   ├── private_key_2 # additional ssh key
-        │   └── private_key_3
-        │
-        └── .composer/ # composer home
-            ├── auth.json
-            └── config.json
-    
+        └── .ssh/ # ssh keys directory
+            ├── config
+            ├── id_rsa # main ssh key
+            ├── private_key_2 # additional ssh key
+            └── private_key_3
+
 ```
 
 Example ssh config for multiple SSH Keys for different github account/repos, 
@@ -278,8 +279,8 @@ from a git post-receive hook or similar. You have to do a POST request to
 }
 ```
 
-Also you can overwrite regex that was used to parse the repository url, 
-see [ApiController](src/Packagist/WebBundle/Controller/ApiController.php#L348)
+Also, you can overwrite regex that was used to parse the repository url, 
+see [ApiController](src/Controller/ApiController.php#L348)
 
 ```
 {
@@ -371,7 +372,7 @@ payload according to your rules.
 
 Usage and Authentication
 ------------------------
-By default admin user have access to all repositories and able to submit packages, create users, view statistics. 
+By default, admin user have access to all repositories and able to submit packages, create users, view statistics. 
 The customer users can only see related packages and own profile with instruction how to use api token.
 
 To authenticate composer access to repository needs add credentials globally into auth.json, for example:
@@ -399,9 +400,15 @@ Configure this private repository in your `composer.json`.
 
 ### Create admin and maintainer users.
 
-Only admin and maintainer user can submit a new package.
-Only admin user can create the new customer users. 
-You can create an user and then promote to admin or maintainer via console using fos user bundle commands.
+
+**Application Roles**
+
+- ROLE_USER - minimal access level, these users only can read metadata only for selected packages.
+- ROLE_FULL_CUSTOMER - Can read all packages metadata.
+- ROLE_MAINTAINER -  Can submit a new package and read all metadata.
+- ROLE_ADMIN - Can create a new customer users, management webhooks and credentials.
+
+You can create a user and then promote to admin or maintainer via console using fos user bundle commands.
 
 ```
 php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin # create admin user

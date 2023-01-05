@@ -65,6 +65,7 @@ services:
         image: packeton/packeton:latest
         hostname: packeton-worker
         command: ['bin/console', 'packagist:run-workers', '-v']
+        user: www-data
         <<: *restart_policy
         <<: *default-volume
         environment:
@@ -77,6 +78,7 @@ services:
         image: packeton/packeton:latest
         hostname: packeton-cron
         command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
+        user: www-data
         <<: *restart_policy
         <<: *default-volume
         environment:
