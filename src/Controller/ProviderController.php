@@ -135,7 +135,7 @@ class ProviderController extends AbstractController
             $path = $distManager->getDistByOrphanedRef($reference, $package, $version);
             $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getVersion() === $version);
 
-            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version)) {
+            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) || $this->isGranted('VIEW_ALL_VERSION', $package)) {
                 return new BinaryFileResponse($path);
             }
         } catch (\Exception $e) {

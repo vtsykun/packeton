@@ -33,8 +33,14 @@ class PackagesAclVoter implements VoterInterface
         if (!$user instanceof User) {
             return self::ACCESS_DENIED;
         }
-        if ($object instanceof Package && $this->checker->isGrantedAccessForPackage($user, $object) === false) {
-            return self::ACCESS_DENIED;
+
+        if ($object instanceof Package) {
+            if (!$this->checker->isGrantedAccessForPackage($user, $object)) {
+                return self::ACCESS_DENIED;
+            }
+            if (in_array('VIEW_ALL_VERSION', $attributes) && !$this->checker->isGrantedAccessForAllVersions($user, $object)) {
+                return self::ACCESS_DENIED;
+            }
         }
         if ($object instanceof Version && $this->checker->isGrantedAccessForVersion($user, $object) === false) {
             return self::ACCESS_DENIED;

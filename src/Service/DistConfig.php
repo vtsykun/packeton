@@ -83,8 +83,7 @@ class DistConfig
         }
 
         $fileName = implode('-', $fileName);
-        $fileName = preg_replace('/(ticket|feature|fix)-/i', '$1/', $fileName);
-        return $fileName;
+        return preg_replace('/(ticket|feature|fix)-/i', '$1/', $fileName);
     }
 
     /**
@@ -106,7 +105,7 @@ class DistConfig
     public function generateRoute(string $name, string $reference): string
     {
         $hostName = !isset($this->config['endpoint']) ? self::HOSTNAME_PLACEHOLDER : rtrim($this->config['endpoint'], '/');
-        
+
         $uri = $this->router->generate(
             'download_dist_package',
             ['package' => $name, 'hash' => $reference . '.' . $this->getArchiveFormat()]

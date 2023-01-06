@@ -12,6 +12,7 @@ use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Symfony\Component\Finder\Finder;
 
 class DistManager
@@ -57,7 +58,7 @@ class DistManager
         $selectedVersion = null;
         foreach ($versions as $rootVersion) {
             // Try to create zip archive by hash commit, select the first package and use it as template in composer API
-            if ($rootVersion instanceof CompletePackage /*&& $rootVersion->getSourceType() === 'git'*/) {
+            if ($rootVersion instanceof CompletePackage) {
                 $selectedVersion = $rootVersion;
                 break;
             }
@@ -67,14 +68,24 @@ class DistManager
         $archiveManager->setOverwriteFiles(false);
 
         if ($selectedVersion instanceof CompletePackage) {
-            $selectedVersion->setDistType(null);
+            if ($selectedVersion->getDistReference() && str_contains($selectedVersion->getDistUrl(), $selectedVersion->getDistReference())) {
+                $selectedVersion->setDistUrl(str_replace($selectedVersion->getDistReference(), $reference, $selectedVersion->getDistUrl()));
+                $selectedVersion->setDistReference($reference);
+            } else {
+                $selectedVersion->setDistType(null);
+                $selectedVersion->setDistReference(null);
+                $selectedVersion->setDistUrl(null);
+            }
+
             $selectedVersion->setDistMirrors(null);
-            $selectedVersion->setDistReference(null);
-            $selectedVersion->setDistUrl(null);
+            $selectedVersion->setSourceMirrors(null);
+            if (str_contains($selectedVersion->getSourceUrl(), $selectedVersion->getSourceReference())) {
+                $selectedVersion->setSourceUrl(str_replace($selectedVersion->getSourceReference(), $reference, $selectedVersion->getSourceUrl()));
+            }
 
             $selectedVersion->setSourceReference($reference);
 
-            $version = 'dev-master';
+            $version = 'dev-master'; // Used only for check ACL, if exists restriction by versions
             $fileName = $this->config->getFileName($reference, $version);
 
             return $archiveManager->archive(
@@ -91,10 +102,16 @@ class DistManager
     private function lookupInCache(string $reference, string $packageName): ?array
     {
         $finder = new Finder();
-        $files = $finder
-            ->in($this->config->generateTargetDir($packageName))
-            ->name("/$reference/")
-            ->files();
+
+        try {
+            $files = $finder
+                ->in($this->config->generateTargetDir($packageName))
+                ->name("/$reference/")
+                ->files();
+        } catch (DirectoryNotFoundException) {
+            return null;
+        }
+
         /** @var \SplFileObject $file */
         foreach ($files as $file) {
             $fileName = $file->getFilename();
