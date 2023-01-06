@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Composer\IO\NullIO;
+use Composer\Package\CompletePackage;
 use Packeton\Composer\PackagistFactory;
+use Packeton\Composer\Repository\VcsRepository;
+use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
@@ -17,7 +20,7 @@ class DistManager
 
     public function __construct(
         private readonly DistConfig $config,
-        private readonly PackagistFactory $packagistFactory
+        private readonly PackagistFactory $packagistFactory,
     ) {
         $this->fileSystem = new Filesystem();
     }
@@ -41,7 +44,51 @@ class DistManager
         return $this->download($version);
     }
 
-    public function lookupInCache(string $reference, string $packageName): ?array
+    public function getDistByOrphanedRef(string $reference, Package $package, &$version = null): string
+    {
+        if ($cacheRef = $this->lookupInCache($reference, $package->getName())) {
+            [$path, $version] = $cacheRef;
+            return $path;
+        }
+
+        $repository = $this->createRepositoryAndIo($package);
+        $versions = $repository->getPackages();
+
+        $selectedVersion = null;
+        foreach ($versions as $rootVersion) {
+            // Try to create zip archive by hash commit, select the first package and use it as template in composer API
+            if ($rootVersion instanceof CompletePackage /*&& $rootVersion->getSourceType() === 'git'*/) {
+                $selectedVersion = $rootVersion;
+                break;
+            }
+        }
+
+        $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
+        $archiveManager->setOverwriteFiles(false);
+
+        if ($selectedVersion instanceof CompletePackage) {
+            $selectedVersion->setDistType(null);
+            $selectedVersion->setDistMirrors(null);
+            $selectedVersion->setDistReference(null);
+            $selectedVersion->setDistUrl(null);
+
+            $selectedVersion->setSourceReference($reference);
+
+            $version = 'dev-master';
+            $fileName = $this->config->getFileName($reference, $version);
+
+            return $archiveManager->archive(
+                $selectedVersion,
+                $this->config->getArchiveFormat(),
+                $this->config->generateTargetDir($package->getName()),
+                $fileName
+            );
+        }
+
+        throw new \InvalidArgumentException('Not found reference for the package in cache or VCS');
+    }
+
+    private function lookupInCache(string $reference, string $packageName): ?array
     {
         $finder = new Finder();
         $files = $finder
@@ -60,21 +107,14 @@ class DistManager
             }
         }
 
-        return [null, null];
+        return null;
     }
 
     private function download(Version $version): ?string
     {
-        $package = $version->getPackage();
-        $io = new NullIO();
-        $repository = $this->packagistFactory->createRepository(
-            $package->getRepository(),
-            $io,
-            null,
-            $package->getCredentials()
-        );
+        $repository = $this->createRepositoryAndIo($version->getPackage());
 
-        $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository);
+        $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
 
         $versions = $repository->getPackages();
@@ -92,5 +132,17 @@ class DistManager
         }
 
         return null;
+    }
+
+    private function createRepositoryAndIo(Package $package): VcsRepository
+    {
+        $io = new NullIO();
+
+        return $this->packagistFactory->createRepository(
+            $package->getRepository(),
+            $io,
+            null,
+            $package->getCredentials()
+        );
     }
 }

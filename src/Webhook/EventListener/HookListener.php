@@ -115,7 +115,7 @@ class HookListener
         }
 
         $webhooks = $this->registry->getRepository(Webhook::class)
-            ->findActive($user->getUsername(), [Webhook::HOOK_USER_LOGIN]);
+            ->findActive($user->getUserIdentifier(), [Webhook::HOOK_USER_LOGIN]);
         foreach ($webhooks as $webhook) {
             $context = [
                 'token' => get_class($token),
