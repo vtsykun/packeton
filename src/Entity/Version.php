@@ -511,6 +511,11 @@ class Version
         return $this->dist ? json_decode($this->dist, true) : null;
     }
 
+    public function getReference()
+    {
+        return $this->getDist()['reference'] ?? null;
+    }
+
     /**
      * @param array $dist
      * @return bool

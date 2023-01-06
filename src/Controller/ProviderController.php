@@ -113,63 +113,43 @@ class ProviderController extends AbstractController
      *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "hash"="[a-f0-9]{40}\.[a-z]+?"},
      *     methods={"GET"}
      * )
-     *
-     * @param Package $package
-     * @param string $hash
-     * @return Response
      */
     public function zipballAction(#[Vars('name')] Package $package, $hash)
     {
         $distManager = $this->container->get(DistManager::class);
-        if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match)) {
+        if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match) or !($reference = $match[0])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
         }
 
-        $versions = $package->getVersions()->filter(
-            function (Version $version) use ($match) {
-                if ($dist = $version->getDist()) {
-                    return isset($dist['reference']) && $match[0] === $dist['reference'];
-                }
-                return false;
-            }
-        );
+        $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getReference() === $reference);
 
-        // Try to download from cache
-        if ($versions->count() === 0) {
-            list($path, $versionName) = $distManager->lookupInCache($match[0], $package->getName());
-            if (null !== $versionName) {
-                $version = $package->getVersions()
-                    ->filter(
-                        function (Version $version) use ($versionName) {
-                            return $versionName === $version->getVersion();
-                        }
-                )->first();
-                if ($version && $this->isGranted('ROLE_FULL_CUSTOMER', $version)) {
-                    return new BinaryFileResponse($path);
-                }
-            }
-        }
-
-        /** @var Version $version */
-        foreach ($versions as $version) {
-            if (!$this->isGranted('ROLE_FULL_CUSTOMER', $version)) {
-                continue;
-            }
-
-            if ($path = $distManager->getDistPath($version)) {
+        if ($version instanceof Version) {
+            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) and $path = $distManager->getDistPath($version)) {
                 return new BinaryFileResponse($path);
             }
-            break;
+
+            return $this->createNotFound();
+        }
+
+        try {
+            $path = $distManager->getDistByOrphanedRef($reference, $package, $version);
+            $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getVersion() === $version);
+
+            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) || $this->isGranted('VIEW_ALL_VERSION', $package)) {
+                return new BinaryFileResponse($path);
+            }
+        } catch (\Exception $e) {
+            $msg = $this->isGranted('ROLE_MAINTAINER') ? $e->getMessage() : null;
+            return $this->createNotFound($msg);
         }
 
         return $this->createNotFound();
     }
 
-    protected function createNotFound()
+    protected function createNotFound(?string $msg = null)
     {
-        return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
+        return new JsonResponse(['status' => 'error', 'message' => $msg ?: 'Not Found'], 404);
     }
-
 
     /**
      * {@inheritDoc}

@@ -74,4 +74,12 @@ class VcsRepository extends ComposerVcsRepository
     {
         return $this->config;
     }
+
+    /**
+     * @return IOInterface
+     */
+    public function getIO()
+    {
+        return $this->io;
+    }
 }

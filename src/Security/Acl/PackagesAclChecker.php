@@ -50,6 +50,18 @@ class PackagesAclChecker
         return \count($version) > 0;
     }
 
+    public function isGrantedAccessForAllVersions(User $user, Package $package)
+    {
+        $versionConstraints = $this->getVersions($user, $package);
+        foreach ($versionConstraints as $constraint) {
+            if ($constraint === null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Check that customer/user can download this version
      *

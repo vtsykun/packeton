@@ -60,9 +60,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
 
             try {
                 $response = $client->request($request->getMethod(), $request->getUrl(), $options);
-                $headers = array_map(function ($item) {
-                    return isset($item[0]) ? $item[0] : $item;
-                }, $response->getHeaders(false));
+                $headers = array_map(fn ($item) => $item[0] ?? $item, $response->getHeaders(false));
                 $options = [
                     'status_code' => $response->getStatusCode(),
                     'headers' => $headers,

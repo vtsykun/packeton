@@ -11,6 +11,7 @@ services:
             ADMIN_USER: admin
             ADMIN_PASSWORD: 123456
             ADMIN_EMAIL: admin@example.com
+            TRUSTED_PROXIES: 172.16.0.0/12
         ports:
             - '127.0.0.1:8088:80'
         volumes:
