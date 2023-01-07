@@ -2,15 +2,21 @@
 
 namespace Packeton\Twig;
 
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Job;
+use Packeton\Entity\Package;
 use Packeton\Model\ProviderManager;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 use Twig\TwigTest;
 
 class PackagistExtension extends AbstractExtension
 {
-    public function __construct(private readonly ProviderManager $providerManager)
-    {
+    public function __construct(
+        private readonly ProviderManager $providerManager,
+        private readonly ManagerRegistry $registry,
+    ) {
     }
 
     public function getTests()
@@ -22,6 +28,13 @@ class PackagistExtension extends AbstractExtension
         );
     }
 
+    public function getFunctions()
+    {
+        return [
+            new TwigFunction('package_job_result', [$this, 'getLatestJobResult']),
+        ];
+    }
+
     public function getFilters()
     {
         return [
@@ -29,6 +42,15 @@ class PackagistExtension extends AbstractExtension
             new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash']),
             new TwigFilter('truncate', [$this, 'truncate']),
         ];
+    }
+
+    public function getLatestJobResult($package): ?Job
+    {
+        if ($package instanceof Package) {
+            $package = $package->getId();
+        }
+
+        return $this->registry->getRepository(Job::class)->findLastJobByType('package:updates', $package);
     }
 
     public function truncate($string, $length)

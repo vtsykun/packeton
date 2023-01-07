@@ -37,7 +37,23 @@
                             {% endif %}
                             <a href="{{ path("view_vendor", {"vendor": package.vendor}) }}">{{ package.vendor }}/</a>{{ package.packageName }}
                         </h2>
-                        <p>Last updated: {{ package.crawledAt ? package.crawledAt|date('Y-m-d H:i:s') ~ ' UTC': 'N/A' }}</p>
+                        <p>
+                            Last updated: {{ package.crawledAt ? package.crawledAt|date('Y-m-d H:i:s') ~ ' UTC': 'N/A' }}
+                            {%- if is_granted('ROLE_MAINTAINER') %}
+                                {% set lastJob = package_job_result(package) %}
+                                {% if lastJob is not null %}
+                                    {% if lastJob.errored %}
+                                        <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #8B0000FF" title="Sync job failed"></i>
+                                    {% endif %}
+
+                                    <a style="font-size: 0.9em; cursor: pointer"
+                                       class="view-log"
+                                       data-msg="{{ lastJob.getResult('message') ~ "\n" ~ lastJob.getResult('exceptionMsg') }}"
+                                       data-details="{{ lastJob.getResult('details') }}"
+                                    >View logs</a>
+                                {% endif %}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>

@@ -67,4 +67,9 @@ class JobRepository extends EntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function findLastJobByType(string $type, $packageId = null): ?Job
+    {
+        return $this->findJobsByType($type, $packageId)[0] ?? null;
+    }
 }

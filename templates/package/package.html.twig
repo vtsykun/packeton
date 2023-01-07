@@ -4,6 +4,13 @@
             <a href="{{ path('view_package', {'name': package.name}) }}" class="anchor">
                 {{ package.name }}
             </a>
+
+            {% if is_granted('ROLE_MAINTAINER') %}
+                {% set lastJob = package_job_result(package) %}
+                {% if lastJob and lastJob.errored %}
+                    <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #8B0000FF" title="Sync job failed"></i>
+                {% endif %}
+            {% endif %}
         </h3>
 
         {% if package.abandoned %}

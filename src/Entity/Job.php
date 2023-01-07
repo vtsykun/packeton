@@ -155,9 +155,14 @@ class Job
         return $this->status;
     }
 
-    public function getResult()
+    public function isErrored(): bool
     {
-        return $this->result;
+        return in_array($this->status, [self::STATUS_ERRORED, self::STATUS_FAILED], true);
+    }
+
+    public function getResult(?string $property = null)
+    {
+        return $property ? ($this->result[$property] ?? null) : $this->result;
     }
 
     public function setCreatedAt(DateTimeInterface $createdAt)

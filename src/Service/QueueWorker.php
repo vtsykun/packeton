@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Exception\JobException;
 use Packeton\Repository\JobRepository;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -128,6 +129,14 @@ class QueueWorker
 
         try {
             $result = $processor($job, $signal);
+        } catch (JobException $e) {
+            $result = [
+                'status' => Job::STATUS_ERRORED,
+                'message' => 'An unexpected failure occurred',
+                'exception' => $e->getPrevious(),
+                'details' => $e->getDetails(),
+            ];
+            $result = array_filter($result);
         } catch (\Throwable $e) {
             $result = [
                 'status' => Job::STATUS_ERRORED,

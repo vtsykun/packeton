@@ -7,6 +7,7 @@ namespace Packeton\Service;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Event\UpdaterErrorEvent;
+use Packeton\Exception\JobException;
 use Packeton\Model\ValidatingArrayLoader;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
@@ -148,7 +149,8 @@ class UpdaterWorker
                 return [
                     'status' => Job::STATUS_FAILED,
                     'message' => 'Package data of '.$package->getName().' could not be downloaded. Could not reach remote VCS server. Please try again later.',
-                    'exception' => $e
+                    'exception' => $e,
+                    'details' => '<pre>'.$output.'</pre>',
                 ];
             }
 
@@ -157,14 +159,14 @@ class UpdaterWorker
                 return [
                     'status' => Job::STATUS_FAILED,
                     'message' => 'Package data of '.$package->getName().' could not be downloaded.',
-                    'exception' => $e
+                    'exception' => $e,
+                    'details' => '<pre>'.$output.'</pre>',
                 ];
             }
 
             $this->logger->error('Failed update of '.$package->getName(), ['exception' => $e]);
 
-            // unexpected error so mark the job errored
-            throw $e;
+            throw new JobException($e, $output ? '<pre>'.$output.'</pre>' : null);
         } finally {
             $locker->release();
         }
