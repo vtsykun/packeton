@@ -219,12 +219,17 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/users/sshkey", name="user_add_sshkey")
+     *  @Route("/users/sshkey", name="user_add_sshkey", methods={"GET", "POST"})
+     *  @Route("/users/sshkey/{id}", name="user_edit_sshkey", methods={"GET", "POST"})
      * {@inheritdoc}
      */
-    public function addSSHKeyAction(Request $request)
+    public function addSSHKeyAction(Request $request, #[Vars] SshCredentials $key = null)
     {
-        $sshKey = new SshCredentials();
+        if ($key && !$this->isGranted('VIEW', $key)) {
+            throw new AccessDeniedException();
+        }
+
+        $sshKey = $key ?: new SshCredentials();
         $form = $this->createForm(SshKeyCredentialType::class, $sshKey);
 
         if ($request->getMethod() === 'POST') {
@@ -239,24 +244,28 @@ class UserController extends AbstractController
                     $sshKey->setFingerprint($fingerprint);
                 }
 
-                if ($parent = $form->get('replace')->getData()) {
-                    $parent->setFingerprint($sshKey->getFingerprint());
-                    $parent->setKey($sshKey->getKey());
-                    $parent->setName($sshKey->getName());
-                    $parent->setComposerConfig($sshKey->getComposerConfig());
-                    $sshKey = $parent;
+                if ($sshKey->getId() === null && $this->getUser() instanceof User) {
+                    $sshKey->setOwner($this->getUser());
                 }
 
                 $em->persist($sshKey);
                 $em->flush();
 
-                $this->addFlash('success', $parent ? 'Existing ssh key was updated successfully' : 'Ssh key was added successfully');
+                $this->addFlash('success', $key ? 'Ssh key updated successfully.' : 'Ssh key added successfully.');
                 return new RedirectResponse('/');
             }
         }
 
+        $listKeys = [];
+        if ($this->getUser() instanceof User) {
+            $listKeys = $this->registry->getRepository(SshCredentials::class)
+                ->findBy(['owner' => $this->getUser()]);
+        }
+
         return $this->render('user/sshkey.html.twig', [
             'form' => $form->createView(),
+            'sshKey' => $sshKey,
+            'listKeys' => $listKeys,
         ]);
     }
 

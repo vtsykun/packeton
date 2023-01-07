@@ -23,10 +23,10 @@ class OwnerVoter implements VoterInterface
             return self::ACCESS_DENIED;
         }
 
-        if ($object->getVisibility() === OwnerAwareInterface::USER_VISIBLE
-            && $object->getOwner()
-            && $object->getOwner()->getId() !== $user->getId()
-        ) {
+        if ($object->getVisibility() === OwnerAwareInterface::USER_VISIBLE && $object->getOwner() && $object->getOwner()->getId() !== $user->getId()) {
+            return self::ACCESS_DENIED;
+        }
+        if ($object->getVisibility() === OwnerAwareInterface::STRICT_VISIBLE && $object->getOwner()?->getId() !== $user->getId()) {
             return self::ACCESS_DENIED;
         }
 

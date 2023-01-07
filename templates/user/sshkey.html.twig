@@ -1,13 +1,14 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
-    <h2 class="title">Add composer git/ssh credentials</h2>
+    <h2 class="title">{{ sshKey.id ? 'Edit' : 'Add' }} composer git/ssh credentials</h2>
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
         {{ form_rest(form) }}
         <input class="btn btn-block btn-success btn-lg" type="submit" value="ADD KEY" />
             {{ form_end(form) }}
         <div class="col-md-6">
+            <b>Notice. Only owner can edit the ssh keys</b>
             <h4>Git SSH Key</h4>
             <p>
                 Application requires the keys to be in PEM format. You receive the following error
@@ -36,4 +37,25 @@ cat id_rsa.pem
 }</pre>
         </div>
     </section>
+
+    <div style="padding-top: 10px; clear: both"></div>
+
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+
+            <h2 class="title"></h2>
+            <b>Your SSH credentials</b>
+
+            {% for listKey in listKeys %}
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <a href="{{ path('user_edit_sshkey', {id: listKey.id}) }}">{{ listKey.name|truncate(45) }}</a>
+                        &nbsp;
+                        <span style="font-size: 0.8em; color: grey">{{ listKey.fingerprint ? listKey.fingerprint : 'Composer Auth' }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 {% endblock %}

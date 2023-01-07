@@ -16,20 +16,19 @@ The Open Source alternative of [Private Packagist for vendors](https://packagist
 Features
 --------
 
-- Compatible with Composer API V2 and bases on Symfony 5.4.
+- Compatible with Composer API v2, bases on Symfony 5.4.
 - Support update webhook for GitHub, Bitbucket and GitLab or custom format.
-- Customers user and groups.
+- Customers user and ACL groups and limit access by vendor and versions.
 - Generic Packeton [webhooks](docs/webhook.md)
-- Limit access by vendor and versions.
 - Allow to freeze updates for the new releases after expire a customers license.
-- Mirroring for packages' zip files and downloads its from your host.
-- Allow to add ssh keys from UI and use multiple SSH Keys settings for different github/git accounts.
+- Mirroring for packages zip files and downloads it's from your host.
+- Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.
 
 What was changed in this fork?
 -----------------------------
 - Disable anonymously access, registrations, spam/antispam, added ACL permissions.
 - Support MySQL, PostgresSQL or SQLite.
-- Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
+- Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies and other metrics collectors.
 
 Table of content
 ---------------
@@ -95,6 +94,7 @@ docker-compose up -f docker-compose-prod.yml -d # Or split
 
 #### Docker Environment variables
 
+- `APP_SECRET` - Must be static, used for encrypt SSH keys in database.
 - `APP_COMPOSER_HOME` - composer home, default /data/composer
 - `DATABASE_URL` - Database DSN, default sqlite:////data/app.db. Example for postgres "postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&charset=utf8"
 - `PACKAGIST_DIST_PATH` - Default /data/zipball, path to storage zipped versions

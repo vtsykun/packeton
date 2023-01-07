@@ -75,6 +75,11 @@ services:
         arguments:
             $userProvider: '@Packeton\Security\Provider\UserProvider'
 
+    Packeton\DBAL\OpensslCrypter:
+        public: true
+        arguments:
+            $encryptedDbalKey: '%env(APP_SECRET)%'
+
     Packeton\Composer\PackagistFactory:
         arguments:
             $composerHome: '%env(resolve:APP_COMPOSER_HOME)%'

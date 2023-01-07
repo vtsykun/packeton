@@ -37,7 +37,7 @@ class PackageRepositoryValidator extends ConstraintValidator
         $driver = $value->vcsDriver;
         if (!is_object($driver)) {
             if (preg_match('{https?://.+@}', $value->getRepository())) {
-                $this->context->buildViolation('URLs with user@host are not supported, use a read-only public URL')
+                $this->context->buildViolation('URLs with user:pass@host are not supported, use credentials instead')
                     ->atPath($property)
                     ->addViolation()
                 ;

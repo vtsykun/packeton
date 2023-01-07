@@ -22,7 +22,8 @@ class ControllerArgumentResolver implements ArgumentValueResolverInterface
      */
     public function supports(Request $request, ArgumentMetadata $argument)
     {
-        return count($argument->getAttributes(Vars::class, ArgumentMetadata::IS_INSTANCEOF)) > 0;
+        return count($argument->getAttributes(Vars::class, ArgumentMetadata::IS_INSTANCEOF)) > 0 &&
+            count($request->attributes->get('_route_params', [])) > 0;
     }
 
     /**

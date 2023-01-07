@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="ssh_credentials")
  * @ORM\Entity()
  */
-class SshCredentials
+class SshCredentials implements OwnerAwareInterface
 {
     /**
      * @var int
@@ -31,21 +31,29 @@ class SshCredentials
     /**
      * @var string
      *
-     * @ORM\Column(name="ssh_key", type="text", nullable=true)
+     * @ORM\Column(name="ssh_key", type="encrypted_text", nullable=true)
      */
     private $key;
 
     /**
      * @var array|null
      *
-     * @ORM\Column(name="composer_config", type="json", nullable=true)
+     * @ORM\Column(name="composer_config", type="encrypted_array", nullable=true)
      */
     private $composerConfig;
 
     /**
+     * @var User|null
+     *
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\User")
+     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL")
+     */
+    private $owner;
+
+    /**
      * @var \DateTime
      *
-     * @ORM\Column(name="createdAt", type="datetime")
+     * @ORM\Column(name="createdat", type="datetime")
      */
     private $createdAt;
 
@@ -183,5 +191,31 @@ class SshCredentials
     {
         $this->composerConfig = $composerConfig;
         return $this;
+    }
+
+    /**
+     * @param User|null $owner
+     * @return $this
+     */
+    public function setOwner(?User $owner): self
+    {
+        $this->owner = $owner;
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getVisibility(): ?string
+    {
+        return OwnerAwareInterface::STRICT_VISIBLE;
     }
 }

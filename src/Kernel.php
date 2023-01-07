@@ -2,6 +2,9 @@
 
 namespace Packeton;
 
+use Packeton\DBAL\OpensslCrypter;
+use Packeton\DBAL\Types\EncryptedArrayType;
+use Packeton\DBAL\Types\EncryptedTextType;
 use Packeton\DependencyInjection\CompilerPass\ApiFirewallCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packeton\DependencyInjection\PacketonExtension;
@@ -54,5 +57,19 @@ class Kernel extends BaseKernel
 
         $container->addCompilerPass(new ApiFirewallCompilerPass());
         $container->addCompilerPass(new WorkerLocatorPass());
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function boot()
+    {
+        parent::boot();
+
+        // class Type has a final constructor, inject dependencies on the boot
+        $crypter = $this->container->get(OpensslCrypter::class);
+
+        EncryptedTextType::setCrypter($crypter);
+        EncryptedArrayType::setCrypter($crypter);
     }
 }

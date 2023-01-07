@@ -59,8 +59,11 @@ class UpdaterWorker
         $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
 
         try {
-            $config = $this->packagistFactory->createConfig($package->getCredentials());
+            $config = $this->packagistFactory->createConfig($credentials = $package->getCredentials());
             $io->loadConfiguration($config);
+            if ($credentials && empty($credentials->getKey()) && empty($credentials->getComposerConfig())) {
+                $io->warning("SSH Key {$credentials->getName()} is not loaded from database, probably encryption param APP_SECRET changed, please check your credentials");
+            }
 
             $flags = 0;
             if ($job->getPayload()['update_equal_refs'] === true) {

@@ -26,11 +26,6 @@ class SshKeyCredentialType extends AbstractType
             ->add('name', TextType::class, [
                 'constraints' => [new NotBlank()]
             ])
-            ->add('replace', CredentialType::class, [
-                'mapped' => false,
-                'label' => 'Replace existing',
-                'tooltip' => 'Update existing credentials with this values. (Safe alternative for edit action)'
-            ])
             ->add('key', PrivateKeyType::class, [
                 'attr' => ['placeholder' => "-----BEGIN RSA PRIVATE KEY-----\n....", 'rows' => 5],
                 'label' => '(optional) Private SSH Key for Git',
