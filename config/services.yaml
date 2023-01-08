@@ -8,7 +8,7 @@ parameters:
     env(PACKAGIST_DIST_HOST): null
     env(GITHUB_NO_API): true
     env(PACKAGIST_DIST_PATH): '%kernel.project_dir%/var/zipball'
-    env(PACKAGE_UPDATE_INTERVAL): 14400
+    env(PACKAGE_UPDATE_INTERVAL): 43200
     env(TRUSTED_PROXIES): null
     env(MAILER_FROM): 'Packeton <packeton@example.com>'
     env(PUBLIC_ACCESS): false
