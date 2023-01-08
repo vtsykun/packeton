@@ -58,11 +58,12 @@ security:
 
         # Packagist
         - { path: (^(/change-password|/profile|/logout))+, roles: ROLE_USER }
-        - { path: (^(/search|/packages/|/versions/))+, roles: ROLE_USER, allow_if: "parameter('anonymous_access')" }
-        - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, roles: ROLE_USER, allow_if: "parameter('anonymous_access')" }
+        - { path: (^(/search|/packages/|/versions/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
+        - { path: (^(/packages.json$|/p/|/p2/|/downloads/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
+        - { path: (^(/zipball/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_ARCHIVE_PUBLIC')" }
         - { path: (^(/api/webhook-invoke/))+, roles: ROLE_USER }
         - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, roles: ROLE_MAINTAINER }
-        - { path: ^/$, roles: ROLE_USER, allow_if: "parameter('anonymous_access')" }
+        - { path: ^/$, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
 
         # Maintainers
         - { path: (^(/users/(.+)/packages))+, roles: ROLE_MAINTAINER }

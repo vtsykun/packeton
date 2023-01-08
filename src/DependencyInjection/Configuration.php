@@ -25,6 +25,7 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('github_no_api')->end()
                 ->scalarNode('rss_max_items')->defaultValue(40)->end()
                 ->booleanNode('anonymous_access')->defaultFalse()->end()
+                ->booleanNode('anonymous_archive_access')->defaultFalse()->end()
                 ->booleanNode('archive')
                     ->defaultFalse()
                 ->end()

@@ -22,7 +22,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
      */
     public function getAllowedVersionByPackage(User $user, Package $package)
     {
-        $qb = $this->_em->createQueryBuilder();
+        $qb = $this->getEntityManager()->createQueryBuilder();
         $qb
             ->select('acl.version')
             ->distinct()
@@ -55,7 +55,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             return [];
         }
 
-        $qb = $this->_em->createQueryBuilder();
+        $qb = $this->getEntityManager()->createQueryBuilder();
         $qb
             ->select('p.id')
             ->distinct()
@@ -67,7 +67,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
 
         $result = $qb->getQuery()->getResult();
         if ($hydration && $result) {
-            $qb = $this->_em->createQueryBuilder();
+            $qb = $this->getEntityManager()->createQueryBuilder();
             $qb->select('p')
                 ->from(Package::class, 'p')
                 ->where('p.id IN (:ids)')
