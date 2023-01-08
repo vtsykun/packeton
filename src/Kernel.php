@@ -47,7 +47,7 @@ class Kernel extends BaseKernel
         }
     }
 
-    public function build(ContainerBuilder $container)
+    protected function build(ContainerBuilder $container)
     {
         /** @var SecurityExtension $extension */
         $extension = $container->getExtension('security');

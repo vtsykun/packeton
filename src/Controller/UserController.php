@@ -59,7 +59,7 @@ class UserController extends AbstractController
      */
     public function showAction(Request $request)
     {
-        $packages = $this->getUserPackages($request, $this->getUser());
+        $packages = $this->getUser() instanceof User ? $this->getUserPackages($request, $this->getUser()) : [];
 
         return $this->render('profile/show.html.twig', [
             'user' => $this->getUser(),

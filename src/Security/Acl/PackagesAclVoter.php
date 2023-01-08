@@ -31,7 +31,7 @@ class PackagesAclVoter implements VoterInterface
 
         $user = $token->getUser();
         if (!$user instanceof User) {
-            return self::ACCESS_DENIED;
+            return self::ACCESS_ABSTAIN;
         }
 
         if ($object instanceof Package) {

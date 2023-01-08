@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Security\Provider;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;
 use Packeton\Repository\UserRepository;
@@ -50,8 +51,14 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
             throw new UnsupportedUserException('Expected '.User::class.', got '.get_class($user));
         }
 
+        $uow = $this->getEM()->getUnitOfWork();
+        $needRefresh = $uow->containsIdHash((string)$user->getId(), User::class);
         if (!$user = $this->getRepo()->find($user->getId())) {
             throw new UserNotFoundException('User not found');
+        }
+
+        if ($needRefresh) {
+            $this->getEM()->refresh($user);
         }
 
         return $user;
@@ -84,6 +91,11 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
 
     private function getRepo(): UserRepository
     {
-        return $this->registry->getRepository(User::class);
+        return $this->getEM()->getRepository(User::class);
+    }
+
+    private function getEM(): EntityManagerInterface
+    {
+        return $this->registry->getManager();
     }
 }
