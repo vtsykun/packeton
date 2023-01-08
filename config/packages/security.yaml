@@ -49,30 +49,30 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         # The WDT has to be allowed to anonymous users to avoid requiring the login with the AJAX request
-        - { path: ^/_wdt/, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/_profiler/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/_wdt/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/_profiler/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
 
-        - { path: ^/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/login/, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/reset-password, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/reset-password, roles: IS_AUTHENTICATED_ANONYMOUSLY }
 
         # Packagist
-        - { path: (^(/change-password|/profile|/logout))+, role: ROLE_USER }
-        - { path: (^(/search|/packages/|/versions/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
-        - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
-        - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
-        - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
-        - { path: ^/$, role: '%env(acl_level:PUBLIC_ACCESS)%' }
+        - { path: (^(/change-password|/profile|/logout))+, roles: ROLE_USER }
+        - { path: (^(/search|/packages/|/versions/))+, roles: ROLE_USER, allow_if: "parameter('anonymous_access')" }
+        - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, roles: ROLE_USER, allow_if: "parameter('anonymous_access')" }
+        - { path: (^(/api/webhook-invoke/))+, roles: ROLE_USER }
+        - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, roles: ROLE_MAINTAINER }
+        - { path: ^/$, roles: ROLE_USER, allow_if: "parameter('anonymous_access')" }
 
         # Maintainers
-        - { path: (^(/users/(.+)/packages))+, role: ROLE_MAINTAINER }
-        - { path: (^(/users/(.+)/favorites))+, role: ROLE_MAINTAINER }
-        - { path: (^(/explore|/jobs/))+, role: ROLE_MAINTAINER }
+        - { path: (^(/users/(.+)/packages))+, roles: ROLE_MAINTAINER }
+        - { path: (^(/users/(.+)/favorites))+, roles: ROLE_MAINTAINER }
+        - { path: (^(/explore|/jobs/))+, roles: ROLE_MAINTAINER }
 
         # Secured part of the site
         # This config requires being logged for the whole site and having the admin role for the admin part.
         # Change these rules to adapt them to your needs
-        - { path: ^.*$, role: ROLE_ADMIN }
+        - { path: ^.*$, roles: ROLE_ADMIN }
 
     role_hierarchy:
         ROLE_UPDATE_PACKAGES: ~
