@@ -60,7 +60,7 @@ security:
         - { path: (^(/change-password|/profile|/logout))+, role: ROLE_USER }
         - { path: (^(/search|/packages/|/versions/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
         - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
-        - { path: (^(/api/webhook-invoke/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
+        - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
         - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
         - { path: ^/$, role: '%env(acl_level:PUBLIC_ACCESS)%' }
 

@@ -175,13 +175,13 @@ class PackageRepository extends EntityRepository
         // with huge amounts of versions
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('partial p.{id}', 'partial v.{id, version, normalizedVersion, development, releasedAt}', 'partial m.{id, username, email}')
-            ->from('Packeton\Entity\Package', 'p')
+            ->from(Package::class, 'p')
             ->leftJoin('p.versions', 'v')
             ->leftJoin('p.maintainers', 'm')
             ->orderBy('v.development', 'DESC')
             ->addOrderBy('v.releasedAt', 'DESC')
             ->where('p.name = ?0')
-            ->setParameters(array($name));
+            ->setParameters([$name]);
 
         $pkg = $qb->getQuery()->getSingleResult();
 

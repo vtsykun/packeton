@@ -94,7 +94,7 @@ docker-compose up -f docker-compose-prod.yml -d # Or split
 
 #### Docker Environment variables
 
-- `APP_SECRET` - Must be static, used for encrypt SSH keys in database.
+- `APP_SECRET` - Must be static, used for encrypt SSH keys in database. The value is generated automatically, see `.env` in the data volume. 
 - `APP_COMPOSER_HOME` - composer home, default /data/composer
 - `DATABASE_URL` - Database DSN, default sqlite:////data/app.db. Example for postgres "postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&charset=utf8"
 - `PACKAGIST_DIST_PATH` - Default /data/zipball, path to storage zipped versions
@@ -110,6 +110,7 @@ Installation
 
 ### Requirements
 
+- PHP 8.1+
 - Redis for some functionality (favorites, download statistics, worker queue).
 - git/svn/hg depending on which repositories you want to support.
 - Supervisor to run a background job worker
