@@ -24,15 +24,6 @@ class PacketonExtension extends Extension
         }
 
         $container->setParameter('packeton_anonymous_access', $config['anonymous_access'] ?? false);
-        $container->setParameter('packeton_min_access_level', 'ROLE_USER');
-
-//        if (true === ($config['anonymous_access'] ?? false)) {
-//            $container->setParameter('packeton_min_access_level', 'IS_AUTHENTICATED_ANONYMOUSLY');
-//            $container->setParameter('packeton_anonymous_access', true);
-//        } else {
-//            $container->setParameter('packeton_min_access_level', 'ROLE_USER');
-//            $container->setParameter('packeton_anonymous_access', false);
-//        }
 
         $container->setParameter('packeton_github_no_api', $config['github_no_api'] ?? false);
     }
