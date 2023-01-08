@@ -101,6 +101,9 @@ docker-compose up -f docker-compose-prod.yml -d # Or split
 - `REDIS_URL` - Redis DB, default redis://localhost
 - `PACKAGIST_DIST_HOST` - Hostname, (auto) default use the current host header in the request.
 - `TRUSTED_PROXIES` - Ips for Reverse Proxy. See [Symfony docs](https://symfony.com/doc/current/deployment/proxies.html)
+- `PUBLIC_ACCESS` - Allow anonymous users access to read packages metadata, default: `false`
+- `MAILER_DSN` - Mailter for reset password, default disabled
+- `MAILER_FROM` - Mailter from
 
 Installation
 ------------

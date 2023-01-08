@@ -54,10 +54,6 @@ class PackageController extends AbstractController
      */
     public function allAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         return new RedirectResponse($this->generateUrl('browse'), Response::HTTP_MOVED_PERMANENTLY);
     }
 
@@ -219,7 +215,7 @@ class PackageController extends AbstractController
      */
     public function viewVendorAction($vendor)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 
@@ -414,13 +410,14 @@ class PackageController extends AbstractController
      */
     public function changelogAction($package, Request $request)
     {
+        if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
         $package = $this->registry->getRepository(Package::class)
             ->findOneBy(['name' => $package]);
         if (null === $package) {
             return new JsonResponse(['error' => 'Not found'], 404);
-        }
-        if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
-            return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
         $changelogBuilder = $this->container->get(ChangelogUtils::class);
@@ -463,8 +460,8 @@ class PackageController extends AbstractController
      */
     public function viewPackageDownloadsAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedHttpException;
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
+            throw new AccessDeniedHttpException();
         }
 
         /** @var PackageRepository $repo */
@@ -889,7 +886,7 @@ class PackageController extends AbstractController
      */
     public function statsAction(Request $req, #[Vars('name')] Package $package)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 
@@ -936,7 +933,7 @@ class PackageController extends AbstractController
      */
     public function dependentsAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 
@@ -969,7 +966,7 @@ class PackageController extends AbstractController
      */
     public function suggestersAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 
@@ -1002,7 +999,7 @@ class PackageController extends AbstractController
      */
     public function overallStatsAction(Request $req, \Redis $redis, #[Vars('name')] Package $package, Version $version = null)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 
@@ -1080,7 +1077,7 @@ class PackageController extends AbstractController
      */
     public function versionStatsAction(\Redis $redis, Request $req, #[Vars('name')] Package $package, $version)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
         }
 

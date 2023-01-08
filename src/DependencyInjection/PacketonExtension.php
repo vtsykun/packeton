@@ -14,6 +14,7 @@ class PacketonExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container)
     {
+
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
@@ -21,6 +22,17 @@ class PacketonExtension extends Extension
         if (true === $config['archive']) {
             $container->setParameter('packeton_archive_opts', $config['archive_options'] ?? []);
         }
+
+        $container->setParameter('packeton_anonymous_access', $config['anonymous_access'] ?? false);
+        $container->setParameter('packeton_min_access_level', 'ROLE_USER');
+
+//        if (true === ($config['anonymous_access'] ?? false)) {
+//            $container->setParameter('packeton_min_access_level', 'IS_AUTHENTICATED_ANONYMOUSLY');
+//            $container->setParameter('packeton_anonymous_access', true);
+//        } else {
+//            $container->setParameter('packeton_min_access_level', 'ROLE_USER');
+//            $container->setParameter('packeton_anonymous_access', false);
+//        }
 
         $container->setParameter('packeton_github_no_api', $config['github_no_api'] ?? false);
     }

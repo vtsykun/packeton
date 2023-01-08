@@ -57,11 +57,12 @@ security:
         - { path: ^/reset-password, role: IS_AUTHENTICATED_ANONYMOUSLY }
 
         # Packagist
-        - { path: (^(/change-password|/profile|/search|/logout|/packages/|/versions/))+, role: ROLE_USER }
-        - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, role: ROLE_USER }
-        - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
+        - { path: (^(/change-password|/profile|/logout))+, role: ROLE_USER }
+        - { path: (^(/search|/packages/|/versions/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
+        - { path: (^(/packages.json$|/p/|/p2/|/zipball/|/downloads/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
+        - { path: (^(/api/webhook-invoke/))+, role: '%env(acl_level:PUBLIC_ACCESS)%' }
         - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
-        - { path: ^/$, role: ROLE_USER }
+        - { path: ^/$, role: '%env(acl_level:PUBLIC_ACCESS)%' }
 
         # Maintainers
         - { path: (^(/users/(.+)/packages))+, role: ROLE_MAINTAINER }
