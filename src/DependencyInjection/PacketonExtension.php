@@ -23,7 +23,7 @@ class PacketonExtension extends Extension
             $container->setParameter('packeton_archive_opts', $config['archive_options'] ?? []);
         }
 
-        $container->setParameter('packeton_anonymous_access', $config['anonymous_access'] ?? false);
+        $container->setParameter('anonymous_access', $config['anonymous_access'] ?? false);
 
         $container->setParameter('packeton_github_no_api', $config['github_no_api'] ?? false);
     }
