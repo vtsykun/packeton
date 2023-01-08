@@ -219,7 +219,12 @@
                         <ul class="col-xs-3 col-md-2">
                             <li><a href="{{ path('api_doc') }}">{{ 'menu.api_doc'|trans }}</a></li>
                         </ul>
-                    {%- endif %}
+                    {%- elseif is_granted('ROLE_MAINTAINER') %}
+                        <ul class="col-xs-4 col-md-2">
+                            <li><a href="{{ path('about') }}">{{ 'menu.about_packagist'|trans }}</a></li>
+                            <li><a href="{{ path('api_doc') }}" rel="nofollow">{{ 'menu.api_doc'|trans }}</a></li>
+                        </ul>
+                    {% endif %}
                     {% block docker_footer_info %}{% endblock %}
 
                 </div>
