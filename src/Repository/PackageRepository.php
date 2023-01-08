@@ -40,12 +40,17 @@ class PackageRepository extends EntityRepository
         return $query->getResult();
     }
 
-    public function getPackageNames()
+    public function getPackageNames(array $allowed = null)
     {
-        $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name FROM Packeton\Entity\Package p");
+        $query = $this->createQueryBuilder('p')
+            ->resetDQLPart('select')
+            ->select('p.name');
 
-        $names = $this->getPackageNamesForQuery($query);
+        if ($allowed) {
+            $query->where('p.id IN (:ids)')->setParameter('ids', $allowed);
+        }
+
+        $names = $this->getPackageNamesForQuery($query->getQuery());
 
         return array_map('strtolower', $names);
     }
@@ -442,9 +447,7 @@ class PackageRepository extends EntityRepository
             $sql .= 'ORDER BY idx LIMIT :limit OFFSET :ofs';
 
             return array_map(
-                function ($item) {
-                    return $this->find($item['id']);
-                },
+                fn ($item) => $this->find($item['id']),
                 $conn->executeQuery($sql, $params, ['ids' => Connection::PARAM_INT_ARRAY])->fetchAllAssociative()
             );
         }
@@ -455,16 +458,42 @@ class PackageRepository extends EntityRepository
                 ->setParameter('ids', $allowed);
         }
 
-        return $qb->andWhere(
-                $qb->expr()->like('p.name', ':name')
-            )
+        $packages = $qb->andWhere('p.name LIKE :name')
             ->setParameter('name', '%' . $search . '%')
             ->setMaxResults($limit)
             ->setFirstResult($limit * $page)
             ->getQuery()->getResult();
+
+        // Use levenshtein search.
+        if ($page === 0 && count($packages) < $limit -1) {
+            $excPackages = array_map(fn (Package $p) => $p->getName(), $packages);
+            $packageNames = $this->getPackageNames($allowed);
+            $alternatives = [];
+            foreach ($packageNames as $name) {
+                $score = levenshtein($name, $search)/(1+strlen($name));
+                if (!in_array($name, $excPackages) && $score <= 0.8) {
+                    $alternatives[$name] = $score;
+                }
+            }
+
+            asort($alternatives);
+            $count = min($limit - 1 - count($packages), count($alternatives));
+
+            if ($count > 0) {
+                $alternatives = array_slice(array_keys($alternatives), 0, $count);
+                $alternatives = $this->createQueryBuilder('p')
+                    ->where('LOWER(p.name) in (:packs)')
+                    ->setParameter('packs', $alternatives)
+                    ->getQuery()->getResult();
+
+                $packages = array_merge($packages, $alternatives);
+            }
+        }
+
+        return $packages;
     }
 
-    private function checkExtension($extensionName)
+    private function checkExtension(string $extensionName)
     {
         $conn = $this->getEntityManager()->getConnection();
         try {
