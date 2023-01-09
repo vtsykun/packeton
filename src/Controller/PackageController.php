@@ -593,7 +593,7 @@ class PackageController extends AbstractController
 
         $update = $req->request->get('update', $req->query->get('update'));
         $autoUpdated = $req->request->get('autoUpdated', $req->query->get('autoUpdated'));
-        $updateEqualRefs = $req->request->get('updateAll', $req->query->get('updateAll'));
+        $updateEqualRefs = (bool)$req->request->get('updateAll', $req->query->get('updateAll'));
 
         $user = $this->getUser() ?: $doctrine
             ->getRepository(User::class)

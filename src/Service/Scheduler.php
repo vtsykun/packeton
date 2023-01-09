@@ -18,15 +18,7 @@ class Scheduler
         $this->redis = $redis;
     }
 
-    /**
-     * @param $packageOrId
-     * @param bool $updateEqualRefs
-     * @param bool $deleteBefore
-     * @param null $executeAfter
-     *
-     * @return Job|object
-     */
-    public function scheduleUpdate($packageOrId, $updateEqualRefs = false, $deleteBefore = false, $executeAfter = null): Job
+    public function scheduleUpdate($packageOrId, bool $updateEqualRefs = false, bool $deleteBefore = false, \DateTimeInterface $executeAfter = null): Job
     {
         if ($packageOrId instanceof Package) {
             $packageOrId = $packageOrId->getId();
@@ -36,18 +28,9 @@ class Scheduler
 
         $pendingJobId = $this->getPendingUpdateJob($packageOrId, $updateEqualRefs, $deleteBefore);
         if ($pendingJobId) {
-            $pendingJob = $this->doctrine->getManager()->getRepository(Job::class)->findOneBy(['id' => $pendingJobId]);
+            $pendingJob = $this->doctrine->getRepository(Job::class)->findOneBy(['id' => $pendingJobId]);
 
-            // pending job will execute before the one we are trying to schedule so skip scheduling
-            if (
-                (!$pendingJob->getExecuteAfter() && $executeAfter)
-                || ($pendingJob->getExecuteAfter() && $executeAfter && $pendingJob->getExecuteAfter() < $executeAfter)
-            ) {
-                return $pendingJob;
-            }
-
-            // neither job has executeAfter, so the pending one is equivalent to the one we are trying to schedule and we can skip scheduling
-            if (!$pendingJob->getExecuteAfter() && !$executeAfter) {
+            if (!$pendingJob->getExecuteAfter() || $executeAfter) {
                 return $pendingJob;
             }
 

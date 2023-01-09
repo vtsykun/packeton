@@ -185,12 +185,12 @@ class Job
         $this->executeAfter = $executeAfter;
     }
 
-    public function getExecuteAfter()
+    public function getExecuteAfter(): ?DateTimeInterface
     {
         return $this->executeAfter;
     }
 
-    public function getCompletedAt()
+    public function getCompletedAt(): ?DateTimeInterface
     {
         return $this->completedAt;
     }

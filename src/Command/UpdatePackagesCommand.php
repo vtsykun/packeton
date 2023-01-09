@@ -100,7 +100,7 @@ class UpdatePackagesCommand extends Command
             $idsGroup = array_splice($ids, 0, 100);
 
             foreach ($idsGroup as $id) {
-                $job = $this->scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, (int) ($interval/1.5)).'seconds') : null);
+                $job = $this->scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, (int) ($interval/1.5)).'seconds') : null, true);
                 if ($verbose) {
                     $output->writeln('Scheduled update job '.$job->getId().' for package '.$id);
                 }
