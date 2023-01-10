@@ -1236,7 +1236,8 @@ class PackageController extends AbstractController
             parent::getSubscribedServices(),
             [
                 Scheduler::class,
-                PackageManager::class
+                PackageManager::class,
+                ChangelogUtils::class,
             ]
         );
     }
