@@ -1,0 +1,32 @@
+name: Deploy docs
+on:
+  push:
+    paths:
+      - 'docs/**'
+    branches:
+      - master
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  pages:
+    name: GitHub Gen Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup mdbook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: '0.4.25'
+
+      - name: Build the documentation
+        run: |
+          mdbook build
+
+      # Deploy to the target directory.
+      - name: Deploy to gh pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./book
