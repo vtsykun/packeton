@@ -1,0 +1,20 @@
+# Documentation for possible options in this file is at
+# https://rust-lang.github.io/mdBook/format/config.html
+
+[book]
+title = "Packeton Docs"
+authors = ["The Packeton.org"]
+language = "en"
+multilingual = false
+
+# The directory that documentation files are stored in
+src = "docs"
+
+[build]
+create-missing = false
+
+[output.html]
+
+edit-url-template = "https://github.com/vtsykun/packeton/edit/master/{path}"
+no-section-label = true
+git-repository-url = "https://github.com/vtsykun/packeton"

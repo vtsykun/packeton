@@ -13,3 +13,5 @@
 /docs
 /excluded
 .DS_Store
+/.github
+/book
