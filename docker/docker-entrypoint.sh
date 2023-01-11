@@ -17,6 +17,9 @@ fi
 
 if [ ! -f /data/.env ]; then
     touch /data/.env
+    echo "# The file has been auto-generated, use docker or docker-compose env if you want overwrite it" >> /data/.env
+    echo "# Variables defined in Dockerfile are loaded with higher priority. So DATABASE_URL won't be overwritten here" >> /data/.env
+
     echo "APP_SECRET=$(tr -dc 0-9a-f </dev/urandom | head -c 32)" >> /data/.env
 fi
 

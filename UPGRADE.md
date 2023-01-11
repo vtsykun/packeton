@@ -48,3 +48,24 @@ After:
 ```
     - .docker:/data
 ```
+
+#### Env variables update
+
+Before `docker-compose.yml`
+
+```yaml
+    environment:
+        DATABASE_HOST: postgres
+        DATABASE_PORT: 5432
+        DATABASE_DRIVER: pdo_pgsql
+        DATABASE_USER: postgres
+        DATABASE_NAME: packagist
+        DATABASE_PASSWORD: 123456
+```
+
+After:
+
+```yaml
+    environment:
+        DATABASE_URL: mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&charset=utf8mb4
+```
