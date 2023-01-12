@@ -152,7 +152,7 @@ class HookTestAction
 
         if (isset($runtimeContext[WebhookContext::CHILD_WEBHOOK])) {
             /** @var Webhook $childHook */
-            foreach ($runtimeContext[WebhookContext::CHILD_WEBHOOK] as list($childHook, $childContext)) {
+            foreach ($runtimeContext[WebhookContext::CHILD_WEBHOOK] as [$childHook, $childContext]) {
                 if (null !== $childHook->getOwner() && $childHook->getVisibility() === Webhook::USER_VISIBLE && $childHook->getOwner() !== $webhook->getOwner()) {
                     $response[] = new HookErrorResponse('You can not call private webhooks of another user owner, please check nesting webhook visibility');
                     continue;

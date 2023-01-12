@@ -94,9 +94,7 @@ class HookResponse implements \JsonSerializable
         $headers = $this->options['headers'] ?? [];
         $headers = is_array($headers) ? $headers : [];
 
-        return array_filter($headers, function ($v) {
-            return is_scalar($v);
-        });
+        return array_filter($headers, fn ($v) => is_scalar($v));
     }
 
     /**
@@ -108,9 +106,7 @@ class HookResponse implements \JsonSerializable
             $headers = $this->options['request_headers'] ?? [];
             $headers = is_array($headers) ? $headers : [];
 
-            return array_filter($headers, function ($v) {
-                return is_scalar($v);
-            });
+            return array_filter($headers, fn ($v) => is_scalar($v));
         }
 
         return $this->request->getHeaders();

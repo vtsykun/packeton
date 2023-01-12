@@ -11,6 +11,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\NoPrivateNetworkHttpClient;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -166,7 +167,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         $isRaw = $options['raw'] ?? false;
 
         unset($options['method'], $options['raw']);
-        $client = HttpClient::create(['max_duration' => 60]);
+        $client = new NoPrivateNetworkHttpClient(HttpClient::create(['max_duration' => 60]));
 
         try {
             $response = $client->request($method, $url, $options);

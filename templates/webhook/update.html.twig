@@ -11,9 +11,11 @@
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
         {% set formBegin %}
+            {{ form_errors(form) }}
             {{ form_row(form.name) }}
             {{ form_row(form.url) }}
             {{ form_row(form.method) }}
+            {{ form_row(form.options) }}
         {% endset %}
 
         {% set formEnd %}
@@ -25,7 +27,7 @@
         {{ formBegin }}
         <div class="form-group">
             <a data-toggle="collapse" href="#moreOptions" aria-expanded="false" aria-controls="moreOptions">
-                More options
+                [+] More options
             </a>
         </div>
 
@@ -37,6 +39,35 @@
         <input class="btn btn-block btn-success btn-lg" type="submit" value="{{ entity.id ? 'Update hook' : 'Add webhook' }}" />
         {{ form_end(form) }}
         <div class="col-md-6">
+            <h4>Example usage</h4>
+            <p>Uses Twig expression language to build custom request body. Example to send JSON payload</p>
+<pre>{%- verbatim %}
+{% set request = {
+    'chat_id': '-1000006111000',
+    'parse_mode': 'Markdown',
+    'text': 'New release'
+} %}
+{{ request|json_encode }}
+{% endverbatim -%}</pre>
+
+            <b>Example usage secrets</b>
+            <p>You can encrypt security request parameters with secrets. Put JSON to Request options</p>
+<pre>{
+    "secrets": {
+        "allowed-domains": ["api.telegram.org"],
+        "TOKEN": "167000000:AAzddkPzfgzkqzzFghiwPutin_khuylo",
+        "CHART_ID": "-1000017160005"
+    }
+}
+</pre>
+            <p>And put secrets as placeholder in URL or body. <br><code>https://api.telegram.org/bot${secrets.TOKEN}/sendMessage</code></p>
+            <pre>{%- verbatim %}
+{% set request = {
+    'chat_id': '${secrets.CHART_ID}',
+    'parse_mode': 'Markdown'
+} %}
+{{ request|json_encode }}
+{% endverbatim -%}</pre>
         </div>
     </section>
 

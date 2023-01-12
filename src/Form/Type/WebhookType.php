@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Form\Type;
 
 use Cron\CronExpression;
+use Packeton\DBAL\OpensslCrypter;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
 use Packeton\Validator\Constraint\ValidRegex;
@@ -25,25 +26,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class WebhookType extends AbstractType
 {
-    /**
-     * @var TokenStorageInterface
-     */
-    private $tokenStorage;
-
-    /**
-     * @var PayloadRenderer
-     */
-    private $renderer;
-
-    /**
-     * @param TokenStorageInterface $tokenStorage
-     * @param PayloadRenderer $renderer
-     */
-    public function __construct(TokenStorageInterface $tokenStorage, PayloadRenderer $renderer)
-    {
-        $this->tokenStorage = $tokenStorage;
-        $this->renderer = $renderer;
-    }
+    public function __construct(
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly PayloadRenderer $renderer,
+        private readonly OpensslCrypter $crypter,
+    ) {}
 
     /**
      * {@inheritdoc}
@@ -123,7 +110,21 @@ class WebhookType extends AbstractType
                 'required' => false,
             ]);
 
-        $builder->addEventListener(FormEvents::POST_SET_DATA, [$this, 'onSetData']);
+        $builder->addEventListener(FormEvents::POST_SET_DATA, $this->onSetData(...));
+        $builder->addEventListener(FormEvents::POST_SUBMIT, $this->postSubmit(...));
+    }
+
+    public function postSubmit(FormEvent $event): void
+    {
+        $data = $event->getData();
+        if (!$data instanceof Webhook || empty($secrets = $data->getOptions()['secrets'] ?? null)) {
+            return;
+        }
+
+        if (is_array($secrets)) {
+            $secrets = $this->crypter->encryptData(json_encode($secrets));
+            $data->setOptions(array_merge($data->getOptions(), ['secrets' => $secrets]));
+        }
     }
 
     /**
@@ -157,6 +158,7 @@ class WebhookType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' =>  Webhook::class,
+            'constraints' => [new Callback([$this, 'validateWebhook'])],
         ]);
     }
 
@@ -177,6 +179,29 @@ class WebhookType extends AbstractType
             $context->addViolation('This value is not a valid twig. ' . $exception->getMessage());
         }
     }
+
+    public function validateWebhook($value, ExecutionContextInterface $context)
+    {
+        if (!$value instanceof Webhook) {
+            return;
+        }
+
+        if ($options = $value->getOptions() and $diff = array_diff(array_keys($options), $this->allowedClientOptions())) {
+            $context->addViolation(sprintf('This options is not allowed. "%s"', implode(",", $diff)));
+        }
+
+        if (!$hostname = parse_url($value->getUrl(), PHP_URL_HOST)) {
+            $context->addViolation("Hostname can not be is empty.");
+        }
+
+        if (filter_var($hostname, FILTER_VALIDATE_IP)) {
+            $flag = \FILTER_FLAG_IPV4 | \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE;
+            if (!filter_var($hostname, FILTER_VALIDATE_IP, $flag)) {
+                $context->addViolation("This is not a valid IP address $hostname");
+            }
+        }
+    }
+
 
     /**
      * @param string|null $value
@@ -204,9 +229,20 @@ class WebhookType extends AbstractType
             'Update tag/branch' => Webhook::HOOK_PUSH_UPDATE,
             'Created a new repository' => Webhook::HOOK_REPO_NEW,
             'Remove repository' => Webhook::HOOK_REPO_DELETE,
-            'By HTTP requests to  https://APP_URL/api/webhook-invoke/{name}' => Webhook::HOOK_HTTP_REQUEST,
+            'By HTTP requests to https://APP_URL/api/webhook-invoke/{name}' => Webhook::HOOK_HTTP_REQUEST,
             'User login event' => Webhook::HOOK_USER_LOGIN,
             'By cron' => Webhook::HOOK_CRON,
+        ];
+    }
+
+    /**
+     * Get allowed options for client https://symfony.com/doc/current/http_client.html
+     */
+    protected function allowedClientOptions(): array
+    {
+        return [
+            'headers', 'verify_peer', 'verify_host', 'secrets',
+            'auth_ntlm', 'auth_basic', 'auth_bearer',
         ];
     }
 
