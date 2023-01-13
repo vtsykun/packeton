@@ -1,7 +1,7 @@
 FROM php:8.1-fpm-alpine
 
-RUN apk --no-cache add nginx openssl supervisor curl \
-    git subversion mercurial patch bash nano sudo icu openssh-client zip unzip redis shadow && \
+RUN apk --no-cache add nginx supervisor curl subversion mercurial \
+    git bash openssh-client zip unzip redis shadow && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     printf "Host *\n    StrictHostKeyChecking no" > /etc/ssh/ssh_config
 
