@@ -41,6 +41,7 @@
         <div class="col-md-6">
             <h4>Example usage</h4>
             <p>Uses Twig expression language to build custom request body. Example to send JSON payload</p>
+            <p><i>Notice:</i>&nbsp;Untrusted template code is evaluate in a Twig sandbox mode</p>
 <pre>{%- verbatim %}
 {% set request = {
     'chat_id': '-1000006111000',
@@ -64,7 +65,7 @@
             <pre>{%- verbatim %}
 {% set request = {
     'chat_id': '${secrets.CHART_ID}',
-    'parse_mode': 'Markdown'
+    'text': 'example text'
 } %}
 {{ request|json_encode }}
 {% endverbatim -%}</pre>

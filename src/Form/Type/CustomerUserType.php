@@ -54,7 +54,7 @@ class CustomerUserType extends AbstractType
             ->add('groups', EntityType::class, [
                 'choice_label' => 'name',
                 'class' => Group::class,
-                'label' => 'ACL Group',
+                'label' => 'ACL Groups',
                 'multiple' => true,
                 'required' => false
             ]);

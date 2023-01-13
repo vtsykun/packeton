@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Packeton\Form\Type;
 
 use Cron\CronExpression;
-use Packeton\DBAL\OpensslCrypter;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
 use Packeton\Validator\Constraint\ValidRegex;
+use Packeton\Webhook\HmacOpensslCrypter;
 use Packeton\Webhook\Twig\PayloadRenderer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -29,7 +29,7 @@ class WebhookType extends AbstractType
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
         private readonly PayloadRenderer $renderer,
-        private readonly OpensslCrypter $crypter,
+        private readonly HmacOpensslCrypter $crypter,
     ) {}
 
     /**

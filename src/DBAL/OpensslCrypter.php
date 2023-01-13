@@ -6,7 +6,7 @@ namespace Packeton\DBAL;
 
 class OpensslCrypter
 {
-    public function __construct(protected string $encryptedDbalKey, protected string $algo = 'aes-256-cbc')
+    public function __construct(protected string $encryptionDbalKey, protected string $algo = 'aes-256-cbc')
     {
     }
 
@@ -14,7 +14,7 @@ class OpensslCrypter
     {
         $ivLength = openssl_cipher_iv_length($this->algo);
         $iv = openssl_random_pseudo_bytes($ivLength);
-        if (false === ($encryptedData = @openssl_encrypt($data, $this->algo, $this->encryptedDbalKey, OPENSSL_RAW_DATA, $iv))) {
+        if (false === ($encryptedData = @openssl_encrypt($data, $this->algo, $this->encryptionDbalKey, OPENSSL_RAW_DATA, $iv))) {
             return null;
         }
 
@@ -41,7 +41,7 @@ class OpensslCrypter
 
         $iv = substr($metadata['data'], 0, $ivLength);
         $data = substr($metadata['data'], $ivLength);
-        return @openssl_decrypt($data, $metadata['algo'], $this->encryptedDbalKey, OPENSSL_RAW_DATA, $iv) ?: null;
+        return @openssl_decrypt($data, $metadata['algo'], $this->encryptionDbalKey, OPENSSL_RAW_DATA, $iv) ?: null;
     }
 
     private function getEncryptMetadata(string $value): array|false

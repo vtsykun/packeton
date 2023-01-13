@@ -85,7 +85,11 @@ services:
     Packeton\DBAL\OpensslCrypter:
         public: true
         arguments:
-            $encryptedDbalKey: '%env(APP_SECRET)%'
+            $encryptionDbalKey: '%env(APP_SECRET)%'
+
+    Packeton\Webhook\HmacOpensslCrypter:
+        arguments:
+            $signKey: '%env(APP_SECRET)%'
 
     Packeton\Composer\PackagistFactory:
         arguments:

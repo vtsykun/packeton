@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Packeton\Webhook;
 
-use Packeton\DBAL\OpensslCrypter;
 use Packeton\Entity\Webhook;
 use Packeton\Webhook\Twig\ContextAwareInterface;
 use Packeton\Webhook\Twig\InterruptException;
@@ -21,7 +20,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
 
     public function __construct(
         private readonly RequestResolver $requestResolver,
-        private readonly OpensslCrypter $crypter,
+        private readonly HmacOpensslCrypter $crypter,
     ) {}
 
     /**
@@ -66,7 +65,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
             try {
                 if (is_string($secrets)) {
                     if (!$this->crypter->isEncryptData($secrets)) {
-                        throw new \InvalidArgumentException('Invalid decrypt secrets parameter.');
+                        throw new \InvalidArgumentException('Unable to decrypt secrets parameter. Probably encryption key was changed, please check you configuration');
                     }
 
                     $secrets = $this->crypter->decryptData($secrets);
