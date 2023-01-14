@@ -35,27 +35,27 @@ class FavoriteManager
     public function markFavorite(UserInterface $user, Package $package)
     {
         if (!$this->isMarked($user, $package)) {
-            $this->redis->zadd('pkg:'.$package->getId().':fav', time(), $user->getId());
-            $this->redis->zadd('usr:'.$user->getId().':fav', time(), $package->getId());
+            $this->redis->zadd('pkg:'.$package->getId().':fav', time(), $this->getUid($user));
+            $this->redis->zadd('usr:'.$this->getUid($user).':fav', time(), $package->getId());
         }
     }
 
     public function removeFavorite(UserInterface $user, Package $package)
     {
-        $this->redis->zrem('pkg:'.$package->getId().':fav', $user->getId());
-        $this->redis->zrem('usr:'.$user->getId().':fav', $package->getId());
+        $this->redis->zrem('pkg:'.$package->getId().':fav', $this->getUid($user));
+        $this->redis->zrem('usr:'.$this->getUid($user).':fav', $package->getId());
     }
 
     public function getFavorites(UserInterface $user, $limit = 0, $offset = 0)
     {
-        $favoriteIds = $this->redis->zrevrange('usr:'.$user->getId().':fav', $offset, $offset + $limit - 1);
+        $favoriteIds = $this->redis->zrevrange('usr:'.$this->getUid($user).':fav', $offset, $offset + $limit - 1);
 
         return $this->getPackageRepo()->findById($favoriteIds);
     }
 
     public function getFavoriteCount(UserInterface $user)
     {
-        return $this->redis->zcard('usr:'.$user->getId().':fav');
+        return $this->redis->zcard('usr:'. $this->getUid($user) .':fav');
     }
 
     public function getFavers(Package $package, $offset = 0, $limit = 100)
@@ -91,7 +91,7 @@ class FavoriteManager
 
     public function isMarked(UserInterface $user, Package $package)
     {
-        return false !== $this->redis->zrank('usr:'.$user->getId().':fav', $package->getId());
+        return false !== $this->redis->zrank('usr:'.$this->getUid($user).':fav', $package->getId());
     }
 
     /**
@@ -108,5 +108,14 @@ class FavoriteManager
     private function getPackageRepo()
     {
         return $this->registry->getRepository(Package::class);
+    }
+
+    private function getUid(UserInterface $user): string
+    {
+        if ($user instanceof User) {
+            return (string) $user->getId();
+        }
+
+        return sha1($user->getUserIdentifier());
     }
 }

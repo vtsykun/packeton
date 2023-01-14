@@ -15,6 +15,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Http\Authenticator\AuthenticatorInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
@@ -69,9 +70,13 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
     public function validateAndLoadUser(string $username, $token)
     {
         $user = $this->retrieveUser($username);
-        if ($user->getApiToken() && \strlen($user->getApiToken()) > 6 && $user->getApiToken() === $token) {
-            return $user;
+
+        if ($user instanceof User) {
+            if ($user->getApiToken() && \strlen($user->getApiToken()) > 6 && $user->getApiToken() === $token) {
+                return $user;
+            }
         }
+
 
         throw new BadCredentialsException('Bad credentials.');
     }
@@ -120,13 +125,7 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         return [$username, $credentials];
     }
 
-    /**
-     * @param string $username
-     * @param TokenInterface $token
-     *
-     * @return User
-     */
-    protected function retrieveUser(string $username): User
+    protected function retrieveUser(string $username): UserInterface
     {
         try {
             $user = $this->userProvider->loadUserByIdentifier($username);
@@ -135,10 +134,6 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
             throw new BadCredentialsException('Bad credentials.', 0, $e);
         } catch (\Exception $e) {
             throw new AuthenticationServiceException($e->getMessage(), 0, $e);
-        }
-
-        if (!$user instanceof User) {
-            throw new AuthenticationServiceException('The user provider must return a UserInterface object.');
         }
 
         return $user;

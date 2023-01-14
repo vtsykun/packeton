@@ -5,7 +5,9 @@ namespace Packeton\Twig;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Job;
 use Packeton\Entity\Package;
+use Packeton\Entity\User;
 use Packeton\Model\ProviderManager;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -32,6 +34,7 @@ class PackagistExtension extends AbstractExtension
     {
         return [
             new TwigFunction('package_job_result', [$this, 'getLatestJobResult']),
+            new TwigFunction('get_api_token', [$this, 'getApiToken']),
         ];
     }
 
@@ -42,6 +45,15 @@ class PackagistExtension extends AbstractExtension
             new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash']),
             new TwigFilter('truncate', [$this, 'truncate']),
         ];
+    }
+
+    public function getApiToken(UserInterface $user = null, $short = true): ?string
+    {
+        if ($user instanceof User) {
+            return ($short ? ($user->getUserIdentifier() . ':') : '') . $user->getApiToken();
+        }
+
+        return null;
     }
 
     public function getLatestJobResult($package): ?Job
