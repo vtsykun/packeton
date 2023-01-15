@@ -1,0 +1,398 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Using docker - Packeton Docs</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html" class="active">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/contributing.html">Contributing</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Packeton Docs</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/vtsykun/packeton" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/installation-docker.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h2 id="install-and-run-in-docker"><a class="header" href="#install-and-run-in-docker">Install and Run in Docker</a></h2>
+<p>You can use prebuild <a href="https://hub.docker.com/r/packeton/packeton">packeton/packeton</a> image</p>
+<h2 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h2>
+<pre><code>docker run -d --name packeton \
+    --mount type=volume,src=packeton-data,dst=/data \
+    -p 8080:80 \
+    packeton/packeton:latest
+</code></pre>
+<p>After container is running, you may wish to create an admin user via command <code>packagist:user:manager</code></p>
+<pre><code>docker exec -it packeton bin/console packagist:user:manager admin --password=123456 --admin
+</code></pre>
+<h2 id="docker-environment"><a class="header" href="#docker-environment">Docker Environment</a></h2>
+<p>All env variables is optional. By default, Packeton uses an SQLite database and build-in redis service,
+but you can overwrite it by env REDIS_URL and DATABASE_URL. The all app data is stored in the VOLUME /data</p>
+<ul>
+<li>
+<p><code>APP_SECRET</code> - Must be static, used for encrypt SSH keys in database. The value is generated automatically, see <code>.env</code> in the data volume.</p>
+</li>
+<li>
+<p><code>APP_COMPOSER_HOME</code> - composer home, default /data/composer</p>
+</li>
+<li>
+<p><code>DATABASE_URL</code> - Database DSN, default sqlite:////data/app.db. Example for postgres &quot;postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&amp;charset=utf8&quot;</p>
+</li>
+<li>
+<p><code>PACKAGIST_DIST_PATH</code> - Default /data/zipball, path to storage zipped versions</p>
+</li>
+<li>
+<p><code>REDIS_URL</code> - Redis DB, default redis://localhost</p>
+</li>
+<li>
+<p><code>PACKAGIST_DIST_HOST</code> - Hostname, (auto) default use the current host header in the request.
+Overwrite packagist host (example https://packagist.youcomany.org). Used for downloading the mirroring zip packages. 
+(The host add into dist url for composer metadata). The default value is define dynamically from the header Host.</p>
+</li>
+<li>
+<p><code>TRUSTED_PROXIES</code> - Ips for Reverse Proxy. See <a href="https://symfony.com/doc/current/deployment/proxies.html">Symfony docs</a></p>
+</li>
+<li>
+<p><code>PUBLIC_ACCESS</code> - Allow anonymous users access to read packages metadata, default: <code>false</code></p>
+</li>
+<li>
+<p><code>MAILER_DSN</code> - Mailer for reset password, default disabled</p>
+</li>
+<li>
+<p><code>MAILER_FROM</code> - Mailer from</p>
+</li>
+<li>
+<p><code>ADMIN_USER</code> Creating admin account, by default there is no admin user created so you won't be able to login to 
+the packagist. To create an admin account you need to use environment variables to pass 
+in an initial username and password (<code>ADMIN_PASSWORD</code>, <code>ADMIN_EMAIL</code>).</p>
+</li>
+<li>
+<p><code>ADMIN_PASSWORD</code> - used together with <code>ADMIN_USER</code></p>
+</li>
+<li>
+<p><code>ADMIN_EMAIL</code> -  used together with <code>ADMIN_USER</code></p>
+</li>
+<li>
+<p><code>PRIVATE_REPO_DOMAIN_LIST</code> - Save ssh fingerprints to known_hosts for this domain.</p>
+</li>
+</ul>
+<h4 id="volume"><a class="header" href="#volume">VOLUME</a></h4>
+<p>The all app data is stored in the VOLUME /data</p>
+<h3 id="user-docker-compose"><a class="header" href="#user-docker-compose">User docker compose</a></h3>
+<p>The typical example <code>docker-compose.yml</code></p>
+<pre><code class="language-yaml">version: '3.6'
+
+services:
+    packeton:
+        image: packeton/packeton:latest
+        container_name: packeton
+        hostname: packeton
+        environment:
+            ADMIN_USER: admin
+            ADMIN_PASSWORD: 123456
+            ADMIN_EMAIL: admin@example.com
+            DATABASE_URL: mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&amp;charset=utf8mb4
+        ports:
+            - '127.0.0.1:8080:80'
+        volumes:
+            - .docker:/data
+</code></pre>
+<p>By default, the container starts the supervisor, which is used to run other tasks: 
+nginx, redis, php-fpm, cron, however, you can start one service per container. 
+See docker-compose-prod.yml example:</p>
+<pre><code class="language-yaml">version: '3.9'
+
+x-volumes: &amp;default-volume
+    volumes:
+        - app-data:/data
+        - app-var:/var/www/packagist/var
+
+x-restart-policy: &amp;restart_policy
+    restart: unless-stopped
+
+x-environment: &amp;default-environment
+    REDIS_URL: redis://redis
+    DATABASE_URL: &quot;postgresql://packeton:pack123@postgres:5432/packeton?serverVersion=14&amp;charset=utf8&quot;
+    SKIP_INIT: 1
+
+services:
+    redis:
+        image: redis:7-alpine
+        hostname: redis
+        &lt;&lt;: *restart_policy
+        volumes:
+            - redis-data:/data
+ 
+    postgres:
+        image: postgres:14-alpine
+        hostname: postgres
+        &lt;&lt;: *restart_policy
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: packeton
+            POSTGRES_PASSWORD: pack123
+            POSTGRES_DB: packeton
+
+    php-fpm:
+        image: packeton/packeton:latest
+        hostname: php-fpm
+        command: ['php-fpm', '-F']
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        environment:
+            &lt;&lt;: *default-environment
+            SKIP_INIT: 0
+            WAIT_FOR_HOST: 'postgres:5432'
+        depends_on:
+            - &quot;postgres&quot;
+            - &quot;redis&quot;
+
+    nginx:
+        image: packeton/packeton:latest
+        hostname: nginx
+        ports:
+            - '127.0.0.1:8088:80'
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        command: &gt;
+            bash -c 'sed s/_PHP_FPM_HOST_/php-fpm:9000/g &lt; docker/nginx/nginx-tpl.conf &gt; /etc/nginx/nginx.conf &amp;&amp; nginx'
+        environment:
+            &lt;&lt;: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - &quot;php-fpm&quot;
+
+    worker:
+        image: packeton/packeton:latest
+        hostname: packeton-worker
+        command: ['bin/console', 'packagist:run-workers', '-v']
+        user: www-data
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        environment:
+            &lt;&lt;: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - &quot;php-fpm&quot;
+
+    cron:
+        image: packeton/packeton:latest
+        hostname: packeton-cron
+        command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
+        user: www-data
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        environment:
+            &lt;&lt;: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - &quot;php-fpm&quot;
+
+volumes:
+    redis-data:
+    postgres-data:
+    app-data:
+    app-var:
+
+</code></pre>
+<h2 id="build-and-run-docker-container-with-docker-compose"><a class="header" href="#build-and-run-docker-container-with-docker-compose">Build and run docker container with docker-compose</a></h2>
+<ol>
+<li>Clone repository</li>
+</ol>
+<pre><code class="language-bash">git clone https://github.com/vtsykun/packeton.git /var/www/packeton/
+cd /var/www/packeton/
+</code></pre>
+<ol start="2">
+<li>Run <code>docker-compose build</code></li>
+</ol>
+<pre><code class="language-bash">docker-compose build
+
+# start container.
+docker-compose up -d # Run with single supervisor container 
+docker-compose up -f docker-compose-prod.yml -d # Or split 
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="installation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="usage/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="installation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="usage/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

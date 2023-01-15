@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Overview - Packeton Docs</title>
+        <title>JWT Configuration - Packeton Docs</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html" class="active">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/contributing.html">Contributing</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html" class="active">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/contributing.html">Contributing</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -118,7 +118,7 @@
                         <a href="https://github.com/vtsykun/packeton" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/readme.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/authentication-jwt.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -147,43 +147,82 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Packeton - Private PHP package repository for vendors. <a href="https://github.com/vtsykun/packeton">GitHub Source Code</a></p>
-<p>Packeton is an open-source Composer repository homeserver for PHP private packages.
-We began development in <strong>2018</strong>, bases on Packagist and Satis fork.</p>
-<h2 id="main-features"><a class="header" href="#main-features">Main Features</a></h2>
+                        <h1 id="jwt-api-authentication"><a class="header" href="#jwt-api-authentication">JWT API Authentication</a></h1>
+<p>By default, packeton is storage api tokens in database for each user. But when user 
+loaded from custom user provider, like LDAP need to enable JWT configuration to use API. So Packeton can be 
+configured with a non-standard login type to support <a href="https://en.wikipedia.org/wiki/JSON_Web_Token">JSON Web Tokens</a>.</p>
+<p>The JSON Web Token integration in Packeton uses the <a href="https://github.com/firebase/php-jwt">Firebase library</a>.
+Also, JWT authentication can be enabled only for API.</p>
+<p>Add <code>yaml</code> configuration file to path <code>config/packages/</code>, for example <code>config/packages/jwt.yaml</code> to enable it.</p>
+<pre><code class="language-yaml">packeton:
+    jwt_authentication:
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem'
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem'
+</code></pre>
+<p>Full configurations: </p>
+<pre><code class="language-yaml"># config/packages/config/packages/jwt.yaml
+packeton:
+    jwt_authentication:
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem' # required for token sign
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem' # required for token verification
+        passphrase: ~
+        algo: EdDSA # Sign algo, here libsodium EdDSA
+</code></pre>
+<h2 id="generate-the-publicprivate-keys"><a class="header" href="#generate-the-publicprivate-keys">Generate the public/private keys</a></h2>
+<pre><code>bin/console packagist:jwt:generate-keypair
+
+bin/console packagist:jwt:generate-keypair --overwrite
+</code></pre>
+<p>Available options:</p>
 <ul>
-<li>Compatible with Composer API v2, bases on Symfony 5.4.</li>
-<li>Customers user and ACL groups and limit access by vendor and versions.</li>
-<li>Generic Packeton webhooks.</li>
-<li>Allow to freeze updates for the new releases after expire a customers license.</li>
-<li>Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.</li>
-<li>Support update webhook for GitHub, Bitbucket and GitLab or custom format.</li>
+<li>--overwrite will overwrite your keys if they already exist.</li>
 </ul>
-<h2 id="demo"><a class="header" href="#demo">Demo</a></h2>
-<p>See our <a href="https://demo.packeton.org">Administration Demo</a>. Username/password (admin/123456)</p>
-<p><a href="img/intro1.png"><img src="img/intro1.png" alt="Demo" /></a></p>
-<h4 id="create-webhooks"><a class="header" href="#create-webhooks">Create Webhooks</a></h4>
-<p><a href="img/intro2.png"><img src="img/intro2.png" alt="Webhooks" /></a></p>
-<h4 id="webhooks-status"><a class="header" href="#webhooks-status">Webhooks status</a></h4>
-<p><a href="img/intro3.png"><img src="img/intro3.png" alt="Webhooks Status" /></a></p>
-<h4 id="ssh-keys"><a class="header" href="#ssh-keys">SSH Keys</a></h4>
-<p><a href="img/intro4.png"><img src="img/intro4.png" alt="SSH Keys" /></a></p>
-<h4 id="submit"><a class="header" href="#submit">Submit</a></h4>
-<p><a href="img/intro5.png"><img src="img/intro5.png" alt="Submit" /></a></p>
-<h4 id="groups"><a class="header" href="#groups">Groups</a></h4>
-<p><a href="img/intro6.png"><img src="img/intro6.png" alt="Groups" /></a></p>
-<h4 id="users-view"><a class="header" href="#users-view">Users view</a></h4>
-<p><a href="img/intro7.png"><img src="img/intro7.png" alt="Users view" /></a></p>
-<h4 id="package-view"><a class="header" href="#package-view">Package view</a></h4>
-<p><a href="img/intro8.png"><img src="img/intro8.png" alt="Package view" /></a></p>
+<p>If keys already exists, a warning message will be raised to prevent you from overwriting your keys accidentally.</p>
+<h3 id="jwt-token-ttl"><a class="header" href="#jwt-token-ttl">JWT Token TTL.</a></h3>
+<p>JWT Token is never expire. It was done for compatibility with composer basic HTTP authorization.
+Each time the api is called, Packeton is checked that the user exists in the database and that 
+he has the same set of permissions and roles. </p>
+<h3 id="digital-signatures-algos"><a class="header" href="#digital-signatures-algos">Digital signatures algos.</a></h3>
+<p>We support all algos from Firebase lib: HMAC, OpenSSL RSA, OpenSSL</p>
+<p>Rsa, HMAC, EdDSA algorithms generate invariant tokens, i.e. the value of the token will be constant for the same user.
+It might be convenient as the app does not store the generated tokens. </p>
+<p>Example how to change algo:</p>
+<pre><code class="language-yaml">packeton:
+    jwt_authentication:
+    ...
+        algo: RS256 # RSA 256
+</code></pre>
+<h3 id="generating-keys-using-openssl"><a class="header" href="#generating-keys-using-openssl">Generating keys using OpenSSL</a></h3>
+<p>Example, how to generate an RSA private key, <code>key.pem</code> - private key. <code>public.pem</code> - public</p>
+<pre><code>openssl genrsa -out key.pem 2048
+openssl rsa -in key.pem -outform PEM -pubout -out public.pem
+</code></pre>
+<p>Example, how to generate an ES256 (elliptic curve) key pairs.</p>
+<pre><code>openssl ecparam -name prime256v1 -genkey -noout -out key.pem
+openssl ec -in key.pem -pubout -out public.pem
+</code></pre>
+<h2 id="obtain-the-token"><a class="header" href="#obtain-the-token">Obtain the token</a></h2>
+<p>You can run command <code>packagist:user:manager</code> to show the api token:</p>
+<pre><code>bin/console packagist:user:manager admin --show-token --token-format=jwt
+</code></pre>
+<p>Or you can found api token on your profile page. </p>
+<p><a href="img/jwt_keys.png"><img src="img/jwt_keys.png" alt="Keys" /></a></p>
+<h3 id="use-the-token"><a class="header" href="#use-the-token">Use the token</a></h3>
+<p>Simply use the JWT, like standard API token for composer api.</p>
+<h4 id="cache-ldap-user-loading"><a class="header" href="#cache-ldap-user-loading">Cache LDAP user loading.</a></h4>
+<p>Since 2.0 composer downloads all packages in parallel, it may run more 12 request at the same time. 
+To prevent calls external LDAP provider each time for JWT token verify, the obtained LDAP user object
+placed to cache with 60 sec TTL. </p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="authentication.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
-                            <a rel="next" href="installation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="authentication-ldap.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -193,8 +232,11 @@ We began development in <strong>2018</strong>, bases on Packagist and Satis fork
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="authentication.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
-                    <a rel="next" href="installation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="authentication-ldap.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

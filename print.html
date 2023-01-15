@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/contributing.html">Contributing</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -146,9 +146,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Packeton - Private PHP package repository for vendors</p>
+<p>Packeton - Private PHP package repository for vendors. <a href="https://github.com/vtsykun/packeton">GitHub Source Code</a></p>
 <p>Packeton is an open-source Composer repository homeserver for PHP private packages.
-We began development in 2018, bases on Packagist and Satis fork.</p>
+We began development in <strong>2018</strong>, bases on Packagist and Satis fork.</p>
 <h2 id="main-features"><a class="header" href="#main-features">Main Features</a></h2>
 <ul>
 <li>Compatible with Composer API v2, bases on Symfony 5.4.</li>
@@ -160,14 +160,1656 @@ We began development in 2018, bases on Packagist and Satis fork.</p>
 </ul>
 <h2 id="demo"><a class="header" href="#demo">Demo</a></h2>
 <p>See our <a href="https://demo.packeton.org">Administration Demo</a>. Username/password (admin/123456)</p>
+<p><a href="img/intro1.png"><img src="img/intro1.png" alt="Demo" /></a></p>
+<h4 id="create-webhooks"><a class="header" href="#create-webhooks">Create Webhooks</a></h4>
+<p><a href="img/intro2.png"><img src="img/intro2.png" alt="Webhooks" /></a></p>
+<h4 id="webhooks-status"><a class="header" href="#webhooks-status">Webhooks status</a></h4>
+<p><a href="img/intro3.png"><img src="img/intro3.png" alt="Webhooks Status" /></a></p>
+<h4 id="ssh-keys"><a class="header" href="#ssh-keys">SSH Keys</a></h4>
+<p><a href="img/intro4.png"><img src="img/intro4.png" alt="SSH Keys" /></a></p>
+<h4 id="submit"><a class="header" href="#submit">Submit</a></h4>
+<p><a href="img/intro5.png"><img src="img/intro5.png" alt="Submit" /></a></p>
+<h4 id="groups"><a class="header" href="#groups">Groups</a></h4>
+<p><a href="img/intro6.png"><img src="img/intro6.png" alt="Groups" /></a></p>
+<h4 id="users-view"><a class="header" href="#users-view">Users view</a></h4>
+<p><a href="img/intro7.png"><img src="img/intro7.png" alt="Users view" /></a></p>
+<h4 id="package-view"><a class="header" href="#package-view">Package view</a></h4>
+<p><a href="img/intro8.png"><img src="img/intro8.png" alt="Package view" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="install-and-run"><a class="header" href="#install-and-run">Install and Run</a></h2>
+<p>There is an official packeton image available at <a href="https://hub.docker.com/r/packeton/packeton">https://hub.docker.com/r/packeton/packeton</a>
+which can be used with the docker-compose file, see <a href="installation-docker.html">docker installation</a></p>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
+<h3 id="requirements"><a class="header" href="#requirements">Requirements</a></h3>
+<ul>
+<li>PHP 8.1+</li>
+<li>Redis for some functionality (favorites, download statistics, worker queue).</li>
+<li>git/svn/hg depending on which repositories you want to support.</li>
+<li>Supervisor to run a background job worker</li>
+<li>(optional) MySQL or PostgresSQL for the main data store, default SQLite</li>
+</ul>
+<ol>
+<li>Clone the repository</li>
+</ol>
+<pre><code class="language-bash">git clone https://github.com/vtsykun/packeton.git /var/www/packeton/
+cd /var/www/packeton/
+</code></pre>
+<ol start="2">
+<li>Install dependencies <code>composer install</code></li>
+<li>Create <code>.env.local</code> and copy needed environment variables into it. See <a href="installation.html#configuration">Configuration</a></li>
+<li>IMPORTANT! Don't forget change <code>APP_SECRET</code></li>
+<li>Run <code>bin/console doctrine:schema:create</code> to setup the DB</li>
+<li>Create admin user via console.</li>
+</ol>
+<pre><code class="language-bash">php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
+</code></pre>
+<ol start="6">
+<li>Setup nginx or any webserver, for example nginx config looks like.</li>
+</ol>
+<pre><code>server {
+    listen *:443 ssl http2;
+    server_name packeton.example.org;
+    root /var/www/packeton/public;
+
+    ssl_certificate /etc/nginx/ssl/example.crt;
+    ssl_certificate_key /etc/nginx/ssl/example.key;
+
+    ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
+
+    ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache  builtin:1000  shared:SSL:10m;
+    ssl_session_timeout  5m;
+
+    rewrite ^/index\.php/?(.+)$ /$1 permanent;
+    try_files $uri @rewriteapp;
+
+    location @rewriteapp {
+        rewrite ^(.*)$ /index.php/$1 last;
+    }
+
+    access_log off;
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_index index.php;
+        send_timeout 300;
+        fastcgi_read_timeout 300;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+    }
+}
+</code></pre>
+<ol start="7">
+<li>Change cache permission to made it accessible for web server.</li>
+</ol>
+<pre><code class="language-bash">chown www-data:www-data -R var/
+</code></pre>
+<ol start="8">
+<li>
+<p>If you get a 500 error in index page <code>packeton.example.org</code>, please check your logs <code>var/log/prod.log</code> or/and webserver log
+and fix permissions, database config, redis etc.</p>
+</li>
+<li>
+<p>Enable cron tabs and background jobs.</p>
+</li>
+</ol>
+<p>Enable crontab <code>crontab -e -u www-data</code></p>
+<pre><code>* * * * * /var/www/packeton/bin/console --env=prod okvpn:cron &gt;&gt; /dev/null
+</code></pre>
+<p><strong>Setup Supervisor to run worker</strong></p>
+<pre><code class="language-bash">sudo apt -y --no-install-recommends install supervisor
+</code></pre>
+<p>Create a new supervisor configuration.</p>
+<pre><code class="language-bash">sudo vim /etc/supervisor/conf.d/packagist.conf
+</code></pre>
+<p>Add the following lines to the file.</p>
+<pre><code>[program:packeton-workers]
+environment =
+        HOME=/var/www/
+command=/var/www/packeton/bin/console packagist:run-workers
+directory=/var/www/packeton/
+process_name=%(program_name)s_%(process_num)02d
+numprocs=1
+autostart=true
+autorestart=true
+startsecs=0
+redirect_stderr=true
+priority=1
+user=www-data
+</code></pre>
+<h3 id="configuration"><a class="header" href="#configuration">Configuration</a></h3>
+<p>Create a file <code>.env.local</code> and change next options</p>
+<ul>
+<li><code>APP_SECRET</code> - Must be static, used for encrypt SSH keys in database.</li>
+<li><code>APP_COMPOSER_HOME</code> - composer home, default <code>/var/www/packeton/var/.composer/</code></li>
+<li><code>DATABASE_URL</code> - Database DSN, default sqlite:///%kernel.project_dir%/var/app.db</li>
+</ul>
+<p>Example for postgres <code>postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&amp;charset=utf8</code>
+Example for mysql <code>mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&amp;charset=utf8mb4</code></p>
+<pre><code># .env.local
+
+DATABASE_URL=&quot;postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=14&amp;charset=utf8&quot;
+</code></pre>
+<ul>
+<li><code>PACKAGIST_DIST_PATH</code> - Default <code>%kernel.project_dir%/var/zipball</code>, path to storage zipped artifacts </li>
+<li><code>REDIS_URL</code> - Redis DB, default <code>redis://localhost</code></li>
+<li><code>PACKAGIST_DIST_HOST</code> - Hostname, (auto) default use the current host header in the request.</li>
+<li><code>TRUSTED_PROXIES</code> - Ips for Reverse Proxy. See <a href="https://symfony.com/doc/current/deployment/proxies.html">Symfony docs</a></li>
+<li><code>PUBLIC_ACCESS</code> - Allow anonymous users access to read packages metadata, default: <code>false</code></li>
+<li><code>MAILER_DSN</code> - Mailer for reset password, default disabled</li>
+<li><code>MAILER_FROM</code> - Mailer from</li>
+</ul>
+<h3 id="ssh-key-access-and-composer-oauth-token"><a class="header" href="#ssh-key-access-and-composer-oauth-token">Ssh key access and composer oauth token.</a></h3>
+<p>Packagist uses the composer config and global ssh-key to get read access to your repositories, so
+the supervisor worker <code>packagist:run-workers</code> and web-server must run under the user,
+that have ssh key or composer config that gives it read (clone) access to your git/svn/hg repositories.
+For example, if your application runs under <code>www-data</code> and have home directory <code>/var/www</code>, directory
+structure must be like this.</p>
+<pre><code>    └── /var/www/
+        └── .ssh/ # ssh keys directory
+            ├── config
+            ├── id_rsa # main ssh key
+            ├── private_key_2 # additional ssh key
+            └── private_key_3
+        └── packeton/ # project dir
+            ├── config APP_COMPOSER_HOME=&quot;%kernel.project_dir%/var/.composer&quot;
+            ├── public 
+            ....
+            ├── src 
+            └── var
+                ├── cache
+                ....
+                └── .composer # APP_COMPOSER_HOME=&quot;%kernel.project_dir%/var/.composer&quot;
+</code></pre>
+<p>By default, composer configuration load from <code>COMPOSER_HOME</code> and it placed at path <code>%kernel.project_dir%/var/.composer</code>.
+if you want to setup authentication in <code>auth.json</code> need to place this file to composer home, i e. <code>/var/www/packeton/var/.composer/</code>
+See <a href="https://getcomposer.org/doc/articles/authentication-for-private-packages.md#authentication-in-auth-json-per-project">Authentication in auth.json</a></p>
+<pre><code># Example /var/www/packeton/var/.composer/auth.json
+{ 
+  &quot;http-basic&quot;: {
+    &quot;git.example.pl&quot;: {
+      &quot;username&quot;: &quot;kastus&quot;,
+      &quot;password&quot;: &quot;489df705a503ac0173256ce01f&quot;
+    }
+  }
+}
+</code></pre>
+<p>Example ssh config for multiple SSH Keys for different github account/repos,
+see <a href="https://gist.github.com/jexchan/2351996">here for details</a></p>
+<pre><code># ~/.ssh/config - example
+
+Host github-oroinc
+	HostName github.com
+	User git
+	IdentityFile /var/www/.ssh/private_key_2
+	IdentitiesOnly yes
+
+Host github-org2
+	HostName github.com
+	User git
+	IdentityFile /var/www/.ssh/private_key_3
+	IdentitiesOnly yes
+
+</code></pre>
+<h4 id="allow-connections-to-http"><a class="header" href="#allow-connections-to-http">Allow connections to http.</a></h4>
+<p>You can create <code>config.json</code> in the composer home (see <code>APP_COMPOSER_HOME</code> env var) or add this option
+in the UI credentials form.</p>
+<pre><code class="language-json">{
+    &quot;secure-http&quot;: false
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="install-and-run-in-docker"><a class="header" href="#install-and-run-in-docker">Install and Run in Docker</a></h2>
-<p>You can use <a href="https://hub.docker.com/r/packeton/packeton">packeton/packeton</a> image</p>
+<p>You can use prebuild <a href="https://hub.docker.com/r/packeton/packeton">packeton/packeton</a> image</p>
+<h2 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h2>
 <pre><code>docker run -d --name packeton \
     --mount type=volume,src=packeton-data,dst=/data \
     -p 8080:80 \
     packeton/packeton:latest
 </code></pre>
-<p>etc.</p>
+<p>After container is running, you may wish to create an admin user via command <code>packagist:user:manager</code></p>
+<pre><code>docker exec -it packeton bin/console packagist:user:manager admin --password=123456 --admin
+</code></pre>
+<h2 id="docker-environment"><a class="header" href="#docker-environment">Docker Environment</a></h2>
+<p>All env variables is optional. By default, Packeton uses an SQLite database and build-in redis service,
+but you can overwrite it by env REDIS_URL and DATABASE_URL. The all app data is stored in the VOLUME /data</p>
+<ul>
+<li>
+<p><code>APP_SECRET</code> - Must be static, used for encrypt SSH keys in database. The value is generated automatically, see <code>.env</code> in the data volume.</p>
+</li>
+<li>
+<p><code>APP_COMPOSER_HOME</code> - composer home, default /data/composer</p>
+</li>
+<li>
+<p><code>DATABASE_URL</code> - Database DSN, default sqlite:////data/app.db. Example for postgres &quot;postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&amp;charset=utf8&quot;</p>
+</li>
+<li>
+<p><code>PACKAGIST_DIST_PATH</code> - Default /data/zipball, path to storage zipped versions</p>
+</li>
+<li>
+<p><code>REDIS_URL</code> - Redis DB, default redis://localhost</p>
+</li>
+<li>
+<p><code>PACKAGIST_DIST_HOST</code> - Hostname, (auto) default use the current host header in the request.
+Overwrite packagist host (example https://packagist.youcomany.org). Used for downloading the mirroring zip packages. 
+(The host add into dist url for composer metadata). The default value is define dynamically from the header Host.</p>
+</li>
+<li>
+<p><code>TRUSTED_PROXIES</code> - Ips for Reverse Proxy. See <a href="https://symfony.com/doc/current/deployment/proxies.html">Symfony docs</a></p>
+</li>
+<li>
+<p><code>PUBLIC_ACCESS</code> - Allow anonymous users access to read packages metadata, default: <code>false</code></p>
+</li>
+<li>
+<p><code>MAILER_DSN</code> - Mailer for reset password, default disabled</p>
+</li>
+<li>
+<p><code>MAILER_FROM</code> - Mailer from</p>
+</li>
+<li>
+<p><code>ADMIN_USER</code> Creating admin account, by default there is no admin user created so you won't be able to login to 
+the packagist. To create an admin account you need to use environment variables to pass 
+in an initial username and password (<code>ADMIN_PASSWORD</code>, <code>ADMIN_EMAIL</code>).</p>
+</li>
+<li>
+<p><code>ADMIN_PASSWORD</code> - used together with <code>ADMIN_USER</code></p>
+</li>
+<li>
+<p><code>ADMIN_EMAIL</code> -  used together with <code>ADMIN_USER</code></p>
+</li>
+<li>
+<p><code>PRIVATE_REPO_DOMAIN_LIST</code> - Save ssh fingerprints to known_hosts for this domain.</p>
+</li>
+</ul>
+<h4 id="volume"><a class="header" href="#volume">VOLUME</a></h4>
+<p>The all app data is stored in the VOLUME /data</p>
+<h3 id="user-docker-compose"><a class="header" href="#user-docker-compose">User docker compose</a></h3>
+<p>The typical example <code>docker-compose.yml</code></p>
+<pre><code class="language-yaml">version: '3.6'
+
+services:
+    packeton:
+        image: packeton/packeton:latest
+        container_name: packeton
+        hostname: packeton
+        environment:
+            ADMIN_USER: admin
+            ADMIN_PASSWORD: 123456
+            ADMIN_EMAIL: admin@example.com
+            DATABASE_URL: mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&amp;charset=utf8mb4
+        ports:
+            - '127.0.0.1:8080:80'
+        volumes:
+            - .docker:/data
+</code></pre>
+<p>By default, the container starts the supervisor, which is used to run other tasks: 
+nginx, redis, php-fpm, cron, however, you can start one service per container. 
+See docker-compose-prod.yml example:</p>
+<pre><code class="language-yaml">version: '3.9'
+
+x-volumes: &amp;default-volume
+    volumes:
+        - app-data:/data
+        - app-var:/var/www/packagist/var
+
+x-restart-policy: &amp;restart_policy
+    restart: unless-stopped
+
+x-environment: &amp;default-environment
+    REDIS_URL: redis://redis
+    DATABASE_URL: &quot;postgresql://packeton:pack123@postgres:5432/packeton?serverVersion=14&amp;charset=utf8&quot;
+    SKIP_INIT: 1
+
+services:
+    redis:
+        image: redis:7-alpine
+        hostname: redis
+        &lt;&lt;: *restart_policy
+        volumes:
+            - redis-data:/data
+ 
+    postgres:
+        image: postgres:14-alpine
+        hostname: postgres
+        &lt;&lt;: *restart_policy
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: packeton
+            POSTGRES_PASSWORD: pack123
+            POSTGRES_DB: packeton
+
+    php-fpm:
+        image: packeton/packeton:latest
+        hostname: php-fpm
+        command: ['php-fpm', '-F']
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        environment:
+            &lt;&lt;: *default-environment
+            SKIP_INIT: 0
+            WAIT_FOR_HOST: 'postgres:5432'
+        depends_on:
+            - &quot;postgres&quot;
+            - &quot;redis&quot;
+
+    nginx:
+        image: packeton/packeton:latest
+        hostname: nginx
+        ports:
+            - '127.0.0.1:8088:80'
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        command: &gt;
+            bash -c 'sed s/_PHP_FPM_HOST_/php-fpm:9000/g &lt; docker/nginx/nginx-tpl.conf &gt; /etc/nginx/nginx.conf &amp;&amp; nginx'
+        environment:
+            &lt;&lt;: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - &quot;php-fpm&quot;
+
+    worker:
+        image: packeton/packeton:latest
+        hostname: packeton-worker
+        command: ['bin/console', 'packagist:run-workers', '-v']
+        user: www-data
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        environment:
+            &lt;&lt;: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - &quot;php-fpm&quot;
+
+    cron:
+        image: packeton/packeton:latest
+        hostname: packeton-cron
+        command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
+        user: www-data
+        &lt;&lt;: *restart_policy
+        &lt;&lt;: *default-volume
+        environment:
+            &lt;&lt;: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - &quot;php-fpm&quot;
+
+volumes:
+    redis-data:
+    postgres-data:
+    app-data:
+    app-var:
+
+</code></pre>
+<h2 id="build-and-run-docker-container-with-docker-compose"><a class="header" href="#build-and-run-docker-container-with-docker-compose">Build and run docker container with docker-compose</a></h2>
+<ol>
+<li>Clone repository</li>
+</ol>
+<pre><code class="language-bash">git clone https://github.com/vtsykun/packeton.git /var/www/packeton/
+cd /var/www/packeton/
+</code></pre>
+<ol start="2">
+<li>Run <code>docker-compose build</code></li>
+</ol>
+<pre><code class="language-bash">docker-compose build
+
+# start container.
+docker-compose up -d # Run with single supervisor container 
+docker-compose up -f docker-compose-prod.yml -d # Or split 
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="administration"><a class="header" href="#administration">Administration</a></h1>
+<p>This section contains information on managing your Packeton application. </p>
+<h2 id="table-of-content"><a class="header" href="#table-of-content">Table of content</a></h2>
+<ul>
+<li><a href="usage/api.html">API Usage</a></li>
+<li><a href="usage/../webhook.html">Outgoing Webhook</a>
+<ul>
+<li><a href="usage/../webhook.html#introduction">Intro</a></li>
+<li><a href="usage/../webhook.html#examples">Examples</a>
+<ul>
+<li><a href="usage/../webhook.html#telegram-notification">Telegram notification</a></li>
+<li><a href="usage/../webhook.html#slack-notification">Slack notification</a></li>
+<li><a href="usage/../webhook.html#jira-create-a-new-release-and-set-fix-version">JIRA issue fix version</a></li>
+<li><a href="usage/../webhook.html#gitlab-auto-webhook">Gitlab setup auto webhook</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="usage/index.html#application-roles">Application Roles</a></li>
+</ul>
+<h2 id="application-roles"><a class="header" href="#application-roles">Application Roles</a></h2>
+<ul>
+<li><code>ROLE_USER</code> - minimal customer access level, these users only can read metadata only for selected packages.</li>
+<li><code>ROLE_FULL_CUSTOMER</code> - Can read all packages metadata.</li>
+<li><code>ROLE_MAINTAINER</code> -  Can submit a new package and read all metadata.</li>
+<li><code>ROLE_ADMIN</code> - Can create a new customer users, management webhooks and credentials.</li>
+</ul>
+<p>You can create a user and then promote to admin or maintainer via console using fos user bundle commands.</p>
+<pre><code>php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin # create admin user
+php bin/console packagist:user:manager user1 --add-role=ROLE_MAINTAINER # Add ROLE_MAINTAINER to user user1
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="api-documentation"><a class="header" href="#api-documentation">API documentation</a></h1>
+<p>About API authorization methods see <a href="usage/../authentication.html#composer-api-authentication">here</a></p>
+<h4 id="submit-package"><a class="header" href="#submit-package">Submit package</a></h4>
+<pre><code>POST https://example.com/api/create-package?token=&lt;api_token&gt;
+Content-Type: application/json
+
+{
+    &quot;repository&quot;: {
+        &quot;url&quot;: &quot;git@github.com:symfony/mime.git&quot;
+    }
+}
+</code></pre>
+<h4 id="listing-package-names"><a class="header" href="#listing-package-names">Listing package names</a></h4>
+<pre><code>GET https://example.com/packages/list.json?token=&lt;api_token&gt;
+
+# Result
+{
+  &quot;packageNames&quot;: [
+    &quot;[vendor]/[package]&quot;,
+    ...
+  ]
+}
+</code></pre>
+<h4 id="list-packages-by-vendor"><a class="header" href="#list-packages-by-vendor">List packages by vendor</a></h4>
+<pre><code>
+GET https://example.com/packages/list.json?vendor=[vendor]&amp;token=&lt;api_token&gt;
+
+{
+  &quot;packageNames&quot;: [
+    &quot;[vendor]/[package]&quot;,
+    ...
+  ]
+}
+</code></pre>
+<h4 id="list-packages-by-type"><a class="header" href="#list-packages-by-type">List packages by type</a></h4>
+<pre><code>GET https://example.com/packages/list.json?type=[type]&amp;token=&lt;api_token&gt;
+
+{
+  &quot;packageNames&quot;: [
+    &quot;[vendor]/[package]&quot;,
+    ...
+  ]
+}
+</code></pre>
+<h4 id="get-the-package-git-changelog"><a class="header" href="#get-the-package-git-changelog">Get the package git changelog</a></h4>
+<p>Get git diff between two commits or tags. <strong>WARNING</strong> Working only if repository was cloned by git. 
+If you want to use this feature for GitHub you need set composer config flag no-api see here</p>
+<pre><code>GET https://example.com/packages/{name}/changelog?token=&lt;api_token&gt;&amp;from=3.1.14&amp;to=3.1.15
+
+{
+  &quot;result&quot;: [
+    &quot;BAP-18660: ElasticSearch 6&quot;,
+    &quot;BB-17293: Back-office &gt;Wrong height&quot;
+  ],
+  &quot;error&quot;: null,
+  &quot;metadata&quot;: {
+    &quot;from&quot;: &quot;3.1.14&quot;,
+    &quot;to&quot;: &quot;3.1.15&quot;,
+    &quot;package&quot;: &quot;okvpn/platform&quot;
+  }
+}
+</code></pre>
+<h4 id="getting-package-data"><a class="header" href="#getting-package-data">Getting package data</a></h4>
+<p>This is the preferred way to access the data as it is always up-to-date, and dumped to static files so it is very efficient on our end.</p>
+<p>You can also send If-Modified-Since headers to limit your bandwidth usage 
+and cache the files on your end with the proper filemtime set according to our Last-Modified header.</p>
+<p>There are a few gotchas though with using this method:</p>
+<ul>
+<li>It only provides you with the package metadata but not information about the maintainers, download stats or github info.</li>
+<li>It contains providers information which must be ignored but can appear confusing at first. This will disappear in the future though.</li>
+</ul>
+<pre><code>GET https://example.com/p/[vendor]/[package].json?token=&lt;api_token&gt;
+
+{
+  &quot;packages&quot;: {
+    &quot;[vendor]/[package]&quot;: {
+      &quot;[version1]&quot;: {
+        &quot;name&quot;: &quot;[vendor]/[package],
+        &quot;description&quot;: [description],
+        // ...
+      },
+      &quot;[version2]&quot;: {
+        // ...
+      }
+      // ...
+    }
+  }
+}
+</code></pre>
+<p><strong>Composer v2</strong> </p>
+<pre><code>GET https://example.com/p2/firebase/php-jwt.json
+
+
+{
+  &quot;minified&quot;: &quot;composer/2.0&quot;,
+  &quot;packages&quot;: {
+    &quot;[vendor]/[package]&quot;: [... list versions ]
+  }
+}
+</code></pre>
+<p><strong>Using the API</strong></p>
+<p>The JSON API for packages gives you all the infos we have including downloads, 
+dependents count, github info, etc. However, it is generated dynamically so for performance reason we cache the responses 
+for twelve hours. As such if the static file endpoint described above is enough please use it instead.</p>
+<pre><code>GET https://example.com/packages/[vendor]/[package].json?token=&lt;api_token&gt;
+
+{
+  &quot;package&quot;: {
+    &quot;name&quot;: &quot;[vendor]/[package],
+    &quot;description&quot;: [description],
+    &quot;time&quot;: [time of the last release],
+    &quot;maintainers&quot;: [list of maintainers],
+    &quot;versions&quot;: [list of versions and their dependencies, the same data of composer.json]
+    &quot;type&quot;: [package type],
+    &quot;repository&quot;: [repository url],
+    &quot;downloads&quot;: {
+      &quot;total&quot;: [numbers of download],
+      &quot;monthly&quot;: [numbers of download per month],
+      &quot;daily&quot;: [numbers of download per day]
+    },
+    &quot;favers&quot;: [number of favers]
+  }
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generic-packeton-webhooks"><a class="header" href="#generic-packeton-webhooks">Generic Packeton webhooks</a></h1>
+<h2 id="introduction-1"><a class="header" href="#introduction-1">Introduction</a></h2>
+<p>Webhooks allow external services to be notified when certain events happen. 
+When the specified events happen, packeton will send a POST request to each of the URLs you provide.
+Now is supported the next events:</p>
+<ul>
+<li>new_release</li>
+<li>update_release</li>
+<li>delete_release</li>
+<li>push_new_event</li>
+<li>update_new_event</li>
+<li>http_request</li>
+<li>update_repo_failed</li>
+<li>new_repo</li>
+<li>delete_repo</li>
+</ul>
+<p><img src="img/diagram.png" alt="diagram" /></p>
+<p>It may be useful for release/deploy process, for example: Automatically create new Jira release 
+when a new version is created in packagist (triggered when new tag is created in bitbucket) and 
+update &quot;fix version&quot; attribute of all the related issues from that release.</p>
+<p>To build a custom request payload uses Twig expression language.
+This allows you to create custom queries. Untrusted template code is evaluate in a Twig sandbox mode, so 
+you will get an error if try to get access for security sensitive information.
+By default, only admin users can use Webhooks.</p>
+<pre><code>Exception (Twig\Sandbox\SecurityNotAllowedMethodError). Calling &quot;setemail&quot; method on a &quot;Packagist\WebBundle\Entity\User&quot; object is not allowed in &quot;__string_template__0d2344b042278505e67568413272d80429f07ecccea43af39cb33608fa747830&quot; at line 1.
+</code></pre>
+<h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
+<ul>
+<li><a href="webhook.html#twig-variables">List of twig variables</a></li>
+<li><a href="webhook.html#telegram-notification">Telegram notification</a></li>
+<li><a href="webhook.html#slack-notification">Slack notification</a></li>
+<li><a href="webhook.html#use-url-placeholder">How to use url placeholder</a></li>
+<li><a href="webhook.html#interrupt-request">Interrupt request</a></li>
+<li><a href="webhook.html#nesting-webhook">Nesting webhook</a></li>
+<li><a href="webhook.html#gitlab-auto-webhook">Gitlab setup auto webhook</a></li>
+<li><a href="webhook.html#jira-create-a-new-release-and-set-fix-version">JIRA issue fix version</a></li>
+<li><a href="webhook.html#external-request">Accept external request</a></li>
+<li><a href="webhook.html#new-twig-functions">Packeton twig function</a></li>
+</ul>
+<h2 id="twig-variables"><a class="header" href="#twig-variables">Twig variables</a></h2>
+<ul>
+<li>package - <code>Package</code> entity. </li>
+<li>versions - <code>Versions[]</code> array of versions.</li>
+<li>webhook - <code>Webhook</code> current webhook entity.</li>
+<li>user    - <code>User</code> entity. Only for user login event.</li>
+<li>parentResponse - <code>HookResponse</code> object. Only for nesting webhook.</li>
+<li>request - <code>array</code> Only for http request event.</li>
+</ul>
+<h2 id="telegram-notification"><a class="header" href="#telegram-notification">Telegram notification</a></h2>
+<p>POST <code>https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+{% set text = text ~ &quot;[&quot; ~ title ~ &quot;](https://pkg.okvpn.org/packages/&quot; ~ package.name ~ &quot;)\n&quot; %}
+{% set text = text ~ package.description  %}
+
+{% set request = {
+    'chat_id': '-1000006111000',
+    'parse_mode': 'Markdown',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<p><img src="img/telegram.png" alt="Telegram" /></p>
+<h2 id="slack-notification"><a class="header" href="#slack-notification">Slack notification</a></h2>
+<p>In first you need create a <a href="https://api.slack.com/apps">slack app</a></p>
+<p>POST <code>https://slack.com/api/chat.postMessage</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;,
+        &quot;Authorization&quot;: &quot;Bearer xoxp-xxxxxxxxxxxxxxxxxxxxxxxxxx&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+{% set text = text ~ &quot;&lt;https://pkg.okvpn.org/packages/&quot; ~ package.name ~ &quot;|&quot; ~ title ~ &quot;&gt;\n&quot; %}
+{% set text = text ~ package.description  %}
+
+{% set request = {
+    'channel': 'jenkins',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<h2 id="use-url-placeholder"><a class="header" href="#use-url-placeholder">Use url placeholder</a></h2>
+<p>The placeholder allow to build URL parameters from twig template.</p>
+<p><code>http://httpbin.org/{{ method }}?repo={{ repoName }}</code></p>
+<p><em>Syntax</em></p>
+<p>Use <code>placeholder</code> tag </p>
+<pre><code>URL: http://httpbin.org/post?repo={{ paramName }}
+
+Variant 1. Send single request.
+
+{% placeholder &lt;paramName&gt; with &lt;string&gt; %}
+
+Variant 2. Send many request for each value from array string[]
+
+{% placeholder &lt;paramName&gt; with &lt;string[]&gt; %}
+</code></pre>
+<p>Example</p>
+<p><code>http://httpbin.org/{{ method }}?repo={{ repoName }}</code></p>
+<p>Payload</p>
+<pre><code class="language-twig">{% placeholder method with 'post' %}
+{% placeholder repoName with [package.name, 'test/test'] %}
+</code></pre>
+<p><img src="img/placeholder.png" alt="URL Placeholder" /></p>
+<h2 id="interrupt-request"><a class="header" href="#interrupt-request">Interrupt request</a></h2>
+<p>You can interrupt request if condition is not pass</p>
+<p><em>Syntax</em></p>
+<p>Use <code>interrupt</code> function.</p>
+<p>Payload</p>
+<pre><code class="language-twig">{% set request = {
+    'chat_id': '1555151',
+    'parse_mode': 'Markdown',
+    'text': 'Text'
+} %}
+
+{% if package.name == 'okvpn/mq-insight' %}
+    {{ interrupt() }}
+{% endif %}
+
+{{ request|json_encode }}
+</code></pre>
+<h2 id="nesting-webhook"><a class="header" href="#nesting-webhook">Nesting webhook</a></h2>
+<p>You can trigger webhook from twig code. It may be used for send two requests a one event.</p>
+<p><em>Syntax</em></p>
+<p>Use <code>trigger_webhook(hookId: int|Webhook, context: array)</code> function.</p>
+<p>Example Payload</p>
+<pre><code class="language-twig">{% do trigger_webhook(6, {'project': 'OK', 'version': versions[0].version}) %}
+</code></pre>
+<h2 id="jira-create-a-new-release-and-set-fix-version"><a class="header" href="#jira-create-a-new-release-and-set-fix-version">Jira create a new release and set fix version</a></h2>
+<p>You need to create two webhook for its, the first must triggers on a new release event, 
+the second will be called from twig code.</p>
+<p><img src="img/jira.png" alt="Jira" /></p>
+<h4 id="create-a-new-release-in-jira"><a class="header" href="#create-a-new-release-in-jira">Create a new release in JIRA</a></h4>
+<p>POST <code>https://jiraserver/rest/api/2/version</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    &quot;auth_basic&quot;: &quot;jirauser:password&quot;
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set changeLog = get_changelog(package, null, versions[0].version) %}
+{% set ticket = preg_match_all('/((OK|OTEK)-(\\d+))\\s*:/u', changeLog|join(';'), 1) %}
+
+{% set request = {
+    'archived': false,
+    'releaseDate': versions[0].releasedAt|date('Y-m-d'),
+    'name': versions[0].version,
+    'released': true,
+    'description': 'Packagist auto release',
+    'project': 'OK'
+} %}
+
+{% if ticket|length == 0 %}
+    {{ interrupt('There are not commits with JIRA tiket no.') }}
+{% endif %}
+
+{% do trigger_webhook(6, {'project': 'OK', 'ticket': ticket, 'version': versions[0].version}) %}
+{{ request|json_encode }}
+</code></pre>
+<h4 id="update-an-issue-fix-version"><a class="header" href="#update-an-issue-fix-version">Update an issue fix version</a></h4>
+<p>PUT <code>https://jiraserver/rest/api/2/issue/{{ issue }}</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    &quot;auth_basic&quot;: &quot;jirauser:password&quot;
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% placeholder issue with ticket %}
+
+{% set request = {
+    'fields': {
+        'fixVersions': [{'name': version}]
+    }
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<p><img src="img/jira_response.png" alt="Jira issue" /></p>
+<h2 id="http-request-from-code"><a class="header" href="#http-request-from-code">Http request from code</a></h2>
+<p>You can made http request from twig code.</p>
+<pre><code class="language-twig">{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/okvpn/orocommerce/tags') %}
+
+{{ tags|json_encode }}
+</code></pre>
+<h2 id="external-request"><a class="header" href="#external-request">External request</a></h2>
+<p>Triggered webhook by HTTP requests to <code>https://PACKEGIST_URL/api/webhook-invoke/{name}</code></p>
+<p>Optional <code>name</code>. If it is specified then this webhook can only be triggered if that name is supplied 
+when invoking <code>https://PACKEGIST_URL/api/webhook-invoke/{name}</code> and name restriction is match.</p>
+<p>Example payload:</p>
+<pre><code class="language-twig">{% if request.packageName is null %}
+    {{ interrupt('package name is not found') }}
+{% endif %}
+
+{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/' ~ request.packageName ~'/tags') %}
+
+{{ tags|json_encode }}
+</code></pre>
+<h2 id="gitlab-auto-webhook"><a class="header" href="#gitlab-auto-webhook">Gitlab auto webhook</a></h2>
+<p>You can use the event <code>new_repo</code> to add a hook to the specified Gitlab project.
+It can be useful, if you don't have a Gold Gitlab Plan that allows configure webhooks for your group,
+so you need add it manually for each a new repository.</p>
+<p>POST <code>https://{{ host }}/api/v4/projects/{{ repo }}/hooks?private_token=xxxxxxxxxxxxxxxx</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set regex = '#^(?:ssh://git@|https?://|git://|git@)?(?P&lt;host&gt;[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P&lt;path&gt;[\\w.-]+(?:/[\\w.-]+?)+)(?:\\.git|/)?$#i' %}
+{% set repository = preg_match_all(regex, package.repository) %}
+
+{% if repository.path[0] is null or repository.host[0] is null %}
+    {{ interrupt('Regex is not match') }}
+{% endif %}
+
+{% set request = {
+    'url': 'https://pkg.okvpn.org/api/update-package?token=admin:xxxxxxxxxxxxxxxx',
+    'push_events': true,
+    'tag_push_events': true
+} %}
+
+{% placeholder host with repository.host[0] %}
+{% placeholder repo with repository.path[0]|url_encode %}
+
+{{ request|json_encode }}
+</code></pre>
+<p>Here you need replace <code>request.url</code> on your packagist. </p>
+<h2 id="new-twig-functions"><a class="header" href="#new-twig-functions">New twig functions</a></h2>
+<p>See <a href="/src/Webhook/Twig/WebhookExtension.php">WebhookExtension</a> for details.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generic-packeton-webhooks-1"><a class="header" href="#generic-packeton-webhooks-1">Generic Packeton webhooks</a></h1>
+<h2 id="introduction-2"><a class="header" href="#introduction-2">Introduction</a></h2>
+<p>Webhooks allow external services to be notified when certain events happen. 
+When the specified events happen, packeton will send a POST request to each of the URLs you provide.
+Now is supported the next events:</p>
+<ul>
+<li>new_release</li>
+<li>update_release</li>
+<li>delete_release</li>
+<li>push_new_event</li>
+<li>update_new_event</li>
+<li>http_request</li>
+<li>update_repo_failed</li>
+<li>new_repo</li>
+<li>delete_repo</li>
+</ul>
+<p><img src="img/diagram.png" alt="diagram" /></p>
+<p>It may be useful for release/deploy process, for example: Automatically create new Jira release 
+when a new version is created in packagist (triggered when new tag is created in bitbucket) and 
+update &quot;fix version&quot; attribute of all the related issues from that release.</p>
+<p>To build a custom request payload uses Twig expression language.
+This allows you to create custom queries. Untrusted template code is evaluate in a Twig sandbox mode, so 
+you will get an error if try to get access for security sensitive information.
+By default, only admin users can use Webhooks.</p>
+<pre><code>Exception (Twig\Sandbox\SecurityNotAllowedMethodError). Calling &quot;setemail&quot; method on a &quot;Packagist\WebBundle\Entity\User&quot; object is not allowed in &quot;__string_template__0d2344b042278505e67568413272d80429f07ecccea43af39cb33608fa747830&quot; at line 1.
+</code></pre>
+<h1 id="examples-1"><a class="header" href="#examples-1">Examples</a></h1>
+<ul>
+<li><a href="webhook.html#twig-variables">List of twig variables</a></li>
+<li><a href="webhook.html#telegram-notification">Telegram notification</a></li>
+<li><a href="webhook.html#slack-notification">Slack notification</a></li>
+<li><a href="webhook.html#use-url-placeholder">How to use url placeholder</a></li>
+<li><a href="webhook.html#interrupt-request">Interrupt request</a></li>
+<li><a href="webhook.html#nesting-webhook">Nesting webhook</a></li>
+<li><a href="webhook.html#gitlab-auto-webhook">Gitlab setup auto webhook</a></li>
+<li><a href="webhook.html#jira-create-a-new-release-and-set-fix-version">JIRA issue fix version</a></li>
+<li><a href="webhook.html#external-request">Accept external request</a></li>
+<li><a href="webhook.html#new-twig-functions">Packeton twig function</a></li>
+</ul>
+<h2 id="twig-variables-1"><a class="header" href="#twig-variables-1">Twig variables</a></h2>
+<ul>
+<li>package - <code>Package</code> entity. </li>
+<li>versions - <code>Versions[]</code> array of versions.</li>
+<li>webhook - <code>Webhook</code> current webhook entity.</li>
+<li>user    - <code>User</code> entity. Only for user login event.</li>
+<li>parentResponse - <code>HookResponse</code> object. Only for nesting webhook.</li>
+<li>request - <code>array</code> Only for http request event.</li>
+</ul>
+<h2 id="telegram-notification-1"><a class="header" href="#telegram-notification-1">Telegram notification</a></h2>
+<p>POST <code>https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+{% set text = text ~ &quot;[&quot; ~ title ~ &quot;](https://pkg.okvpn.org/packages/&quot; ~ package.name ~ &quot;)\n&quot; %}
+{% set text = text ~ package.description  %}
+
+{% set request = {
+    'chat_id': '-1000006111000',
+    'parse_mode': 'Markdown',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<p><img src="img/telegram.png" alt="Telegram" /></p>
+<h2 id="slack-notification-1"><a class="header" href="#slack-notification-1">Slack notification</a></h2>
+<p>In first you need create a <a href="https://api.slack.com/apps">slack app</a></p>
+<p>POST <code>https://slack.com/api/chat.postMessage</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;,
+        &quot;Authorization&quot;: &quot;Bearer xoxp-xxxxxxxxxxxxxxxxxxxxxxxxxx&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+{% set text = text ~ &quot;&lt;https://pkg.okvpn.org/packages/&quot; ~ package.name ~ &quot;|&quot; ~ title ~ &quot;&gt;\n&quot; %}
+{% set text = text ~ package.description  %}
+
+{% set request = {
+    'channel': 'jenkins',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<h2 id="use-url-placeholder-1"><a class="header" href="#use-url-placeholder-1">Use url placeholder</a></h2>
+<p>The placeholder allow to build URL parameters from twig template.</p>
+<p><code>http://httpbin.org/{{ method }}?repo={{ repoName }}</code></p>
+<p><em>Syntax</em></p>
+<p>Use <code>placeholder</code> tag </p>
+<pre><code>URL: http://httpbin.org/post?repo={{ paramName }}
+
+Variant 1. Send single request.
+
+{% placeholder &lt;paramName&gt; with &lt;string&gt; %}
+
+Variant 2. Send many request for each value from array string[]
+
+{% placeholder &lt;paramName&gt; with &lt;string[]&gt; %}
+</code></pre>
+<p>Example</p>
+<p><code>http://httpbin.org/{{ method }}?repo={{ repoName }}</code></p>
+<p>Payload</p>
+<pre><code class="language-twig">{% placeholder method with 'post' %}
+{% placeholder repoName with [package.name, 'test/test'] %}
+</code></pre>
+<p><img src="img/placeholder.png" alt="URL Placeholder" /></p>
+<h2 id="interrupt-request-1"><a class="header" href="#interrupt-request-1">Interrupt request</a></h2>
+<p>You can interrupt request if condition is not pass</p>
+<p><em>Syntax</em></p>
+<p>Use <code>interrupt</code> function.</p>
+<p>Payload</p>
+<pre><code class="language-twig">{% set request = {
+    'chat_id': '1555151',
+    'parse_mode': 'Markdown',
+    'text': 'Text'
+} %}
+
+{% if package.name == 'okvpn/mq-insight' %}
+    {{ interrupt() }}
+{% endif %}
+
+{{ request|json_encode }}
+</code></pre>
+<h2 id="nesting-webhook-1"><a class="header" href="#nesting-webhook-1">Nesting webhook</a></h2>
+<p>You can trigger webhook from twig code. It may be used for send two requests a one event.</p>
+<p><em>Syntax</em></p>
+<p>Use <code>trigger_webhook(hookId: int|Webhook, context: array)</code> function.</p>
+<p>Example Payload</p>
+<pre><code class="language-twig">{% do trigger_webhook(6, {'project': 'OK', 'version': versions[0].version}) %}
+</code></pre>
+<h2 id="jira-create-a-new-release-and-set-fix-version-1"><a class="header" href="#jira-create-a-new-release-and-set-fix-version-1">Jira create a new release and set fix version</a></h2>
+<p>You need to create two webhook for its, the first must triggers on a new release event, 
+the second will be called from twig code.</p>
+<p><img src="img/jira.png" alt="Jira" /></p>
+<h4 id="create-a-new-release-in-jira-1"><a class="header" href="#create-a-new-release-in-jira-1">Create a new release in JIRA</a></h4>
+<p>POST <code>https://jiraserver/rest/api/2/version</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    &quot;auth_basic&quot;: &quot;jirauser:password&quot;
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set changeLog = get_changelog(package, null, versions[0].version) %}
+{% set ticket = preg_match_all('/((OK|OTEK)-(\\d+))\\s*:/u', changeLog|join(';'), 1) %}
+
+{% set request = {
+    'archived': false,
+    'releaseDate': versions[0].releasedAt|date('Y-m-d'),
+    'name': versions[0].version,
+    'released': true,
+    'description': 'Packagist auto release',
+    'project': 'OK'
+} %}
+
+{% if ticket|length == 0 %}
+    {{ interrupt('There are not commits with JIRA tiket no.') }}
+{% endif %}
+
+{% do trigger_webhook(6, {'project': 'OK', 'ticket': ticket, 'version': versions[0].version}) %}
+{{ request|json_encode }}
+</code></pre>
+<h4 id="update-an-issue-fix-version-1"><a class="header" href="#update-an-issue-fix-version-1">Update an issue fix version</a></h4>
+<p>PUT <code>https://jiraserver/rest/api/2/issue/{{ issue }}</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    &quot;auth_basic&quot;: &quot;jirauser:password&quot;
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% placeholder issue with ticket %}
+
+{% set request = {
+    'fields': {
+        'fixVersions': [{'name': version}]
+    }
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<p><img src="img/jira_response.png" alt="Jira issue" /></p>
+<h2 id="http-request-from-code-1"><a class="header" href="#http-request-from-code-1">Http request from code</a></h2>
+<p>You can made http request from twig code.</p>
+<pre><code class="language-twig">{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/okvpn/orocommerce/tags') %}
+
+{{ tags|json_encode }}
+</code></pre>
+<h2 id="external-request-1"><a class="header" href="#external-request-1">External request</a></h2>
+<p>Triggered webhook by HTTP requests to <code>https://PACKEGIST_URL/api/webhook-invoke/{name}</code></p>
+<p>Optional <code>name</code>. If it is specified then this webhook can only be triggered if that name is supplied 
+when invoking <code>https://PACKEGIST_URL/api/webhook-invoke/{name}</code> and name restriction is match.</p>
+<p>Example payload:</p>
+<pre><code class="language-twig">{% if request.packageName is null %}
+    {{ interrupt('package name is not found') }}
+{% endif %}
+
+{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/' ~ request.packageName ~'/tags') %}
+
+{{ tags|json_encode }}
+</code></pre>
+<h2 id="gitlab-auto-webhook-1"><a class="header" href="#gitlab-auto-webhook-1">Gitlab auto webhook</a></h2>
+<p>You can use the event <code>new_repo</code> to add a hook to the specified Gitlab project.
+It can be useful, if you don't have a Gold Gitlab Plan that allows configure webhooks for your group,
+so you need add it manually for each a new repository.</p>
+<p>POST <code>https://{{ host }}/api/v4/projects/{{ repo }}/hooks?private_token=xxxxxxxxxxxxxxxx</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set regex = '#^(?:ssh://git@|https?://|git://|git@)?(?P&lt;host&gt;[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P&lt;path&gt;[\\w.-]+(?:/[\\w.-]+?)+)(?:\\.git|/)?$#i' %}
+{% set repository = preg_match_all(regex, package.repository) %}
+
+{% if repository.path[0] is null or repository.host[0] is null %}
+    {{ interrupt('Regex is not match') }}
+{% endif %}
+
+{% set request = {
+    'url': 'https://pkg.okvpn.org/api/update-package?token=admin:xxxxxxxxxxxxxxxx',
+    'push_events': true,
+    'tag_push_events': true
+} %}
+
+{% placeholder host with repository.host[0] %}
+{% placeholder repo with repository.path[0]|url_encode %}
+
+{{ request|json_encode }}
+</code></pre>
+<p>Here you need replace <code>request.url</code> on your packagist. </p>
+<h2 id="new-twig-functions-1"><a class="header" href="#new-twig-functions-1">New twig functions</a></h2>
+<p>See <a href="/src/Webhook/Twig/WebhookExtension.php">WebhookExtension</a> for details.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generic-packeton-webhooks-2"><a class="header" href="#generic-packeton-webhooks-2">Generic Packeton webhooks</a></h1>
+<h2 id="introduction-3"><a class="header" href="#introduction-3">Introduction</a></h2>
+<p>Webhooks allow external services to be notified when certain events happen. 
+When the specified events happen, packeton will send a POST request to each of the URLs you provide.
+Now is supported the next events:</p>
+<ul>
+<li>new_release</li>
+<li>update_release</li>
+<li>delete_release</li>
+<li>push_new_event</li>
+<li>update_new_event</li>
+<li>http_request</li>
+<li>update_repo_failed</li>
+<li>new_repo</li>
+<li>delete_repo</li>
+</ul>
+<p><img src="img/diagram.png" alt="diagram" /></p>
+<p>It may be useful for release/deploy process, for example: Automatically create new Jira release 
+when a new version is created in packagist (triggered when new tag is created in bitbucket) and 
+update &quot;fix version&quot; attribute of all the related issues from that release.</p>
+<p>To build a custom request payload uses Twig expression language.
+This allows you to create custom queries. Untrusted template code is evaluate in a Twig sandbox mode, so 
+you will get an error if try to get access for security sensitive information.
+By default, only admin users can use Webhooks.</p>
+<pre><code>Exception (Twig\Sandbox\SecurityNotAllowedMethodError). Calling &quot;setemail&quot; method on a &quot;Packagist\WebBundle\Entity\User&quot; object is not allowed in &quot;__string_template__0d2344b042278505e67568413272d80429f07ecccea43af39cb33608fa747830&quot; at line 1.
+</code></pre>
+<h1 id="examples-2"><a class="header" href="#examples-2">Examples</a></h1>
+<ul>
+<li><a href="webhook.html#twig-variables">List of twig variables</a></li>
+<li><a href="webhook.html#telegram-notification">Telegram notification</a></li>
+<li><a href="webhook.html#slack-notification">Slack notification</a></li>
+<li><a href="webhook.html#use-url-placeholder">How to use url placeholder</a></li>
+<li><a href="webhook.html#interrupt-request">Interrupt request</a></li>
+<li><a href="webhook.html#nesting-webhook">Nesting webhook</a></li>
+<li><a href="webhook.html#gitlab-auto-webhook">Gitlab setup auto webhook</a></li>
+<li><a href="webhook.html#jira-create-a-new-release-and-set-fix-version">JIRA issue fix version</a></li>
+<li><a href="webhook.html#external-request">Accept external request</a></li>
+<li><a href="webhook.html#new-twig-functions">Packeton twig function</a></li>
+</ul>
+<h2 id="twig-variables-2"><a class="header" href="#twig-variables-2">Twig variables</a></h2>
+<ul>
+<li>package - <code>Package</code> entity. </li>
+<li>versions - <code>Versions[]</code> array of versions.</li>
+<li>webhook - <code>Webhook</code> current webhook entity.</li>
+<li>user    - <code>User</code> entity. Only for user login event.</li>
+<li>parentResponse - <code>HookResponse</code> object. Only for nesting webhook.</li>
+<li>request - <code>array</code> Only for http request event.</li>
+</ul>
+<h2 id="telegram-notification-2"><a class="header" href="#telegram-notification-2">Telegram notification</a></h2>
+<p>POST <code>https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+{% set text = text ~ &quot;[&quot; ~ title ~ &quot;](https://pkg.okvpn.org/packages/&quot; ~ package.name ~ &quot;)\n&quot; %}
+{% set text = text ~ package.description  %}
+
+{% set request = {
+    'chat_id': '-1000006111000',
+    'parse_mode': 'Markdown',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<p><img src="img/telegram.png" alt="Telegram" /></p>
+<h2 id="slack-notification-2"><a class="header" href="#slack-notification-2">Slack notification</a></h2>
+<p>In first you need create a <a href="https://api.slack.com/apps">slack app</a></p>
+<p>POST <code>https://slack.com/api/chat.postMessage</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;,
+        &quot;Authorization&quot;: &quot;Bearer xoxp-xxxxxxxxxxxxxxxxxxxxxxxxxx&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+{% set text = text ~ &quot;&lt;https://pkg.okvpn.org/packages/&quot; ~ package.name ~ &quot;|&quot; ~ title ~ &quot;&gt;\n&quot; %}
+{% set text = text ~ package.description  %}
+
+{% set request = {
+    'channel': 'jenkins',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<h2 id="use-url-placeholder-2"><a class="header" href="#use-url-placeholder-2">Use url placeholder</a></h2>
+<p>The placeholder allow to build URL parameters from twig template.</p>
+<p><code>http://httpbin.org/{{ method }}?repo={{ repoName }}</code></p>
+<p><em>Syntax</em></p>
+<p>Use <code>placeholder</code> tag </p>
+<pre><code>URL: http://httpbin.org/post?repo={{ paramName }}
+
+Variant 1. Send single request.
+
+{% placeholder &lt;paramName&gt; with &lt;string&gt; %}
+
+Variant 2. Send many request for each value from array string[]
+
+{% placeholder &lt;paramName&gt; with &lt;string[]&gt; %}
+</code></pre>
+<p>Example</p>
+<p><code>http://httpbin.org/{{ method }}?repo={{ repoName }}</code></p>
+<p>Payload</p>
+<pre><code class="language-twig">{% placeholder method with 'post' %}
+{% placeholder repoName with [package.name, 'test/test'] %}
+</code></pre>
+<p><img src="img/placeholder.png" alt="URL Placeholder" /></p>
+<h2 id="interrupt-request-2"><a class="header" href="#interrupt-request-2">Interrupt request</a></h2>
+<p>You can interrupt request if condition is not pass</p>
+<p><em>Syntax</em></p>
+<p>Use <code>interrupt</code> function.</p>
+<p>Payload</p>
+<pre><code class="language-twig">{% set request = {
+    'chat_id': '1555151',
+    'parse_mode': 'Markdown',
+    'text': 'Text'
+} %}
+
+{% if package.name == 'okvpn/mq-insight' %}
+    {{ interrupt() }}
+{% endif %}
+
+{{ request|json_encode }}
+</code></pre>
+<h2 id="nesting-webhook-2"><a class="header" href="#nesting-webhook-2">Nesting webhook</a></h2>
+<p>You can trigger webhook from twig code. It may be used for send two requests a one event.</p>
+<p><em>Syntax</em></p>
+<p>Use <code>trigger_webhook(hookId: int|Webhook, context: array)</code> function.</p>
+<p>Example Payload</p>
+<pre><code class="language-twig">{% do trigger_webhook(6, {'project': 'OK', 'version': versions[0].version}) %}
+</code></pre>
+<h2 id="jira-create-a-new-release-and-set-fix-version-2"><a class="header" href="#jira-create-a-new-release-and-set-fix-version-2">Jira create a new release and set fix version</a></h2>
+<p>You need to create two webhook for its, the first must triggers on a new release event, 
+the second will be called from twig code.</p>
+<p><img src="img/jira.png" alt="Jira" /></p>
+<h4 id="create-a-new-release-in-jira-2"><a class="header" href="#create-a-new-release-in-jira-2">Create a new release in JIRA</a></h4>
+<p>POST <code>https://jiraserver/rest/api/2/version</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    &quot;auth_basic&quot;: &quot;jirauser:password&quot;
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set changeLog = get_changelog(package, null, versions[0].version) %}
+{% set ticket = preg_match_all('/((OK|OTEK)-(\\d+))\\s*:/u', changeLog|join(';'), 1) %}
+
+{% set request = {
+    'archived': false,
+    'releaseDate': versions[0].releasedAt|date('Y-m-d'),
+    'name': versions[0].version,
+    'released': true,
+    'description': 'Packagist auto release',
+    'project': 'OK'
+} %}
+
+{% if ticket|length == 0 %}
+    {{ interrupt('There are not commits with JIRA tiket no.') }}
+{% endif %}
+
+{% do trigger_webhook(6, {'project': 'OK', 'ticket': ticket, 'version': versions[0].version}) %}
+{{ request|json_encode }}
+</code></pre>
+<h4 id="update-an-issue-fix-version-2"><a class="header" href="#update-an-issue-fix-version-2">Update an issue fix version</a></h4>
+<p>PUT <code>https://jiraserver/rest/api/2/issue/{{ issue }}</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    &quot;auth_basic&quot;: &quot;jirauser:password&quot;
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% placeholder issue with ticket %}
+
+{% set request = {
+    'fields': {
+        'fixVersions': [{'name': version}]
+    }
+} %}
+
+{{ request|json_encode }}
+</code></pre>
+<p><img src="img/jira_response.png" alt="Jira issue" /></p>
+<h2 id="http-request-from-code-2"><a class="header" href="#http-request-from-code-2">Http request from code</a></h2>
+<p>You can made http request from twig code.</p>
+<pre><code class="language-twig">{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/okvpn/orocommerce/tags') %}
+
+{{ tags|json_encode }}
+</code></pre>
+<h2 id="external-request-2"><a class="header" href="#external-request-2">External request</a></h2>
+<p>Triggered webhook by HTTP requests to <code>https://PACKEGIST_URL/api/webhook-invoke/{name}</code></p>
+<p>Optional <code>name</code>. If it is specified then this webhook can only be triggered if that name is supplied 
+when invoking <code>https://PACKEGIST_URL/api/webhook-invoke/{name}</code> and name restriction is match.</p>
+<p>Example payload:</p>
+<pre><code class="language-twig">{% if request.packageName is null %}
+    {{ interrupt('package name is not found') }}
+{% endif %}
+
+{% set tags = http_request('https://registry.hub.docker.com/v1/repositories/' ~ request.packageName ~'/tags') %}
+
+{{ tags|json_encode }}
+</code></pre>
+<h2 id="gitlab-auto-webhook-2"><a class="header" href="#gitlab-auto-webhook-2">Gitlab auto webhook</a></h2>
+<p>You can use the event <code>new_repo</code> to add a hook to the specified Gitlab project.
+It can be useful, if you don't have a Gold Gitlab Plan that allows configure webhooks for your group,
+so you need add it manually for each a new repository.</p>
+<p>POST <code>https://{{ host }}/api/v4/projects/{{ repo }}/hooks?private_token=xxxxxxxxxxxxxxxx</code></p>
+<p>Options:</p>
+<pre><code class="language-json">{
+    &quot;headers&quot;: {
+        &quot;Content-Type&quot;: &quot;application/json&quot;
+    }
+}
+</code></pre>
+<p>Payload</p>
+<pre><code class="language-twig">{% set regex = '#^(?:ssh://git@|https?://|git://|git@)?(?P&lt;host&gt;[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P&lt;path&gt;[\\w.-]+(?:/[\\w.-]+?)+)(?:\\.git|/)?$#i' %}
+{% set repository = preg_match_all(regex, package.repository) %}
+
+{% if repository.path[0] is null or repository.host[0] is null %}
+    {{ interrupt('Regex is not match') }}
+{% endif %}
+
+{% set request = {
+    'url': 'https://pkg.okvpn.org/api/update-package?token=admin:xxxxxxxxxxxxxxxx',
+    'push_events': true,
+    'tag_push_events': true
+} %}
+
+{% placeholder host with repository.host[0] %}
+{% placeholder repo with repository.path[0]|url_encode %}
+
+{{ request|json_encode }}
+</code></pre>
+<p>Here you need replace <code>request.url</code> on your packagist. </p>
+<h2 id="new-twig-functions-2"><a class="header" href="#new-twig-functions-2">New twig functions</a></h2>
+<p>See <a href="/src/Webhook/Twig/WebhookExtension.php">WebhookExtension</a> for details.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="manage-secrets"><a class="header" href="#manage-secrets">Manage secrets</a></h1>
+<p>Before adding sensitive data such as API credentials to your webhook payload strongly 
+recommended to encrypt it. Secret data will not be save to database or shows on webhooks' status. 
+Alternative way you can set own visibility for webhook entity to prevent edit by other admin users.</p>
+<h3 id="encrypt-secrets"><a class="header" href="#encrypt-secrets">Encrypt secrets</a></h3>
+<p>To add secrets to your webhook, put JSON body to <code>Request options</code> field, for example</p>
+<pre><code class="language-json">{
+//     &quot;headers&quot;  more other options 
+    &quot;secrets&quot;: {
+        &quot;allowed-domains&quot;: [&quot;api.telegram.org&quot;],
+        &quot;TOKEN&quot;: &quot;167000000:AAzddkPzfgzkqzzFghiwPutin_khuylo&quot;,
+        &quot;CHART_ID&quot;: &quot;-1000017160005&quot;
+    }
+}
+</code></pre>
+<p><a href="webhook/../img/secrets.png"><img src="webhook/../img/secrets.png" alt="secrets" /></a></p>
+<p>Once the form is submitted, the secret params will be encrypted and sign and cannot be changed.
+The sign algo is hmac sha256 with <code>APP_SECRET</code> as key. Digital signature required to prevent modification
+encrypted data and attack on change <code>allowed-domains</code> </p>
+<h4 id="secrets-option"><a class="header" href="#secrets-option">Secrets option</a></h4>
+<p><code>allowed-domains</code> - you can restrict webhook call to untrusted hosts to prevent modify the change URL parameter.</p>
+<h3 id="usage-secrets"><a class="header" href="#usage-secrets">Usage secrets</a></h3>
+<p>Use secrets params in request, url or headers options, example:</p>
+<pre><code>https://api.telegram.org/bot${secrets.TOKEN}/sendMessage
+</code></pre>
+<p>In body</p>
+<pre><code class="language-twig">{% set request = {
+    'chat_id': '${secrets.CHART_ID}',
+    'text': 'example text'
+} %}
+{{ request|json_encode }}
+</code></pre>
+<p>But this example will not work.</p>
+<pre><code class="language-twig">{% set request = {
+    'chat_id': '${secrets.CHART_ID}',
+    'text': 'example text'
+} %}
+{% do log('${secrets.CHART_ID}')
+
+{{ request|json_encode }}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="webhook-security"><a class="header" href="#webhook-security">Webhook security</a></h1>
+<p>To evaluate expressions uses a Twig sandbox mode.</p>
+<p>You will get an error if try to get access for security sensitive information.</p>
+<p><strong>SSRF</strong> - To prevent SSRF attacks to make HTTP requests to inner private networks uses <code>NoPrivateNetworkHttpClient</code>,
+so not possible call url like <code>http://10.8.100.1/</code> etc.</p>
+<pre><code># This code is not works.
+
+{% set text = &quot;*New Releases*\n&quot; %}
+{% set title = package.name ~ ' (' ~ versions|map(v =&gt; &quot;#{v.version}&quot;)|join(',') ~ ')' %}
+
+{% set text = text ~ package.credentials.key  %}
+
+{% set request = {
+    'channel': 'jenkins',
+    'text': text
+} %}
+
+{{ request|json_encode }}
+
+</code></pre>
+<pre><code>Exception (Twig\Sandbox\SecurityNotAllowedMethodError). Calling &quot;getcredentials&quot; method on a &quot;Packeton\Entity\Package&quot; 
+object is not allowed in &quot;__string_template__4b1d9dd7416b75a6c353bd4750fe5490&quot; at line 4.
+</code></pre>
+<p>Block SSRF</p>
+<pre><code>Exception (Symfony\Component\HttpClient\Exception\TransportException). IP &quot;127.0.0.1&quot; is blocked for &quot;https://pack.loc.example.org/webhooks&quot;.
+ * Prev exception (Symfony\Component\HttpClient\Exception\TransportException). IP &quot;127.0.0.1&quot; is blocked for &quot;https://pack.loc.example.org/webhooks&quot;.
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="test-webhook-twig-payload"><a class="header" href="#test-webhook-twig-payload">Test Webhook Twig payload.</a></h1>
+<p>You can use test action to check result</p>
+<p><a href="webhook/../img/wh-test.png"><img src="webhook/../img/wh-test.png" alt="Test" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="how-to-auto-update-packages"><a class="header" href="#how-to-auto-update-packages">How to auto update packages?</a></h1>
+<p>You can use GitLab, GitHub, and Bitbucket project post-receive hook to keep your packages up to date every time you push code.</p>
+<h2 id="into"><a class="header" href="#into">Into</a></h2>
+<p>Webhook API request authorization with minimum access level <code>ROLE_MAINTAINER</code>. 
+You can use <code>token</code> query parameter with <code>&lt;username:api_token&gt;</code> to call it. </p>
+<p>Also support Packagist.org authorization with <code>username</code> and <code>apiToken</code> query parameters.</p>
+<h2 id="bitbucket-webhooks"><a class="header" href="#bitbucket-webhooks">Bitbucket Webhooks</a></h2>
+<p>To enable the Bitbucket web hook, go to your BitBucket repository,
+open the settings and select &quot;Webhooks&quot; in the menu. Add a new hook. Y
+ou have to enter the Packagist endpoint, containing both your username and API token.
+Enter <code>https://&lt;app&gt;/api/bitbucket?token=user:token</code> as URL. Save your changes and you're done.</p>
+<h2 id="gitlab-service"><a class="header" href="#gitlab-service">GitLab Service</a></h2>
+<p>To enable the GitLab service integration, go to your GitLab repository, open
+the Settings &gt; Integrations page from the menu.
+Search for Packagist in the list of Project Services. Check the &quot;Active&quot; box,
+enter your <code>packeton.org</code> username and API token. Save your changes and you're done.</p>
+<h2 id="gitlab-group-hooks"><a class="header" href="#gitlab-group-hooks">GitLab Group Hooks</a></h2>
+<p>Group webhooks will apply to all projects in a group and allow to sync all projects.
+To enable the Group GitLab webhook you must have the paid plan.
+Go to your GitLab Group &gt; Settings &gt; Webhooks.
+Enter <code>https://&lt;app&gt;/api/update-package?token=user:token</code> as URL.</p>
+<h2 id="github-webhooks"><a class="header" href="#github-webhooks">GitHub Webhooks</a></h2>
+<p>To enable the GitHub webhook go to your GitHub repository. Click the &quot;Settings&quot; button, click &quot;Webhooks&quot;.
+Add a new hook. Enter <code>https://&lt;app&gt;/api/github?token=user:token</code> as URL.</p>
+<h2 id="gitea-webhooks"><a class="header" href="#gitea-webhooks">Gitea Webhooks</a></h2>
+<p>To enable the Gitea web hook, go to your Gitea repository, open the settings, select &quot;Webhooks&quot; 
+in the menu and click on 'Add Webhook'. From the dropdown menu select Gitea.
+You have to enter the Packagist endpoint, containing both your username and API token. 
+Enter <code>https://&lt;app&gt;/api/update-package?token=user:token</code> as URL. 
+The HTTP method has to be POST and content type is application/json. Save your changes and you're done.</p>
+<h2 id="manual-hook-setup"><a class="header" href="#manual-hook-setup">Manual hook setup</a></h2>
+<p>If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually
+from a git post-receive hook or similar. You have to do a POST request to
+<code>https://&lt;app&gt;g/api/update-package?token=user:api_token</code> with a request body looking like this:</p>
+<pre><code>{
+  &quot;repository&quot;: {
+    &quot;url&quot;: &quot;PACKAGIST_PACKAGE_URL&quot;
+  }
+}
+</code></pre>
+<p>You can also send a GET request with query parameter <code>composer_package_name</code></p>
+<pre><code>curl 'https://&lt;app&gt;/api/update-package?token=&lt;user:token&gt;&amp;composer_package_name=vender/name'
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-authentication"><a class="header" href="#user-authentication">User Authentication</a></h1>
+<p>Packeton may support multiple methods of authenticating users. It can additionally be extended to support 
+custom authentication schemes.</p>
+<h2 id="web-user-authentication"><a class="header" href="#web-user-authentication">Web User authentication</a></h2>
+<p>Included in packeton is support for authenticating users via:</p>
+<ul>
+<li>A username and password.</li>
+<li>An email address and password.</li>
+</ul>
+<p>But possible to enable LDAP only via configuration, see <a href="./authentication-ldap.html">ldap authentication</a></p>
+<h2 id="composer-api-authentication"><a class="header" href="#composer-api-authentication">Composer API authentication</a></h2>
+<p>Packeton is support API authentication only with api token. Password usage is not allowed. 
+You can see api token in thr user profile menu.</p>
+<p>Support for authenticating users via:</p>
+<ul>
+<li>HTTP Basic Authentication (username and api token)</li>
+<li>Short query param <code>token</code> = <code>username:apiToken</code></li>
+<li>Default packagist hook API (query params: <code>username</code> = username, <code>apiToken</code> = apiToken) </li>
+</ul>
+<p>Your customer needs to authenticate to access their Composer repository:
+The simplest way to provide your credentials is providing your set of credentials inline with the repository specification such as:</p>
+<pre><code class="language-json">{
+    &quot;repositories&quot;: [
+        {
+            &quot;type&quot;: &quot;composer&quot;,
+            &quot;url&quot;: &quot;https://&lt;username&gt;:&lt;api_token&gt;@example.org&quot;
+        }
+    ]
+}
+</code></pre>
+<p>When you don't want to hard code your credentials into your composer.json, you can set up it global.</p>
+<pre><code>composer config --global --auth http-basic.example.org username api_token
+</code></pre>
+<p>Example API call.</p>
+<pre><code>curl https://example.com/packages/list.json
+   -u &quot;username:apiToken&quot;
+</code></pre>
+<pre><code>curl https://example.com/packages/list.json?token=username:apiToken
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="jwt-api-authentication"><a class="header" href="#jwt-api-authentication">JWT API Authentication</a></h1>
+<p>By default, packeton is storage api tokens in database for each user. But when user 
+loaded from custom user provider, like LDAP need to enable JWT configuration to use API. So Packeton can be 
+configured with a non-standard login type to support <a href="https://en.wikipedia.org/wiki/JSON_Web_Token">JSON Web Tokens</a>.</p>
+<p>The JSON Web Token integration in Packeton uses the <a href="https://github.com/firebase/php-jwt">Firebase library</a>.
+Also, JWT authentication can be enabled only for API.</p>
+<p>Add <code>yaml</code> configuration file to path <code>config/packages/</code>, for example <code>config/packages/jwt.yaml</code> to enable it.</p>
+<pre><code class="language-yaml">packeton:
+    jwt_authentication:
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem'
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem'
+</code></pre>
+<p>Full configurations: </p>
+<pre><code class="language-yaml"># config/packages/config/packages/jwt.yaml
+packeton:
+    jwt_authentication:
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem' # required for token sign
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem' # required for token verification
+        passphrase: ~
+        algo: EdDSA # Sign algo, here libsodium EdDSA
+</code></pre>
+<h2 id="generate-the-publicprivate-keys"><a class="header" href="#generate-the-publicprivate-keys">Generate the public/private keys</a></h2>
+<pre><code>bin/console packagist:jwt:generate-keypair
+
+bin/console packagist:jwt:generate-keypair --overwrite
+</code></pre>
+<p>Available options:</p>
+<ul>
+<li>--overwrite will overwrite your keys if they already exist.</li>
+</ul>
+<p>If keys already exists, a warning message will be raised to prevent you from overwriting your keys accidentally.</p>
+<h3 id="jwt-token-ttl"><a class="header" href="#jwt-token-ttl">JWT Token TTL.</a></h3>
+<p>JWT Token is never expire. It was done for compatibility with composer basic HTTP authorization.
+Each time the api is called, Packeton is checked that the user exists in the database and that 
+he has the same set of permissions and roles. </p>
+<h3 id="digital-signatures-algos"><a class="header" href="#digital-signatures-algos">Digital signatures algos.</a></h3>
+<p>We support all algos from Firebase lib: HMAC, OpenSSL RSA, OpenSSL</p>
+<p>Rsa, HMAC, EdDSA algorithms generate invariant tokens, i.e. the value of the token will be constant for the same user.
+It might be convenient as the app does not store the generated tokens. </p>
+<p>Example how to change algo:</p>
+<pre><code class="language-yaml">packeton:
+    jwt_authentication:
+    ...
+        algo: RS256 # RSA 256
+</code></pre>
+<h3 id="generating-keys-using-openssl"><a class="header" href="#generating-keys-using-openssl">Generating keys using OpenSSL</a></h3>
+<p>Example, how to generate an RSA private key, <code>key.pem</code> - private key. <code>public.pem</code> - public</p>
+<pre><code>openssl genrsa -out key.pem 2048
+openssl rsa -in key.pem -outform PEM -pubout -out public.pem
+</code></pre>
+<p>Example, how to generate an ES256 (elliptic curve) key pairs.</p>
+<pre><code>openssl ecparam -name prime256v1 -genkey -noout -out key.pem
+openssl ec -in key.pem -pubout -out public.pem
+</code></pre>
+<h2 id="obtain-the-token"><a class="header" href="#obtain-the-token">Obtain the token</a></h2>
+<p>You can run command <code>packagist:user:manager</code> to show the api token:</p>
+<pre><code>bin/console packagist:user:manager admin --show-token --token-format=jwt
+</code></pre>
+<p>Or you can found api token on your profile page. </p>
+<p><a href="img/jwt_keys.png"><img src="img/jwt_keys.png" alt="Keys" /></a></p>
+<h3 id="use-the-token"><a class="header" href="#use-the-token">Use the token</a></h3>
+<p>Simply use the JWT, like standard API token for composer api.</p>
+<h4 id="cache-ldap-user-loading"><a class="header" href="#cache-ldap-user-loading">Cache LDAP user loading.</a></h4>
+<p>Since 2.0 composer downloads all packages in parallel, it may run more 12 request at the same time. 
+To prevent calls external LDAP provider each time for JWT token verify, the obtained LDAP user object
+placed to cache with 60 sec TTL. </p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="authenticating-against-an-ldap-server"><a class="header" href="#authenticating-against-an-ldap-server">Authenticating against an LDAP server</a></h1>
+<p>You can enable LDAP authenticating only on configuration level.</p>
+<p>Packeton has pre-installed Symfony LDAP component. Add the file <code>config/packages/ldap.yaml</code> to enable LDAP 
+with following content. See LDAP in <a href="https://symfony.com/doc/current/security/ldap.html">Symfony Docs</a></p>
+<pre><code class="language-yaml">parameters:
+    default_login_provider: 'form_login_ldap'
+    default_login_options:
+        provider: all_users
+        login_path: /login
+        use_forward: false
+        check_path: /login
+        failure_path: null
+        service: Symfony\Component\Ldap\Ldap
+        dn_string: 'uid={username},dc=example,dc=com'
+
+services:
+    Symfony\Component\Ldap\Ldap:
+        arguments: ['@Symfony\Component\Ldap\Adapter\ExtLdap\Adapter']
+        tags:
+            - ldap
+
+    Symfony\Component\Ldap\Adapter\ExtLdap\Adapter:
+        arguments:
+            -   host: ldap.forumsys.com
+                port: 389
+
+security:
+    providers:
+        users_ldap:
+            ldap:
+                service: Symfony\Component\Ldap\Ldap
+                base_dn: dc=example,dc=com
+                search_dn: &quot;cn=read-only-admin,dc=example,dc=com&quot;
+                search_password: password
+                default_roles: ROLE_MAINTAINER
+                uid_key: uid
+
+        all_users:
+            chain:
+                providers: ['packagist', 'users_ldap']
+</code></pre>
+<p>Here is working example where used test <code>ldap.forumsys.com</code> server https://www.forumsys.com/2022/05/10/online-ldap-test-server/</p>
+<p>Using LDAP integration does not prevent you from creating user manually from CLI and assign more accessible roles.
+At the same LDAP password validation will be done on LDAP server side, because <code>CheckLdapCredentialsListener</code> has higher priority 
+loading than default check listener. Therefore, if user is not enable in LDAP - it will not able login to packeton. </p>
+<h2 id="user-providers-priority"><a class="header" href="#user-providers-priority">User providers priority.</a></h2>
+<p>Packeton use Symfony <a href="https://symfony.com/doc/current/security/user_providers.html#chain-user-provider">Chain User Provider</a>
+to lookup users.</p>
+<p>If you want to use customer user restriction by vendors and versions, <code>packagist</code> user provider must load before ldap.</p>
+<pre><code class="language-yaml">security:
+    providers:
+        users_ldap:
+            ldap:
+                ... 
+ 
+        all_users:
+            chain:
+                providers: ['packagist', 'users_ldap'] # Load user/roles form default packagist and if not found - use ldap user
+                providers: ['users_ldap', 'packagist'] # packagist users will be ignore 
+</code></pre>
+<h2 id="load-different-roles-from-ldap"><a class="header" href="#load-different-roles-from-ldap">Load different roles from LDAP.</a></h2>
+<p>You can use more 1 user providers:</p>
+<pre><code class="language-yaml">security:
+    providers:
+        users_ldap:
+            ldap:
+                service: Symfony\Component\Ldap\Ldap
+                base_dn: dc=example,dc=com
+                search_dn: &quot;cn=read-only-admin,dc=example,dc=com&quot;
+                filter: &quot;(&amp;(objectclass=groupOfUniqueNames)(ou=scientists)(uniqueMember=uid={username},dc=example,dc=com))&quot;
+                search_password: password
+                default_roles: ROLE_MAINTAINER
+                uid_key: uid
+
+        users_ldap_admin:
+            ldap:
+                service: Symfony\Component\Ldap\Ldap
+                base_dn: dc=example,dc=com
+                search_dn: &quot;cn=read-only-admin,dc=example,dc=com&quot;
+                filter: &quot;(&amp;(objectclass=groupOfUniqueNames)(ou=mathematicians)(uniqueMember=uid={username},dc=example,dc=com))&quot;
+                search_password: password
+                default_roles: ROLE_ADMIN
+                uid_key: uid
+
+        all_users:
+            chain:
+                providers: ['packagist', 'users_ldap', 'users_ldap_admin']
+</code></pre>
+<p>Here test example where exists two Groups (ou) that include:</p>
+<ul>
+<li>ou=mathematicians,dc=example,dc=com - assign role ROLE_ADMIN</li>
+<li>ou=scientists,dc=example,dc=com - assign role ROLE_MAINTAINER</li>
+</ul>
+<h2 id="api-authentication-with-ldap-users"><a class="header" href="#api-authentication-with-ldap-users">API authentication with LDAP users.</a></h2>
+<p>By default, packeton is storage api token in database for each user. 
+But if the user was loaded by custom external users' provider, but from the database, you will need enable JWT configuration.
+See <a href="authentication-jwt.html">JWT Configuration</a></p>
+<h2 id="enable-ldap-for-docker-runtime"><a class="header" href="#enable-ldap-for-docker-runtime">Enable LDAP for docker runtime.</a></h2>
+<p>You can use docker volume to share own configuration to application.</p>
+<pre><code>...
+        volumes:
+            - .docker:/data
+            - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
+<p>Everyone is welcome to contribute code to https://github.com/vtsykun/packeton.git</p>
+<h3 id="1-development-environment"><a class="header" href="#1-development-environment">1. Development environment.</a></h3>
+<p>If you are running Windows, the Linux Windows Subsystem (WSL) is recommended for development.
+The code of Packeton is written in PHP.</p>
+<h4 id="requirements-1"><a class="header" href="#requirements-1">Requirements</a></h4>
+<ul>
+<li>PHP 8.1+</li>
+<li>Redis (or Docker) for some functionality.</li>
+<li>Symfony CLI / nginx / php-fpm to run the web server.</li>
+<li>(optional) MySQL or PostgresSQL for the main data store, default SQLite.</li>
+</ul>
+<h3 id="2-get-the-source"><a class="header" href="#2-get-the-source">2. Get the source.</a></h3>
+<p>Make a fork on GitHub, and then create a pull request to provide your changes.</p>
+<pre><code>git clone git@github.com:YOUR_GITHUB_NAME/packeton.git
+git checkout -b patch-1
+</code></pre>
+<h3 id="4-install-the-dependencies"><a class="header" href="#4-install-the-dependencies">4. Install the dependencies</a></h3>
+<p>Run composer install</p>
+<pre><code>cd packeton
+composer install
+</code></pre>
 
                     </main>
 

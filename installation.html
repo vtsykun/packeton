@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded "><a href="installation.html" class="active">Installation</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html" class="active">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/contributing.html">Contributing</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -147,14 +147,190 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h2 id="install-and-run-in-docker"><a class="header" href="#install-and-run-in-docker">Install and Run in Docker</a></h2>
-<p>You can use <a href="https://hub.docker.com/r/packeton/packeton">packeton/packeton</a> image</p>
-<pre><code>docker run -d --name packeton \
-    --mount type=volume,src=packeton-data,dst=/data \
-    -p 8080:80 \
-    packeton/packeton:latest
+                        <h2 id="install-and-run"><a class="header" href="#install-and-run">Install and Run</a></h2>
+<p>There is an official packeton image available at <a href="https://hub.docker.com/r/packeton/packeton">https://hub.docker.com/r/packeton/packeton</a>
+which can be used with the docker-compose file, see <a href="installation-docker.html">docker installation</a></p>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
+<h3 id="requirements"><a class="header" href="#requirements">Requirements</a></h3>
+<ul>
+<li>PHP 8.1+</li>
+<li>Redis for some functionality (favorites, download statistics, worker queue).</li>
+<li>git/svn/hg depending on which repositories you want to support.</li>
+<li>Supervisor to run a background job worker</li>
+<li>(optional) MySQL or PostgresSQL for the main data store, default SQLite</li>
+</ul>
+<ol>
+<li>Clone the repository</li>
+</ol>
+<pre><code class="language-bash">git clone https://github.com/vtsykun/packeton.git /var/www/packeton/
+cd /var/www/packeton/
 </code></pre>
-<p>etc.</p>
+<ol start="2">
+<li>Install dependencies <code>composer install</code></li>
+<li>Create <code>.env.local</code> and copy needed environment variables into it. See <a href="#configuration">Configuration</a></li>
+<li>IMPORTANT! Don't forget change <code>APP_SECRET</code></li>
+<li>Run <code>bin/console doctrine:schema:create</code> to setup the DB</li>
+<li>Create admin user via console.</li>
+</ol>
+<pre><code class="language-bash">php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
+</code></pre>
+<ol start="6">
+<li>Setup nginx or any webserver, for example nginx config looks like.</li>
+</ol>
+<pre><code>server {
+    listen *:443 ssl http2;
+    server_name packeton.example.org;
+    root /var/www/packeton/public;
+
+    ssl_certificate /etc/nginx/ssl/example.crt;
+    ssl_certificate_key /etc/nginx/ssl/example.key;
+
+    ssl_ciphers 'TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-256-GCM-SHA384:ECDHE:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
+
+    ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache  builtin:1000  shared:SSL:10m;
+    ssl_session_timeout  5m;
+
+    rewrite ^/index\.php/?(.+)$ /$1 permanent;
+    try_files $uri @rewriteapp;
+
+    location @rewriteapp {
+        rewrite ^(.*)$ /index.php/$1 last;
+    }
+
+    access_log off;
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_index index.php;
+        send_timeout 300;
+        fastcgi_read_timeout 300;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+    }
+}
+</code></pre>
+<ol start="7">
+<li>Change cache permission to made it accessible for web server.</li>
+</ol>
+<pre><code class="language-bash">chown www-data:www-data -R var/
+</code></pre>
+<ol start="8">
+<li>
+<p>If you get a 500 error in index page <code>packeton.example.org</code>, please check your logs <code>var/log/prod.log</code> or/and webserver log
+and fix permissions, database config, redis etc.</p>
+</li>
+<li>
+<p>Enable cron tabs and background jobs.</p>
+</li>
+</ol>
+<p>Enable crontab <code>crontab -e -u www-data</code></p>
+<pre><code>* * * * * /var/www/packeton/bin/console --env=prod okvpn:cron &gt;&gt; /dev/null
+</code></pre>
+<p><strong>Setup Supervisor to run worker</strong></p>
+<pre><code class="language-bash">sudo apt -y --no-install-recommends install supervisor
+</code></pre>
+<p>Create a new supervisor configuration.</p>
+<pre><code class="language-bash">sudo vim /etc/supervisor/conf.d/packagist.conf
+</code></pre>
+<p>Add the following lines to the file.</p>
+<pre><code>[program:packeton-workers]
+environment =
+        HOME=/var/www/
+command=/var/www/packeton/bin/console packagist:run-workers
+directory=/var/www/packeton/
+process_name=%(program_name)s_%(process_num)02d
+numprocs=1
+autostart=true
+autorestart=true
+startsecs=0
+redirect_stderr=true
+priority=1
+user=www-data
+</code></pre>
+<h3 id="configuration"><a class="header" href="#configuration">Configuration</a></h3>
+<p>Create a file <code>.env.local</code> and change next options</p>
+<ul>
+<li><code>APP_SECRET</code> - Must be static, used for encrypt SSH keys in database.</li>
+<li><code>APP_COMPOSER_HOME</code> - composer home, default <code>/var/www/packeton/var/.composer/</code></li>
+<li><code>DATABASE_URL</code> - Database DSN, default sqlite:///%kernel.project_dir%/var/app.db</li>
+</ul>
+<p>Example for postgres <code>postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&amp;charset=utf8</code>
+Example for mysql <code>mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&amp;charset=utf8mb4</code></p>
+<pre><code># .env.local
+
+DATABASE_URL=&quot;postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=14&amp;charset=utf8&quot;
+</code></pre>
+<ul>
+<li><code>PACKAGIST_DIST_PATH</code> - Default <code>%kernel.project_dir%/var/zipball</code>, path to storage zipped artifacts </li>
+<li><code>REDIS_URL</code> - Redis DB, default <code>redis://localhost</code></li>
+<li><code>PACKAGIST_DIST_HOST</code> - Hostname, (auto) default use the current host header in the request.</li>
+<li><code>TRUSTED_PROXIES</code> - Ips for Reverse Proxy. See <a href="https://symfony.com/doc/current/deployment/proxies.html">Symfony docs</a></li>
+<li><code>PUBLIC_ACCESS</code> - Allow anonymous users access to read packages metadata, default: <code>false</code></li>
+<li><code>MAILER_DSN</code> - Mailer for reset password, default disabled</li>
+<li><code>MAILER_FROM</code> - Mailer from</li>
+</ul>
+<h3 id="ssh-key-access-and-composer-oauth-token"><a class="header" href="#ssh-key-access-and-composer-oauth-token">Ssh key access and composer oauth token.</a></h3>
+<p>Packagist uses the composer config and global ssh-key to get read access to your repositories, so
+the supervisor worker <code>packagist:run-workers</code> and web-server must run under the user,
+that have ssh key or composer config that gives it read (clone) access to your git/svn/hg repositories.
+For example, if your application runs under <code>www-data</code> and have home directory <code>/var/www</code>, directory
+structure must be like this.</p>
+<pre><code>    └── /var/www/
+        └── .ssh/ # ssh keys directory
+            ├── config
+            ├── id_rsa # main ssh key
+            ├── private_key_2 # additional ssh key
+            └── private_key_3
+        └── packeton/ # project dir
+            ├── config APP_COMPOSER_HOME=&quot;%kernel.project_dir%/var/.composer&quot;
+            ├── public 
+            ....
+            ├── src 
+            └── var
+                ├── cache
+                ....
+                └── .composer # APP_COMPOSER_HOME=&quot;%kernel.project_dir%/var/.composer&quot;
+</code></pre>
+<p>By default, composer configuration load from <code>COMPOSER_HOME</code> and it placed at path <code>%kernel.project_dir%/var/.composer</code>.
+if you want to setup authentication in <code>auth.json</code> need to place this file to composer home, i e. <code>/var/www/packeton/var/.composer/</code>
+See <a href="https://getcomposer.org/doc/articles/authentication-for-private-packages.md#authentication-in-auth-json-per-project">Authentication in auth.json</a></p>
+<pre><code># Example /var/www/packeton/var/.composer/auth.json
+{ 
+  &quot;http-basic&quot;: {
+    &quot;git.example.pl&quot;: {
+      &quot;username&quot;: &quot;kastus&quot;,
+      &quot;password&quot;: &quot;489df705a503ac0173256ce01f&quot;
+    }
+  }
+}
+</code></pre>
+<p>Example ssh config for multiple SSH Keys for different github account/repos,
+see <a href="https://gist.github.com/jexchan/2351996">here for details</a></p>
+<pre><code># ~/.ssh/config - example
+
+Host github-oroinc
+	HostName github.com
+	User git
+	IdentityFile /var/www/.ssh/private_key_2
+	IdentitiesOnly yes
+
+Host github-org2
+	HostName github.com
+	User git
+	IdentityFile /var/www/.ssh/private_key_3
+	IdentitiesOnly yes
+
+</code></pre>
+<h4 id="allow-connections-to-http"><a class="header" href="#allow-connections-to-http">Allow connections to http.</a></h4>
+<p>You can create <code>config.json</code> in the composer home (see <code>APP_COMPOSER_HOME</code> env var) or add this option
+in the UI credentials form.</p>
+<pre><code class="language-json">{
+    &quot;secure-http&quot;: false
+}
+</code></pre>
 
                     </main>
 
@@ -164,6 +340,9 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
+                            <a rel="next" href="installation-docker.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -175,6 +354,9 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
+                    <a rel="next" href="installation-docker.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>
