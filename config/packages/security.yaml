@@ -15,13 +15,18 @@ security:
         packagist:
             id: Packeton\Security\Provider\UserProvider
 
+        all_users:
+            chain:
+                providers: ['packagist']
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         packages:
             pattern: (^(.+\.json$|/p/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/downloads/|/api/))+
-            api_basic: true
+            api_basic:
+                provider: all_users
             stateless: true
             context: main
             user_checker: Packeton\Security\UserChecker
@@ -30,16 +35,11 @@ security:
             lazy: true
             pattern:      .*
             user_checker: Packeton\Security\UserChecker
-            form_login:
-                provider:       packagist
-                login_path:     /login
-                use_forward:    false
-                check_path:     /login
-                failure_path:   null
+            '%default_login_provider%': '%default_login_options%'
 
             remember_me:
                 secret: '%env(APP_SECRET)%'
-                user_providers: packagist
+                user_providers: all_users
                 name: pauth
                 always_remember_me: true
                 lifetime: 31104000 # 1y

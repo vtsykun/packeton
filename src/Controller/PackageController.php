@@ -101,7 +101,7 @@ class PackageController extends AbstractController
         } elseif ($req->query->get('vendor')) {
             $names = $repo->getPackageNamesByVendor($req->query->get('vendor'));
         } else {
-            $names = $this->providerManager->getPackageNames();
+            $names = $repo->getPackageNames();
         }
 
         return new JsonResponse(['packageNames' => $names]);

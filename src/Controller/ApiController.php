@@ -6,6 +6,7 @@ namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
+use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
@@ -38,14 +39,17 @@ class ApiController extends AbstractController
      */
     public function createPackageAction(Request $request)
     {
-        $payload = json_decode($request->getContent(), true);
-        if (!$payload) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
+        $payload = $this->getJsonPayload($request);
+
+        if (!$payload || empty($url = $payload['repository']['url'] ?? null)) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Missing payload repository->url parameter'], 406);
         }
-        $url = $payload['repository']['url'];
+
         $package = new Package;
-        $user = $this->getUser();
-        $package->addMaintainer($user);
+        if ($this->getUser() instanceof User) {
+            $package->addMaintainer($this->getUser());
+        }
+
         $package->setRepository($url);
         $this->container->get(PackageManager::class)->updatePackageUrl($package);
         $errors = $this->validator->validate($package, null, ['Create']);
@@ -60,6 +64,7 @@ class ApiController extends AbstractController
             $em = $this->registry->getManager();
             $em->persist($package);
             $em->flush();
+
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), ['exception', $e]);
             return new JsonResponse(['status' => 'error', 'message' => 'Error saving package'], 500);

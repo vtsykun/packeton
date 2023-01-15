@@ -14,7 +14,7 @@
   <li><a href="#list-changelog">{{ 'api_doc.changelog_name'|trans }}</a></li>
   <li><a href="#get-package-data">{{ 'api_doc.get_package_data'|trans }}</a></li>
 </ul>
-{% set apiToken = app.user.username ~ ':' ~ app.user.apiToken %}
+{% set apiToken = get_api_token(app.user)|default('<api_token>') %}
 {% set packagist_url = app.request.getSchemeAndHttpHost() %}
 
 <section class="col-d-12">

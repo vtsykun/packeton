@@ -7,6 +7,7 @@ use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\Authentic
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 
 class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
 {
@@ -21,8 +22,13 @@ class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function addConfiguration(NodeDefinition $builder)
+    public function addConfiguration(NodeDefinition $node)
     {
+        $node
+            ->children()
+                ->scalarNode('provider')->end()
+            ->end()
+        ;
     }
 
     /**
@@ -32,8 +38,11 @@ class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
     {
         $authenticatorId = 'packeton.security.authentication.' . $firewallName;
 
+        $service = new ChildDefinition(ApiTokenAuthenticator::class);
+        $service->setArgument('$userProvider', new Reference($userProviderId));
+
         $container
-            ->setDefinition($authenticatorId, new ChildDefinition(ApiTokenAuthenticator::class));
+            ->setDefinition($authenticatorId, $service);
 
         return $authenticatorId;
     }

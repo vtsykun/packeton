@@ -26,7 +26,7 @@ update "fix version" attribute of all the related issues from that release.
 To build a custom request payload uses Twig expression language.
 This allows you to create custom queries. Untrusted template code is evaluate in a Twig sandbox mode, so 
 you will get an error if try to get access for security sensitive information.
-By default only admin users can use Webhooks.
+By default, only admin users can use Webhooks.
 
 ```
 Exception (Twig\Sandbox\SecurityNotAllowedMethodError). Calling "setemail" method on a "Packagist\WebBundle\Entity\User" object is not allowed in "__string_template__0d2344b042278505e67568413272d80429f07ecccea43af39cb33608fa747830" at line 1.
@@ -348,4 +348,4 @@ Here you need replace `request.url` on your packagist.
 New twig functions
 -----------------
 
-See [WebhookExtension](/src/Packagist/WebBundle/Webhook/Twig/WebhookExtension.php) for details.
+See [WebhookExtension](/src/Webhook/Twig/WebhookExtension.php) for details.

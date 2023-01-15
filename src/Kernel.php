@@ -23,15 +23,23 @@ ini_set('date.timezone', 'UTC');
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait {
-        configureContainer as traitConfigureContainer;
         configureRoutes as traitConfigureRoutes;
     }
 
     private function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
     {
-        $this->traitConfigureContainer($container, $loader, $builder);
-
         $configDir = $this->getConfigDir();
+
+        if (is_file($configDir.'/services.yaml')) {
+            $container->import($configDir.'/services.yaml');
+            $container->import($configDir.'/{services}_'.$this->environment.'.yaml');
+        } else {
+            $container->import($configDir.'/{services}.php');
+        }
+
+        $container->import($configDir.'/{packages}/*.yaml');
+        $container->import($configDir.'/{packages}/'.$this->environment.'/*.yaml');
+
         if (class_exists(WebProfilerBundle::class)) {
             $container->import($configDir.'/{packages}/withdev/*.yaml');
         }

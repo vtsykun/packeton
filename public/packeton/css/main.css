@@ -610,7 +610,7 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     min-height: 45px;
 }
 .api-token-group #api-token {
-  width: 85%;
+  width: 83%;
   position: absolute;
   right: 0;
   text-align: center;

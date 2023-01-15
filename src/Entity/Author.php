@@ -58,6 +58,7 @@ class Author
 
     /**
      * @ORM\ManyToOne(targetEntity="Packeton\Entity\User", inversedBy="authors")
+     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL", nullable=true)
      */
     private $owner;
 

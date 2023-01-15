@@ -27,6 +27,14 @@ parameters:
         'Packeton\Entity\User': ['getApiToken', 'unserialize', 'getGithubToken', 'getPassword', 'getSalt', 'getPlainPassword', '!regex /^(add|set)/']
         'Packeton\Entity\Package': ['getCredentials', '!regex /^(add|set)/']
 
+    default_login_provider: 'form_login'
+    default_login_options:
+        provider: all_users
+        login_path: /login
+        use_forward: false
+        check_path: /login
+        failure_path: null
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -34,6 +42,8 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $redis: '@snc_redis.default'
+            $jwtTokenConfig: '%packeton_jws_config%'
+            $jwtSignAlgorithm: '%packeton_jws_algo%'
             'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:
@@ -76,11 +86,6 @@ services:
     Packeton\Service\DistConfig:
         arguments:
             $config: '%packeton_archive_opts%'
-
-    Packeton\Security\Api\ApiTokenAuthenticator:
-        abstract: true
-        arguments:
-            $userProvider: '@Packeton\Security\Provider\UserProvider'
 
     Packeton\DBAL\OpensslCrypter:
         public: true

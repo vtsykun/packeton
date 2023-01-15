@@ -39,6 +39,7 @@
         "doctrine/doctrine-bundle": "^2.2",
         "doctrine/orm": "^2.7",
         "ezyang/htmlpurifier": "^4.16",
+        "firebase/php-jwt": "^6.3",
         "knplabs/knp-menu-bundle": "^3.2",
         "laminas/laminas-feed": "^2.20",
         "nelmio/cors-bundle": "^2.2",
