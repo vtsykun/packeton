@@ -25,13 +25,19 @@ final class ApiFirewallCompilerPass implements CompilerPassInterface
     public function process(ContainerBuilder $container): void
     {
         $securityConfigs = $container->getExtensionConfig('security');
-        if (empty($securityConfigs[0]['firewalls'])) {
+        if (empty($securityConfigs[0])) {
             return;
         }
 
-        foreach ($securityConfigs[0]['firewalls'] as $name => $config) {
-            if ($this->isStatelessFirewallWithContext($config)) {
-                $this->configureStatelessFirewallWithContext($container, $name, $config);
+        foreach ($securityConfigs as $securityConfig) {
+            if (empty($securityConfig['firewalls'] ?? null)) {
+                continue;
+            }
+
+            foreach ($securityConfig['firewalls'] as $name => $config) {
+                if ($this->isStatelessFirewallWithContext($config)) {
+                    $this->configureStatelessFirewallWithContext($container, $name, $config);
+                }
             }
         }
     }

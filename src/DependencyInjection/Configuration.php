@@ -2,6 +2,7 @@
 
 namespace Packeton\DependencyInjection;
 
+use Firebase\JWT\JWT;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -28,6 +29,14 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('anonymous_archive_access')->defaultFalse()->end()
                 ->booleanNode('archive')
                     ->defaultFalse()
+                ->end()
+                ->arrayNode('jwt_authentication')
+                    ->children()
+                        ->enumNode('algo')->defaultNull()->values(array_keys(JWT::$supported_algs))->end()
+                        ->scalarNode('private_key')->cannotBeEmpty()->end()
+                        ->scalarNode('public_key')->cannotBeEmpty()->end()
+                        ->booleanNode('passphrase')->defaultNull()->end()
+                    ->end()
                 ->end()
                 ->arrayNode('archive_options')
                     ->children()

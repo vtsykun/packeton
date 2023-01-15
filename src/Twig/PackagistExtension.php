@@ -7,6 +7,7 @@ use Packeton\Entity\Job;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Model\ProviderManager;
+use Packeton\Security\JWTUserManager;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -18,6 +19,7 @@ class PackagistExtension extends AbstractExtension
     public function __construct(
         private readonly ProviderManager $providerManager,
         private readonly ManagerRegistry $registry,
+        private readonly JWTUserManager $jwtUserManager
     ) {
     }
 
@@ -47,10 +49,16 @@ class PackagistExtension extends AbstractExtension
         ];
     }
 
-    public function getApiToken(UserInterface $user = null, $short = true): ?string
+    public function getApiToken(UserInterface $user = null, bool $short = true, bool $generate = false): ?string
     {
         if ($user instanceof User) {
             return ($short ? ($user->getUserIdentifier() . ':') : '') . $user->getApiToken();
+        }
+
+        if ($generate && $user instanceof UserInterface) {
+            try {
+                return $this->jwtUserManager->createTokenForUser($user);
+            } catch (\Exception) {}
         }
 
         return null;

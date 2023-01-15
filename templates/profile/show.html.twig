@@ -5,7 +5,7 @@
 {% block user_content %}
 <section class="col-md-9">
     {% set isMaintainer = is_granted('ROLE_MAINTAINER') %}
-    {% set apiToken = get_api_token(app.user, false) %}
+    {% set apiToken = get_api_token(app.user, false, true) %}
     {%- if apiToken is not null %}
         <h3 class="font-normal profile-title">{{ 'profile.your_api_token'|trans }}</h3>
 

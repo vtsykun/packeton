@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Packeton\Security\Api;
 
 use Packeton\Entity\User;
+use Packeton\Security\JWSTokenProvider;
+use Packeton\Security\JWTUserManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,9 +27,14 @@ use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface
 
 class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEntryPointInterface
 {
+    private int $fastFetchCacheTtl = 60;
+
     public function __construct(
         private readonly UserProviderInterface $userProvider,
         private readonly UserCheckerInterface $userChecker,
+        private readonly JWTUserManager $tokenUserManager,
+        private readonly JWSTokenProvider $tokenProvider,
+        private readonly \Redis $redis,
         private readonly LoggerInterface $logger
     ) {}
 
@@ -62,21 +69,29 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         return new JsonResponse(['status' => 'error', 'message' => $message], 401);
     }
 
-    /**
-     * @param string $username
-     * @param string $token
-     * @return User
-     */
-    public function validateAndLoadUser(string $username, $token)
+    public function validateAndLoadUser(string $username, string $token): UserInterface|User
     {
-        $user = $this->retrieveUser($username);
+        $user = $this->retrieveUser($username, $token);
+        $isJwtToken = $this->tokenUserManager->checkTokenFormat($token);
 
-        if ($user instanceof User) {
+        if ($user instanceof User && !$isJwtToken) {
+            // Standard API Token loading for database
             if ($user->getApiToken() && \strlen($user->getApiToken()) > 6 && $user->getApiToken() === $token) {
                 return $user;
             }
         }
 
+        if (true === $isJwtToken) {
+            try {
+                // Check JWT token user.
+                $loadedUser = $this->tokenUserManager->loadUserFromToken($token);
+                if ($loadedUser->isEqualTo($user)) {
+                    return $user instanceof User ? $user : $loadedUser;
+                }
+            } catch (\Exception $e) {
+                $this->logger->error($e->getMessage(), ['e' => $e]);
+            }
+        }
 
         throw new BadCredentialsException('Bad credentials.');
     }
@@ -125,10 +140,16 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         return [$username, $credentials];
     }
 
-    protected function retrieveUser(string $username): UserInterface
+    protected function retrieveUser(string $username, string $token): UserInterface
     {
+        $preFetchUser = null;
+        $userJwtCacheKey = 'jwt-user-' . sha1($username . "\x00" . $token);
+        if ($useJwtUser = $this->tokenUserManager->checkTokenFormat($token)) {
+            $preFetchUser = $this->fastPrefetchJwtUser($userJwtCacheKey, $username);
+        }
+
         try {
-            $user = $this->userProvider->loadUserByIdentifier($username);
+            $user = $preFetchUser ?: $this->userProvider->loadUserByIdentifier($username);
             $this->userChecker->checkPreAuth($user);
         } catch (AuthenticationException $e) {
             throw new BadCredentialsException('Bad credentials.', 0, $e);
@@ -136,7 +157,55 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
             throw new AuthenticationServiceException($e->getMessage(), 0, $e);
         }
 
+        if (!$user instanceof User && true === $useJwtUser) {
+            $user = $this->tokenUserManager->convertToJwtUser($user);
+            if ($preFetchUser === null) {
+                $this->serializeJwtUser($userJwtCacheKey, $user);
+            }
+        }
+
         return $user;
+    }
+
+    /**
+     * Will uses only for jwt_token
+     *
+     * Composer makes a very many requests per second, to avoid call LDAP/External user provider
+     * on each request cache user object for 60 sec.
+     */
+    protected function fastPrefetchJwtUser(string $cacheKey, string $username): ?UserInterface
+    {
+        if (!$jwtSerializedData = $this->redis->get($cacheKey)) {
+            return null;
+        }
+
+        try {
+            [$serialized, $timestamp] = $this->tokenProvider->decode($jwtSerializedData);
+            $user = unserialize($serialized);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if (!$user instanceof UserInterface || $timestamp < time() - $this->fastFetchCacheTtl) {
+            return null;
+        }
+
+        if ($user->getUserIdentifier() !== $username) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    protected function serializeJwtUser(string $cacheKey, UserInterface $user): void
+    {
+        try {
+            $jwtSerializedData = $this->tokenProvider->create([serialize($user), time()]);
+        } catch (\Exception) {
+            return;
+        }
+
+        $this->redis->setex($cacheKey, $this->fastFetchCacheTtl, $jwtSerializedData);
     }
 
     /**
