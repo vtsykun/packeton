@@ -14,13 +14,13 @@ class OwnerVoter implements VoterInterface
      */
     public function vote(TokenInterface $token, $object, array $attributes)
     {
-        if (!$object instanceof OwnerAwareInterface) {
+        if (!$object instanceof OwnerAwareInterface || !in_array('VIEW', $attributes)) {
             return self::ACCESS_ABSTAIN;
         }
 
         $user = $token->getUser();
         if (!$user instanceof User) {
-            return self::ACCESS_DENIED;
+            return $object->getVisibility() === OwnerAwareInterface::GLOBAL_VISIBLE ? self::ACCESS_GRANTED : self::ACCESS_DENIED;
         }
 
         if ($object->getVisibility() === OwnerAwareInterface::USER_VISIBLE && $object->getOwner() && $object->getOwner()->getId() !== $user->getId()) {

@@ -85,7 +85,8 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
             try {
                 // Check JWT token user.
                 $loadedUser = $this->tokenUserManager->loadUserFromToken($token);
-                if ($loadedUser->isEqualTo($user)) {
+                // Compare only attributes. If $user instance of User, then return database instance.
+                if ($loadedUser->isEqualUserAttributes($user)) {
                     return $user instanceof User ? $user : $loadedUser;
                 }
             } catch (\Exception $e) {
@@ -142,10 +143,12 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
 
     protected function retrieveUser(string $username, string $token): UserInterface
     {
-        $preFetchUser = null;
+        $preFetchUser = $tokenIsValid = null;
         $userJwtCacheKey = 'jwt-user-' . sha1($username . "\x00" . $token);
+
         if ($useJwtUser = $this->tokenUserManager->checkTokenFormat($token)) {
             $preFetchUser = $this->fastPrefetchJwtUser($userJwtCacheKey, $username);
+            $tokenIsValid = $this->tokenUserManager->isValidJWTToken($token);
         }
 
         try {
@@ -159,7 +162,7 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
 
         if (!$user instanceof User && true === $useJwtUser) {
             $user = $this->tokenUserManager->convertToJwtUser($user);
-            if ($preFetchUser === null) {
+            if ($preFetchUser === null && true === $tokenIsValid) {
                 $this->serializeJwtUser($userJwtCacheKey, $user);
             }
         }

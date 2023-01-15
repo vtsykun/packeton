@@ -75,6 +75,10 @@ class UserController extends AbstractController
     public function editAction(Request $request)
     {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createNotFoundException();
+        }
+
         $form = $this->createForm(ProfileFormType::class, $user);
 
         $form->handleRequest($request);
@@ -99,6 +103,10 @@ class UserController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createNotFoundException();
+        }
+
         $form = $this->createForm(ChangePasswordFormType::class, $user);
         $form->handleRequest($request);
 

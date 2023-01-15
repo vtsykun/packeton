@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Entity\Job;
 use Packeton\Entity\Package;
+use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
 use Packeton\Form\Type\WebhookType;
 use Packeton\Webhook\HookResponse;
@@ -43,6 +44,7 @@ class WebhookController extends AbstractController
      */
     public function indexAction(Request $request)
     {
+        $user = $this->getUser();
         $qb = $this->registry
             ->getRepository(Webhook::class)
             ->createQueryBuilder('w')
@@ -51,7 +53,7 @@ class WebhookController extends AbstractController
         $qb->where('w.owner IS NULL')
             ->orWhere("w.visibility = 'global'")
             ->orWhere("w.visibility = 'user' AND IDENTITY(w.owner) = :owner")
-            ->setParameter('owner', $this->getUser()->getId());
+            ->setParameter('owner', $user instanceof User ? $user->getId() : null);
 
         /** @var Webhook[] $webhooks */
         $webhooks = $qb->getQuery()->getResult();

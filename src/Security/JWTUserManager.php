@@ -36,6 +36,15 @@ class JWTUserManager
         return new JWTUser($username, $roles);
     }
 
+    public function isValidJWTToken(string $token): bool
+    {
+        try {
+            return (bool) $this->loadUserFromToken($token);
+        } catch (\Throwable) {}
+
+        return false;
+    }
+
     public function checkTokenFormat(?string $token): bool
     {
         return $token && str_starts_with($token, self::JWT_PREFIX) && strlen($token) > 32;

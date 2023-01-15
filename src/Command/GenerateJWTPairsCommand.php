@@ -15,7 +15,7 @@ use Symfony\Component\Filesystem\Filesystem;
 class GenerateJWTPairsCommand extends Command
 {
     protected static $defaultName = 'packagist:jwt:generate-keypair';
-    protected static $defaultDescription = 'Generate JWT public/private keys for use in API authorizations';
+    protected static $defaultDescription = 'Generate JWT public/private keys for packeton jwt_authentication';
 
     public function __construct(
         protected Filesystem $filesystem,
@@ -30,7 +30,6 @@ class GenerateJWTPairsCommand extends Command
      */
     protected function configure(): void
     {
-        $this->addOption('only-if-not-exists', null, InputOption::VALUE_NONE, 'Do not update key files if they already exist.');
         $this->addOption('overwrite', null, InputOption::VALUE_NONE, 'Overwrite key files if they already exist.');
         $this->addOption('algo', null, InputOption::VALUE_OPTIONAL, 'Key sign algo, default config value.', $this->jwtSignAlgorithm);
     }

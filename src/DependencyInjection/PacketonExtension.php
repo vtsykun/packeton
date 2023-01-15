@@ -29,7 +29,7 @@ class PacketonExtension extends Extension
         $container->setParameter('packeton_github_no_api', $config['github_no_api'] ?? false);
 
         $container->setParameter('packeton_jws_config', $config['jwt_authentication'] ?? []);
-        $container->setParameter('packeton_jws_algo', $config['jwt_authentication']['algo'] ?? 'ES256');
+        $container->setParameter('packeton_jws_algo', $config['jwt_authentication']['algo'] ?? 'EdDSA');
     }
 
     /**
