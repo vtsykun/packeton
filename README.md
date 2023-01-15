@@ -9,7 +9,7 @@ Packeton - Private PHP package repository for vendors
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
 
-**All** documentation here [docs.packeton.org](https://docs.packeton.org/)
+**Full documentation** [docs.packeton.org](https://docs.packeton.org/)
 
 ### Legacy Symfony 3.4 version
 

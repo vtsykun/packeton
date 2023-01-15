@@ -23,4 +23,4 @@
     - [LDAP Configuration](authentication-ldap.md)
 
 # Development
-  - [Contributing](dev/contributing.md)
+  - [Contributing](dev/CONTRIBUTING.md)
