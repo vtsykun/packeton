@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/contributing.html">Contributing</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -1789,27 +1789,44 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
             - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
-<p>Everyone is welcome to contribute code to https://github.com/vtsykun/packeton.git</p>
+<p>Everyone is welcome to contribute code to <a href="https://github.com/vtsykun/packeton.git">https://github.com/vtsykun/packeton.git</a></p>
 <h3 id="1-development-environment"><a class="header" href="#1-development-environment">1. Development environment.</a></h3>
-<p>If you are running Windows, the Linux Windows Subsystem (WSL) is recommended for development.
+<p>If you are running Windows, the Windows Subsystem for Linux (WSL) is recommended for development.
+But the most of the features will work on Windows too.
 The code of Packeton is written in PHP.</p>
 <h4 id="requirements-1"><a class="header" href="#requirements-1">Requirements</a></h4>
 <ul>
 <li>PHP 8.1+</li>
 <li>Redis (or Docker) for some functionality.</li>
-<li>Symfony CLI / nginx / php-fpm to run the web server.</li>
+<li>(optional) nginx / php-fpm to run the web server.</li>
 <li>(optional) MySQL or PostgresSQL for the main data store, default SQLite.</li>
 </ul>
 <h3 id="2-get-the-source"><a class="header" href="#2-get-the-source">2. Get the source.</a></h3>
 <p>Make a fork on GitHub, and then create a pull request to provide your changes.</p>
 <pre><code>git clone git@github.com:YOUR_GITHUB_NAME/packeton.git
-git checkout -b patch-1
+git checkout -b fix/patch-1
 </code></pre>
-<h3 id="4-install-the-dependencies"><a class="header" href="#4-install-the-dependencies">4. Install the dependencies</a></h3>
+<h3 id="3-install-the-dependencies"><a class="header" href="#3-install-the-dependencies">3. Install the dependencies</a></h3>
 <p>Run composer install</p>
 <pre><code>cd packeton
 composer install
 </code></pre>
+<h3 id="4-configure-your-env-vars"><a class="header" href="#4-configure-your-env-vars">4. Configure your env vars.</a></h3>
+<p>Create a file <code>.env.local</code> with following content.</p>
+<pre><code># .env.local
+
+APP_ENV=dev
+
+# select database, default SQLite
+DATABASE_URL=&quot;postgresql://postgres:123456@127.0.0.1:5432/packeton?serverVersion=12&amp;charset=utf8&quot;
+</code></pre>
+<h3 id="5-setup-database"><a class="header" href="#5-setup-database">5. Setup database</a></h3>
+<pre><code>bin/console doctrine:schema:update --dump-sql --force
+</code></pre>
+<h3 id="6-run-local-webserver"><a class="header" href="#6-run-local-webserver">6. Run local webserver.</a></h3>
+<pre><code>php -S localhost:8000 -t public/
+</code></pre>
+<h2 id="enjoy"><a class="header" href="#enjoy">ENJOY</a></h2>
 
                     </main>
 
