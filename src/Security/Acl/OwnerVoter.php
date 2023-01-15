@@ -20,7 +20,8 @@ class OwnerVoter implements VoterInterface
 
         $user = $token->getUser();
         if (!$user instanceof User) {
-            return $object->getVisibility() === OwnerAwareInterface::GLOBAL_VISIBLE ? self::ACCESS_GRANTED : self::ACCESS_DENIED;
+            return $object->getVisibility() === OwnerAwareInterface::GLOBAL_VISIBLE || null === $object->getVisibility()
+                ? self::ACCESS_GRANTED : self::ACCESS_DENIED;
         }
 
         if ($object->getVisibility() === OwnerAwareInterface::USER_VISIBLE && $object->getOwner() && $object->getOwner()->getId() !== $user->getId()) {

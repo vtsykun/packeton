@@ -100,6 +100,3 @@ Simply use the JWT, like standard API token for composer api.
 Since 2.0 composer downloads all packages in parallel, it may run more 12 request at the same time. 
 To prevent calls external LDAP provider each time for JWT token verify, the obtained LDAP user object
 placed to cache with 60 sec TTL. 
-
-
-

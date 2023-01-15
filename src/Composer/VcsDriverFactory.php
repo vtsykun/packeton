@@ -85,6 +85,11 @@ class VcsDriverFactory
             }
         }
 
+        if (null === $driver) {
+            $repoUrl = $options['url'] ?? null;
+            throw new \UnexpectedValueException("VCS Driver not found for repository $repoUrl");
+        }
+
         $driver->initialize();
 
         return $driver;
