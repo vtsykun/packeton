@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -1579,6 +1579,30 @@ from a git post-receive hook or similar. You have to do a POST request to
 <p>You can also send a GET request with query parameter <code>composer_package_name</code></p>
 <pre><code>curl 'https://&lt;app&gt;/api/update-package?token=&lt;user:token&gt;&amp;composer_package_name=vender/name'
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="customer-users"><a class="header" href="#customer-users">Customer Users</a></h1>
+<p>You can create customers user and manage their packages access.
+The customer users have may have two users role:</p>
+<ul>
+<li><code>ROLE_USER</code> - minimal access level, these users only can read metadata only for selected packages</li>
+<li><code>ROLE_FULL_CUSTOMER</code> - Can read all packages metadata without groups ACL restriction.</li>
+</ul>
+<p>For <code>ROLE_USER</code> you will be able to limit packages access by release date too. </p>
+<p>To grant access to your packages, need to create ACL group in the first.</p>
+<p><a href="usage/../img/groups.png"><img src="usage/../img/groups.png" alt="Groups" /></a></p>
+<h3 id="create-customer-user"><a class="header" href="#create-customer-user">Create Customer User.</a></h3>
+<p>After creating an ACL group, you may to create a user and grant access to more that one groups.
+If selected more than one group, then all groups permission will be union together. </p>
+<p><a href="usage/../img/users.png"><img src="usage/../img/users.png" alt="Users" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ssh-credential-and-composer-auth"><a class="header" href="#ssh-credential-and-composer-auth">SSH Credential and Composer Auth.</a></h1>
+<p>Composer provide two why of authentication for privately hosted packages. </p>
+<p>You may to setup authentication in <code>auth.json</code> in composer home, i e. <code>/var/www/packeton/var/.composer/</code> 
+or <code>/data/composer/auth.json</code> for docker installation. </p>
+<p>See example usage <a href="usage/../installation.html#ssh-key-access-and-composer-oauth-token">system auth setup</a></p>
+<h3 id="using-ui-credential-manager"><a class="header" href="#using-ui-credential-manager">Using UI Credential Manager</a></h3>
+<p>You can overwrite credentials for each repository in UI.</p>
+<p>All credentials are encrypted in database by custom DBAL type <code>EncryptedTextType</code>.
+Encrypted key is <code>APP_SECRET</code> so it must be permanent.</p>
+<p><a href="usage/../img/keys.png"><img src="usage/../img/keys.png" alt="Groups" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="user-authentication"><a class="header" href="#user-authentication">User Authentication</a></h1>
 <p>Packeton may support multiple methods of authenticating users. It can additionally be extended to support 
 custom authentication schemes.</p>
@@ -1827,6 +1851,29 @@ DATABASE_URL=&quot;postgresql://postgres:123456@127.0.0.1:5432/packeton?serverVe
 <pre><code>php -S localhost:8000 -t public/
 </code></pre>
 <h2 id="enjoy"><a class="header" href="#enjoy">ENJOY</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h1>
+<p>Full packeton configuration:</p>
+<pre><code class="language-yaml">
+packeton:
+    github_no_api: '%env(bool:GITHUB_NO_API)%' # default true
+    rss_max_items: 30
+    archive: true
+    
+    anonymous_access: '%env(bool:PUBLIC_ACCESS)%' # default false
+    anonymous_archive_access: '%env(bool:PUBLIC_ACCESS)%' # default false
+    archive_options:
+        format: zip
+        basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'
+        endpoint: '%env(PACKAGIST_DIST_HOST)%' # default auto detect by host headers 
+        include_archive_checksum: false
+
+    jwt_authentication: # disable by default 
+        algo: EdDSA
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem'
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem'
+        passphrase: ~
+
+</code></pre>
 
                     </main>
 
