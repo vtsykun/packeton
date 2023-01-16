@@ -17,6 +17,8 @@
       - [Security Policy](webhook/wh-security.md)
       - [Testing](webhook/wh-test.md)
     - [Update Webhooks](usage/update-packages.md)
+    - [Customer Users](usage/customers.md)
+    - [SSH Credential](usage/credential.md)
 
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
@@ -24,3 +26,4 @@
 
 # Development
   - [Contributing](dev/CONTRIBUTING.md)
+  - [Configuration Reference](dev/configuration.md)
