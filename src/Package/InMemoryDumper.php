@@ -81,6 +81,7 @@ class InMemoryDumper
         $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
         $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
         $rootFile['notify-batch'] = $this->router->generate('track_download_batch');
+        $rootFile['metadata-changes-url'] = $this->router->generate('metadata_changes');
         $rootFile['providers-url'] = '/p/%package%$%hash%.json';
 
         $rootFile['metadata-url'] = '/p2/%package%.json';

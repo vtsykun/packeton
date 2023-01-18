@@ -19,6 +19,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Entity\Version;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -491,6 +492,53 @@ class PackageRepository extends EntityRepository
         }
 
         return $packages;
+    }
+
+    /**
+     * @param int|\DateTime $since
+     * @param int|\DateTime|null $now
+     * @param
+     *
+     * @return array
+     */
+    public function getMetadataChanges($since, $now = null, ?bool $stability = true)
+    {
+        if (is_numeric($since)) {
+            $since = (new \DateTime())->setTimestamp($since);
+        }
+
+        if (is_numeric($now) || null === $now) {
+            $now = $now ? (new \DateTime())->setTimestamp($now) : new \DateTime();
+        }
+
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select(['v.name', 'MAX(v.releasedAt) as time1', 'MAX(v.createdAt) as time2'])
+            ->from(Version::class, 'v')
+            ->where('v.createdAt > :since OR v.releasedAt > :since')
+            ->andWhere('v.createdAt <= :now AND v.releasedAt <= :now')
+            ->groupBy('v.name')
+            ->setParameter('now', $now)
+            ->setParameter('since', $since);
+
+        if (true === $stability) {
+            $qb->andWhere("v.version NOT LIKE 'dev-%'");
+        }
+        if (false === $stability) {
+            $qb->andWhere("v.version LIKE 'dev-%'");
+        }
+
+        $packages = $qb
+            ->getQuery()->getArrayResult();
+
+        $updates = [];
+        foreach ($packages as $package) {
+            $unix = max(strtotime($package['time1']), strtotime($package['time2']));
+            $packageName = $stability === false ? $package['name'] . '~dev' : $package['name'];
+            $updates[] = ['type' => 'update', 'package' => $packageName, 'time' => $unix];
+        }
+
+        return $updates;
     }
 
     private function checkExtension(string $extensionName)
