@@ -1,0 +1,35 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<section class="row">
+    <ul class="packages user-grid list-unstyled">
+        {% for proxy in proxies %}
+
+            {% set viewPath = '' %}
+            <li data-url="{{ viewPath }}" class="row">
+                <div class="col-xs-12 package-item">
+                    <div class="row" style="margin: 6px 12px;">
+
+                        <div class="s-flex">
+                            <a href="{{ viewPath }}" class="s-flex no-underline link-gray-dark">
+                                {% if proxy.logo %}
+                                    <img height="40" src="{{ proxy.logo }}" alt="{{ proxy.url }}">
+                                {% endif %}
+                                <h4 class="tab-cell">{{ proxy.alias }}</h4>
+                                <div class="role-container">
+                                    <span class="role-name">{{ proxy.url }}</span>
+                                </div>
+                            </a>
+
+                        </div>
+                        <p class="link-gray" style="font-size: 12px">
+                            Active: Yes<br>
+                            Expires at: 1212
+                        </p>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

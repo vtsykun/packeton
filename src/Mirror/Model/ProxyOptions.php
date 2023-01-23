@@ -1,0 +1,91 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Packeton\Mirror\Model;
+
+class ProxyOptions extends MetadataOptions
+{
+    /**
+     * @param string|null $path
+     *
+     * @return string
+     */
+    public function getUrl(string $path = null): string
+    {
+        $url = \rtrim($this->config['url'], '/');
+
+        // Full url
+        if ($path && \str_starts_with($path, $url)) {
+            return $path;
+        }
+
+        return $path ? $url . '/' . \ltrim($path, '/') : $url;
+    }
+
+    public function getMetadataV2Url(string $package = null): ?string
+    {
+        if (!isset($this->config['root']['metadata-url'])) {
+            return null;
+        }
+
+        $url = $this->getUrl($this->config['root']['metadata-url']);
+        return \str_replace('%package%', $package ?? '%package%', $url);
+    }
+
+    public function hasV2Api(): bool
+    {
+        return (bool) ($this->config['root']['metadata-url'] ?? false);
+    }
+
+    public function getV2SyncApi(): ?string
+    {
+        return (string)($this->config['root']['metadata-changes-url'] ?? null) ?: null;
+    }
+
+    public function getMetadataV1Url(string $package = null, string $hash = null): ?string
+    {
+        $providersUrl = $this->config['root']['providers-url'] ??
+            ($this->config['root']['providers-lazy-url'] ?? null);
+
+        if (null === $providersUrl) {
+            return null;
+        }
+
+        $url = $this->getUrl($providersUrl);
+        return \str_replace(['%package%', '%hash%'], [$package ?? '%package%', $hash ?? '%hash%'], $url);
+    }
+
+    public function getRootProviders(): array
+    {
+        return $this->config['root']['providers'] ?? [];
+    }
+
+    public function getProviderIncludes($withHash = false): array
+    {
+        $providerIncludes = $this->config['root']['provider-includes'] ?? [];
+        if ($withHash === true) {
+            foreach ($providerIncludes as $name => $hash) {
+                $uri = \str_replace('%hash%', $hash['sha256'] ?? '', $name);
+                $providerIncludes[$name] = $uri;
+            }
+        }
+
+        return $providerIncludes;
+    }
+
+    public function logo(): ?string
+    {
+        return $this->config['logo'] ?? null;
+    }
+
+    /**
+     * Get HTTP configuration
+     *
+     * @return array
+     */
+    public function http(): array
+    {
+        return $this->config['options'] ?? [];
+    }
+}

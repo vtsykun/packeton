@@ -24,7 +24,7 @@ final class WorkerLocatorPass implements CompilerPassInterface
                 if (!isset($tag['topic'])) {
                     throw new \LogicException('Topic is required for tag queue_worker');
                 }
-                $workersReferences[$tag['topic']] = new Reference($id);;
+                $workersReferences[$tag['topic']] = new Reference($id);
             }
         }
         $workersServiceLocator = ServiceLocatorTagPass::register($container, $workersReferences);

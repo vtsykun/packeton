@@ -14,7 +14,6 @@ class PacketonExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container)
     {
-
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
@@ -30,6 +29,8 @@ class PacketonExtension extends Extension
 
         $container->setParameter('packeton_jws_config', $config['jwt_authentication'] ?? []);
         $container->setParameter('packeton_jws_algo', $config['jwt_authentication']['algo'] ?? 'EdDSA');
+
+        $container->setParameter('.packeton_repositories', $config['mirrors'] ?? []);
     }
 
     /**

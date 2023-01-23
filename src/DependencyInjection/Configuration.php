@@ -3,6 +3,8 @@
 namespace Packeton\DependencyInjection;
 
 use Firebase\JWT\JWT;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -35,7 +37,7 @@ class Configuration implements ConfigurationInterface
                         ->enumNode('algo')
                             ->info("Sign algo, default EdDSA libsodium")
                             ->defaultNull()
-                            ->values(array_keys(JWT::$supported_algs))
+                            ->values(\array_keys(JWT::$supported_algs))
                         ->end()
                         ->scalarNode('private_key')->cannotBeEmpty()->end()
                         ->scalarNode('public_key')->cannotBeEmpty()->end()
@@ -62,6 +64,95 @@ class Configuration implements ConfigurationInterface
                 return $values;
             })->end();
 
+        $this->addMirrorsRepositoriesConfiguration($rootNode);
+
         return $treeBuilder;
+    }
+
+    private function addMirrorsRepositoriesConfiguration(ArrayNodeDefinition|NodeDefinition $node)
+    {
+        /** @var ArrayNodeDefinition $mirrorNodeBuilder */
+        $mirrorNodeBuilder = $node
+            ->children()
+                ->arrayNode('mirrors')
+                    ->useAttributeAsKey('name')
+                    ->prototype('array');
+
+        $mirrorNodeBuilder
+            ->children()
+                ->scalarNode('url')->end()
+                ->variableNode('repository_json')
+                    ->beforeNormalization()
+                    ->always()
+                    ->then(static function ($repository) {
+                        if (\is_string($repository) && \is_array($repo = @json_decode($repository, true))) {
+                            return $repo;
+                        }
+                        if (\is_string($repository) && \is_file($repository)) {
+                            $repository = \file_get_contents($repository);
+                            $repository = $repository ? \json_decode($repository, true) : null;
+                        }
+                        return $repository;
+                    })
+                    ->end()
+                ->end()
+                ->scalarNode('sync_interval')->defaultValue(86400)->end()
+                ->booleanNode('sync_lazy')->end()
+                ->booleanNode('enable_dist_mirror')->defaultTrue()->end()
+                ->booleanNode('parent_notify')->end()
+                ->booleanNode('disable_v1')->end()
+                ->scalarNode('info_cmd_message')->end()
+                ->scalarNode('logo')->end()
+                ->arrayNode('available_package_patterns')
+                    ->scalarPrototype()->end()
+                ->end()
+                ->arrayNode('available_packages')
+                    ->scalarPrototype()->end()
+                ->end()
+                ->arrayNode('chain_providers')
+                    ->scalarPrototype()->end()
+                ->end()
+            ->end()
+        ;
+
+        $defaultLogos = [
+            'asset-packagist.org' => '/packeton/img/logo/asset-packagist.svg',
+            'packages.drupal.org' => '/packeton/img/logo/drupl.png',
+            'repo.packagist.org' => '/packeton/img/logo/packagist.png',
+            'packagist.org' => '/packeton/img/logo/packagist.png',
+            'wpackagist.org' => '/packeton/img/logo/wordpress.png',
+            'repo.magento.com' => '/packeton/img/logo/magento.png',
+            'satis.oroinc.com' => '/packeton/img/logo/orocrm.png',
+            'packagist.oroinc.com' => '/packeton/img/logo/orocrm.png',
+        ];
+
+        $mirrorNodeBuilder
+            ->beforeNormalization()
+                ->always()
+                ->then(static function ($provider) use ($defaultLogos) {
+                    if (!isset($provider['url'])) {
+                        return $provider;
+                    }
+
+                    $host = \parse_url($provider['url'], \PHP_URL_HOST);
+
+                    $provider['url'] = \rtrim($provider['url'], '/');
+                    // packagist.org is mark lazy by default.
+                    $isOfficial = \in_array($host, ['packagist.org','repo.packagist.org']);
+                    if ($isOfficial && !isset($provider['sync_lazy'])) {
+                        // packagist.org is very big and have v2, sync on fly by default.
+                        $provider['sync_lazy'] = true;
+                    }
+                    if (!$isOfficial && !isset($provider['parent_notify'])) {
+                        // Disable download stats for non packagist.org, by default
+                        $provider['parent_notify'] = false;
+                    }
+                    if (!\array_key_exists('logo', $provider) && isset($defaultLogos[$host])) {
+                        $provider['logo'] = $defaultLogos[$host];
+                    }
+
+                    return $provider;
+                })
+            ->end();
     }
 }
