@@ -176,6 +176,16 @@ class SshCredentials implements OwnerAwareInterface
     }
 
     /**
+     * @param string $name
+     *
+     * @return mixed|null
+     */
+    public function getComposerConfigOption(string $name)
+    {
+        return $this->composerConfig[$name] ?? null;
+    }
+
+    /**
      * @return array|null
      */
     public function getComposerConfig(): ?array

@@ -123,7 +123,7 @@ class PackagistFactory
         $repoConfig['url'] = $url;
         if (null !== $credentials || true === $this->githubNoApi) {
             // Disable API if used ssh key
-            if (!$config->has('use-github-api') || !empty($credentials?->getKey())) {
+            if (null === $credentials?->getComposerConfigOption('use-github-api') || !empty($credentials?->getKey())) {
                 $repoConfig['no-api'] = true;
             }
         }
