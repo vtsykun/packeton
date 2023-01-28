@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packeton\Repository;
 
+use Packeton\Entity\Group;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -49,7 +52,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
      *
      * @return Package[]
      */
-    public function getAllowedPackagesForUser(?UserInterface $user, $hydration = true)
+    public function getAllowedPackagesForUser(?UserInterface $user, bool $hydration = true)
     {
         if (!$user instanceof User) {
             return [];
@@ -63,7 +66,8 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             ->innerJoin('u.groups', 'g')
             ->innerJoin('g.aclPermissions', 'acl')
             ->innerJoin('acl.package', 'p')
-            ->where($qb->expr()->eq('u.id', $user->getId()));
+            ->where('u.id = :uid')
+            ->setParameter('uid', $user->getId());
 
         $result = $qb->getQuery()->getResult();
         if ($hydration && $result) {
@@ -77,5 +81,24 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         }
 
         return $result ? array_column($result, 'id') : [];
+    }
+
+    public function getGroupsData(Group|int $group): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+
+        $result = $qb
+            ->select('p.name')
+            ->from(Group::class, 'g')
+            ->innerJoin('g.aclPermissions', 'acl')
+            ->innerJoin('acl.package', 'p')
+            ->where('g.id = :gid')
+            ->setParameter('gid', $group instanceof Group ? $group->getId() : $group)
+            ->getQuery()
+            ->getArrayResult();
+
+        $packages = array_column($result, 'name');
+
+        return ['packages' => $packages];
     }
 }

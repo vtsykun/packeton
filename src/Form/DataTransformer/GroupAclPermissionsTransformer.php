@@ -4,6 +4,7 @@ namespace Packeton\Form\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\GroupAclPermission;
 use Packeton\Entity\Package;
@@ -36,12 +37,20 @@ class GroupAclPermissionsTransformer implements DataTransformerInterface
             $value = $value->map(
                 function (GroupAclPermission $permission) {
                     $model = new PackagePermission();
-                    $model->setName($permission->getPackage()->getName());
                     $model->setVersion($permission->getVersion());
                     $model->setSelected((bool) $permission->getGroup());
+                    try {
+                        $model->setName($permission->getPackage()->getName());
+                    } catch (EntityNotFoundException) { // If SQLite FK error
+                        $model->setName('DELETED');
+                    }
+
                     return $model;
                 }
             );
+
+            $value = $value->toArray();
+            usort($value, fn($a, $b) => $a->getSelected() ^ $b->getSelected() === 0 ?  $a->getName() <=> $b->getName() : -1 * ($a->getSelected() <=> $b->getSelected()));
         }
 
         return $value;
@@ -62,7 +71,7 @@ class GroupAclPermissionsTransformer implements DataTransformerInterface
 
         $repo = $this->registry->getRepository(Package::class);
         if ($value instanceof Collection) {
-            $value = $value->filter(function (PackagePermission $permission) { return $permission->getSelected(); });
+            $value = $value->filter(fn (PackagePermission $permission) => $permission->getSelected());
             $value = $value->map(
                 function (PackagePermission $permission) use ($repo) {
                     $package = $repo->findOneBy(['name' => $permission->getName()]);

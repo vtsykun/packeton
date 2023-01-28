@@ -4,6 +4,7 @@ namespace Packeton\Form\Type;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\GroupAclPermission;
 use Packeton\Entity\Package;
@@ -61,7 +62,11 @@ class GroupAclPermissionCollectionType extends AbstractType
     {
         $packages = $collection->map(
             function (GroupAclPermission $permission) {
-                return $permission->getPackage()->getName();
+                try {
+                    return $permission->getPackage()->getName();
+                } catch (EntityNotFoundException) {
+                    return null;
+                }
             }
         );
 
