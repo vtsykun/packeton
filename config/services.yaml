@@ -103,23 +103,13 @@ services:
 
     Packeton\Composer\PackagistFactory:
         arguments:
-            $composerHome: '%env(resolve:APP_COMPOSER_HOME)%'
+            $composerHome: '%composer_home_dir%'
             $githubNoApi: '%packeton_github_no_api%'
-
-    Packeton\Service\UpdaterWorker:
-        tags:
-            - { name: queue_worker, topic: package:updates }
 
     Packeton\Cron\CronWorker:
         arguments:
             $consoleHandler: '@?monolog.handler.console'
             $scheduleRunner: '@okvpn_cron.runner_default'
-        tags:
-            - { name: queue_worker, topic: cron:execute }
-
-    Packeton\Webhook\SenderWorker:
-        tags:
-            - { name: queue_worker, topic: webhook:send }
 
     Packeton\EventListener\DoctrineListener:
         tags:

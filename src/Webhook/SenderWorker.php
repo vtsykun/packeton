@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Webhook;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Attribute\AsWorker;
 use Packeton\Entity\Job;
 use Packeton\Entity\Webhook;
 use Packeton\Service\JobScheduler;
@@ -15,6 +16,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
+#[AsWorker('webhook:send')]
 class SenderWorker
 {
     public const MAX_NESTING_LEVEL = 3;
