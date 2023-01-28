@@ -86,6 +86,22 @@ class ProxyOptions extends MetadataOptions
      */
     public function http(): array
     {
-        return $this->config['options'] ?? [];
+        return $this->config['options']['http'] ?? [];
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getAuthBasic(): ?array
+    {
+        return $this->config['http_basic'] ?? null;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getComposerAuth(): ?array
+    {
+        return $this->config['composer_auth'] ?? null;
     }
 }

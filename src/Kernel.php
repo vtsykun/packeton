@@ -16,6 +16,7 @@ use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\ErrorHandler\DebugClassLoader;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
@@ -81,5 +82,9 @@ class Kernel extends BaseKernel
 
         EncryptedTextType::setCrypter($crypter);
         EncryptedArrayType::setCrypter($crypter);
+
+        if (class_exists(DebugClassLoader::class)) {
+            DebugClassLoader::disable();;
+        }
     }
 }

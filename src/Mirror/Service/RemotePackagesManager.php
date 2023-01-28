@@ -19,10 +19,12 @@ class RemotePackagesManager
 
     public function allEnabled(): array
     {
+        return $this->redis->zRange("repo:{$this->repo}:enabled", 0, -1) ?: [];
     }
 
     public function allApproved(): array
     {
+        return $this->redis->zRange("repo:{$this->repo}:approve", 0, -1) ?: [];
     }
 
     public function markApprove(string $name): void

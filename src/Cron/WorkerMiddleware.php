@@ -19,7 +19,7 @@ class WorkerMiddleware implements MiddlewareEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function handle(ScheduleEnvelope $envelope, StackInterface $stack): ScheduleEnvelope
     {

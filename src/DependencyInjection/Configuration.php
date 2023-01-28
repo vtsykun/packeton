@@ -78,22 +78,30 @@ class Configuration implements ConfigurationInterface
                     ->useAttributeAsKey('name')
                     ->prototype('array');
 
+        $jsonNormalizer = static function ($json) {
+            if (\is_string($json) && \is_array($opt = @json_decode($json, true))) {
+                return $opt;
+            }
+            if (!\is_array($json)) {
+                throw new \InvalidArgumentException('This node must be array or JSON string');
+            }
+
+            return $json;
+        };
+
         $mirrorNodeBuilder
             ->children()
                 ->scalarNode('url')->end()
-                ->variableNode('repository_json')
-                    ->beforeNormalization()
-                    ->always()
-                    ->then(static function ($repository) {
-                        if (\is_string($repository) && \is_array($repo = @json_decode($repository, true))) {
-                            return $repo;
-                        }
-                        if (\is_string($repository) && \is_file($repository)) {
-                            $repository = \file_get_contents($repository);
-                            $repository = $repository ? \json_decode($repository, true) : null;
-                        }
-                        return $repository;
-                    })
+                ->variableNode('options')
+                    ->beforeNormalization()->always()->then($jsonNormalizer)->end()
+                ->end()
+                ->variableNode('composer_auth')
+                    ->beforeNormalization()->always()->then($jsonNormalizer)->end()
+                ->end()
+                ->arrayNode('http_basic')
+                    ->children()
+                        ->scalarNode('username')->cannotBeEmpty()->end()
+                        ->scalarNode('password')->cannotBeEmpty()->end()
                     ->end()
                 ->end()
                 ->scalarNode('sync_interval')->defaultValue(86400)->end()

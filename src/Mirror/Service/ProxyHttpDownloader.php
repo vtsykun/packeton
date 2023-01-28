@@ -21,11 +21,20 @@ class ProxyHttpDownloader
     {
         $config = $this->packagistFactory->createConfig();
         $io ??= new NullIO();
+
+        if ($composer = $options->getComposerAuth()) {
+            $config->merge(['config' => $composer]);
+        }
+
         $http = new HttpDownloader($io, $config);
+        $origin = \parse_url($options->getUrl(), \PHP_URL_HOST);
+
+        if ($basic = $options->getAuthBasic()) {
+            $io->setAuthentication($origin, $basic['username'], $basic['password']);
+        }
 
         // capture username/password from URL if there is one
         if (Preg::isMatchStrictGroups('{^https?://([^:/]+):([^@/]+)@([^/]+)}i', $options->getUrl(), $match)) {
-            $origin = \parse_url($options->getUrl(), \PHP_URL_HOST);
             $io->setAuthentication($origin, \rawurldecode($match[1]), \rawurldecode($match[2]));
         }
 
