@@ -5,12 +5,13 @@
         {%- if app.request.attributes.get('_route') == 'groups_update' %}
             Update group
         {%- else %}
-            Create a ACL new group
+            Create an ACL group
         {%- endif %}
     </h2>
 
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+        {{ form_errors(form) }}
         {{ form_row(form.name) }}
         <h3>Access matrix</h3>
             <div>

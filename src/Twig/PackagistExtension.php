@@ -3,6 +3,7 @@
 namespace Packeton\Twig;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Group;
 use Packeton\Entity\Job;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
@@ -36,6 +37,7 @@ class PackagistExtension extends AbstractExtension
     {
         return [
             new TwigFunction('package_job_result', [$this, 'getLatestJobResult']),
+            new TwigFunction('get_group_data', [$this, 'getGroupData']),
             new TwigFunction('get_api_token', [$this, 'getApiToken']),
         ];
     }
@@ -47,6 +49,11 @@ class PackagistExtension extends AbstractExtension
             new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash']),
             new TwigFilter('truncate', [$this, 'truncate']),
         ];
+    }
+
+    public function getGroupData(Group|int $group): array
+    {
+        return $this->registry->getRepository(Group::class)->getGroupsData($group);
     }
 
     public function getApiToken(UserInterface $user = null, bool $short = true, bool $generate = false): ?string

@@ -7,30 +7,29 @@
 <section class="row">
     <ul class="packages list-unstyled">
         {% for group in groups %}
-        {% set groupUrl = path('groups_update', { 'id' : group.id }) %}
-        <li data-url="{{ groupUrl }}" class="row">
-            <div class="col-xs-12 package-item">
-                <div class="row">
-                    <div class="col-sm-9 col-lg-11" style="margin-top: 18px">
-                        <h4 class="tab-cell font-bold"><a href="{{ groupUrl }}">{{ group.name }}</a></h4>
-                    </div>
-                    <div class="col-sm-3 col-lg-1">
-                    <div style="font-size: 1.5em">
-                        <ul class="nav">
-                        <li class="launcher-item">
-                            <form action="{{ path('groups_delete', { 'id': group.id}) }}" method="POST"
-                                  onsubmit="return confirm('Are you sure?');"
-                            >
-                                {{ form_widget(csrfForm.createView._token) }}
-                                <button type="submit" title="Delete"><i class="fa fa-ban"></i></button>
-                            </form>
-                        </li>
-                        </ul>
-                    </div>
+            {% set groupUrl = path('groups_update', { 'id' : group.id }) %}
+            {% set data = get_group_data(group) %}
+            <li data-url="{{ groupUrl }}" class="row">
+                <div class="col-xs-12 package-item" style="border-width: 1px;border-style: groove; border-radius: 0">
+                    <div class="row" style="margin: 6px 12px;">
+                        <div class="s-flex">
+                            <h4 class="s-flex tab-cell font-bold"><a class="no-underline" href="{{ groupUrl }}">{{ group.name }}</a></h4>
+                            <div style="width: 100%; margin-top: 10px">
+                                <form action="{{ path('groups_delete', { 'id': group.id}) }}" style="float: right" method="POST"
+                                      onsubmit="return confirm('Are you sure?');"
+                                >
+                                    {{ form_widget(csrfForm.createView._token) }}
+                                    <button type="submit" class="btn btn-danger" title="Delete">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <p class="link-gray" style="font-size: 12px">
+                            Packages: {{ data['packages']|join(', ') }}
+                        </p>
                     </div>
                 </div>
-            </div>
-        </li>
+            </li>
         {% endfor %}
     </ul>
 
