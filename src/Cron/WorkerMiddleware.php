@@ -27,7 +27,7 @@ class WorkerMiddleware implements MiddlewareEngineInterface
             return $stack->next()->handle($envelope, $stack);
         }
 
-        $envelopeData = serialize($envelope->without(WorkerStamp::class));
+        $envelopeData = \serialize($envelope->without(WorkerStamp::class));
         $this->jobScheduler->publish(WorkerStamp::JOB_NAME, [
             'envelope' => $envelopeData
         ]);

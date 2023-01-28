@@ -15,6 +15,7 @@ use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\ErrorHandler\DebugClassLoader;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
@@ -24,6 +25,15 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait {
         configureRoutes as traitConfigureRoutes;
+    }
+
+    public function __construct(string $environment, bool $debug)
+    {
+        if (\class_exists(DebugClassLoader::class)) {
+            DebugClassLoader::disable();
+        }
+
+        parent::__construct($environment, $debug);
     }
 
     private function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void

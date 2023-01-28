@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Packeton\Cron\Handler;
 
+use Okvpn\Bundle\CronBundle\CronServiceInterface;
 use Packeton\Webhook\HookBus;
 
-class ScheduleHookHandler
+class ScheduleHookHandler implements CronServiceInterface
 {
-    private $hookBus;
-
-    public function __construct(HookBus $hookBus)
+    public function __construct(private readonly HookBus $hookBus)
     {
-        $this->hookBus = $hookBus;
     }
 
     /**

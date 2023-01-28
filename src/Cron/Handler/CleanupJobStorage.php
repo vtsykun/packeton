@@ -5,28 +5,27 @@ declare(strict_types=1);
 namespace Packeton\Cron\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Okvpn\Bundle\CronBundle\Attribute\AsCron;
 use Packeton\Entity\Job;
 use Psr\Log\LoggerInterface;
 
 /**
  * Cron command to cleanup jobs storage
  */
+#[AsCron('49 0 * * *')]
 class CleanupJobStorage
 {
-    private $registry;
-    private $logger;
-
-    public function __construct(ManagerRegistry $registry, LoggerInterface $logger)
-    {
-        $this->registry = $registry;
-        $this->logger = $logger;
+    public function __construct(
+        private readonly ManagerRegistry $registry,
+        private readonly LoggerInterface $logger
+    ) {
     }
 
-    public function __invoke()
+    public function __invoke(): array
     {
         $keepPeriod = $this->selectKeepPeriod($count);
         $expireDate = new \DateTime('now', new \DateTimeZone('UTC'));
-        $expireDate->modify(sprintf('-%d days', $keepPeriod));
+        $expireDate->modify(\sprintf('-%d days', $keepPeriod));
 
         $rowCount = $this->registry->getRepository(Job::class)
             ->createQueryBuilder('j')
@@ -36,7 +35,7 @@ class CleanupJobStorage
             ->getQuery()
             ->execute();
 
-        $this->logger->info(sprintf('Removed %s jobs from storage, since: %s, jobs count: %s', $rowCount, $expireDate->format('c'), $count));
+        $this->logger->info(\sprintf('Removed %s jobs from storage, since: %s, jobs count: %s', $rowCount, $expireDate->format('c'), $count));
 
         return [
             'since' => $expireDate->format('c'),
@@ -45,7 +44,7 @@ class CleanupJobStorage
         ];
     }
 
-    protected function selectKeepPeriod(&$count = null)
+    protected function selectKeepPeriod(&$count = null): int
     {
         $count = $this->registry->getRepository(Job::class)
             ->createQueryBuilder('j')
@@ -54,17 +53,12 @@ class CleanupJobStorage
             ->getQuery()
             ->getSingleScalarResult();
 
-        switch ($count) {
-            case $count > 60000:
-                return 2;
-            case $count > 40000:
-                return 5;
-            case $count > 25000:
-                return 10;
-            case $count > 10000:
-                return 21;
-        }
-
-        return 60;
+        return match ($count) {
+            $count > 60000 => 2,
+            $count > 40000 => 5,
+            $count > 25000 => 10,
+            $count > 10000 => 21,
+            default => 60,
+        };
     }
 }
