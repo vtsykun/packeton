@@ -43,7 +43,7 @@
         "knplabs/knp-menu-bundle": "^3.2",
         "laminas/laminas-feed": "^2.20",
         "nelmio/cors-bundle": "^2.2",
-        "okvpn/cron-bundle": "^0.1.1",
+        "okvpn/cron-bundle": "^0.2",
         "oro/doctrine-extensions": "^2.0",
         "pagerfanta/core": "^3.7",
         "pagerfanta/doctrine-orm-adapter": "^3.7",
