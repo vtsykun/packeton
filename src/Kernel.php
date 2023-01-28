@@ -28,6 +28,15 @@ class Kernel extends BaseKernel
         configureRoutes as traitConfigureRoutes;
     }
 
+    public function __construct(string $environment, bool $debug)
+    {
+        if (\class_exists(DebugClassLoader::class)) {
+            DebugClassLoader::disable();
+        }
+
+        parent::__construct($environment, $debug);
+    }
+
     private function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
     {
         $configDir = $this->getConfigDir();
