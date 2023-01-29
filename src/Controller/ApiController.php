@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Attribute\Vars;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+#[Route(defaults: ['_format' => 'json'])]
 class ApiController extends AbstractController
 {
     use ControllerTrait;
@@ -32,12 +34,8 @@ class ApiController extends AbstractController
         protected ValidatorInterface $validator,
     ){}
 
-    /**
-     * @Route("/api/create-package", name="generic_create", defaults={"_format" = "json"}, methods={"POST"})
-     *
-     * {@inheritdoc}
-     */
-    public function createPackageAction(Request $request)
+    #[Route('/api/create-package', name: 'generic_create', methods: ['POST'])]
+    public function createPackageAction(Request $request): Response
     {
         $payload = $this->getJsonPayload($request);
 
@@ -53,7 +51,7 @@ class ApiController extends AbstractController
         $package->setRepository($url);
         $this->container->get(PackageManager::class)->updatePackageUrl($package);
         $errors = $this->validator->validate($package, null, ['Create']);
-        if (count($errors) > 0) {
+        if (\count($errors) > 0) {
             $errorArray = [];
             foreach ($errors as $error) {
                 $errorArray[$error->getPropertyPath()] =  $error->getMessage();
@@ -73,31 +71,30 @@ class ApiController extends AbstractController
         return new JsonResponse(['status' => 'success'], 202);
     }
 
-    /**
-     * @Route("/api/update-package", name="generic_postreceive", defaults={"_format" = "json"})
-     * @Route("/api/github", name="github_postreceive", defaults={"_format" = "json"})
-     * @Route("/api/bitbucket", name="bitbucket_postreceive", defaults={"_format" = "json"})
-     *
-     * {@inheritdoc}
-     */
-    public function updatePackageAction(Request $request)
+    #[Route('/api/github', name: 'github_postreceive')]
+    #[Route('/api/bitbucket', name: 'bitbucket_postreceive')]
+    #[Route('/api/update-package', name: 'generic_postreceive')]
+    #[Route('/api/update-package/{name}', name: 'generic_named_postreceive', requirements: ['name' => '%package_name_regex%'])]
+    public function updatePackageAction(Request $request, #[Vars] Package $package = null): Response
     {
         // parse the payload
         $payload = $this->getJsonPayload($request);
 
-        if (!$payload && !$request->get('composer_package_name')) {
+        if (!$payload && !$request->get('composer_package_name') && null === $package) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
         }
 
-        $packages = [];
+        $packages = [$package];
         // Get from query parameter.
         if ($packageNames = $request->get('composer_package_name')) {
-            $packageNames = explode(',', $packageNames);
+            $packageNames = \explode(',', $packageNames);
             $repo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $packageName) {
-                $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
+                $packages = \array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
         }
+
+        $packages = \array_values(\array_filter($packages));
 
         if (isset($payload['project']['git_http_url'])) { // gitlab event payload
             $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
@@ -108,7 +105,7 @@ class ApiController extends AbstractController
         } elseif (isset($payload['repository']['url'])) { // github/anything hook
             $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
             $url = $payload['repository']['url'];
-            $url = str_replace('https://api.github.com/repos', 'https://github.com', $url);
+            $url = \str_replace('https://api.github.com/repos', 'https://github.com', $url);
         } elseif (isset($payload['repository']['links']['html']['href'])) { // bitbucket push event payload
             $urlRegex = '{^(?:https?://|git://|git@)?(?:api\.)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
             $url = $payload['repository']['links']['html']['href'];
@@ -129,7 +126,7 @@ class ApiController extends AbstractController
             $packageNames = (array) $payload['composer']['package_name'];
             $repo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $packageName) {
-                $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
+                $packages = \array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
         } elseif (empty($packages)) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing or invalid payload'], 406);
@@ -147,17 +144,9 @@ class ApiController extends AbstractController
         return $this->receivePost($request, $url, $urlRegex);
     }
 
-    /**
-     * @Route(
-     *     "/api/packages/{package}",
-     *     name="api_edit_package",
-     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
-     *     defaults={"_format" = "json"},
-     *     methods={"PUT"}
-     * )
-     * {@inheritDoc}
-     */
-    public function editPackageAction(Request $request, Package $package)
+
+    #[Route('/api/packages/{name}', name: 'api_edit_package', requirements: ['name' => '%package_name_regex%'], methods: ['PUT'])]
+    public function editPackageAction(Request $request, #[Vars] Package $package): Response
     {
         $user = $this->getUser();
         if (!$package->getMaintainers()->contains($user) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
@@ -169,7 +158,7 @@ class ApiController extends AbstractController
         $package->setRepository($payload['repository']);
         $this->container->get(PackageManager::class)->updatePackageUrl($package);
         $errors = $this->validator->validate($package, null, ["Update"]);
-        if (count($errors) > 0) {
+        if (\count($errors) > 0) {
             $errorArray = [];
             foreach ($errors as $error) {
                 $errorArray[$error->getPropertyPath()] =  $error->getMessage();
@@ -186,11 +175,9 @@ class ApiController extends AbstractController
         return new JsonResponse(['status' => 'success'], 200);
     }
 
-    /**
-     * @Route("/downloads/{name}", name="track_download", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"}, methods={"POST"})
-     * @inheritDoc
-     */
-    public function trackDownloadAction(Request $request, $name)
+
+    #[Route('/downloads/{name}', name: 'track_download', requirements: ['name' => '%package_name_regex%'], methods: ['POST'])]
+    public function trackDownloadAction(Request $request, $name): Response
     {
         $result = $this->getPackageAndVersionId($name, $request->request->get('version_normalized'));
 
@@ -203,11 +190,9 @@ class ApiController extends AbstractController
         return new JsonResponse(['status' => 'success'], 201);
     }
 
-    /**
-     * @Route("/jobs/{id}", name="get_job", requirements={"id"="[a-f0-9]+"}, defaults={"_format" = "json"}, methods={"GET"})
-     * @inheritDoc
-     */
-    public function getJobAction(string $id)
+
+    #[Route('/jobs/{id}', name: 'get_job', requirements: ['id' => '[a-f0-9]+'], methods: ['GET'])]
+    public function getJobAction(string $id): Response
     {
         return new JsonResponse($this->container->get(Scheduler::class)->getJobStatus($id), 200);
     }
@@ -223,13 +208,12 @@ class ApiController extends AbstractController
      * }
      *
      * The version must be the normalized one
-     *
-     * @Route("/downloads/", name="track_download_batch", defaults={"_format" = "json"}, methods={"POST"})
      * @inheritDoc
      */
-    public function trackDownloadsAction(Request $request)
+    #[Route('/downloads/', name: 'track_download_batch', methods: ['POST'])]
+    public function trackDownloadsAction(Request $request): Response
     {
-        $contents = json_decode($request->getContent(), true);
+        $contents = \json_decode($request->getContent(), true);
         if (empty($contents['downloads']) || !is_array($contents['downloads'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid request format, must be a json object containing a downloads key filled with an array of name/version objects'], 200);
         }
@@ -257,23 +241,14 @@ class ApiController extends AbstractController
         return new JsonResponse(['status' => 'success'], 201);
     }
 
-    /**
-     * @Route("/api/webhook-invoke/{name}", name="generic_webhook_invoke", defaults={"_format" = "json", "name" = "default"})
-     *
-     * {@inheritdoc}
-     */
-    public function notifyWebhookAction($name, Request $request)
+
+    #[Route('/api/webhook-invoke/{name}', name: 'generic_webhook_invoke', defaults: ['name' => 'default'], methods: ['POST'])]
+    public function notifyWebhookAction($name, Request $request): Response
     {
-        $payload = array_merge($request->request->all(), $request->query->all());
+        $payload = \array_merge($request->request->all(), $request->query->all());
         unset($payload['token']);
 
-        // Always try to decode json
-        if ($content = $request->getContent()) {
-            $content = @json_decode($content, true);
-            if (is_array($content)) {
-                $payload = array_merge($payload, $content);
-            }
-        }
+        $payload = $payload + ($this->getJsonPayload($request) ?: []);
 
         $context = [
             'event' => Webhook::HOOK_HTTP_REQUEST,
@@ -291,7 +266,7 @@ class ApiController extends AbstractController
             $jobs[] = $bus->dispatch($context, $webhook)->getId();
         }
 
-        return new JsonResponse(['status' => 'success', 'jobs' => $jobs], count($jobs) === 0 ? 200 : 202);
+        return new JsonResponse(['status' => 'success', 'jobs' => $jobs], \count($jobs) === 0 ? 200 : 202);
     }
 
     /**
@@ -308,18 +283,18 @@ class ApiController extends AbstractController
             WHERE p.name = ?
             AND v.normalizedVersion = ?
             LIMIT 1',
-            array($name, $version)
+            [$name, $version]
         );
     }
 
-    protected function getJsonPayload(Request $request)
+    protected function getJsonPayload(Request $request): ?array
     {
-        $payload = $request->request->get('payload') ? json_decode($request->request->get('payload'), true) : null;
+        $payload = $request->request->get('payload') ? \json_decode($request->request->get('payload'), true) : null;
         if (!$payload and $content = $request->getContent()) {
-            $payload = @json_decode($content, true);
+            $payload = @\json_decode($content, true);
         }
 
-        return $payload ?: null;
+        return \is_array($payload) ? $payload : null;
     }
 
     /**
@@ -333,8 +308,8 @@ class ApiController extends AbstractController
     protected function receivePost(Request $request, $url, $urlRegex)
     {
         // try to parse the URL first to avoid the DB lookup on malformed requests
-        if (!preg_match($urlRegex, $url)) {
-            return new Response(json_encode(['status' => 'error', 'message' => 'Could not parse payload repository URL']), 406);
+        if (!\preg_match($urlRegex, $url)) {
+            return new Response(\json_encode(['status' => 'error', 'message' => 'Could not parse payload repository URL']), 406);
         }
 
         // try to find the all package
@@ -350,7 +325,7 @@ class ApiController extends AbstractController
     protected function schedulePostJobs(array $packages)
     {
         if (!$packages) {
-            return new Response(json_encode(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)']), 404);
+            return new Response(\json_encode(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)']), 404);
         }
 
         $jobs = [];
@@ -375,16 +350,16 @@ class ApiController extends AbstractController
      */
     protected function findPackagesByUrl($url, $urlRegex)
     {
-        if (!preg_match($urlRegex, $url, $matched)) {
+        if (!\preg_match($urlRegex, $url, $matched)) {
             return [];
         }
 
         $packages = [];
         $repo = $this->registry->getRepository(Package::class);
         foreach ($repo->findAll() as $package) {
-            if (preg_match($urlRegex, $package->getRepository(), $candidate)
-                && strtolower($candidate['host']) === strtolower($matched['host'])
-                && strtolower($candidate['path']) === strtolower($matched['path'])
+            if (\preg_match($urlRegex, $package->getRepository(), $candidate)
+                && \strtolower($candidate['host']) === \strtolower($matched['host'])
+                && \strtolower($candidate['path']) === \strtolower($matched['path'])
             ) {
                 $packages[] = $package;
             }
@@ -398,7 +373,7 @@ class ApiController extends AbstractController
      */
     public static function getSubscribedServices(): array
     {
-        return array_merge(
+        return \array_merge(
             parent::getSubscribedServices(),
             [
                 PackageManager::class,

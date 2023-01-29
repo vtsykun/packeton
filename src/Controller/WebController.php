@@ -24,6 +24,7 @@ use Pagerfanta\Adapter\CallbackAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -33,12 +34,11 @@ class WebController extends AbstractController
 {
     public function __construct(
         protected ManagerRegistry $registry
-    ){}
+    ){
+    }
 
-    /**
-     * @Route("/", name="home")
-     */
-    public function indexAction(Request $request)
+    #[Route('/', name: 'home')]
+    public function indexAction(Request $request): Response
     {
         $page = $request->query->get('page', 1);
         $paginator = new Pagerfanta($this->createAdapter());
@@ -70,11 +70,9 @@ class WebController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/search/", name="search.ajax")
-     * @Route("/search.{_format}", requirements={"_format"="(html|json)"}, name="search", defaults={"_format"="html"}, methods={"GET"})
-     */
-    public function searchAction(Request $req)
+    #[Route('/search/', name: 'search.ajax')]
+    #[Route('/search.{_format}', name: 'search', requirements: ['_format' => '(html|json)'], defaults: ['_format' => 'html'], methods: ['GET'])]
+    public function searchAction(Request $req): Response
     {
         $packages = [];
         $form = $this->createForm(SearchQueryType::class, new SearchQuery());
@@ -103,10 +101,8 @@ class WebController extends AbstractController
         return $this->render('web/search.html.twig', ['packages' => $paginator]);
     }
 
-    /**
-     * @Route("/statistics", name="stats")
-     */
-    public function statsAction(\Redis $redis)
+    #[Route('/statistics', name: 'stats')]
+    public function statsAction(\Redis $redis): Response
     {
         $packages = $this->registry->getRepository(Package::class)
             ->getPackagesStatisticsByMonthAndYear();

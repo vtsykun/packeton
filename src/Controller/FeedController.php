@@ -26,32 +26,22 @@ use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @author Rafael Dohms <rafael@doh.ms>
- *
- * @Route("/feeds")
  */
+#[Route('/feeds')]
 class FeedController extends AbstractController
 {
     public function __construct(
         protected ManagerRegistry $registry
     ){}
 
-    /**
-     * @Route("/", name="feeds")
-     */
-    public function feedsAction()
+    #[Route('/', name: 'feeds')]
+    public function feedsAction(): Response
     {
         return $this->render('feed/feeds.html.twig');
     }
 
-    /**
-     * @Route(
-     *     "/packages.{_format}",
-     *     name="feed_packages",
-     *     methods={"GET"},
-     *     requirements={"_format"="(rss|atom)"}
-     * )
-     */
-    public function packagesAction(Request $req)
+    #[Route('/packages.{_format}', name: 'feed_packages', requirements: ['_format' => '(rss|atom)'], methods: ['GET'])]
+    public function packagesAction(Request $req): Response
     {
         $repo = $this->registry->getRepository(Package::class);
         $packages = $this->getLimitedResults(
@@ -69,15 +59,8 @@ class FeedController extends AbstractController
         return $this->buildResponse($req, $feed);
     }
 
-    /**
-     * @Route(
-     *     "/releases.{_format}",
-     *     name="feed_releases",
-     *     methods={"GET"},
-     *     requirements={"_format"="(rss|atom)"}
-     * )
-     */
-    public function releasesAction(Request $req)
+    #[Route('/releases.{_format}', name: 'feed_releases', requirements: ['_format' => '(rss|atom)'], methods: ['GET'])]
+    public function releasesAction(Request $req): Response
     {
         $repo = $this->registry->getRepository(Version::class);
         $packages = $this->getLimitedResults(
@@ -95,14 +78,12 @@ class FeedController extends AbstractController
         return $this->buildResponse($req, $feed);
     }
 
-    /**
-     * @Route(
-     *     "/vendor.{vendor}.{_format}",
-     *     name="feed_vendor",
-     *     methods={"GET"},
-     *     requirements={"_format"="(rss|atom)", "vendor"="[A-Za-z0-9_.-]+"}
-     * )
-     */
+    #[Route(
+        '/vendor.{vendor}.{_format}',
+        name: 'feed_vendor',
+        requirements: ['_format' => '(rss|atom)', 'vendor' => '[A-Za-z0-9_.-]+'],
+        methods: ['GET']
+    )]
     public function vendorAction(Request $req, $vendor)
     {
         $repo = $this->registry->getRepository(Version::class);
@@ -121,14 +102,12 @@ class FeedController extends AbstractController
         return $this->buildResponse($req, $feed);
     }
 
-    /**
-     * @Route(
-     *     "/package.{package}.{_format}",
-     *     name="feed_package",
-     *     methods={"GET"},
-     *     requirements={"_format"="(rss|atom)", "package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}
-     * )
-     */
+    #[Route(
+        '/package.{package}.{_format}',
+        name: 'feed_package',
+        requirements: ['_format' => '(rss|atom)', 'package' => '%package_name_regex%'],
+        methods: ['GET']
+    )]
     public function packageAction(Request $req, $package)
     {
         $repo = $this->registry->getRepository(Version::class);

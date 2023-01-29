@@ -22,14 +22,13 @@ use Packeton\Repository\VersionRepository;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @Route("/explore")
- */
+#[Route('/explore')]
 class ExploreController extends AbstractController
 {
     use ControllerTrait;
@@ -40,10 +39,8 @@ class ExploreController extends AbstractController
         protected FavoriteManager $favoriteManager,
     ) {}
 
-    /**
-     * @Route("", name="browse")
-     */
-    public function exploreAction(\Redis $redis)
+    #[Route('', name: 'browse')]
+    public function exploreAction(\Redis $redis): Response
     {
         /** @var PackageRepository $pkgRepo */
         $pkgRepo = $this->registry->getRepository(Package::class);
@@ -80,10 +77,9 @@ class ExploreController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/popular.{_format}", name="browse_popular", defaults={"_format"="html"})
-     */
-    public function popularAction(Request $req, \Redis $redis)
+
+    #[Route('popular.{_format}', name: 'browse_popular', defaults: ['_format' => 'html'])]
+    public function popularAction(Request $req, \Redis $redis): Response
     {
         $perPage = $req->query->getInt('per_page', 15);
         if ($perPage <= 0 || $perPage > 100) {

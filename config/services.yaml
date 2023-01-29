@@ -38,6 +38,10 @@ parameters:
     composer_home_dir: '%env(resolve:APP_COMPOSER_HOME)%'
     mirror_repos_meta_dir: '%composer_home_dir%/proxy-meta'
     mirror_repos_dist_dir: '%composer_home_dir%/proxy-dist'
+    
+    package_name_regex: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+'
+    package_name_regex_v2: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'
+    package_name_regex_v1: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.$-]+' # package$hash
 
 services:
     # default configuration for services in *this* file

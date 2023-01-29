@@ -35,7 +35,7 @@ class MirrorController extends AbstractController
         return $this->renderMetadata($metadata, $request);
     }
 
-    #[Route('/{alias}/p2/{package}.json', name: 'mirror_metadata_v2', requirements: ['package' => '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'], methods: ['GET'])]
+    #[Route('/{alias}/p2/{package}.json', name: 'mirror_metadata_v2', requirements: ['package' => '%package_name_regex_v2%'], methods: ['GET'])]
     public function metadataV2Action(string $package, string $alias, Request $request): Response
     {
         $devStability = \str_ends_with($package, '~dev');
@@ -48,7 +48,7 @@ class MirrorController extends AbstractController
         return $this->renderMetadata($metadata, $request);
     }
 
-    #[Route('/{alias}/pkg/{package}.json', name: 'mirror_metadata_v1', requirements: ['package' => '[A-Za-z0-9_.-]+/[A-Za-z0-9_.$-]+'], methods: ['GET'])]
+    #[Route('/{alias}/pkg/{package}.json', name: 'mirror_metadata_v1', requirements: ['package' => '%package_name_regex_v1%'], methods: ['GET'])]
     public function packageAction(string $package, string $alias, Request $request): Response
     {
         $metadata = $this->wrap404Error($alias, fn (PRI $repo) => $repo->findPackageMetadata($package));

@@ -18,7 +18,7 @@ trait ControllerTrait
     protected function getPackagesMetadata($packages)
     {
         $ids = [];
-        if (!count($packages)) {
+        if (!\count($packages)) {
             return [];
         }
 
@@ -28,7 +28,7 @@ trait ControllerTrait
             if ($package instanceof Package) {
                 $ids[] = $package->getId();
                 $favs[$package->getId()] = $this->favoriteManager->getFaverCount($package);
-            } elseif (is_array($package)) {
+            } elseif (\is_array($package)) {
                 $solarium = true;
                 $ids[] = $package['id'];
             } else {
