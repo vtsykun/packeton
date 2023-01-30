@@ -9,6 +9,7 @@ use Packeton\Mirror\Model\GZipTrait;
 use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Service\Filesystem;
 use Packeton\Mirror\Service\RemotePackagesManager;
+use Packeton\Mirror\Service\ZipballDownloadManager;
 
 /**
  * Filesystem mirror proxy repo for metadata.
@@ -28,7 +29,8 @@ class RemoteProxyRepository extends AbstractProxyRepository
         protected ?string $mirrorRepoMetaDir,
         protected Filesystem $filesystem,
         protected \Redis $redis,
-        protected RemotePackagesManager $rpm
+        protected RemotePackagesManager $rpm,
+        protected ZipballDownloadManager $zipballManager
     ) {
         if (null === $mirrorRepoMetaDir) {
             $mirrorRepoMetaDir = ConfigFactory::getHomeDir();
@@ -38,6 +40,8 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $this->rootFilename = $this->mirrorRepoMetaDir . '/' . self::ROOT_PACKAGE;
         $this->providersDir = $this->mirrorRepoMetaDir . '/p/';
         $this->packageDir = $this->mirrorRepoMetaDir . '/package/';
+
+        $this->zipballManager->setRepository($this);
     }
 
     /**
@@ -175,7 +179,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $this->mirrorRepoMetaDir;
     }
 
-    public function getStats(): ?array
+    public function getStats(): array
     {
         $stats = $this->redis->get("proxy-info-{$this->repoConfig['name']}");
         $stats = $stats ? json_decode($stats, true) : [];
@@ -183,14 +187,26 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return is_array($stats) ? $stats : [];
     }
 
+    public function clearStats(array $stats = []): void
+    {
+        $this->redis->set("proxy-info-{$this->repoConfig['name']}", json_encode($stats));
+    }
+
     public function setStats(array $stats = []): void
     {
+        $stats = \array_merge($this->getStats(), $stats);
+
         $this->redis->set("proxy-info-{$this->repoConfig['name']}", json_encode($stats));
     }
 
     public function getPackageManager(): RemotePackagesManager
     {
         return $this->rpm;
+    }
+
+    public function getDownloadManager(): ZipballDownloadManager
+    {
+        return $this->zipballManager;
     }
 
     protected function packageShort(string $package, string $hash = null): string

@@ -16,12 +16,7 @@ class MetadataOptions
 
     public function isLazy(): bool
     {
-        return ($this->config['lazy'] ?? false);
-    }
-
-    public function isLazyProviders(): bool
-    {
-        return $this->repoConfig['skip_fetch_providers'] ?? false;
+        return ($this->config['sync_lazy'] ?? false);
     }
 
     public function parentNotify(): bool

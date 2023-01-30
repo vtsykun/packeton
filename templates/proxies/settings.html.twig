@@ -1,0 +1,34 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}{{ proxy.alias }} - Settings Proxy - {{ parent() }}{% endblock %}
+
+{% block content %}
+    <h2 class="title">
+        {% include 'proxies/info_caps.html.twig' %}
+    </h2>
+    <hr>
+
+    <style>
+        #settings-form label {
+            margin-bottom: 0;
+        }
+        #settings-form input[type=radio] {
+            margin: 0
+        }
+        .form-group > label {
+            font-weight: bold;
+        }
+    </style>
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-sm-6', id: 'settings-form' } }) }}
+        {{ form_widget(form) }}
+
+        <a href="{{ path('proxy_view', {'alias': proxy.alias}) }}"> << Go Back</a>
+        <input class="btn btn-block btn-default btn-lg" type="submit" value="Update Settings" />
+        {{ form_end(form) }}
+
+        <div class="col-sm-6">
+            {{ 'abandon.warning'|trans|raw }}
+        </div>
+    </section>
+{% endblock %}

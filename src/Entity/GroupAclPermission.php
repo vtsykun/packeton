@@ -88,7 +88,7 @@ class GroupAclPermission
      * @param Group $group
      * @return GroupAclPermission
      */
-    public function setGroup(Group $group)
+    public function setGroup(Group $group = null)
     {
         $this->group = $group;
         return $this;

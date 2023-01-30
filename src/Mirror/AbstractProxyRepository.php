@@ -50,12 +50,17 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
         return null;
     }
 
-    public function getStats(): ?array
+    public function getStats(): array
     {
         return [];
     }
 
     public function setStats(array $stats = []): void
     {
+    }
+
+    public function resetProxyOptions(): void
+    {
+        $this->proxyOptions = null;
     }
 }

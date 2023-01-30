@@ -24,6 +24,7 @@ class RemoteSyncProxiesFacade
     {
         $this->syncProvider->setIO($io);
 
+        $stats = ['last_sync' => \date('Y-m-d H:i:s')];
         if (self::FULL_RESET & $flags) {
             $io->notice('Remove all sync data and execute full resync!');
 
@@ -31,7 +32,7 @@ class RemoteSyncProxiesFacade
             $cfs = new \Composer\Util\Filesystem();
             $cfs->remove($repo->getRootDir());
 
-            $repo->setStats([]);
+            $repo->clearStats();
             $io->notice('All data removed!');
         }
 
@@ -47,7 +48,7 @@ class RemoteSyncProxiesFacade
 
         if ($repo->isRootFresh($root)) {
             $io->info('Root is not changes, skip update providers');
-            return [];
+            return $stats;
         }
 
         $providersForUpdate = [];
@@ -63,14 +64,14 @@ class RemoteSyncProxiesFacade
         if (empty($providerUrl) || $config->isLazy()) {
             $io->notice('Skipping sync packages, lazy sync.');
             $repo->dumpRootMeta($root);
-            return [];
+            return $stats;
         }
 
-        $updated = 0;
+        $updated = $success = 0;
         $maxErrors = 3;
         foreach ($this->getAllProviders($providersForUpdate, $repo, $config) as $provName => $providersChunk) {
             $io->info("Loading chunk #$provName");
-            $packages = $skipped = [];
+
             try {
                 [$packages, $skipped] = $this->syncProvider->loadPackages($repo, $providersChunk, $providerUrl);
             } catch (TransportException $e) {
@@ -86,13 +87,14 @@ class RemoteSyncProxiesFacade
             }
 
             $updated += \count($packages);
-            $success = \count($packages) + \count($skipped);
+            $success += \count($packages) + \count($skipped);
             $io->info("Total updated $updated packages.");
         }
 
+        $stats += ['pkg_updated' => $updated, 'pkg_total' => $success];
         $repo->dumpRootMeta($root);
 
-        return ['pkg_updated' => $updated];
+        return $stats;
     }
 
     private function getAllProviders($providersForUpdate, RemoteProxyRepository $repo, ProxyOptions $config): iterable
@@ -113,7 +115,7 @@ class RemoteSyncProxiesFacade
     private function syncLazy(RemoteProxyRepository $repo, IOInterface $io, ProxyOptions $config): array
     {
         $stats = [];
-        $packages = $repo->getPackageManager()->allEnabled();
+        $packages = $repo->getPackageManager()->getEnabled();
 
         $http = $this->syncProvider->initHttpDownloader($config);
         if ($apiUrl = $config->getV2SyncApi()) {

@@ -1,0 +1,18 @@
+<p>To enable proxy, please add these lines to your composer.json file:</p>
+{% if proxy is defined and proxy.packagist %}
+    <pre>{
+  "repositories": [
+    { "type": "composer", "url": "{{ repoUrl }}"},
+    { "packagist": false }
+  ]
+}</pre>
+{% else %}
+    <pre>{
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "{{ repoUrl }}"
+    }
+  ]
+}</pre>
+{% endif %}

@@ -22,9 +22,11 @@ class JobScheduler
      *
      * @param string $type
      * @param array|Job|null $job
+     * @param int|null $hash
+     *
      * @return Job
      */
-    public function publish(string $type, $job = null): Job
+    public function publish(string $type, array|Job|null $job = null, int $hash = null): Job
     {
         if ($job instanceof Job) {
             $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
@@ -35,6 +37,12 @@ class JobScheduler
             $job->setType($type);
             $job->setPayload($payload);
             $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
+        }
+
+        $job->setPackageId($hash);
+        if (null !== $hash && null !== $this->persister->getPendingJob($type, $hash)) {
+            $job->setStatus(Job::STATUS_COMPLETED);
+            return $job;
         }
 
         $this->persister->persist($job);

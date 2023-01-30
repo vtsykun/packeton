@@ -49,6 +49,7 @@ class MenuBuilder
         $menu->addChild($this->translator->trans('menu.my_groups'), ['label' => '<span class="fas fa-users"></span>' . $this->translator->trans('menu.my_groups'), 'route' => 'groups_index', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.ssh_keys'), ['label' => '<span class="fas fa-key"></span>' . $this->translator->trans('menu.ssh_keys'), 'route' => 'user_add_sshkey', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.webhooks'), ['label' => '<span class="fas fa-bell"></span>' . $this->translator->trans('menu.webhooks'), 'route' => 'webhook_index', 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.proxies'), ['label' => '<span class="fas fa-random"></span>' . $this->translator->trans('menu.proxies'), 'route' => 'proxies_list', 'extras' => ['safe_label' => true]]);
 
         return $menu;
     }

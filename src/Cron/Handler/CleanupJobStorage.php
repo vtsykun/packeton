@@ -53,7 +53,7 @@ class CleanupJobStorage
             ->getQuery()
             ->getSingleScalarResult();
 
-        return match ($count) {
+        return match (true) {
             $count > 60000 => 2,
             $count > 40000 => 5,
             $count > 25000 => 10,

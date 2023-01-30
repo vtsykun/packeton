@@ -1,15 +1,17 @@
 {% extends "layout.html.twig" %}
 
+{% block title %}Proxies - {{ parent() }}{% endblock %}
+
 {% block content %}
 <section class="row">
+    <h2>Proxies and Mirroring</h2><hr>
+    {% if proxies|length > 0 %}
     <ul class="packages user-grid list-unstyled">
         {% for proxy in proxies %}
-
-            {% set viewPath = '' %}
+            {% set viewPath = path('proxy_view', {'alias': proxy.alias }) %}
             <li data-url="{{ viewPath }}" class="row">
                 <div class="col-xs-12 package-item">
                     <div class="row" style="margin: 6px 12px;">
-
                         <div class="s-flex">
                             <a href="{{ viewPath }}" class="s-flex no-underline link-gray-dark">
                                 {% if proxy.logo %}
@@ -20,16 +22,41 @@
                                     <span class="role-name">{{ proxy.url }}</span>
                                 </div>
                             </a>
-
                         </div>
+                        {% set caps = proxy.capabilities %}
+                        {% if caps|length > 0 %}
                         <p class="link-gray" style="font-size: 12px">
-                            Active: Yes<br>
-                            Expires at: 1212
+                            Capabilities: {{ caps|map(value => "<span class='role-name'>#{value}</span>")|join(' ')|raw }}
+                        </p>
+                        {% endif %}
+                        <p class="link-gray" style="font-size: 12px">
+                            Lazy: {{ proxy.lazy ? 'Yes' : 'No' }} <br>
+                            Last sync: {{ proxy.getStats('last_sync', 'N/A') }} <br>
+                            Packages: {{ proxy.getStats('pkg_total', 'N/A') }} <br>
                         </p>
                     </div>
                 </div>
             </li>
         {% endfor %}
     </ul>
+    {% else %}
+    <section class="col-md-12">
+        <p>To enable mirroring and proxies, you need to update the application configuration, see docs</p>
+        <pre>
+
+# config/packages/example.yaml
+packeton:
+  mirrors:
+#   packagist:
+#     url: https://repo.packagist.org
+
+    magentocom:
+      url: https://packages.example.com
+      http_basic:
+        username: ****
+        password: ****
+        </pre>
+    </section>
+    {% endif %}
 </section>
 {% endblock %}

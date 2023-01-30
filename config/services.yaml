@@ -53,6 +53,7 @@ services:
             $jwtTokenConfig: '%packeton_jws_config%'
             $jwtSignAlgorithm: '%packeton_jws_algo%'
             $mirrorRepoMetaDir: '%mirror_repos_meta_dir%'
+            $mirrorDistDir: '%mirror_repos_dist_dir%'
             'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:

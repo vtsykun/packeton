@@ -18,7 +18,8 @@ class SyncProviderService
 
     public function __construct(
         private readonly ProxyHttpDownloader $downloader,
-    ) {}
+    ) {
+    }
 
     public function loadRootComposer(RemoteProxyRepository $repo): array
     {

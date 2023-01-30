@@ -10,10 +10,13 @@ use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Model\ProxyRepositoryInterface as PRI;
 use Packeton\Mirror\RootMetadataMerger;
 use Packeton\Mirror\Service\ComposeProxyRegistry;
+use Packeton\Security\Acl\ObjectIdentity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/mirror', defaults:['_format' => 'json'])]
 class MirrorController extends AbstractController
@@ -23,6 +26,21 @@ class MirrorController extends AbstractController
         protected RootMetadataMerger $metadataMerger,
         protected MetadataMinifier $minifier,
     ) {
+    }
+
+    #[Route('/{alias}', name: 'mirror_index', defaults: ['_format' => 'html'], methods: ['GET'])]
+    public function index(string $alias): Response
+    {
+        try {
+            $this->checkAccess($alias);
+            $this->proxyRegistry->createRepository($alias);
+        } catch (MetadataNotFoundException $e) {
+            throw $this->createNotFoundException($e->getMessage(), $e);
+        }
+
+        $repo = $this->generateUrl('mirror_index', ['alias' => $alias], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        return $this->render('proxies/mirror.html.twig', ['alias' => $alias, 'repoUrl' => $repo]);
     }
 
     #[Route('/{alias}/packages.json', name: 'mirror_root', methods: ['GET'])]
@@ -56,6 +74,30 @@ class MirrorController extends AbstractController
         return $this->renderMetadata($metadata, $request);
     }
 
+    #[Route(
+        '/{alias}/zipball/{package}/{version}/{ref}.{type}',
+        name: 'mirror_zipball',
+        requirements: ['package' => '%package_name_regex%'],
+        methods: ['GET']
+    )]
+    public function zipball(string $alias, string $package, string $version, string $ref): Response
+    {
+        try {
+            $this->checkAccess($alias);
+            $dm = $this->proxyRegistry->getProxyDownloadManager($alias);
+
+            $path = $dm->distPath($package, $version, $ref);
+        } catch (MetadataNotFoundException $e) {
+            throw $this->createNotFoundException($e->getMessage(), $e);
+        }
+
+        $response = new BinaryFileResponse($path);
+        $response->setAutoEtag();
+        $response->setPublic();
+
+        return $response;
+    }
+
     // provider - proxy full url name, include providers is not changed for root
     #[Route('/{alias}/{provider}', name: 'mirror_provider_includes', requirements: ['provider' => '.+'], methods: ['GET'])]
     public function providerAction(Request $request, $alias, $provider): Response
@@ -77,10 +119,20 @@ class MirrorController extends AbstractController
     protected function wrap404Error(string $alias, callable $callback): JsonMetadata
     {
         try {
+            $this->checkAccess($alias);
             $repo = $this->proxyRegistry->createRepository($alias);
+
             return $callback($repo);
         } catch (MetadataNotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
+        }
+    }
+
+    protected function checkAccess(string $alias)
+    {
+        // ROLE_ADMIN have access to all proxies views
+        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('VIEW', new ObjectIdentity($alias, PRI::class))) {
+            throw $this->createAccessDeniedException();
         }
     }
 }

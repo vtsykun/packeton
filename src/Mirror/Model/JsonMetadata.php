@@ -31,7 +31,8 @@ class JsonMetadata
 
     public function decodeJson(): array
     {
-        return \json_decode($this->getContent(), true);
+        $data = \json_decode($this->getContent(), true);
+        return \is_array($data) ? $data : [];
     }
 
     public function hash(): ?string

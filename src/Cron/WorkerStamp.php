@@ -8,5 +8,11 @@ use Okvpn\Bundle\CronBundle\Model\CommandStamp;
 
 class WorkerStamp implements CommandStamp
 {
-    public const JOB_NAME = 'cron:execute';
+    public const DEFAULT_JOB_NAME = 'cron:execute';
+
+    public function __construct(
+        public readonly bool $asJob = false,
+        public readonly ?int $hash = null,
+    ) {
+    }
 }

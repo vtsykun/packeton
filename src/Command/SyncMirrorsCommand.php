@@ -63,7 +63,8 @@ class SyncMirrorsCommand extends Command
     {
         $io = new ConsoleIO($input, $output, new HelperSet());
         $flags = $input->getOption('force') ? 1 : 0;
-        $this->syncFacade->sync($repo, $io, $flags);
+        $stats = $this->syncFacade->sync($repo, $io, $flags);
+        $repo->setStats($stats);
 
         return 0;
     }

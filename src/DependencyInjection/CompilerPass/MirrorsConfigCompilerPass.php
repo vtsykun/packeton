@@ -7,6 +7,7 @@ namespace Packeton\DependencyInjection\CompilerPass;
 use Packeton\Mirror\RemoteProxyRepository;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\Service\RemotePackagesManager;
+use Packeton\Mirror\Service\ZipballDownloadManager;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
@@ -39,9 +40,13 @@ final class MirrorsConfigCompilerPass implements CompilerPassInterface
         $rmp->setArgument('$repo', $name);
         $container->setDefinition($rmpId = 'packeton.mirror_rmp.' . $name, $rmp);
 
+        $container->setDefinition($dmId = 'packeton.mirror_dm.' . $name, new ChildDefinition(ZipballDownloadManager::class));
+
         $service = new ChildDefinition(RemoteProxyRepository::class);
+
         $service->setArgument('$repoConfig', ['name' => $name, 'type' => 'composer'] + $repoConfig)
-            ->setArgument('$rpm', new Reference($rmpId));
+            ->setArgument('$rpm', new Reference($rmpId))
+            ->setArgument('$zipballManager', new Reference($dmId));
 
         $container
             ->setDefinition($serviceId = $this->getMirrorServiceId($name), $service);

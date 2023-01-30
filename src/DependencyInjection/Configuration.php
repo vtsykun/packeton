@@ -100,11 +100,11 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('http_basic')
                     ->children()
-                        ->scalarNode('username')->cannotBeEmpty()->end()
-                        ->scalarNode('password')->cannotBeEmpty()->end()
+                        ->scalarNode('username')->isRequired()->end()
+                        ->scalarNode('password')->isRequired()->end()
                     ->end()
                 ->end()
-                ->scalarNode('sync_interval')->defaultValue(86400)->end()
+                ->scalarNode('sync_interval')->end()
                 ->booleanNode('sync_lazy')->end()
                 ->booleanNode('enable_dist_mirror')->defaultTrue()->end()
                 ->booleanNode('parent_notify')->end()
@@ -141,7 +141,6 @@ class Configuration implements ConfigurationInterface
                     if (!isset($provider['url'])) {
                         return $provider;
                     }
-
                     $host = \parse_url($provider['url'], \PHP_URL_HOST);
 
                     $provider['url'] = \rtrim($provider['url'], '/');

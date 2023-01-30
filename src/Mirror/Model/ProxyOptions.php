@@ -74,6 +74,30 @@ class ProxyOptions extends MetadataOptions
         return $providerIncludes;
     }
 
+    public function getSyncInterval(): ?int
+    {
+        return $this->config['sync_interval'] ?? null;
+    }
+
+    public function capabilities(): array
+    {
+        $flags = [
+            isset($this->config['root']['metadata-url']) ? 'API_V2' : null,
+            isset($this->config['root']['providers-url']) || isset($this->config['root']['providers-lazy-url']) ? 'API_V1' : null,
+            isset($this->config['root']['metadata-changes-url']) ? 'API_META_CHANGE' : null,
+            !isset($this->config['root']['providers-url']) && isset($this->config['root']['providers-lazy-url']) ? 'API_V1_LAZY' : null,
+            $this->config['packages'] ?? [] ? 'API_V1_PACKAGES' : null,
+        ];
+
+        return \array_values(\array_filter($flags));
+    }
+
+    public function isPackagist()
+    {
+        $hostname = \parse_url($this->getUrl(), \PHP_URL_HOST);
+        return \in_array($hostname, ['repo.packagist.org', 'packagist.org']);
+    }
+
     public function logo(): ?string
     {
         return $this->config['logo'] ?? null;
@@ -103,5 +127,11 @@ class ProxyOptions extends MetadataOptions
     public function getComposerAuth(): ?array
     {
         return $this->config['composer_auth'] ?? null;
+    }
+
+    public function getStats(string $name = null, mixed $default = null): mixed
+    {
+        $stats = $this->config['stats'] ?? [];
+        return $name ? $stats[$name] ?? $default : $stats;
     }
 }

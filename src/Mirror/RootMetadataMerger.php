@@ -16,7 +16,7 @@ class RootMetadataMerger
 
     public function merge(JsonMetadata ...$stamps): JsonMetadata
     {
-        if (count($stamps) > 1) {
+        if (\count($stamps) > 1) {
             throw new \LogicException('Todo, not implements');
         }
 
@@ -36,21 +36,21 @@ class RootMetadataMerger
 
         $newFile = [];
         $url = $this->router->generate('mirror_metadata_v2', ['package' => 'VND/PKG', 'alias' => $opt->getAlias()]);
-        $newFile['metadata-url'] = str_replace('VND/PKG', '%package%', $url);
+        $newFile['metadata-url'] = \str_replace('VND/PKG', '%package%', $url);
 
         if ($providerIncludes = $rootFile['provider-includes'] ?? []) {
             foreach ($providerIncludes as $name => $value) {
                 unset($providerIncludes[$name]);
-                $providerIncludes[ltrim($name, '/')] = $value;
+                $providerIncludes[\ltrim($name, '/')] = $value;
             }
 
             $rootFile['provider-includes'] = $providerIncludes;
         }
 
         if ($providerUrl = $rootFile['providers-url'] ?? null) {
-            $hasHash = str_contains($providerUrl, '%hash%');
+            $hasHash = \str_contains($providerUrl, '%hash%');
             $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $opt->getAlias()]);
-            $rootFile['providers-url'] = str_replace('VND/PKG', $hasHash ? '%package%$%hash%' : '%package%', $url);
+            $rootFile['providers-url'] = \str_replace('VND/PKG', $hasHash ? '%package%$%hash%' : '%package%', $url);
         }
 
         if ($opt->getAvailablePatterns()) {
@@ -63,6 +63,15 @@ class RootMetadataMerger
             unset($rootFile['packages']);
         }
 
-        return $stamps->withContent(array_merge($newFile, $rootFile));
+        $zipball = $this->router->generate(
+            'mirror_zipball',
+            ['package' => 'VND/PKG', 'alias' => $opt->getAlias(), 'version' => '__VER', 'ref' => '__REF', 'type' => '__TP']
+        );
+
+        $rootFile['mirrors'] = [
+            ['dist-url' => \str_replace(['VND/PKG', '__VER', '__REF', '__TP'], ['%package%', '%version%', '%reference%', '%type%'], $zipball), 'preferred' => true]
+        ];
+
+        return $stamps->withContent(\array_merge($newFile, $rootFile));
     }
 }

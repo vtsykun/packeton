@@ -7,6 +7,7 @@ namespace Packeton\Mirror\Service;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\ProxyRepositoryFacade;
 use Packeton\Mirror\ProxyRepositoryRegistry;
+use Packeton\Mirror\RemoteProxyRepository;
 
 class ComposeProxyRegistry
 {
@@ -30,7 +31,17 @@ class ComposeProxyRegistry
         return new ProxyRepositoryFacade($repo, ...$this->factoryArgs);
     }
 
-    public function createProxyDownloadManager(string $name)
+    public function getProxyDownloadManager(string $name): ZipballDownloadManager
     {
+        try {
+            $repo = $this->proxyRegistry->getRepository($name);
+            if (!$repo instanceof RemoteProxyRepository) {
+                throw new MetadataNotFoundException('Provider does not exists');
+            }
+        } catch (\InvalidArgumentException $e) {
+            throw new MetadataNotFoundException('Provider does not exists', 0, $e);
+        }
+
+        return $repo->getDownloadManager();
     }
 }

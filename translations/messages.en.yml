@@ -26,6 +26,7 @@ menu:
     my_groups: My groups
     ssh_keys: Credentials
     webhooks: Webhooks
+    proxies: Composer Proxies
 
 security:
     login:
