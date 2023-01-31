@@ -7,7 +7,7 @@ namespace Packeton\Controller;
 use Packeton\Composer\MetadataMinifier;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\JsonMetadata;
-use Packeton\Mirror\Model\ProxyRepositoryInterface as PRI;
+use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\RootMetadataMerger;
 use Packeton\Mirror\Service\ComposeProxyRegistry;
 use Packeton\Security\Acl\ObjectIdentity;
@@ -120,7 +120,7 @@ class MirrorController extends AbstractController
     {
         try {
             $this->checkAccess($alias);
-            $repo = $this->proxyRegistry->createRepository($alias);
+            $repo = $this->proxyRegistry->createACLAwareRepository($alias);
 
             return $callback($repo);
         } catch (MetadataNotFoundException $e) {

@@ -14,28 +14,23 @@ class RootMetadataMerger
     ) {
     }
 
-    public function merge(JsonMetadata ...$stamps): JsonMetadata
+    public function merge(JsonMetadata $stamps): JsonMetadata
     {
-        if (\count($stamps) > 1) {
-            throw new \LogicException('Todo, not implements');
-        }
-
-        $stamps = $stamps[0];
         $rootFile = $stamps->decodeJson();
-        $opt = $stamps->getOption();
+        $config = $stamps->getOption();
 
         // To avoid call parent host
         unset($rootFile['providers-api']);
 
-        if (!$opt->parentNotify()) {
+        if (!$config->parentNotify()) {
             unset($rootFile['notify-batch']);
         }
-        if ($opt->info()) {
-            $rootFile['info'] = $opt->info();
+        if ($config->info()) {
+            $rootFile['info'] = $config->info();
         }
 
         $newFile = [];
-        $url = $this->router->generate('mirror_metadata_v2', ['package' => 'VND/PKG', 'alias' => $opt->getAlias()]);
+        $url = $this->router->generate('mirror_metadata_v2', ['package' => 'VND/PKG', 'alias' => $config->getAlias()]);
         $newFile['metadata-url'] = \str_replace('VND/PKG', '%package%', $url);
 
         if ($providerIncludes = $rootFile['provider-includes'] ?? []) {
@@ -49,29 +44,35 @@ class RootMetadataMerger
 
         if ($providerUrl = $rootFile['providers-url'] ?? null) {
             $hasHash = \str_contains($providerUrl, '%hash%');
-            $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $opt->getAlias()]);
+            $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $config->getAlias()]);
             $rootFile['providers-url'] = \str_replace('VND/PKG', $hasHash ? '%package%$%hash%' : '%package%', $url);
         }
 
-        if ($opt->getAvailablePatterns()) {
-            $newFile['available-package-patterns'] = $opt->getAvailablePatterns();
+        if ($config->getAvailablePatterns()) {
+            $newFile['available-package-patterns'] = $config->getAvailablePatterns();
         }
-        if ($opt->disableV1Format()) {
-            unset($rootFile['packages'], $rootFile['providers']);
+        if ($config->disableV1Format()) {
+            unset($rootFile['packages'], $rootFile['providers'], $rootFile['provider-includes']);
         }
         if (empty($rootFile['packages'] ?? null)) {
             unset($rootFile['packages']);
         }
 
+        if ($config->isLazy()) {
+            unset($rootFile['provider-includes'], $rootFile['providers-url']);
+            $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $config->getAlias()]);
+            $rootFile['providers-lazy-url'] = \str_replace('VND/PKG','%package%', $url);
+        }
+
         $zipball = $this->router->generate(
             'mirror_zipball',
-            ['package' => 'VND/PKG', 'alias' => $opt->getAlias(), 'version' => '__VER', 'ref' => '__REF', 'type' => '__TP']
+            ['package' => 'VND/PKG', 'alias' => $config->getAlias(), 'version' => '__VER', 'ref' => '__REF', 'type' => '__TP']
         );
 
         $rootFile['mirrors'] = [
             ['dist-url' => \str_replace(['VND/PKG', '__VER', '__REF', '__TP'], ['%package%', '%version%', '%reference%', '%type%'], $zipball), 'preferred' => true]
         ];
 
-        return $stamps->withContent(\array_merge($newFile, $rootFile));
+        return $stamps->withContent(\array_merge($rootFile, $newFile), \JSON_UNESCAPED_SLASHES | \JSON_PRETTY_PRINT);
     }
 }

@@ -4,34 +4,50 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Service;
 
+use Packeton\Composer\MetadataMinifier;
+use Packeton\Mirror\Decorator\ProxyRepositoryACLDecorator;
+use Packeton\Mirror\Decorator\ProxyRepositoryFacade;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
-use Packeton\Mirror\ProxyRepositoryFacade;
+use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
 
 class ComposeProxyRegistry
 {
-    private array $factoryArgs;
-
     public function __construct(
         protected ProxyRepositoryRegistry $proxyRegistry,
-        SyncProviderService $syncService,
+        protected SyncProviderService $syncService,
+        protected MetadataMinifier $metadataMinifier
     ) {
-        $this->factoryArgs = array_slice(func_get_args(), 1);
     }
 
-    public function createRepository(string $name): ProxyRepositoryFacade
+    public function createRepository(string $name): PRI
     {
-        try {
-            $repo = $this->proxyRegistry->getRepository($name);
-        } catch (\InvalidArgumentException $e) {
-            throw new MetadataNotFoundException('Provider does not exists', 0, $e);
-        }
+        $repo = $this->getRemoteProxyRepository($name);
 
-        return new ProxyRepositoryFacade($repo, ...$this->factoryArgs);
+        return new ProxyRepositoryFacade($repo, $this->syncService, $this->metadataMinifier);
+    }
+
+    public function createACLAwareRepository(string $name): PRI
+    {
+        $repo = $this->getRemoteProxyRepository($name);
+
+        return new ProxyRepositoryACLDecorator(
+            $this->createRepository($name),
+            $repo->getPackageManager(),
+            $repo->getConfig()->getAvailablePackages(),
+            $repo->getConfig()->getAvailablePatterns()
+        );
     }
 
     public function getProxyDownloadManager(string $name): ZipballDownloadManager
+    {
+        $repo = $this->getRemoteProxyRepository($name);
+
+        return $repo->getDownloadManager();
+    }
+
+    protected function getRemoteProxyRepository(string $name)
     {
         try {
             $repo = $this->proxyRegistry->getRepository($name);
@@ -42,6 +58,6 @@ class ComposeProxyRegistry
             throw new MetadataNotFoundException('Provider does not exists', 0, $e);
         }
 
-        return $repo->getDownloadManager();
+        return $repo;
     }
 }

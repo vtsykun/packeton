@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Service;
 
-class RemotePackagesManager
+use Packeton\Mirror\Model\ApprovalRepoInterface;
+
+class RemotePackagesManager implements ApprovalRepoInterface
 {
     public function __construct(
         private readonly \Redis $redis,
@@ -28,7 +30,10 @@ class RemotePackagesManager
         $this->redis->set("repo:{$this->repo}:settings", \json_encode($settings));
     }
 
-    public function isMinoring(): bool
+    /**
+     * {@inheritdoc}
+     */
+    public function requireApprove(): bool
     {
         return $this->getSettings()['strict_mirror'];
     }
@@ -40,33 +45,42 @@ class RemotePackagesManager
 
     public function markEnable(string $name): void
     {
-        $this->redis->zadd("repo:{$this->repo}:enabled", time(), $name);
+        $this->redis->sAdd("repo:{$this->repo}:enabled", $name);
     }
 
     public function getEnabled(): array
     {
-        return $this->redis->zRange("repo:{$this->repo}:enabled", 0, -1) ?: [];
+        return $this->redis->sMembers("repo:{$this->repo}:enabled") ?: [];
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getApproved(): array
     {
-        return $this->redis->zRange("repo:{$this->repo}:approve", 0, -1) ?: [];
+        return $this->redis->sMembers("repo:{$this->repo}:approve") ?: [];
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function markApprove(string $name): void
     {
-        $this->redis->zadd("repo:{$this->repo}:approve", time(), $name);
-        $this->redis->zadd("repo:{$this->repo}:enabled", time(), $name);
+        $this->redis->sAdd("repo:{$this->repo}:approve", $name);
+        $this->redis->sAdd("repo:{$this->repo}:enabled", $name);
     }
 
     public function markDisable(string $name): void
     {
-        $this->redis->zrem("repo:{$this->repo}:enabled", $name);
+        $this->redis->sRem("repo:{$this->repo}:enabled", $name);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function removeApprove(string $name): void
     {
-        $this->redis->zrem("repo:{$this->repo}:approve", $name);
-        $this->redis->zrem("repo:{$this->repo}:enabled", $name);
+        $this->redis->sRem("repo:{$this->repo}:approve", $name);
+        $this->redis->sRem("repo:{$this->repo}:enabled", $name);
     }
 }

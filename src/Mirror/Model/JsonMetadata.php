@@ -45,13 +45,13 @@ class JsonMetadata
         return new MetadataOptions($this->options);
     }
 
-    public function withContent(string|array|callable $content): self
+    public function withContent(string|array|callable $content, int $flags = \JSON_UNESCAPED_SLASHES): self
     {
         if (\is_callable($content)) {
             $content = $content($this->decodeJson());
         }
 
-        $content = \is_array($content) ? \json_encode($content, JSON_UNESCAPED_SLASHES) : $content;
+        $content = \is_array($content) ? \json_encode($content, $flags) : $content;
 
         $clone = clone $this;
         $clone->content = $content;

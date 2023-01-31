@@ -262,6 +262,7 @@ strong {
 .nav-user .nav-user-menu span {
     float: right;
     font-size: 20px;
+    margin-top: 5px;
 }
 
 .nav-user .nav-user-menu span.normal {

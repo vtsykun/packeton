@@ -8,13 +8,13 @@ use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 class Filesystem extends SymfonyFilesystem
 {
-    public function glob(string $pattern):array
+    public function glob(string $pattern): array
     {
         $return = \glob($pattern, GLOB_NOSORT);
         return $return ?: [];
     }
 
-    public function globLast(string $pattern): string
+    public function globLast(string $pattern): ?string
     {
         $dir = \rtrim(\dirname($pattern), '/') . '/';
         $list = $this->glob($pattern);
