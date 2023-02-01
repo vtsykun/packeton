@@ -149,6 +149,7 @@
 <p>Packeton - Private PHP package repository for vendors. <a href="https://github.com/vtsykun/packeton">GitHub Source Code</a></p>
 <p>Packeton is an open-source Composer repository homeserver for PHP private packages.
 We began development in <strong>2018</strong>, bases on Packagist and Satis fork.</p>
+<p><strong>Documentation</strong> <a href="https://docs.packeton.org">docs.packeton.org</a></p>
 <h2 id="main-features"><a class="header" href="#main-features">Main Features</a></h2>
 <ul>
 <li>Compatible with Composer API v2, bases on Symfony 5.4.</li>
@@ -195,14 +196,14 @@ cd /var/www/packeton/
 </code></pre>
 <ol start="2">
 <li>Install dependencies <code>composer install</code></li>
-<li>Create <code>.env.local</code> and copy needed environment variables into it. See <a href="installation.html#configuration">Configuration</a></li>
+<li>Create <code>.env.local</code> and copy needed environment variables into it. See <a href="installation.html#configuration">Configuration</a> </li>
 <li>IMPORTANT! Don't forget change <code>APP_SECRET</code></li>
-<li>Run <code>bin/console doctrine:schema:create</code> to setup the DB</li>
+<li>Run <code>bin/console doctrine:schema:update --force --complete</code> to setup the DB</li>
 <li>Create admin user via console.</li>
 </ol>
 <pre><code class="language-bash">php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
 </code></pre>
-<ol start="6">
+<ol start="7">
 <li>Setup nginx or any webserver, for example nginx config looks like.</li>
 </ol>
 <pre><code>server {
@@ -240,12 +241,12 @@ cd /var/www/packeton/
     }
 }
 </code></pre>
-<ol start="7">
+<ol start="8">
 <li>Change cache permission to made it accessible for web server.</li>
 </ol>
 <pre><code class="language-bash">chown www-data:www-data -R var/
 </code></pre>
-<ol start="8">
+<ol start="9">
 <li>
 <p>If you get a 500 error in index page <code>packeton.example.org</code>, please check your logs <code>var/log/prod.log</code> or/and webserver log
 and fix permissions, database config, redis etc.</p>
