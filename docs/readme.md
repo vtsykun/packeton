@@ -5,6 +5,8 @@ Packeton - Private PHP package repository for vendors. [GitHub Source Code](http
 Packeton is an open-source Composer repository homeserver for PHP private packages.
 We began development in **2018**, bases on Packagist and Satis fork.
 
+**Documentation** [docs.packeton.org](https://docs.packeton.org)
+
 ## Main Features
 
 - Compatible with Composer API v2, bases on Symfony 5.4.

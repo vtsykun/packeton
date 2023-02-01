@@ -23,16 +23,16 @@ cd /var/www/packeton/
 ```
 
 2. Install dependencies `composer install`
-3. Create `.env.local` and copy needed environment variables into it. See [Configuration](#configuration)
-4. IMPORTANT! Don't forget change `APP_SECRET`
-4. Run `bin/console doctrine:schema:create` to setup the DB
-5. Create admin user via console.
+3. Create `.env.local` and copy needed environment variables into it. See [Configuration](#configuration) 
+4.  IMPORTANT! Don't forget change `APP_SECRET`
+5. Run `bin/console doctrine:schema:update --force --complete` to setup the DB
+6. Create admin user via console.
 
 ```bash
 php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
 ```
 
-6. Setup nginx or any webserver, for example nginx config looks like.
+7. Setup nginx or any webserver, for example nginx config looks like.
 
 ```
 server {
@@ -71,16 +71,16 @@ server {
 }
 ```
 
-7. Change cache permission to made it accessible for web server.
+8. Change cache permission to made it accessible for web server.
 
 ```bash
 chown www-data:www-data -R var/
 ```
 
-8. If you get a 500 error in index page `packeton.example.org`, please check your logs `var/log/prod.log` or/and webserver log
+9. If you get a 500 error in index page `packeton.example.org`, please check your logs `var/log/prod.log` or/and webserver log
 and fix permissions, database config, redis etc.
 
-9. Enable cron tabs and background jobs.
+10. Enable cron tabs and background jobs.
 
 Enable crontab `crontab -e -u www-data`
 
