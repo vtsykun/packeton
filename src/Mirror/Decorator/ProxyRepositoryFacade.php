@@ -35,12 +35,13 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
      */
     public function findPackageMetadata(string $nameOrUri): JsonMetadata
     {
-        @[$package, $hash] = \explode('$', $nameOrUri);
+        [$package, ] = \explode('$', $nameOrUri);
 
         $metadata = $this->fetch(__FUNCTION__, func_get_args(), function () use ($package) {
             $metadata = $this->lazyFetchPackageMetadata($package);
-            $this->repository->dumpPackage($package, $metadata);
 
+            $this->repository->touchRoot();
+            $this->repository->dumpPackage($package, $metadata);
             return new JsonMetadata(\json_encode($metadata, \JSON_UNESCAPED_SLASHES));
         });
 

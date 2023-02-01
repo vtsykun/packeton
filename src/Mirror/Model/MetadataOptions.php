@@ -34,6 +34,11 @@ class MetadataOptions
         return $this->config['disable_v1'] ?? false;
     }
 
+    public function isDistMirror(): bool
+    {
+        return $this->config['enable_dist_mirror'] ?? true;
+    }
+
     public function getAlias(): string
     {
         return $this->config['name'];

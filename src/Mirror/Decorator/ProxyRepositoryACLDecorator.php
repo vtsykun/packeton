@@ -55,7 +55,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
             return $metadata;
         }
 
-        if ($this->availablePackages && !\in_array($package, $this->availablePackages)) {
+        if ($this->availablePackages && !\in_array($package, $this->availablePackages, true)) {
             throw new ApproveRestrictException("This package $package was restricted by available packages config");
         }
 

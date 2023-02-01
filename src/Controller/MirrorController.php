@@ -6,9 +6,9 @@ namespace Packeton\Controller;
 
 use Packeton\Composer\MetadataMinifier;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
+use Packeton\Mirror\Manager\RootMetadataMerger;
 use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
-use Packeton\Mirror\RootMetadataMerger;
 use Packeton\Mirror\Service\ComposeProxyRegistry;
 use Packeton\Security\Acl\ObjectIdentity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

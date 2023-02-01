@@ -122,6 +122,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return false;
     }
 
+    public function touchRoot(): void
+    {
+        if ($this->filesystem->exists($this->rootFilename)) {
+            $this->filesystem->touch($this->rootFilename);
+        }
+    }
+
     public function hasPackage(string $package, string $hash = null): bool
     {
         $filename = $this->packageDir . $this->packageShort($package, $hash);
@@ -182,9 +189,9 @@ class RemoteProxyRepository extends AbstractProxyRepository
     public function getStats(): array
     {
         $stats = $this->redis->get("proxy-info-{$this->repoConfig['name']}");
-        $stats = $stats ? json_decode($stats, true) : [];
+        $stats = $stats ? \json_decode($stats, true) : [];
 
-        return is_array($stats) ? $stats : [];
+        return \is_array($stats) ? $stats : [];
     }
 
     public function clearStats(array $stats = []): void
@@ -211,13 +218,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     protected function packageShort(string $package, string $hash = null): string
     {
-        return $package . ($hash ? '__' . $hash : '') . '.json.gz';
+        return \preg_replace('#[^a-z0-9-_/]#i', '-', $package) . ($hash ? '__' . $hash : '') . '.json.gz';
     }
 
     protected function providerShort(string $uri): string
     {
-        preg_match('/([a-z0-9-_]+)\$/', $uri, $match);
+        \preg_match('/([a-z0-9-_]+)\$/', $uri, $match);
 
-        return ($match[1] ?? 'provider') . '__' . sha1($uri) . '.json.gz';
+        return ($match[1] ?? 'provider') . '__' . \sha1($uri) . '.json.gz';
     }
 }

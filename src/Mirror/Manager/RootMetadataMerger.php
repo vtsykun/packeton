@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Mirror;
+namespace Packeton\Mirror\Manager;
 
 use Packeton\Mirror\Model\JsonMetadata;
 use Symfony\Component\Routing\RouterInterface;
@@ -64,14 +64,16 @@ class RootMetadataMerger
             $rootFile['providers-lazy-url'] = \str_replace('VND/PKG','%package%', $url);
         }
 
-        $zipball = $this->router->generate(
-            'mirror_zipball',
-            ['package' => 'VND/PKG', 'alias' => $config->getAlias(), 'version' => '__VER', 'ref' => '__REF', 'type' => '__TP']
-        );
+        if ($config->isDistMirror()) {
+            $zipball = $this->router->generate(
+                'mirror_zipball',
+                ['package' => 'VND/PKG', 'alias' => $config->getAlias(), 'version' => '__VER', 'ref' => '__REF', 'type' => '__TP']
+            );
 
-        $rootFile['mirrors'] = [
-            ['dist-url' => \str_replace(['VND/PKG', '__VER', '__REF', '__TP'], ['%package%', '%version%', '%reference%', '%type%'], $zipball), 'preferred' => true]
-        ];
+            $rootFile['mirrors'] = [
+                ['dist-url' => \str_replace(['VND/PKG', '__VER', '__REF', '__TP'], ['%package%', '%version%', '%reference%', '%type%'], $zipball), 'preferred' => true]
+            ];
+        }
 
         return $stamps->withContent(\array_merge($rootFile, $newFile), \JSON_UNESCAPED_SLASHES | \JSON_PRETTY_PRINT);
     }
