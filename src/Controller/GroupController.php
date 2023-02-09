@@ -63,7 +63,7 @@ class GroupController extends AbstractController
     #[Route('/groups/{id}/delete', name: 'groups_delete')]
     public function deleteAction(Request $request, #[Vars] Group $group): Response
     {
-        $form = $this->createFormBuilder([])->getForm();
+        $form = $this->createFormBuilder()->getForm();
         $form->submit($request->get('form'));
         if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->registry->getManager();
