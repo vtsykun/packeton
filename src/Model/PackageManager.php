@@ -168,8 +168,11 @@ class PackageManager
 
     public function getPackageV2Json(?UserInterface $user, string $package, bool $isDev = true, &$lastModified = null): array
     {
-        if (!$metadata = $this->getCachedPackageJson($user, $package)) {
-            $metadata = $this->getPackageJson($user, $package);
+        $metadata = $this->getCachedPackageJson($user, $package) ?:
+            $this->getPackageJson($user, $package);
+
+        if (empty($metadata)) {
+            return [];
         }
 
         $packages = $metadata['packages'] ?? [];
