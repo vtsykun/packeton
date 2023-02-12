@@ -6,6 +6,13 @@ framework:
     trusted_proxies: '%env(TRUSTED_PROXIES)%'
     trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
 
+    cache:
+        pools:
+            # pool for root/packages.json
+            packages_cache_pool:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600
+
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.
     session:

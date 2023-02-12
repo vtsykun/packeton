@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Packeton\Model;
 
-use Composer\Semver\VersionParser;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\MetadataMinifier;
 use Packeton\Composer\PackagistFactory;
@@ -20,6 +19,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 use Twig\Environment;
 
 class PackageManager
@@ -34,6 +34,7 @@ class PackageManager
         protected AuthorizationCheckerInterface $authorizationChecker,
         protected PackagistFactory $packagistFactory,
         protected EventDispatcherInterface $dispatcher,
+        protected CacheInterface $packagesCachePool,
         protected MetadataMinifier $metadataMinifier,
         protected \Redis $redis,
     ) {}
@@ -199,19 +200,42 @@ class PackageManager
         return $packages[$package];
     }
 
-    private function dumpInMemory(UserInterface $user = null, bool $cache = true)
+    private function dumpInMemory(UserInterface $user = null, bool $ignoreLastModify = true)
     {
         if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
         $cacheKey = 'pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0);
-        if ($cache and $data = $this->redis->get($cacheKey)) {
-            return json_decode($data, true);
+
+        $item = $this->packagesCachePool->getItem($cacheKey);
+        @[$ctime, $data] = $item->get();
+
+        $needRefresh = false;
+        if (false === $ignoreLastModify) {
+            $lastModify = $this->getLastModify()?->getTimestamp() ?: 0;
+            $needRefresh = $ctime < $lastModify || $ctime + 1800 < time(); // 1800 sec max ttl for root package request, but default TTL = 3600
         }
 
-        $data = $this->dumper->dump($user);
-        $this->redis->setex($cacheKey, 900, json_encode($data));
+        if (!$item->isHit() || $needRefresh || empty($data)) {
+            $data = $this->dumper->dump($user);
+            $item->set([time(), $data]);
+            $this->packagesCachePool->save($item);
+        }
+
         return $data;
+    }
+
+    public function setLastModify(): void
+    {
+        try {
+            $this->redis->set('packages-last-modify', time());
+        } catch (\Exception) {}
+    }
+
+    public function getLastModify(): ?\DateTimeInterface
+    {
+        $unix = $this->redis->get('packages-last-modify');
+        return $unix ? \DateTime::createFromFormat('U', $unix) : null;
     }
 }
