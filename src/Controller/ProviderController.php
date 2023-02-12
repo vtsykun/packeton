@@ -28,11 +28,18 @@ class ProviderController extends AbstractController
     /**
      * @Route("/packages.json", name="root_packages", defaults={"_format" = "json"}, methods={"GET"})
      */
-    public function packagesAction()
+    public function packagesAction(Request $request)
     {
         $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser());
 
-        return new JsonResponse($rootPackages);
+        $response = new JsonResponse($rootPackages);
+        $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        if ($lastModify = $this->packageManager->getLastModify()) {
+            $response->setLastModified($lastModify);
+            $response->isNotModified($request);
+        }
+
+        return $response;
     }
 
     /**
@@ -137,8 +144,10 @@ class ProviderController extends AbstractController
         }
 
         $response = new JsonResponse($package);
-        $response->setLastModified(new \DateTime($lastModified));
-        $response->isNotModified($request);
+        if ($lastModified !== null) {
+            $response->setLastModified(new \DateTime($lastModified));
+            $response->isNotModified($request);
+        }
 
         return $response;
     }
