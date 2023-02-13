@@ -8,11 +8,13 @@ use Composer\Downloader\TransportException;
 use Composer\IO\IOInterface;
 use Packeton\Composer\MetadataMinifier;
 use Packeton\Mirror\Model\ProxyOptions;
-use Packeton\Mirror\RemoteProxyRepository;
+use Packeton\Mirror\RemoteProxyRepository as RPR;
 
 class RemoteSyncProxiesFacade
 {
     public const FULL_RESET = 1;
+
+    protected $providersCacheKeys = [];
 
     public function __construct(
         private readonly SyncProviderService $syncProvider,
@@ -20,9 +22,10 @@ class RemoteSyncProxiesFacade
     ) {
     }
 
-    public function sync(RemoteProxyRepository $repo, IOInterface $io, int $flags = 0): array
+    public function sync(RPR $repo, IOInterface $io, int $flags = 0): array
     {
         $this->syncProvider->setIO($io);
+        $this->providersCacheKeys = [];
 
         $stats = ['last_sync' => \date('Y-m-d H:i:s')];
         if (self::FULL_RESET & $flags) {
@@ -54,17 +57,27 @@ class RemoteSyncProxiesFacade
         $providersForUpdate = [];
         if ($providerIncludes = $config->getProviderIncludes(true)) {
             $io->info('Loading provider includes...');
+
+            $this->providersCacheKeys = \array_merge($this->providersCacheKeys, \array_map($repo->providerKey(...), $providerIncludes));
             [$providersForUpdate, ] = $this->syncProvider->loadProvidersInclude($repo, $providerIncludes);
         } else {
             $io->info('Not found any provider-includes in packages.json');
         }
 
+        if ($includes = \array_keys($config->getIncludes())) {
+            $io->info('Loading includes. ' . implode(' ', $includes));
+
+            $this->providersCacheKeys = \array_merge($this->providersCacheKeys, \array_map($repo->providerKey(...), $includes));
+            $this->syncProvider->loadProvidersInclude($repo, $includes);
+        }
+
+        $availablePackages = $this->loadRootPackagesNames($root, $repo);
         $providerUrl = $config->getMetadataV1Url();
 
         if (empty($providerUrl) || $config->isLazy()) {
             $io->notice('Skipping sync packages, lazy sync.');
             $repo->dumpRootMeta($root);
-            return $stats;
+            return $stats + ['available_packages' => $availablePackages];
         }
 
         $updated = $success = 0;
@@ -97,7 +110,39 @@ class RemoteSyncProxiesFacade
         return $stats;
     }
 
-    private function getAllProviders($providersForUpdate, RemoteProxyRepository $repo, ProxyOptions $config): iterable
+    private function loadRootPackagesNames(array $data, RPR $repo): array
+    {
+        $packages = [];
+        // legacy repo handling
+        if (!isset($data['packages']) && !isset($data['includes'])) {
+            foreach ($data as $pkg) {
+                if (isset($pkg['versions']) && \is_array($pkg['versions'])) {
+                    foreach ($pkg['versions'] as $metadata) {
+                        $packages[] = $metadata['name'] ?? null;
+                    }
+                }
+            }
+
+            return array_values(array_unique(array_filter($packages)));
+        }
+
+        if (isset($data['packages'])) {
+            foreach ($data['packages'] as $package => $versions) {
+                $packages[] = \strtolower((string) $package);
+            }
+        }
+
+        if (isset($data['includes'])) {
+            foreach ($data['includes'] as $include => $metadata) {
+                $includedData = $repo->findProviderMetadata($include)?->decodeJson();
+                $packages = \array_merge($packages, $this->loadRootPackagesNames($includedData, $repo));
+            }
+        }
+
+        return array_values(array_unique(array_filter($packages)));
+    }
+
+    private function getAllProviders($providersForUpdate, RPR $repo, ProxyOptions $config): iterable
     {
         if ($config->getRootProviders()) {
             yield 'root' => $config->getRootProviders();
@@ -112,7 +157,7 @@ class RemoteSyncProxiesFacade
         }
     }
 
-    private function syncLazy(RemoteProxyRepository $repo, IOInterface $io, ProxyOptions $config): array
+    private function syncLazy(RPR $repo, IOInterface $io, ProxyOptions $config): array
     {
         $stats = [];
         $packages = $repo->getPackageManager()->getEnabled();
@@ -156,5 +201,10 @@ class RemoteSyncProxiesFacade
         $io->info('Updated packages: ' . \count($updated));
 
         return $stats;
+    }
+
+    public function clear(): void
+    {
+        $this->providersCacheKeys = [];
     }
 }

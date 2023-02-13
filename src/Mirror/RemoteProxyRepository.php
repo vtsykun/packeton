@@ -70,7 +70,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
      */
     public function findProviderMetadata(string $providerName): ?JsonMetadata
     {
-        $filename = $this->providersDir . $this->providerShort($providerName);
+        $filename = $this->providersDir . $this->providerKey($providerName);
 
         if ($this->filesystem->exists($filename)) {
             return $this->createMetadataFromFile($filename);
@@ -86,16 +86,58 @@ class RemoteProxyRepository extends AbstractProxyRepository
     {
         @[$package, $hash] = \explode('$', $name);
 
-        $packageName  = \explode('/', $package)[1];
-        $filename = $this->packageDir . $this->packageShort($package, $hash);
+        // Load packages data from root.
+        if ($packages = $this->lookIncludePackageMetadata($this->getConfig()->getRoot(), $package)) {
+            $content = \json_encode(['packages' => [$package => $packages]], \JSON_UNESCAPED_SLASHES);
+            $unix = @\filemtime($this->rootFilename) ?: null;
+            return new JsonMetadata($content, $unix, null, $this->repoConfig);
+        }
+
+        $vendorName  = \explode('/', $package)[1];
+        $filename = $this->packageDir . $this->packageKey($package, $hash);
 
         if (null !== $hash && $this->filesystem->exists($filename)) {
             return $this->createMetadataFromFile($filename, $hash);
         }
 
         $dir = \rtrim(\dirname($filename), '/') . '/';
-        $last = $this->filesystem->globLast($dir . $packageName . '*');
+        $last = $this->filesystem->globLast($dir . $vendorName . '*');
         return $last ? $this->createMetadataFromFile($last) : null;
+    }
+
+    // See loadIncludes in the ComposerRepository
+    protected function lookIncludePackageMetadata(array $data, string $package): array
+    {
+        $packages = [];
+        // legacy repo handling
+        if (!isset($data['packages']) && !isset($data['includes'])) {
+            foreach ($data as $pkg) {
+                if (isset($pkg['versions']) && \is_array($pkg['versions'])) {
+                    foreach ($pkg['versions'] as $metadata) {
+                        if (($metadata['name'] ?? null) === $package) {
+                            $packages[] = $metadata;
+                        }
+                    }
+                }
+            }
+
+            return $packages;
+        }
+
+        if (isset($data['packages'][$package])) {
+            return $data['packages'][$package];
+        }
+
+        if (isset($data['includes']) && \is_array($data['includes'])) {
+            foreach ($data['includes'] as $include => $metadata) {
+                $includedData = $this->findProviderMetadata($include)?->decodeJson();
+                if ($includedData && ($packages = $this->lookIncludePackageMetadata($includedData, $package))) {
+                    return $packages;
+                }
+            }
+        }
+
+        return $packages;
     }
 
     protected function createMetadataFromFile(string $filename, string $hash = null): JsonMetadata
@@ -131,7 +173,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function hasPackage(string $package, string $hash = null): bool
     {
-        $filename = $this->packageDir . $this->packageShort($package, $hash);
+        $filename = $this->packageDir . $this->packageKey($package, $hash);
         return $this->filesystem->exists($filename);
     }
 
@@ -143,13 +185,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
             return;
         }
 
-        $filename = $this->packageDir . $this->packageShort($package, $hash);
+        $filename = $this->packageDir . $this->packageKey($package, $hash);
         $this->filesystem->dumpFile($filename, $content);
     }
 
     public function hasProvider(string $uri): bool
     {
-        $filename = $this->providersDir . $this->providerShort($uri);
+        $filename = $this->providersDir . $this->providerKey($uri);
 
         return $this->filesystem->exists($filename);
     }
@@ -159,7 +201,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $content = \is_array($content) ? \json_encode($content, JSON_UNESCAPED_SLASHES) : $content;
 
         $content = $this->encode($content);
-        $filename = $this->providersDir . $this->providerShort($uri);
+        $filename = $this->providersDir . $this->providerKey($uri);
         $this->filesystem->dumpFile($filename, $content);
     }
 
@@ -171,7 +213,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         }
 
         foreach ($config->getProviderIncludes(true) as $provider) {
-            $filename = $this->providersDir . $this->providerShort($provider);
+            $filename = $this->providersDir . $this->providerKey($provider);
             if ($this->filesystem->exists($filename)) {
                 $content = \file_get_contents($filename);
                 $content = $content ? $this->encode($content) : null;
@@ -216,15 +258,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $this->zipballManager;
     }
 
-    protected function packageShort(string $package, string $hash = null): string
+    public function packageKey(string $package, string $hash = null): string
     {
         return \preg_replace('#[^a-z0-9-_/]#i', '-', $package) . ($hash ? '__' . $hash : '') . '.json.gz';
     }
 
-    protected function providerShort(string $uri): string
+    public function providerKey(string $uri): string
     {
-        \preg_match('/([a-z0-9-_]+)\$/', $uri, $match);
-
-        return ($match[1] ?? 'provider') . '__' . \sha1($uri) . '.json.gz';
+        return  \preg_replace('#[^a-z0-9-_]#i', '-', $uri) . '.json.gz';
     }
 }

@@ -26,7 +26,7 @@ class MetadataMinifier
             $versions = \array_filter($versions, fn($v) => $this->isValidStability($v, $isDev));
 
             \usort($versions, fn($v1, $v2) => -1 * version_compare($v1['version_normalized'], $v2['version_normalized']));
-            \array_map(fn($v) => $obj->time < $v['time'] ? $obj->time = $v['time'] : null, $versions);
+            \array_map(fn($v) => $obj->time < ($v['time'] ?? 0) ? $obj->time = ($v['time'] ?? 0) : null, $versions);
 
             foreach ($versions as $i => $v) {
                 if (isset($v['version_normalized_v2'])) {
