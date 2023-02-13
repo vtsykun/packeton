@@ -111,6 +111,7 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('disable_v1')->end()
                 ->scalarNode('info_cmd_message')->end()
                 ->scalarNode('logo')->end()
+                ->integerNode('available_packages_count_limit')->end()
                 ->arrayNode('available_package_patterns')
                     ->scalarPrototype()->end()
                 ->end()

@@ -40,7 +40,12 @@ class JsonMetadata
         return $this->hash;
     }
 
-    public function getOption(): MetadataOptions
+    public function setOption(string $name, mixed $value): void
+    {
+        $this->options[$name] = $value;
+    }
+
+    public function getOptions(): MetadataOptions
     {
         return new MetadataOptions($this->options);
     }

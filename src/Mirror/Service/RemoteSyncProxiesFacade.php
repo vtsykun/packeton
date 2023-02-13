@@ -71,13 +71,20 @@ class RemoteSyncProxiesFacade
             $this->syncProvider->loadProvidersInclude($repo, $includes);
         }
 
-        $availablePackages = $this->loadRootPackagesNames($root, $repo);
+        $availablePackages = array_merge(
+            $this->loadRootPackagesNames($root, $repo),
+            $this->loadProviderPackagesNames($repo, $config->maxCountOfAvailablePackages())
+        );
+
+
+        $stats['available_packages'] = \count($availablePackages) < $config->maxCountOfAvailablePackages() ? $availablePackages : [];
+
         $providerUrl = $config->getMetadataV1Url();
 
         if (empty($providerUrl) || $config->isLazy()) {
             $io->notice('Skipping sync packages, lazy sync.');
             $repo->dumpRootMeta($root);
-            return $stats + ['available_packages' => $availablePackages];
+            return $stats;
         }
 
         $updated = $success = 0;
@@ -110,6 +117,19 @@ class RemoteSyncProxiesFacade
         return $stats;
     }
 
+    private function loadProviderPackagesNames(RPR $repo, int $limit): array
+    {
+        $packages = [];
+        foreach ($repo->lookupAllProviders() as $providerInclude) {
+            $packages = \array_merge($packages, \array_keys($providerInclude));
+            if (\count($packages) > $limit) {
+                break;
+            }
+        }
+
+        return $packages;
+    }
+
     private function loadRootPackagesNames(array $data, RPR $repo): array
     {
         $packages = [];
@@ -134,7 +154,7 @@ class RemoteSyncProxiesFacade
 
         if (isset($data['includes'])) {
             foreach ($data['includes'] as $include => $metadata) {
-                $includedData = $repo->findProviderMetadata($include)?->decodeJson();
+                $includedData = $repo->findProviderMetadata($include)?->decodeJson() ?: [];
                 $packages = \array_merge($packages, $this->loadRootPackagesNames($includedData, $repo));
             }
         }

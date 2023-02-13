@@ -17,7 +17,7 @@ class RootMetadataMerger
     public function merge(JsonMetadata $stamps): JsonMetadata
     {
         $rootFile = $stamps->decodeJson();
-        $config = $stamps->getOption();
+        $config = $stamps->getOptions();
 
         // To avoid call parent host
         unset($rootFile['providers-api']);
@@ -48,11 +48,15 @@ class RootMetadataMerger
             $rootFile['providers-url'] = \str_replace('VND/PKG', $hasHash ? '%package%$%hash%' : '%package%', $url);
         }
 
-        if ($config->getAvailablePatterns()) {
+        if ($config->getAvailablePackages()) {
+            $newFile['available-packages'] = $config->getAvailablePackages();
+        }
+
+        if ($config->getAvailablePatterns() && !isset($newFile['available-packages'])) {
             $newFile['available-package-patterns'] = $config->getAvailablePatterns();
         }
         if ($config->disableV1Format()) {
-            unset($rootFile['packages'], $rootFile['providers'], $rootFile['provider-includes']);
+            unset($rootFile['packages'], $rootFile['providers'], $rootFile['provider-includes'], $rootFile['includes']);
         }
         if (empty($rootFile['packages'] ?? null)) {
             unset($rootFile['packages']);

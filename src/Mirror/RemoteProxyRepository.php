@@ -238,14 +238,14 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function clearStats(array $stats = []): void
     {
-        $this->redis->set("proxy-info-{$this->repoConfig['name']}", json_encode($stats));
+        $this->redis->set("proxy-info-{$this->repoConfig['name']}", \json_encode($stats));
     }
 
     public function setStats(array $stats = []): void
     {
         $stats = \array_merge($this->getStats(), $stats);
 
-        $this->redis->set("proxy-info-{$this->repoConfig['name']}", json_encode($stats));
+        $this->redis->set("proxy-info-{$this->repoConfig['name']}", \json_encode($stats, \JSON_UNESCAPED_SLASHES));
     }
 
     public function getPackageManager(): RemotePackagesManager

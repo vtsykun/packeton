@@ -54,6 +54,11 @@ class MetadataOptions
         return $this->config['available_packages'] ?? [];
     }
 
+    public function maxCountOfAvailablePackages(): int
+    {
+        return $this->config['available_packages_count_limit'] ?? 5000;
+    }
+
     public function withRoot(array $root): static
     {
         $clone = clone $this;

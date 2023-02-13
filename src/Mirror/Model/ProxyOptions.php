@@ -96,8 +96,8 @@ class ProxyOptions extends MetadataOptions
             isset($this->config['root']['providers-url']) || isset($this->config['root']['providers-lazy-url']) ? 'API_V1' : null,
             isset($this->config['root']['metadata-changes-url']) ? 'API_META_CHANGE' : null,
             !isset($this->config['root']['providers-url']) && isset($this->config['root']['providers-lazy-url']) ? 'API_V1_LAZY' : null,
-            ($this->config['packages'] ?? []) ? 'API_V1_PACKAGES' : null,
-            ($this->config['includes'] ?? []) ? 'API_V1_INCLUDES' : null,
+            ($this->config['root']['packages'] ?? []) ? 'API_V1_PACKAGES' : null,
+            ($this->config['root']['includes'] ?? []) ? 'API_V1_INCLUDES' : null,
         ];
 
         return \array_values(\array_filter($flags));

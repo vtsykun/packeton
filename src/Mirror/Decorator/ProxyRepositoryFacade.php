@@ -45,9 +45,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
             return new JsonMetadata(\json_encode($metadata, \JSON_UNESCAPED_SLASHES));
         });
 
-        if (null !== $metadata) {
-            $this->rmp->markEnable($package);
-        }
+        $this->rmp->markEnable($package);
 
         return $metadata;
     }
@@ -67,7 +65,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
      */
     public function rootMetadata(): JsonMetadata
     {
-        return $this->fetch(__FUNCTION__, [], function () {
+        $metadata = $this->fetch(__FUNCTION__, [], function () {
             try {
                 $meta = $this->syncService->loadRootComposer($this->repository);
             } catch (\Exception $e) {
@@ -77,13 +75,23 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
             $this->repository->dumpRootMeta($meta);
             return $meta;
         });
+
+        // set default available_packages if repository is small.
+        if ($available = $this->repository->getConfig()->getStats('available_packages')) {
+            $options = $metadata->getOptions();
+            if (empty($options->getAvailablePackages()) && empty($options->getAvailablePatterns())) {
+                $metadata->setOption('available_packages', $available);
+            }
+        }
+
+        return $metadata;
     }
 
-    protected function fetch(string $key, array $args = [], callable $fn = null)
+    protected function fetch(string $key, array $args = [], callable $fn = null): JsonMetadata
     {
         $meta = $this->repository->{$key}(...$args);
 
-        if (null === $meta && !$this->config->isLazy()) {
+        if (null === $meta && (!$this->config->isLazy() || null === $fn)) {
             throw new MetadataNotFoundException($key === 'rootMetadata' ? 'This is not a lazy proxy, so for fetch metadata need to sync it in background' : 'Metadata not found');
         }
 

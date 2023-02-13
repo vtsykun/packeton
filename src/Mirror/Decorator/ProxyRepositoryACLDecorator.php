@@ -27,7 +27,13 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
      */
     public function rootMetadata(): JsonMetadata
     {
-        return $this->repository->rootMetadata();
+        $metadata = $this->repository->rootMetadata();
+        if ($this->approval->requireApprove()) {
+            $approved = $this->approval->getApproved();
+            $metadata->setOption('available_packages', $approved);
+        }
+
+        return $metadata;
     }
 
     /**
