@@ -10,8 +10,10 @@ use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -45,7 +47,9 @@ class ProxiesController extends AbstractController
         $repo = $this->getRemoteRepository($alias);
         $data = $this->getProxyData($repo);
 
-        return $this->render('proxies/view.html.twig', $data + ['proxy' => $repo->getConfig()]);
+        $action = $this->createFormBuilder()->getForm()->createView();
+
+        return $this->render('proxies/view.html.twig', $data + ['proxy' => $repo->getConfig(), 'action' => $action]);
     }
 
     #[Route('/{alias}/settings', name: 'proxy_settings')]
@@ -69,13 +73,46 @@ class ProxiesController extends AbstractController
         ]);
     }
 
+    #[Route('/{alias}/mark-approved', name: 'proxy_mark_approved', methods: ["PUT"])]
+    public function markApproved(Request $request, string $alias)
+    {
+        $repo = $this->getRemoteRepository($alias);
+        $data = $this->jsonRequest($request);
+
+        return new JsonResponse($data);
+    }
+
+    protected function jsonRequest(Request $request): array
+    {
+        $json = \json_decode($request->getContent(), true);
+        if (!$this->isCsrfTokenValid('actions', $json['token'] ?? '')) {
+            throw new BadRequestHttpException('Csrf token is not a valid');
+        }
+
+        return $json;
+    }
+
     protected function getProxyData(RemoteProxyRepository $repo): array
     {
         $config = $repo->getConfig();
         $repoUrl = $this->generateUrl('mirror_index', ['alias' => $config->getAlias()], UrlGeneratorInterface::ABSOLUTE_URL);
 
+        $rpm = $repo->getPackageManager();
+
+        $packages = [];
+        $approved = \array_flip($rpm->getApproved());
+        $enabled = $rpm->getEnabled();
+        foreach ($enabled as $name) {
+            $packages[$name] = [
+                'name' => $name,
+                'enabled' => true,
+                'approved' => isset($approved[$name])
+            ];
+        }
+
         return [
             'repoUrl' => $repoUrl,
+            'usedPackages' => $packages,
             'tooltips' => [
                 'API_V2' => 'Support metadata-url for Composer v2',
                 'API_V1' => 'Support Composer v1 API',

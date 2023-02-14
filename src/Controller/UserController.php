@@ -263,7 +263,7 @@ class UserController extends AbstractController
     #[Route('/users/{name}', name: 'user_profile')]
     public function profileAction(Request $req, #[Vars(['name' => 'username'])] User $user): Response
     {
-        $deleteForm = $this->createFormBuilder([])->getForm();
+        $deleteForm = $this->createFormBuilder()->getForm();
         $packages = $this->getUserPackages($req, $user);
 
         return $this->render('user/profile.html.twig', [
@@ -277,7 +277,7 @@ class UserController extends AbstractController
     #[Route('/users/{name}/delete', name: 'user_delete', methods: ['POST'])]
     public function deleteAction(Request $request, #[Vars(['name' => 'username'])] User $user): Response
     {
-        $form = $this->createFormBuilder([])->getForm();
+        $form = $this->createFormBuilder()->getForm();
         $form->submit($request->request->get('form'));
         if ($form->isValid()) {
             $em = $this->registry->getManager();

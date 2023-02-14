@@ -32,7 +32,8 @@ class GroupType extends AbstractType
                 ->add('proxies', ChoiceType::class, [
                     'choices' => $proxyChoice,
                     'multiple' => true,
-                    'label' => 'Allowed Proxies'
+                    'label' => 'Allowed Proxies',
+                    'required' => false
                 ]);
         }
 

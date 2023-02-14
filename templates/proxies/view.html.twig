@@ -3,10 +3,19 @@
 {% block title %}{{ proxy.alias }} - Proxy - {{ parent() }}{% endblock %}
 
 {% block scripts %}
+    <script src="{{ asset('packeton/js/proxies.js')}}"></script>
+{% endblock %}
+{% block stylesheets %}
+    <style>
+        .checkbox-id {
+            margin: 0!important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="row">
+    {% set csrfToken = csrf_token('actions') %}
     <div class="col-xs-12 package">
         <div class="row">
             <div class="col-md-7">
@@ -25,16 +34,53 @@
                 </form>
 
                 <form class="update action" action="" method="PUT">
-                    <input type="hidden" name="update" value="1" />
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
                     <input class="btn btn-success" type="submit" value="Update" />
                 </form>
 
                 <form class="force-update action" action="" method="PUT">
-                    <input type="hidden" name="update" value="1" />
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
                     <input class="btn btn-danger" type="submit" value="Force resync" />
                 </form>
-
             </div>
+        </div>
+
+        <div class="row">
+            <h2 style="text-align: center">Used packages</h2>
+
+            <div style="text-align: right" class="grid-buttons">
+                <form class="action" action="{{ path('proxy_mark_approved', {'alias': proxy.alias}) }}" method="PUT">
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input class="btn btn-success" type="submit" value="Mark Approved" />
+                </form>
+                <form class="action" action="" method="DELETE">
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input class="btn btn-danger" type="submit" value="Remove" />
+                </form>
+            </div>
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Package name</th>
+                    <th scope="col">Enabled</th>
+                    <th scope="col">Approved</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for p in usedPackages %}
+                    <tr>
+                        <th scope="row">
+                            <span>{{ loop.index }}</span>
+                            <input type="checkbox" class="checkbox-id" name="{{ p['name'] }}">
+                        </th>
+                        <td>{{ p['name'] }}</td>
+                        <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
+                        <td>{{ p['approved'] ? 'YES' : 'NO' }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
