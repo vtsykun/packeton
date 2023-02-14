@@ -106,8 +106,8 @@ class ExploreController extends AbstractController
         });
 
         $packages = new Pagerfanta(new FixedAdapter($redis->zcard('downloads:trending'), $popular));
-        $packages->setMaxPerPage($perPage);
-        $packages->setCurrentPage($req->get('page', 1));
+        $packages->setMaxPerPage((int)$perPage);
+        $packages->setCurrentPage((int)$req->get('page', 1));
 
         $data = ['packages' => $packages];
         $data['meta'] = $this->getPackagesMetadata($data['packages']);

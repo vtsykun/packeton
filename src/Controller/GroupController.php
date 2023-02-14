@@ -29,17 +29,25 @@ class GroupController extends AbstractController
         $page = $request->query->get('page', 1);
         $qb = $this->registry->getRepository(Group::class)
             ->createQueryBuilder('g');
+
+        if ($searchGroup = $request->query->get('search')['group'] ?? null) {
+            $searchGroup = \mb_strtolower($searchGroup);
+            $qb->andWhere('LOWER(g.name) LIKE :search')
+                ->setParameter('search', "%{$searchGroup}%");
+        }
+
         $qb->orderBy('g.id', 'DESC');
 
         $paginator = new Pagerfanta(new QueryAdapter($qb, false));
         $paginator->setMaxPerPage(10);
         $csrfForm = $this->createFormBuilder([])->getForm();
 
-        $paginator->setCurrentPage($page);
+        $paginator->setCurrentPage((int)$page);
 
         return $this->render('group/index.html.twig', [
             'groups' => $paginator,
-            'csrfForm' => $csrfForm
+            'csrfForm' => $csrfForm,
+            'searchGroup' => $searchGroup,
         ]);
     }
 

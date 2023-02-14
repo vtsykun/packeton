@@ -43,7 +43,7 @@ class WebController extends AbstractController
         $page = $request->query->get('page', 1);
         $paginator = new Pagerfanta($this->createAdapter());
         $paginator->setMaxPerPage(10);
-        $paginator->setCurrentPage($page);
+        $paginator->setCurrentPage((int)$page);
 
         return $this->render('web/index.html.twig', [
             'packages' => $paginator

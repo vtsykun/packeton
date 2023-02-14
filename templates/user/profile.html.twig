@@ -16,10 +16,12 @@
 </h2>
 
 <section class="row">
-
     {% if deleteForm is defined and is_granted('ROLE_ADMIN') and user.admin == false %}
         <div class="btn-group btn-group-xs">
-            <form class="delete action" action="{{ path('user_delete', {name: user.username}) }}" method="post" onsubmit="return confirm('Are you sure?');">
+            <a href="{{ path('users_update', {name: user.userIdentifier}) }}" class="btn btn-primary">Edit</a>
+        </div>
+        <div class="btn-group btn-group-xs">
+            <form class="delete action" action="{{ path('user_delete', {name: user.userIdentifier}) }}" method="post" onsubmit="return confirm('Are you sure?');">
                 {{ form_widget(deleteForm._token) }}
                 <button class="btn btn-danger" type="submit">Delete</button>
             </form>
@@ -37,7 +39,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "{{ app.request.getScheme() }}://{{ user.username }}:{{ user.apiToken }}@{{ app.request.getHttpHost() }}"
+            "url": "{{ app.request.getScheme() }}://{{ user.userIdentifier }}:{{ user.apiToken }}@{{ app.request.getHttpHost() }}"
         }
     ]
 }
@@ -49,7 +51,7 @@
                 to enter the username and password.
             </p>
             <pre>
-composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.username }} {{ user.apiToken }}
+composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ user.apiToken }}
             </pre>
         </section>
     {% endif %}
