@@ -291,7 +291,7 @@ class UserController extends AbstractController
      */
     public function profileAction(Request $req, #[Vars(['name' => 'username'])] User $user)
     {
-        $deleteForm = $this->createFormBuilder([])->getForm();
+        $deleteForm = $this->createFormBuilder()->getForm();
         $packages = $this->getUserPackages($req, $user);
 
         return $this->render('user/profile.html.twig', [
