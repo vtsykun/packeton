@@ -946,7 +946,7 @@ class PackageController extends AbstractController
 
         $paginator = new Pagerfanta(new FixedAdapter($depCount, $packages));
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($page, false, true);
+        $paginator->setCurrentPage((int)$page, false, true);
 
         $data['packages'] = $paginator;
         $data['count'] = $depCount;
@@ -979,7 +979,7 @@ class PackageController extends AbstractController
 
         $paginator = new Pagerfanta(new FixedAdapter($suggestCount, $packages));
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($page);
+        $paginator->setCurrentPage((int)$page);
 
         $data['packages'] = $paginator;
         $data['count'] = $suggestCount;

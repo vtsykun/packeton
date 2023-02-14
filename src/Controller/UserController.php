@@ -145,7 +145,7 @@ class UserController extends AbstractController
         $paginator->setMaxPerPage(6);
 
         $csrfForm = $this->createFormBuilder([])->getForm();
-        $paginator->setCurrentPage($page);
+        $paginator->setCurrentPage((int)$page);
 
         /** @var User[] $paginator */
         return $this->render('user/list.html.twig', [
@@ -322,7 +322,7 @@ class UserController extends AbstractController
         );
 
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($req->query->get('page', 1));
+        $paginator->setCurrentPage((int)$req->query->get('page', 1));
 
         return $this->render('user/favorites.html.twig', [
             'packages' => $paginator,
@@ -386,7 +386,7 @@ class UserController extends AbstractController
 
         $paginator = new Pagerfanta(new QueryAdapter($packages, true));
         $paginator->setMaxPerPage(15);
-        $paginator->setCurrentPage($req->query->get('page', 1));
+        $paginator->setCurrentPage((int)$req->query->get('page', 1));
 
         return $paginator;
     }
