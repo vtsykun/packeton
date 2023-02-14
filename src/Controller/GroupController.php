@@ -39,7 +39,7 @@ class GroupController extends AbstractController
         $paginator->setMaxPerPage(10);
         $csrfForm = $this->createFormBuilder([])->getForm();
 
-        $paginator->setCurrentPage($page);
+        $paginator->setCurrentPage((int)$page);
 
         return $this->render('group/index.html.twig', [
             'groups' => $paginator,
