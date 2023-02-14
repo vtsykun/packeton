@@ -135,11 +135,19 @@ class UserController extends AbstractController
     public function listAction(Request $request)
     {
         $page = $request->query->get('page', 1);
+        $searchUser = $request->query->get('search_user');
 
         $qb = $this->registry->getRepository(User::class)
             ->createQueryBuilder('u');
         $qb->where("u.roles NOT LIKE '%ADMIN%'")
             ->orderBy('u.id', 'DESC');
+
+        if ($searchUser && isset($searchUser['user'])) {
+            $searchUser = $searchUser['user'];
+
+            $qb->andWhere('u.username LIKE :searchUser')
+                ->setParameter('searchUser', "%{$searchUser}%");
+        }
 
         $paginator = new Pagerfanta(new QueryAdapter($qb, false));
         $paginator->setMaxPerPage(6);
@@ -150,7 +158,8 @@ class UserController extends AbstractController
         /** @var User[] $paginator */
         return $this->render('user/list.html.twig', [
             'users' => $paginator,
-            'csrfForm' => $csrfForm
+            'csrfForm' => $csrfForm,
+            'searchUser' => $searchUser
         ]);
     }
 
