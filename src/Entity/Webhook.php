@@ -43,7 +43,7 @@ class Webhook implements OwnerAwareInterface
     /**
      * @var string
      *
-     * @ORM\Column(name="url", type="string", length=8000)
+     * @ORM\Column(name="url", type="text")
      */
     private $url;
 
@@ -64,7 +64,7 @@ class Webhook implements OwnerAwareInterface
     /**
      * @var string|null
      *
-     * @ORM\Column(name="package_restriction", type="string", length=8000, nullable=true)
+     * @ORM\Column(name="package_restriction", type="text", nullable=true)
      */
     private $packageRestriction;
 
