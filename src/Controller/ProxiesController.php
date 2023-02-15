@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Packeton\Controller;
 
+use Composer\Downloader\TransportException;
 use Packeton\Form\Type\ProxySettingsType;
 use Packeton\Mirror\Model\ProxyInfoInterface;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
+use Packeton\Mirror\Utils\MirrorPackagesValidate;
+use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +24,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class ProxiesController extends AbstractController
 {
     public function __construct(
-        private readonly ProxyRepositoryRegistry $proxyRepositoryRegistry
+        private readonly ProxyRepositoryRegistry $proxyRepositoryRegistry,
+        private readonly MirrorTextareaParser $textareaParser,
+        private readonly MirrorPackagesValidate $mirrorValidate,
     ) {
     }
 
@@ -73,13 +78,52 @@ class ProxiesController extends AbstractController
         ]);
     }
 
+    #[Route('/{alias}/mark-enabled', name: 'proxy_mark_enabled', methods: ["POST"])]
+    public function markEnabled(Request $request, string $alias)
+    {
+        $repo = $this->getRemoteRepository($alias);
+        $data = $this->jsonRequest($request);
+
+        $packages = $this->textareaParser->parser($data['packages'] ?? null);
+        try {
+            $result = $this->mirrorValidate->checkPackages($repo, $packages);
+        } catch (TransportException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 400);
+        }
+
+        if (false === ($data['check'] ?? false)) {
+            $pm = $repo->getPackageManager();
+            \array_map($pm->markEnable(...), $result['valid'] ?? []);
+            $this->addFlash('success', 'The packages have been enabled.');
+        }
+
+        return new JsonResponse($result);
+    }
+
     #[Route('/{alias}/mark-approved', name: 'proxy_mark_approved', methods: ["PUT"])]
     public function markApproved(Request $request, string $alias)
     {
         $repo = $this->getRemoteRepository($alias);
         $data = $this->jsonRequest($request);
 
-        return new JsonResponse($data);
+        $pm = $repo->getPackageManager();
+        \array_map($pm->markApprove(...), $data['packages'] ?? []);
+        $this->addFlash('success', 'The packages have been approved');
+
+        return new JsonResponse([], 204);
+    }
+
+    #[Route('/{alias}/remove-approved', name: 'proxy_remove_approved', methods: ["DELETE"])]
+    public function removeApproved(Request $request, string $alias)
+    {
+        $repo = $this->getRemoteRepository($alias);
+        $data = $this->jsonRequest($request);
+
+        $pm = $repo->getPackageManager();
+        \array_map($pm->removeApprove(...), $data['packages'] ?? []);
+        $this->addFlash('success', 'The packages have been removed');
+
+        return new JsonResponse([], 204);
     }
 
     protected function jsonRequest(Request $request): array
@@ -109,6 +153,8 @@ class ProxiesController extends AbstractController
                 'approved' => isset($approved[$name])
             ];
         }
+
+        uasort($packages, fn($p1, $p2) => $p1['name'] <=> $p2['name']);
 
         return [
             'repoUrl' => $repoUrl,

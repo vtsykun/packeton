@@ -23,6 +23,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     protected string $rootFilename;
     protected string $providersDir;
     protected string $packageDir;
+    protected string $ds;
 
     public function __construct(
         protected array $repoConfig,
@@ -36,10 +37,12 @@ class RemoteProxyRepository extends AbstractProxyRepository
             $mirrorRepoMetaDir = ConfigFactory::getHomeDir();
         }
 
-        $this->mirrorRepoMetaDir = \rtrim($mirrorRepoMetaDir, '/') . '/' . $this->repoConfig['name'];
-        $this->rootFilename = $this->mirrorRepoMetaDir . '/' . self::ROOT_PACKAGE;
-        $this->providersDir = $this->mirrorRepoMetaDir . '/p/';
-        $this->packageDir = $this->mirrorRepoMetaDir . '/package/';
+        $this->ds = DIRECTORY_SEPARATOR;
+
+        $this->mirrorRepoMetaDir = \rtrim($mirrorRepoMetaDir, $this->ds) . $this->ds . $this->repoConfig['name'];
+        $this->rootFilename = $this->mirrorRepoMetaDir . $this->ds . self::ROOT_PACKAGE;
+        $this->providersDir = $this->mirrorRepoMetaDir . $this->ds . 'p' . $this->ds;
+        $this->packageDir = $this->mirrorRepoMetaDir . $this->ds . 'package' . $this->ds;
 
         $this->zipballManager->setRepository($this);
     }
@@ -100,7 +103,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
             return $this->createMetadataFromFile($filename, $hash);
         }
 
-        $dir = \rtrim(\dirname($filename), '/') . '/';
+        $dir = \rtrim(\dirname($filename), $this->ds) . $this->ds;
         $last = $this->filesystem->globLast($dir . $vendorName . '*');
         return $last ? $this->createMetadataFromFile($last) : null;
     }
@@ -260,11 +263,24 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function packageKey(string $package, string $hash = null): string
     {
-        return \preg_replace('#[^a-z0-9-_/]#i', '-', $package) . ($hash ? '__' . $hash : '') . '.json.gz';
+        @[$vendor, $pkg] = \explode('/', $package, 2);
+
+        $vendor = $this->safeName($vendor);
+        $pkg = $this->safeName($pkg) ?: '_null_';
+
+        return $vendor . $this->ds . $pkg . ($hash ? '__' . $hash : '') . '.json.gz';
     }
 
     public function providerKey(string $uri): string
     {
-        return  \preg_replace('#[^a-z0-9-_]#i', '-', $uri) . '.json.gz';
+        return  $this->safeName($uri) . '.json.gz';
+    }
+
+    private function safeName($name)
+    {
+        $name = (string) $name;
+        $name = \str_replace('.', '_', $name);
+
+        return \preg_replace('#[^a-z0-9-_]#i', '-', $name);
     }
 }

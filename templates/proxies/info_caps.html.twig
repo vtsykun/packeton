@@ -1,9 +1,14 @@
-<h2 class="title">
-    {% if proxy.logo %}
-        <img height="40" src="{{ proxy.logo }}" alt="{{ proxy.url }}">
-    {% endif %}
-    {{ proxy.alias }}
-    <span class="role-name" style="font-size: 0.8em">{{ proxy.url }}</span>
+<h2 class="title" style="display: flex">
+    <a href="{{ path('proxies_list') }}" style="margin-right: 10px; margin-top: 3px" title="Go to Proxy List">
+        <i class="fa fa-home" style="color: grey" aria-hidden="true"></i>
+    </a>
+    <a href="{{ path('proxy_view', {'alias': proxy.alias}) }}">
+        {% if proxy.logo %}
+            <img height="40" src="{{ proxy.logo }}" alt="{{ proxy.url }}">
+        {% endif %}
+        {{ proxy.alias }}
+        <span class="role-name" style="font-size: 0.55em">{{ proxy.url }}</span>
+    </a>
 </h2>
 <p class="link-gray">
     Last updated: {{ proxy.getStats('last_sync', 'N/A') }}

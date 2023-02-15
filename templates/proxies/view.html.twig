@@ -33,6 +33,13 @@
                     <input class="btn btn-default" type="submit" value="Settings" />
                 </form>
 
+                <div class="settings action">
+                    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse-push" aria-expanded="false" aria-controls="collapse-push">
+                        Add packages
+                    </button>
+                </div>
+
+
                 <form class="update action" action="" method="PUT">
                     <input type="hidden" name="token" value="{{ csrfToken }}"/>
                     <input class="btn btn-success" type="submit" value="Update" />
@@ -43,17 +50,36 @@
                     <input class="btn btn-danger" type="submit" value="Force resync" />
                 </form>
             </div>
+
+            <div class="collapse" id="collapse-push">
+                <form name="packages_mirror" id="packages_mirror" method="POST" action="{{ path('proxy_mark_enabled', { 'alias': proxy.alias }) }}">
+                    <p class="card card-body" style="font-size: 1.2em">
+                        Here you can add mirrored packages. If strict mirrored mode is enabled, the Packeton will
+                        prevent you from using packages that have not been approved by your.
+                    </p>
+
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <div class="form-group">
+                        <label for="package_payload">
+                            Put your composer.json, composer.lock, composer info output or packages names separated by spaces or comma.
+                            The file composer.json may is invalid json and can be partially copied, but match with regexp: #"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)":#
+                        </label>
+                        <textarea id="package_payload" class="form-control" name="packages" style="resize: none" rows="15"></textarea>
+                    </div>
+                    <div id="result-validate" ></div>
+                    <input id="mirror-submit" class="btn btn-success"  style="min-width: 200px;" type="submit" value="Check Packages" />
+                </form>
+            </div>
         </div>
 
         <div class="row">
             <h2 style="text-align: center">Used packages</h2>
-
             <div style="text-align: right" class="grid-buttons">
                 <form class="action" action="{{ path('proxy_mark_approved', {'alias': proxy.alias}) }}" method="PUT">
                     <input type="hidden" name="token" value="{{ csrfToken }}"/>
                     <input class="btn btn-success" type="submit" value="Mark Approved" />
                 </form>
-                <form class="action" action="" method="DELETE">
+                <form class="action" action="{{ path('proxy_remove_approved', {'alias': proxy.alias}) }}" method="DELETE">
                     <input type="hidden" name="token" value="{{ csrfToken }}"/>
                     <input class="btn btn-danger" type="submit" value="Remove" />
                 </form>
