@@ -12,6 +12,7 @@ use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
 use Packeton\Mirror\Utils\MirrorPackagesValidate;
 use Packeton\Mirror\Utils\MirrorTextareaParser;
+use Packeton\Mirror\Utils\MirrorUIFormatter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,6 +70,7 @@ class ProxiesController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $repo->getPackageManager()->setSettings($form->getData());
             $this->addFlash('success', 'The proxy settings has been updated.');
+            $repo->touchRoot();
             return $this->redirect($this->generateUrl('proxy_view', ['alias' => $alias]));
         }
 
@@ -95,6 +97,7 @@ class ProxiesController extends AbstractController
             $pm = $repo->getPackageManager();
             \array_map($pm->markEnable(...), $result['valid'] ?? []);
             $this->addFlash('success', 'The packages have been enabled.');
+            $repo->touchRoot();
         }
 
         return new JsonResponse($result);
@@ -109,6 +112,7 @@ class ProxiesController extends AbstractController
         $pm = $repo->getPackageManager();
         \array_map($pm->markApprove(...), $data['packages'] ?? []);
         $this->addFlash('success', 'The packages have been approved');
+        $repo->touchRoot();
 
         return new JsonResponse([], 204);
     }
@@ -122,6 +126,7 @@ class ProxiesController extends AbstractController
         $pm = $repo->getPackageManager();
         \array_map($pm->removeApprove(...), $data['packages'] ?? []);
         $this->addFlash('success', 'The packages have been removed');
+        $repo->touchRoot();
 
         return new JsonResponse([], 204);
     }
@@ -143,18 +148,7 @@ class ProxiesController extends AbstractController
 
         $rpm = $repo->getPackageManager();
 
-        $packages = [];
-        $approved = \array_flip($rpm->getApproved());
-        $enabled = $rpm->getEnabled();
-        foreach ($enabled as $name) {
-            $packages[$name] = [
-                'name' => $name,
-                'enabled' => true,
-                'approved' => isset($approved[$name])
-            ];
-        }
-
-        uasort($packages, fn($p1, $p2) => $p1['name'] <=> $p2['name']);
+        $packages = MirrorUIFormatter::getGridPackagesData($rpm->getApproved(), $rpm->getEnabled());
 
         return [
             'repoUrl' => $repoUrl,

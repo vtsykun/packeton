@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Manager;
 
+use Packeton\Composer\Util\ComposerApiVersion;
 use Packeton\Mirror\Model\JsonMetadata;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -14,7 +15,7 @@ class RootMetadataMerger
     ) {
     }
 
-    public function merge(JsonMetadata $stamps): JsonMetadata
+    public function merge(JsonMetadata $stamps, int $composerApi = null): JsonMetadata
     {
         $rootFile = $stamps->decodeJson();
         $config = $stamps->getOptions();
@@ -66,6 +67,12 @@ class RootMetadataMerger
             unset($rootFile['provider-includes'], $rootFile['providers-url']);
             $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $config->getAlias()]);
             $rootFile['providers-lazy-url'] = \str_replace('VND/PKG','%package%', $url);
+        }
+
+        // generate lazy load includes if enabled composer strict approve mode.
+        if ($config->disableV1Format() === false && ComposerApiVersion::API_V1 === $composerApi && ($includes = $config->getIncludes())) {
+            unset($rootFile['provider-includes'], $rootFile['providers-url'], $rootFile['providers-lazy-url']);
+            $rootFile['includes'] = $includes;
         }
 
         if ($config->isDistMirror()) {

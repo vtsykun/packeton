@@ -11,6 +11,7 @@ use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\Service\ComposeProxyRegistry;
 use Packeton\Security\Acl\ObjectIdentity;
+use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -48,9 +49,10 @@ class MirrorController extends AbstractController
     {
         $metadata = $this->wrap404Error($alias, fn (PRI $repo) => $repo->rootMetadata());
 
-        $metadata = $this->metadataMerger->merge($metadata);
+        $uaParser = new UserAgentParser($request->headers->get('User-Agent'));
+        $api = $uaParser->getComposerMajorVersion();
 
-        return $this->renderMetadata($metadata, $request);
+        return $this->renderMetadata($metadata, $request, fn ($meta) => $this->metadataMerger->merge($meta, $api));
     }
 
     #[Route('/{alias}/p2/{package}.json', name: 'mirror_metadata_v2', requirements: ['package' => '%package_name_regex_v2%'], methods: ['GET'])]
@@ -107,11 +109,16 @@ class MirrorController extends AbstractController
         return $this->renderMetadata($metadata, $request);
     }
 
-    protected function renderMetadata(JsonMetadata $metadata, Request $request): Response
+    protected function renderMetadata(JsonMetadata $metadata, Request $request, callable $lazyLoad = null): Response
     {
         $response = new Response($metadata->getContent(), 200, ['Content-Type' => 'application/json']);
         $response->setLastModified($metadata->lastModified());
-        $response->isNotModified($request);
+        $notModified = $response->isNotModified($request);
+
+        if (null !== $lazyLoad && false === $notModified) {
+            $metadata = $lazyLoad($metadata);
+            $response->setContent($metadata instanceof JsonMetadata ? $metadata->getContent() : $metadata);
+        }
 
         return $response;
     }

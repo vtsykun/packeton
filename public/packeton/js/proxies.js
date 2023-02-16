@@ -31,6 +31,12 @@
         dispatchCheckPackagesForm(e.target);
     });
 
+    $('.tabpanel-packages').on('click', (e) => {
+        e.preventDefault();
+        let checkbox = $(e.target).closest('.tab-pane').find('.checkbox-id');
+        checkbox.prop('checked', true);
+    });
+
     function serializeForm(el) {
         let data = {};
         let form = $(el).closest('form');

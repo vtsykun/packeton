@@ -84,29 +84,48 @@
                     <input class="btn btn-danger" type="submit" value="Remove" />
                 </form>
             </div>
-            <table class="table table-bordered">
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Package name</th>
-                    <th scope="col">Enabled</th>
-                    <th scope="col">Approved</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for p in usedPackages %}
-                    <tr>
-                        <th scope="row">
-                            <span>{{ loop.index }}</span>
-                            <input type="checkbox" class="checkbox-id" name="{{ p['name'] }}">
-                        </th>
-                        <td>{{ p['name'] }}</td>
-                        <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
-                        <td>{{ p['approved'] ? 'YES' : 'NO' }}</td>
-                    </tr>
+
+            <ul class="nav nav-tabs" role="tablist">
+                {% for vendor, items in usedPackages %}
+                {% set title = vendor ~ ' (' ~ items|length ~ ')' %}
+                {% set vid = 'vendor-' ~ vendor  %}
+                <li role="presentation" class="{{ loop.first ? 'active' : '' }}">
+                    <a href="#{{ vid }}" aria-controls="{{ vid }}" role="tab" data-toggle="tab">{{ title|capitalize }}</a>
+                </li>
                 {% endfor %}
-                </tbody>
-            </table>
+            </ul>
+
+            <div class="tab-content">
+                {% for vendor, items in usedPackages %}
+                {% set vid = 'vendor-' ~ vendor  %}
+                <div role="tabpanel" class="tab-pane {{ loop.first ? 'active' : '' }}" id="{{ vid }}">
+                    <a href="#" class="tabpanel-packages">Select All</a>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Package name</th>
+                            <th scope="col">Enabled</th>
+                            <th scope="col">Approved</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in items %}
+                                <tr>
+                                    <th scope="row">
+                                        <span>{{ loop.index }}</span>
+                                        <input type="checkbox" class="checkbox-id" name="{{ p['name'] }}">
+                                    </th>
+                                    <td>{{ p['name'] }}</td>
+                                    <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
+                                    <td>{{ p['approved'] ? 'YES' : 'NO' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>

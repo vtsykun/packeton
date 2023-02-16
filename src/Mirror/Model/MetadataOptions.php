@@ -49,6 +49,16 @@ class MetadataOptions
         return $this->config['available_package_patterns'] ?? [];
     }
 
+    public function getIncludes(): ?array
+    {
+        $includes = $this->config['includes'] ?? null;
+        if (\is_callable($includes)) {
+            $includes = \call_user_func($includes);
+        }
+
+        return $includes;
+    }
+
     public function getAvailablePackages(): array
     {
         return $this->config['available_packages'] ?? [];

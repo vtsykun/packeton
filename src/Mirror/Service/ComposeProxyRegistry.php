@@ -35,6 +35,7 @@ class ComposeProxyRegistry
         return new ProxyRepositoryACLDecorator(
             $this->createRepository($name),
             $repo->getPackageManager(),
+            $repo,
             $repo->getConfig()->getAvailablePackages(),
             $repo->getConfig()->getAvailablePatterns()
         );

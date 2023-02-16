@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Packeton\Mirror\Decorator;
 
 use Packeton\Mirror\Exception\ApproveRestrictException;
+use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\ApprovalRepoInterface;
 use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as RPI;
+use Packeton\Mirror\RemoteProxyRepository;
+use Packeton\Mirror\Utils\IncludeV1ApiMetadata;
 
 /**
  * Filter by available_packages, available_package_patterns
@@ -17,6 +20,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     public function __construct(
         protected RPI $repository,
         protected ApprovalRepoInterface $approval,
+        protected ?RemoteProxyRepository $remote = null,
         protected array $availablePackages = [],
         protected array $availablePackagePatterns = [],
     ) {
@@ -31,6 +35,13 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
         if ($this->approval->requireApprove()) {
             $approved = $this->approval->getApproved();
             $metadata->setOption('available_packages', $approved);
+
+            if (null !== $this->remote) {
+                $metadata->setOption('includes', function () use ($approved) {
+                    [$includes] = IncludeV1ApiMetadata::buildInclude($approved, $this->remote);
+                    return $includes;
+                });
+            }
         }
 
         return $metadata;
@@ -41,6 +52,14 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
      */
     public function findProviderMetadata(string $nameOrUri): JsonMetadata
     {
+        if (\str_starts_with($nameOrUri, 'include-packeton/all$') && null !== $this->remote) {
+            $approved = $this->approval->getApproved();
+            [$includes, $content] = IncludeV1ApiMetadata::buildInclude($approved, $this->remote);
+            if (isset($includes[$nameOrUri])) {
+                return new JsonMetadata($content);
+            }
+        }
+
         return $this->repository->findProviderMetadata($nameOrUri);
     }
 
