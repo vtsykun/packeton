@@ -110,7 +110,7 @@ HELP
                 $user->setPassword($this->passwordHasher->hashPassword($user, $password));
             }
 
-            if ($input->hasOption('enabled')) {
+            if ($input->hasOption('enabled') && null !== $input->getOption('enabled')) {
                 $user->setEnabled((bool) $input->getOption('enabled'));
             }
 

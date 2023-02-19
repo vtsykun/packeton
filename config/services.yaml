@@ -186,3 +186,6 @@ services:
                 autoescape: false
         calls:
             - [addExtension, ['@packeton.twig.webhook_sandbox']]
+    
+    Packeton\Security\CheckLdapCredentialsListener:
+        autoconfigure: false
