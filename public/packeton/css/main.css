@@ -773,10 +773,12 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     font-size: 12px;
 }
 
-.btn.loading, .btn.loading:hover, .btn.loading:active {
+.btn.loading, .btn.loading:hover, .btn.loading:active, .btn.loading:focus {
     background-image: url("../img/loader.gif");
     background-position: 95% 50%;
     background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0.75;
 }
 
 .btn-default {

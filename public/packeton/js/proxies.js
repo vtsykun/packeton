@@ -1,32 +1,6 @@
 (function ($, humane) {
     "use strict";
 
-    if (!String.prototype.htmlSpecialChars) {
-        String.prototype.htmlSpecialChars = function () {
-            return this.replace(/&/g, '&amp;')
-                .replace(/'/g, '&apos;')
-                .replace(/"/g, '&quot;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-        };
-    }
-
-    $('.view-log').on('click', function (e) {
-        e.preventDefault();
-        let target = $(this);
-        let details = target.attr('data-details');
-        let message = target.attr('data-msg');
-        let close = '<a class="close" onclick="humane.remove();">x</a>';
-        if (message.length > 64) {
-            if (message.length > 120) {
-                details = '<pre>' + message + '</pre>' + details;
-            }
-
-            message = message.substring(0, 60) + '...';
-        }
-        humane.log([close, message, details], {timeout: 0});
-    });
-
     let gridBtn = $('.grid-buttons .btn');
     gridBtn.on('click', (e) => {
         e.preventDefault();
@@ -35,6 +9,23 @@
     gridBtn.on('submit', (e) => {
         e.preventDefault();
         dispatchAjaxGridForm(e.target);
+    });
+
+    let updateBtn = $('.update.action').find('.btn');
+    updateBtn.on('click', (e) => {
+        e.preventDefault();
+        let data = {};
+        let options = ajaxFormData(e.target, data);
+        if (data['force']) {
+            if (!window.confirm('All data will remove and resync again. Are you sure?')) {
+                return;
+            }
+        }
+
+        options['success'] = () => {
+            humane.log('The job has been scheduled');
+        }
+        $.ajax(options);
     });
 
     let packagesMirror = $('#packages_mirror .btn-success');
@@ -50,6 +41,12 @@
     $('.tabpanel-packages').on('click', (e) => {
         e.preventDefault();
         let checkbox = $(e.target).closest('.tab-pane').find('.checkbox-id');
+        checkbox.prop('checked', true);
+    });
+
+    $('.tabpanel-packages-new').on('click', (e) => {
+        e.preventDefault();
+        let checkbox = $(e.target).closest('.tab-pane').find('.checkbox-new');
         checkbox.prop('checked', true);
     });
 
@@ -96,7 +93,6 @@
                 return;
             }
 
-            button.removeClass('loading');
             let msg = '';
             if (data['valid'] && data['valid'].length > 0) {
                 validTextarea = req['packages'];
@@ -106,21 +102,33 @@
             }
 
             if (data['invalid'] && data['invalid'].length > 0) {
-                console.log(data['invalid']);
                 msg += '<div class="alert alert-warning">Package not found:' + data['invalid'].join(', ') + '</div>';
+            }
+            if (data['errors'] && data['errors'].length > 0) {
+                msg += '<div class="alert alert-warning">' + data['errors'].join('<br>') + '</div>';
             }
 
             let info = "";
-            for (let item of data['validData']) {
-                let str = item['name'] + " " + item['license'] + " - " + item['description'];
-                info += str.trim().replace(/[\-,]+$/, '').htmlSpecialChars() + "\n";
+            if (data['newData'] && data['newData'].length > 0) {
+                for (let item of data['newData']) {
+                    let str = item['name'] + " " + item['license'] + " - " + item['description'];
+                    info += str.trim().replace(/[\-,]+$/, '').htmlSpecialChars() + "\n";
+                }
+                msg += '<b>New packages</b><pre style="max-height: 175px;">' + info + '</pre>';
+            }
+            if (data['updateData'] && data['updateData'].length > 0) {
+                info = '';
+                for (let item of data['updateData']) {
+                    let str = item['name'] + " " + item['license'] + " - " + item['description'];
+                    info += str.trim().replace(/[\-,]+$/, '').htmlSpecialChars() + "\n";
+                }
+                msg += '<b>Already enabled packages</b><pre style="max-height: 175px;">' + info + '</pre>';
             }
 
-            msg += '<b>Valid packages</b><pre style="max-height: 175px;">' + info + '</pre>';
             $('#result-validate').html(msg);
         }
 
-        $.ajax(options);
+        $.ajax(options).always(() => {button.removeClass('loading')});
     }
 
     function dispatchAjaxGridForm(el) {

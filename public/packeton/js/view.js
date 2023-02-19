@@ -16,24 +16,6 @@
         e.preventDefault();
     });
 
-    $('.package .view-log').on('click', function (e) {
-        e.preventDefault();
-
-        var target = $(this);
-        var details = target.attr('data-details');
-        var message = target.attr('data-msg');
-        var close = '<a class="close" onclick="humane.remove();">x</a>';
-        if (message.length > 64) {
-            if (message.length > 120) {
-                details = '<pre>' + message + '</pre>' + details;
-            }
-
-            message = message.substring(0, 60) + '...';
-        }
-
-        humane.log([close, message, details], {timeout: 0});
-    });
-
     $('.package .details-toggler').on('click', function () {
         var target = $(this);
 
