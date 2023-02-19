@@ -102,22 +102,27 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     {
         $http = $this->syncService->initHttpDownloader($this->config);
 
-        if ($this->config->hasV2Api()) {
-            $queue = new \SplQueue();
-            try {
-                $apiUrl =  $this->config->getMetadataV2Url();
-                $this->requestMetadataVia2($http, [$package], $apiUrl, fn ($name, $meta) => $queue->enqueue($meta));
-            } catch (TransportException $exception) {
-                throw new MetadataNotFoundException("The package $package is not exist. Remote proxy status: {$exception->getStatusCode()}");
+        $queue = new \SplQueue();
+        $reject = static function (\Throwable $e) use ($package) {
+            if ($e instanceof TransportException) {
+                throw new MetadataNotFoundException("The package $package not found. Remote proxy status: {$e->getStatusCode()}");
             }
 
-            if (!empty($meta = $queue->dequeue())) {
-                return $meta;
-            }
-        } elseif ($metadataUrl = $this->config->getMetadataV1Url($package)) {
-            // TODO: Try to search in included providers
+            throw new MetadataNotFoundException("The package $package errored. Unexpected exception " . $e->getMessage());
+        };
+
+        if ($this->config->hasV2Api()) {
+            $apiUrl =  $this->config->getMetadataV2Url();
+            $this->requestMetadataVia2($http, [$package], $apiUrl, fn ($name, array $meta) => $queue->enqueue($meta), $reject);
+
+        } elseif ($apiUrl = $this->config->getMetadataV1Url($package)) {
+            $this->requestMetadataVia1($http, [$package], $apiUrl, fn ($name, array $meta) => $queue->enqueue($meta), $reject, $this->repository->lookupAllProviders());
         }
 
-        throw new MetadataNotFoundException('not found');
+        if (!empty($meta = $queue->dequeue())) {
+            return $meta;
+        }
+
+        throw new MetadataNotFoundException('Not found');
     }
 }

@@ -20,6 +20,21 @@
         <div class="row">
             <div class="col-md-7">
                 {% include 'proxies/info_caps.html.twig' %}
+
+                {% set lastJob = package_job_result(proxy.reference, 'sync:mirrors') %}
+                {% if lastJob is not null %}
+                    <p>Job result:
+                        {% if lastJob.errored %}
+                            <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #8B0000FF" title="{{ lastJob.getResult('message') }}"></i>
+                        {% endif %}
+
+                        <a style="font-size: 0.9em; cursor: pointer"
+                           class="view-log"
+                           data-msg="{{ lastJob.getResult('message') ~ "\n" ~ lastJob.getResult('exceptionMsg') }}"
+                           data-details="{{ lastJob.getResult('details') }}"
+                        >View logs</a>
+                    </p>
+                {% endif %}
             </div>
             <div class="col-md-5">
                 {% include 'proxies/info_repo.html.twig' %}
@@ -35,7 +50,7 @@
 
                 <div class="settings action">
                     <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse-push" aria-expanded="false" aria-controls="collapse-push">
-                        Add packages
+                        Mass mirror packages
                     </button>
                 </div>
 
@@ -52,13 +67,23 @@
             </div>
 
             <div class="collapse" id="collapse-push">
-                <form name="packages_mirror" id="packages_mirror" method="POST" action="{{ path('proxy_mark_enabled', { 'alias': proxy.alias }) }}">
+                <form name="packages_mirror" id="packages_mirror" method="POST" action="{{ path('proxy_mark_mass', { 'alias': proxy.alias }) }}">
                     <p class="card card-body" style="font-size: 1.2em">
                         Here you can add mirrored packages. If strict mirrored mode is enabled, the Packeton will
                         prevent you from using packages that have not been approved by your.
                     </p>
 
                     <input type="hidden" name="token" value="{{ csrfToken }}"/>
+
+                    <div class="form-group">
+                        <label for="package_action_type">Action</label>
+                        <select id="package_action_type" class="form-control" name="action">
+                            <option value="approve">Enable and Approve</option>
+                            <option value="enable">Only Enable</option>
+                            <option value="remove">Remove</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label for="package_payload">
                             Put your composer.json, composer.lock, composer info output or packages names separated by spaces or comma.
@@ -118,7 +143,7 @@
                                     </th>
                                     <td>{{ p['name'] }}</td>
                                     <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
-                                    <td>{{ p['approved'] ? 'YES' : 'NO' }}</td>
+                                    <td>{{ p['approved'] ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-times" style="color: #8B0000FF"></i>' }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

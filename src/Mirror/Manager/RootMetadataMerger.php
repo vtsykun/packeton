@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Manager;
 
-use Packeton\Composer\Util\ComposerApiVersion;
+use Packeton\Composer\Util\ComposerApi;
 use Packeton\Mirror\Model\JsonMetadata;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -70,7 +70,7 @@ class RootMetadataMerger
         }
 
         // generate lazy load includes if enabled composer strict approve mode.
-        if ($config->disableV1Format() === false && ComposerApiVersion::API_V1 === $composerApi && ($includes = $config->getIncludes())) {
+        if ($config->disableV1Format() === false && ComposerApi::API_V1 === $composerApi && ($includes = $config->getIncludes())) {
             unset($rootFile['provider-includes'], $rootFile['providers-url'], $rootFile['providers-lazy-url']);
             $rootFile['includes'] = $includes;
         }

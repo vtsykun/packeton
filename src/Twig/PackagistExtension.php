@@ -107,13 +107,13 @@ class PackagistExtension extends AbstractExtension
         return null;
     }
 
-    public function getLatestJobResult($package): ?Job
+    public function getLatestJobResult($package, $type = 'package:updates'): ?Job
     {
         if ($package instanceof Package) {
             $package = $package->getId();
         }
 
-        return $this->registry->getRepository(Job::class)->findLastJobByType('package:updates', $package);
+        return $this->registry->getRepository(Job::class)->findLastJobByType($type, $package);
     }
 
     public function truncate($string, $length)

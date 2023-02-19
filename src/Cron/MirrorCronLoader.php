@@ -22,7 +22,7 @@ class MirrorCronLoader implements ScheduleLoaderInterface
      */
     public function getSchedules(array $options = []): iterable
     {
-        if (!\in_array($options['groups'] ?? 'default', ['default', 'mirror'])) {
+        if (!\array_intersect($options['groups'] ?? ['default'], ['default', 'mirror'])) {
             return;
         }
 
@@ -35,7 +35,7 @@ class MirrorCronLoader implements ScheduleLoaderInterface
                 yield new ScheduleEnvelope(
                     'sync:mirrors',
                     new Model\ScheduleStamp($expr),
-                    new WorkerStamp(true),
+                    new WorkerStamp(asJob: true, hash: $config->reference()),
                     new Model\ArgumentsStamp(['mirror' => $name,])
                 );
             }

@@ -11,8 +11,11 @@ class WorkerStamp implements CommandStamp
     public const DEFAULT_JOB_NAME = 'cron:execute';
 
     public function __construct(
-        public readonly bool $asJob = false,
-        public readonly ?int $hash = null,
+        public array $config = [],
+        public bool $asJob = false,
+        public ?int $hash = null,
     ) {
+        $this->asJob = $config['as_job'] ?? $this->asJob;
+        $this->hash = $config['hash'] ?? $this->hash;
     }
 }

@@ -8,17 +8,42 @@ use Composer\IO\ConsoleIO;
 use Composer\IO\IOInterface;
 use Composer\Util\Http\Response;
 use Composer\Util\HttpDownloader;
-use Composer\Util\Loop;
+use Packeton\Composer\Util\SignalLoop;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\RemoteProxyRepository;
+use Seld\Signal\SignalHandler;
 
 class SyncProviderService
 {
     private ?IOInterface $io;
+    private $onRejected;
+    private $signal;
 
     public function __construct(
         private readonly ProxyHttpDownloader $downloader,
     ) {
+    }
+
+    public function setErrorHandler(callable $onRejected = null): void
+    {
+        $this->onRejected = $onRejected;
+    }
+
+    public function setSignalHandler(SignalHandler $signal = null): void
+    {
+        $this->signal = $signal;
+    }
+
+    public function setIO(?IOInterface $io = null): void
+    {
+        $this->io = $io;
+    }
+
+    public function reset(): void
+    {
+        $this->signal = null;
+        $this->onRejected = null;
+        $this->io = null;
     }
 
     public function loadRootComposer(RemoteProxyRepository $repo): array
@@ -34,11 +59,6 @@ class SyncProviderService
         return $response->decodeJson();
     }
 
-    public function setIO(?IOInterface $io = null): void
-    {
-        $this->io = $io;
-    }
-
     public function loadProvidersInclude(RemoteProxyRepository $repo, array $providerIncludes): array
     {
         $loopCallback = function ($name, $uri, HttpDownloader $http) use ($repo) {
@@ -48,7 +68,7 @@ class SyncProviderService
 
             return $http
                 ->add($repo->getUrl($uri))
-                ->then(fn (Response $rs) => $repo->dumpProvider($uri, $rs->getBody()));
+                ->then(fn (Response $rs) => $repo->dumpProvider($uri, $rs->getBody()), $this->onRejected);
         };
 
         return $this->httpLoop($providerIncludes, $repo->getConfig(), $loopCallback);
@@ -66,7 +86,7 @@ class SyncProviderService
             }
 
             return $http->add($repo->getUrl($uri))
-                ->then(fn (Response $rs) => $repo->dumpPackage($name, $minifier ? $minifier($rs->getBody()) : $rs->getBody(), $hash));
+                ->then(fn (Response $rs) => $repo->dumpPackage($name, $minifier ? $minifier($rs->getBody()) : $rs->getBody(), $hash), $this->onRejected);
         };
 
         return $this->httpLoop($providers, $repo->getConfig(), $loopCallback);
@@ -80,7 +100,7 @@ class SyncProviderService
     protected function httpLoop(iterable $generator, ProxyOptions $config, callable $factory): array
     {
         $http = $this->initHttpDownloader($config);
-        $loop = new Loop($http);
+        $loop = new SignalLoop($http, $this->signal);
         $progress = $this->io instanceof ConsoleIO ? $this->io->getProgressBar() : null;
 
         $promises = $updated = $skipped = [];

@@ -16,7 +16,7 @@ class ProxyOptions extends MetadataOptions
         $url = \rtrim($this->config['url'], '/');
 
         // Full url
-        if ($path && \str_starts_with($path, $url)) {
+        if ($path && \preg_match('#^https?://#', $path)) {
             return $path;
         }
 
@@ -40,7 +40,11 @@ class ProxyOptions extends MetadataOptions
 
     public function getV2SyncApi(): ?string
     {
-        return (string)($this->config['root']['metadata-changes-url'] ?? null) ?: null;
+        if (!\is_string($this->config['root']['metadata-changes-url'] ?? null)) {
+            return null;
+        }
+
+        return $this->getUrl($this->config['root']['metadata-changes-url']);
     }
 
     public function getMetadataV1Url(string $package = null, string $hash = null): ?string
@@ -101,6 +105,11 @@ class ProxyOptions extends MetadataOptions
         ];
 
         return \array_values(\array_filter($flags));
+    }
+
+    public function reference(): int
+    {
+        return (\unpack('L', \substr(sha1($this->getAlias(), true), 0, 4))[1] ?? 0) % 1073741824;
     }
 
     public function isPackagist()

@@ -26,7 +26,7 @@ class WebhookCronLoader implements ScheduleLoaderInterface
      */
     public function getSchedules(array $options = []): iterable
     {
-        if (!\in_array($options['groups'] ?? 'default', ['default', 'webhook'])) {
+        if (!\array_intersect($options['groups'] ?? ['default'], ['default', 'webhook'])) {
             return;
         }
 

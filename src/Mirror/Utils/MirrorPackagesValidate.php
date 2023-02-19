@@ -36,7 +36,7 @@ class MirrorPackagesValidate
 
         return [
             'validData' => \array_values($valid),
-            'invalid' => \array_diff($packages, \array_keys($valid)),
+            'invalid' => \array_values(\array_diff($packages, \array_keys($valid))),
             'valid' => \array_keys($valid),
         ];
     }

@@ -6,25 +6,44 @@ namespace Packeton\Mirror\Service;
 
 use Composer\Downloader\TransportException;
 use Composer\IO\IOInterface;
+use Composer\Util\Http\Response;
 use Packeton\Composer\MetadataMinifier;
+use Packeton\Mirror\Model\HttpMetadataTrait;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\RemoteProxyRepository as RPR;
+use Seld\Signal\SignalHandler;
 
 class RemoteSyncProxiesFacade
 {
+    use HttpMetadataTrait;
+
     public const FULL_RESET = 1;
+    public const UI_RESET = 2;
 
     protected $providersCacheKeys = [];
 
     public function __construct(
-        private readonly SyncProviderService $syncProvider,
-        private readonly MetadataMinifier $minifier
+        protected SyncProviderService $syncProvider,
+        protected MetadataMinifier $metadataMinifier
     ) {
     }
 
-    public function sync(RPR $repo, IOInterface $io, int $flags = 0): array
+    public function sync(RPR $repo, IOInterface $io, int $flags = 0, SignalHandler $signal = null): array
     {
         $this->syncProvider->setIO($io);
+        $this->syncProvider->setSignalHandler($signal);
+        $this->signal = $signal;
+
+        try {
+            return $this->doSync($repo, $io, $flags);
+        } finally {
+            $this->signal = null;
+            $this->syncProvider->reset();
+        }
+    }
+
+    private function doSync(RPR $repo, IOInterface $io, int $flags = 0): array
+    {
         $this->providersCacheKeys = [];
 
         $stats = ['last_sync' => \date('Y-m-d H:i:s')];
@@ -43,13 +62,17 @@ class RemoteSyncProxiesFacade
         $root = $this->syncProvider->loadRootComposer($repo);
         $config = $repo->getConfig()->withRoot($root);
 
+        if ($this->signal?->isTriggered()) {
+            return [];
+        }
+
         if ($config->isLazy() && $config->hasV2Api()) {
-            $stats = $this->syncLazy($repo, $io, $config);
+            $stats += $this->syncLazyV2($repo, $io, $config);
             $repo->dumpRootMeta($root);
             return $stats;
         }
 
-        if ($repo->isRootFresh($root)) {
+        if ($repo->isRootFresh($root) && 0 === ($flags & self::UI_RESET)) {
             $io->info('Root is not changes, skip update providers');
             return $stats;
         }
@@ -65,17 +88,16 @@ class RemoteSyncProxiesFacade
         }
 
         if ($includes = \array_keys($config->getIncludes())) {
-            $io->info('Loading includes. ' . implode(' ', $includes));
+            $io->info('Loading includes. ' . \implode(' ', $includes));
 
             $this->providersCacheKeys = \array_merge($this->providersCacheKeys, \array_map($repo->providerKey(...), $includes));
             $this->syncProvider->loadProvidersInclude($repo, $includes);
         }
 
-        $availablePackages = array_merge(
+        $availablePackages = \array_merge(
             $this->loadRootPackagesNames($root, $repo),
             $this->loadProviderPackagesNames($repo, $config->maxCountOfAvailablePackages())
         );
-
 
         $stats['available_packages'] = \count($availablePackages) < $config->maxCountOfAvailablePackages() ? $availablePackages : [];
 
@@ -84,6 +106,10 @@ class RemoteSyncProxiesFacade
         if (empty($providerUrl) || $config->isLazy()) {
             $io->notice('Skipping sync packages, lazy sync.');
             $repo->dumpRootMeta($root);
+            if ($providerUrl) {
+                $stats += $this->syncLazyV1($repo, $io, $config);
+            }
+
             return $stats;
         }
 
@@ -143,23 +169,23 @@ class RemoteSyncProxiesFacade
                 }
             }
 
-            return array_values(array_unique(array_filter($packages)));
+            return \array_values(array_unique(array_filter($packages)));
         }
 
-        if (isset($data['packages'])) {
+        if (\is_array($data['packages'] ?? null)) {
             foreach ($data['packages'] as $package => $versions) {
                 $packages[] = \strtolower((string) $package);
             }
         }
 
-        if (isset($data['includes'])) {
+        if (\is_array($data['includes'] ?? null)) {
             foreach ($data['includes'] as $include => $metadata) {
                 $includedData = $repo->findProviderMetadata($include)?->decodeJson() ?: [];
                 $packages = \array_merge($packages, $this->loadRootPackagesNames($includedData, $repo));
             }
         }
 
-        return array_values(array_unique(array_filter($packages)));
+        return \array_values(array_unique(array_filter($packages)));
     }
 
     private function getAllProviders($providersForUpdate, RPR $repo, ProxyOptions $config): iterable
@@ -177,17 +203,49 @@ class RemoteSyncProxiesFacade
         }
     }
 
-    private function syncLazy(RPR $repo, IOInterface $io, ProxyOptions $config): array
+    private function syncLazyV1(RPR $repo, IOInterface $io, ProxyOptions $config): array
     {
         $stats = [];
-        $packages = $repo->getPackageManager()->getEnabled();
+        $rmp = $repo->getPackageManager();
+        $packages = $rmp->getEnabled();
+
+        $http = $this->syncProvider->initHttpDownloader($config);
+        $onFulfilled = static function (string $name, Response $meta, $hash = null) use ($repo) {
+            $repo->dumpPackage($name, $meta->getBody());
+            if (null !== $hash) {
+                $repo->dumpPackage($name, $meta->getBody(), $hash);
+            }
+        };
+
+        if (empty($packages)) {
+            $io->info('Not found enabled packages for re sync');
+            return $stats;
+        }
+
+        $this->requestMetadataVia1($http, $packages, $config->getMetadataV1Url(), $onFulfilled, null, $repo->lookupAllProviders());
+
+        return $stats;
+    }
+
+    private function syncLazyV2(RPR $repo, IOInterface $io, ProxyOptions $config): array
+    {
+        $stats = [];
+        $rmp = $repo->getPackageManager();
+        $packages = $rmp->getEnabled();
 
         $http = $this->syncProvider->initHttpDownloader($config);
         if ($apiUrl = $config->getV2SyncApi()) {
+            $stats['metadata_timestamp'] = \time() * 10000;
             $timestamp = $repo->getStats()['metadata_timestamp'] ?? 0;
-            $response = $http->get("$apiUrl?since=$timestamp");
 
-            if ($response->getStatusCode() === 200) {
+            try {
+                $response = $http->get("$apiUrl?since=$timestamp");
+            } catch (\Throwable $e) {
+                $io->warning($e->getMessage());
+                $response = null;
+            }
+
+            if ($response && $response->getStatusCode() === 200) {
                 $response = $response->decodeJson();
                 $timestamp = $response['timestamp'] ?? \time() * 10000;
                 $stats['metadata_timestamp'] = $timestamp;
@@ -205,20 +263,19 @@ class RemoteSyncProxiesFacade
         }
 
         if (empty($packages)) {
-            $io->info('not found packages for resync');
+            $io->info('Not found packages for resync');
             return $stats;
         }
 
-        $minifier = function ($metadata) {
-            $metadata = \is_string($metadata) ? \json_decode($metadata, true) : $metadata;
-            return $this->minifier->expand($metadata);
+        $updated = 0;
+        $onFulfilled = static function (string $name, $meta) use ($repo, &$updated) {
+            $updated++;
+            $repo->dumpPackage($name, $meta);
         };
 
-        $packages = \array_flip($packages);
+        $this->requestMetadataVia2($http, $packages, $config->getMetadataV2Url(), $onFulfilled);
 
-        // Add delete handler.
-        [$updated] = $this->syncProvider->loadPackages($repo, $packages, $config->getMetadataV2Url(), $minifier);
-        $io->info('Updated packages: ' . \count($updated));
+        $io->info('Updated packages: ' . $updated);
 
         return $stats;
     }

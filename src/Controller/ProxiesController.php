@@ -80,13 +80,15 @@ class ProxiesController extends AbstractController
         ]);
     }
 
-    #[Route('/{alias}/mark-enabled', name: 'proxy_mark_enabled', methods: ["POST"])]
-    public function markEnabled(Request $request, string $alias)
+    #[Route('/{alias}/mark-enabled', name: 'proxy_mark_mass', methods: ["POST"])]
+    public function markMass(Request $request, string $alias)
     {
         $repo = $this->getRemoteRepository($alias);
         $data = $this->jsonRequest($request);
 
         $packages = $this->textareaParser->parser($data['packages'] ?? null);
+        $action = $data['action'] ?? 'approve';
+
         try {
             $result = $this->mirrorValidate->checkPackages($repo, $packages);
         } catch (TransportException $e) {
@@ -95,8 +97,13 @@ class ProxiesController extends AbstractController
 
         if (false === ($data['check'] ?? false)) {
             $pm = $repo->getPackageManager();
-            \array_map($pm->markEnable(...), $result['valid'] ?? []);
-            $this->addFlash('success', 'The packages have been enabled.');
+            match ($action) {
+                'enable' => \array_map($pm->markEnable(...), $result['valid'] ?? []),
+                'approve' => \array_map($pm->markApprove(...), $result['valid'] ?? []),
+                'remove' => \array_map($pm->markDisable(...), $packages),
+            };
+
+            $this->addFlash('success', 'The packages have been updated.');
             $repo->touchRoot();
         }
 

@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, humane) {
     "use strict";
 
     if (!String.prototype.htmlSpecialChars) {
@@ -10,6 +10,22 @@
                 .replace(/>/g, '&gt;');
         };
     }
+
+    $('.view-log').on('click', function (e) {
+        e.preventDefault();
+        let target = $(this);
+        let details = target.attr('data-details');
+        let message = target.attr('data-msg');
+        let close = '<a class="close" onclick="humane.remove();">x</a>';
+        if (message.length > 64) {
+            if (message.length > 120) {
+                details = '<pre>' + message + '</pre>' + details;
+            }
+
+            message = message.substring(0, 60) + '...';
+        }
+        humane.log([close, message, details], {timeout: 0});
+    });
 
     let gridBtn = $('.grid-buttons .btn');
     gridBtn.on('click', (e) => {
@@ -131,4 +147,4 @@
     }
 
 
-})(jQuery);
+})(jQuery, humane);

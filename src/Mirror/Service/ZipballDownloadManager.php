@@ -92,6 +92,8 @@ class ZipballDownloadManager
             }
         }
 
+        // todo try to download from source.
+
         if (false === $hasFile) {
             throw new MetadataNotFoundException('Unable to download dist from source');
         }
