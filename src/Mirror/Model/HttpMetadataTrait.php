@@ -17,14 +17,14 @@ trait HttpMetadataTrait
     /**
      * @throws TransportException
      */
-    private function requestMetadataVia2(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $reject = null): void
+    private function requestMetadataVia2(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null): void
     {
         $queue = new \ArrayObject();
         $loop = new SignalLoop($downloader, $this->signal);
 
         $promise = [];
 
-        $reject ??= static function ($e) {
+        $onReject ??= static function ($e, $package) {
             if ($e instanceof TransportException && $e->getStatusCode() === 404) {
                 return false;
             }
@@ -43,6 +43,10 @@ trait HttpMetadataTrait
                 }
             };
 
+            $reject = function ($e) use ($package, $onReject) {
+                return $onReject($e, $package);
+            };
+
             $promise[] = $downloader->add(\str_replace('%package%', $package, $url))->then($requester, $reject);
             $promise[] = $downloader->add(\str_replace('%package%', $package . '~dev', $url))->then($requester, $reject);
         }
@@ -50,12 +54,12 @@ trait HttpMetadataTrait
         $loop->wait($promise);
     }
 
-    private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $reject = null, iterable $providersGenerator = []): void
+    private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, iterable $providersGenerator = []): void
     {
         $resolvedPackages = $promise = [];
         $loop = new SignalLoop($downloader, $this->signal);
 
-        $reject ??= static function ($e) {
+        $onReject ??= static function ($e, $package) {
             if ($e instanceof TransportException && $e->getStatusCode() === 404) {
                 return false;
             }
@@ -83,10 +87,14 @@ trait HttpMetadataTrait
         }
 
         foreach ($resolvedPackages as $package => [$packageUrl, $hash]) {
-            $requester = function (Response $response) use ($package, $onFulfilled, $hash, $asArray) {
-                $response->getBody() ? $onFulfilled($package, $asArray ? $response->decodeJson() : $response, $hash) : null;
-            };
-            $promise[] = $downloader->add($packageUrl)->then($requester, $reject);
+            $promise[] = $downloader->add($packageUrl)->then(
+                function (Response $response) use ($package, $onFulfilled, $hash, $asArray) {
+                    $response->getBody() ? $onFulfilled($package, $asArray ? $response->decodeJson() : $response, $hash) : null;
+                },
+                function ($e) use ($package, $onReject) {
+                    return $onReject($e, $package);
+                }
+            );
         }
 
         $loop->wait($promise);

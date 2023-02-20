@@ -30,9 +30,6 @@
     let updateBtn = $('.update.action').find('.btn');
     updateBtn.on('click', (e) => {
         e.preventDefault();
-        $('#json-model').modal({show: true});
-
-        return;
         let data = {};
         let options = ajaxFormData(e.target, data);
         if (data['force']) {

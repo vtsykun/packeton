@@ -19,6 +19,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     use GZipTrait;
 
     protected const ROOT_PACKAGE = 'packages.json';
+    protected const HASH_SEPARATOR = '____';
 
     protected string $rootFilename;
     protected string $providersDir;
@@ -96,15 +97,15 @@ class RemoteProxyRepository extends AbstractProxyRepository
             return new JsonMetadata($content, $unix, null, $this->repoConfig);
         }
 
-        $vendorName  = \explode('/', $package)[1];
+        $packageName  = \explode('/', $package)[1];
         $filename = $this->packageDir . $this->packageKey($package, $hash);
 
-        if (null !== $hash && $this->filesystem->exists($filename)) {
+        if ($this->filesystem->exists($filename)) {
             return $this->createMetadataFromFile($filename, $hash);
         }
 
         $dir = \rtrim(\dirname($filename), $this->ds) . $this->ds;
-        $last = $this->filesystem->globLast($dir . $vendorName . '*');
+        $last = $this->filesystem->globLast($dir . $packageName . self::HASH_SEPARATOR . '*');
         return $last ? $this->createMetadataFromFile($last) : null;
     }
 
@@ -219,7 +220,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
             $filename = $this->providersDir . $this->providerKey($provider);
             if ($this->filesystem->exists($filename)) {
                 $content = \file_get_contents($filename);
-                $content = $content ? $this->encode($content) : null;
+                $content = $content ? $this->decode($content) : null;
                 $content = $content ? \json_decode($content, true) : [];
                 yield $content;
             }
@@ -268,7 +269,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $vendor = $this->safeName($vendor);
         $pkg = $this->safeName($pkg) ?: '_null_';
 
-        return $vendor . $this->ds . $pkg . ($hash ? '__' . $hash : '') . '.json.gz';
+        return $vendor . $this->ds . $pkg . ($hash ? self::HASH_SEPARATOR . $hash : '') . '.json.gz';
     }
 
     public function providerKey(string $uri): string

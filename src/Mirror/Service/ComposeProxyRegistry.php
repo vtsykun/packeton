@@ -11,13 +11,15 @@ use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
+use Packeton\Model\PackageManager;
 
 class ComposeProxyRegistry
 {
     public function __construct(
         protected ProxyRepositoryRegistry $proxyRegistry,
         protected SyncProviderService $syncService,
-        protected MetadataMinifier $metadataMinifier
+        protected MetadataMinifier $metadataMinifier,
+        protected PackageManager $packageManager,
     ) {
     }
 
@@ -37,7 +39,8 @@ class ComposeProxyRegistry
             $repo->getPackageManager(),
             $repo,
             $repo->getConfig()->getAvailablePackages(),
-            $repo->getConfig()->getAvailablePatterns()
+            $repo->getConfig()->getAvailablePatterns(),
+            $this->packageManager->getPackageNames(),
         );
     }
 

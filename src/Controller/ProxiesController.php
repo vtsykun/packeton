@@ -5,14 +5,21 @@ declare(strict_types=1);
 namespace Packeton\Controller;
 
 use Composer\Downloader\TransportException;
+use Packeton\Composer\MetadataMinifier;
 use Packeton\Form\Type\ProxySettingsType;
+use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\ProxyInfoInterface;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
+use Packeton\Mirror\Service\ComposeProxyRegistry;
+use Packeton\Mirror\Service\RemoteSyncProxiesFacade;
 use Packeton\Mirror\Utils\MirrorPackagesValidate;
 use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Packeton\Mirror\Utils\MirrorUIFormatter;
+use Packeton\Model\PackageManager;
+use Packeton\Service\JobScheduler;
+use Packeton\Util\HtmlJsonHuman;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,8 +33,12 @@ class ProxiesController extends AbstractController
 {
     public function __construct(
         private readonly ProxyRepositoryRegistry $proxyRepositoryRegistry,
+        private readonly ComposeProxyRegistry $composeProxyRegistry,
         private readonly MirrorTextareaParser $textareaParser,
+        private readonly JobScheduler $jobScheduler,
         private readonly MirrorPackagesValidate $mirrorValidate,
+        private readonly MetadataMinifier $metadataMinifier,
+        private readonly PackageManager $packageManager,
     ) {
     }
 
@@ -80,6 +91,44 @@ class ProxiesController extends AbstractController
         ]);
     }
 
+    #[Route(
+        '/{alias}/metadata/{package}',
+        name: 'proxy_package_meta',
+        requirements: ['package' => '.+'],
+        methods: ["POST", "GET"]
+    )]
+    public function metadata(HtmlJsonHuman $jsonHuman, string $alias, string $package)
+    {
+        try {
+            $repo = $this->composeProxyRegistry->createRepository($alias);
+            $meta = $repo->findPackageMetadata($package);
+        } catch (MetadataNotFoundException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 404);
+        }
+
+        $json = $meta->decodeJson();
+        $metadata = $this->metadataMinifier->minify($json)['packages'][$package] ?? [];
+
+        return new Response($jsonHuman->buildToHtml($metadata));
+    }
+
+    #[Route('/{alias}/update', name: 'proxy_update', methods: ["PUT"])]
+    public function updateAction(Request $request, string $alias)
+    {
+        $repo = $this->getRemoteRepository($alias);
+        $data = $this->jsonRequest($request);
+        $flags = ($data['force'] ?? false) ? RemoteSyncProxiesFacade::FULL_RESET : 0;
+        $flags |= RemoteSyncProxiesFacade::UI_RESET;
+
+        $job = $this->jobScheduler->publish(
+            'sync:mirrors',
+            ['mirror' => $alias, 'flags' => $flags],
+            $repo->getConfig()->reference()
+        );
+
+        return new JsonResponse(['job' => $job->getId()], 201);
+    }
+
     #[Route('/{alias}/mark-enabled', name: 'proxy_mark_mass', methods: ["POST"])]
     public function markMass(Request $request, string $alias)
     {
@@ -88,9 +137,10 @@ class ProxiesController extends AbstractController
 
         $packages = $this->textareaParser->parser($data['packages'] ?? null);
         $action = $data['action'] ?? 'approve';
+        $pm = $repo->getPackageManager();
 
         try {
-            $result = $this->mirrorValidate->checkPackages($repo, $packages);
+            $result = $this->mirrorValidate->checkPackages($repo, $packages, $pm->getEnabled());
         } catch (TransportException $e) {
             return new JsonResponse(['error' => $e->getMessage()], 400);
         }
@@ -154,8 +204,9 @@ class ProxiesController extends AbstractController
         $repoUrl = $this->generateUrl('mirror_index', ['alias' => $config->getAlias()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $rpm = $repo->getPackageManager();
+        $privatePackages = $this->packageManager->getPackageNames();
 
-        $packages = MirrorUIFormatter::getGridPackagesData($rpm->getApproved(), $rpm->getEnabled());
+        $packages = MirrorUIFormatter::getGridPackagesData($rpm->getApproved(), $rpm->getEnabled(), $privatePackages);
 
         return [
             'repoUrl' => $repoUrl,

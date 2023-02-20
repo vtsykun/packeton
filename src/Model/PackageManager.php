@@ -206,7 +206,7 @@ class PackageManager
             $user = null;
         }
 
-        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0);
+        $cacheKey = \sha1('pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0));
 
         $item = $this->packagesCachePool->getItem($cacheKey);
         @[$ctime, $data] = $item->get();
@@ -224,6 +224,23 @@ class PackageManager
         }
 
         return $data;
+    }
+
+    public function getPackageNames(): array
+    {
+        $cacheKey = 'all_packages_';
+        $lastModify = $this->getLastModify()?->getTimestamp();
+
+        $item = $this->packagesCachePool->getItem($cacheKey);
+        @[$ctime, $data] = $item->get();
+
+        if ($ctime < $lastModify || !$item->isHit()) {
+            $data = $this->doctrine->getRepository(Package::class)->getPackageNames();
+            $item->set([time(), $data]);
+            $this->packagesCachePool->save($item);
+        }
+
+        return is_array($data) ? $data : [];
     }
 
     public function setLastModify(): void

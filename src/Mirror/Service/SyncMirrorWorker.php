@@ -6,8 +6,8 @@ namespace Packeton\Mirror\Service;
 
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Factory;
-use Composer\IO\BufferIO;
 use Packeton\Attribute\AsWorker;
+use Packeton\Composer\IO\BufferIO;
 use Packeton\Entity\Job;
 use Packeton\Exception\SignalException;
 use Packeton\Mirror\ProxyRepositoryRegistry;
@@ -15,6 +15,7 @@ use Packeton\Mirror\RemoteProxyRepository;
 use Psr\Log\LoggerInterface;
 use Seld\Signal\SignalHandler;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Lock\LockFactory;
 
 #[AsWorker('sync:mirrors')]
 class SyncMirrorWorker
@@ -22,6 +23,7 @@ class SyncMirrorWorker
     public function __construct(
         private readonly ProxyRepositoryRegistry $registry,
         private readonly RemoteSyncProxiesFacade $syncFacade,
+        private readonly LockFactory $lockFactory,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -45,6 +47,13 @@ class SyncMirrorWorker
 
         $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
 
+        $locker = $this->lockFactory->createLock('package_update_' . $arguments['mirror'], 1800);
+        if (!$locker->acquire()) {
+            $io->warning("Another job already running");
+            return ['status' => Job::STATUS_COMPLETED, 'message' => 'Job interrupted by lock'];
+        }
+
+        $this->logger->info("Run mirror {$arguments['mirror']} synchronization");
         try {
             $stats = $this->syncFacade->sync($repo, $io, $arguments['flags'] ?? 0, $signal);
         } catch (SignalException $e) {
@@ -65,7 +74,12 @@ class SyncMirrorWorker
             ];
         }
 
+        $this->logger->info("Mirror {$arguments['mirror']} synchronization finished");
         $repo->setStats($stats);
+
+        try {
+            $locker->release();
+        } catch (\Throwable) {}
 
         return [
             'status' => Job::STATUS_COMPLETED,

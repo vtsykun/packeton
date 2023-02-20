@@ -43,6 +43,10 @@ parameters:
     package_name_regex_v2: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'
     package_name_regex_v1: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.$-]+' # package$hash
 
+    mirror_metadata_regex: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.-]+'
+    mirror_metadata_regex_v2: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.~-]+'
+    mirror_metadata_regex_v1: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.$-]+'
+
 services:
     # default configuration for services in *this* file
     _defaults:

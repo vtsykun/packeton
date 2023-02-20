@@ -8,6 +8,7 @@ use Composer\IO\ConsoleIO;
 use Composer\IO\IOInterface;
 use Composer\Util\Http\Response;
 use Composer\Util\HttpDownloader;
+use Packeton\Composer\IO\BufferIO;
 use Packeton\Composer\Util\SignalLoop;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\RemoteProxyRepository;
@@ -102,6 +103,10 @@ class SyncProviderService
         $http = $this->initHttpDownloader($config);
         $loop = new SignalLoop($http, $this->signal);
         $progress = $this->io instanceof ConsoleIO ? $this->io->getProgressBar() : null;
+
+        if ($this->io instanceof BufferIO) {
+            $progress = null;
+        }
 
         $promises = $updated = $skipped = [];
         foreach ($generator as $key => $value) {

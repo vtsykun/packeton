@@ -47,8 +47,19 @@ class MirrorTextareaParser
             return $packages[1];
         }
 
-        $packages = \preg_split('/[\s,]+/', $string);
-        $packages = \array_filter($packages, fn($p) => \preg_match('#'. $this->packageRegexp. '#', $p));
+        // Use composer info output
+        if (\preg_match('#(\d+)\.(\d+)\.(\d+)#', $string)) {
+            $list = \explode(PHP_EOL, $string);
+            $packages = \array_filter(
+                \array_map(fn ($s) => \preg_split('/[\s,]+/', $s)[0] ?? null, $list),
+                fn($p) => $p && \preg_match('#^'. $this->packageRegexp. '$#', $p)
+            );
+        } else if (\count(\explode('/', $string)) === 2) {
+            $packages = [\trim($string)];
+        } else {
+            $packages = \preg_split('/[\s,]+/', $string);
+            $packages = \array_filter($packages, fn($p) => \preg_match('#^'. $this->packageRegexp. '$#', $p));
+        }
 
         return \array_values($packages);
     }

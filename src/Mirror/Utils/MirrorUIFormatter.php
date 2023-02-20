@@ -29,21 +29,30 @@ class MirrorUIFormatter
         }
         foreach ($grouped as $vendor => $items) {
             \usort($items, fn($a, $b) => $a['name'] <=> $b['name']);
-            $grouped[$vendor] = $items;
+
+            $grouped[$vendor] = [
+                'items' => $items,
+                'count' => \count($items),
+                'new' => \count(\array_filter($items, fn($p) => !$p['approved'])),
+                'private' => \count(\array_filter($items, fn($p) => $p['private'])),
+            ];
         }
 
         return $grouped;
     }
 
-    public static function getGridPackagesData(array $approved, array $enabled): array
+    public static function getGridPackagesData(array $approved, array $enabled, array $privatePackages): array
     {
         $packages = [];
         $approved = \array_flip($approved);
+        $privatePackages = \array_flip($privatePackages);
+
         foreach ($enabled as $name) {
             $packages[$name] = [
                 'name' => $name,
                 'enabled' => true,
-                'approved' => isset($approved[$name])
+                'approved' => isset($approved[$name]),
+                'private' => isset($privatePackages[$name])
             ];
         }
 

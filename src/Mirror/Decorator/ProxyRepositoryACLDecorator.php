@@ -23,6 +23,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
         protected ?RemoteProxyRepository $remote = null,
         protected array $availablePackages = [],
         protected array $availablePackagePatterns = [],
+        protected array $excludedPackages = [],
     ) {
     }
 
@@ -78,6 +79,11 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
             }
 
             return $metadata;
+        } else if (\in_array($package, $this->excludedPackages)) {
+            throw new ApproveRestrictException(
+                "The package '$package' has been already registered in the your private repository. " .
+                "3-rd party mirrored packages always is canonical, so do not allowed use it if your already add private package by same name"
+            );
         }
 
         if ($this->availablePackages && !\in_array($package, $this->availablePackages, true)) {
