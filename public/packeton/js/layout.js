@@ -23,6 +23,12 @@
         });
     });
 
+    $('form.onsubmit-confirm').on('submit', (e) => {
+        if (!confirm('Are you sure?')) {
+            e.preventDefault();
+        }
+    });
+
     /**
      * Ajax error handler
      */

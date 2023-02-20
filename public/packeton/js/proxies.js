@@ -11,9 +11,28 @@
         dispatchAjaxGridForm(e.target);
     });
 
+    $('a.package-info').on('click', (e) => {
+        e.preventDefault();
+        let model = $('#json-model');
+
+        let options = {
+            type: 'POST',
+            url: $(e.target).attr('href'),
+            success: (data) => {
+                model.find('.modal-body').html(data);
+                model.modal({show: true});
+            }
+        };
+
+        $.ajax(options);
+    });
+
     let updateBtn = $('.update.action').find('.btn');
     updateBtn.on('click', (e) => {
         e.preventDefault();
+        $('#json-model').modal({show: true});
+
+        return;
         let data = {};
         let options = ajaxFormData(e.target, data);
         if (data['force']) {

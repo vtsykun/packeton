@@ -24,9 +24,7 @@
                         <div class="s-flex">
                             <h4 class="s-flex tab-cell font-bold"><a class="no-underline" href="{{ groupUrl }}">{{ group.name }}</a></h4>
                             <div style="width: 100%; margin-top: 10px">
-                                <form action="{{ path('groups_delete', { 'id': group.id}) }}" style="float: right" method="POST"
-                                      onsubmit="return confirm('Are you sure?');"
-                                >
+                                <form class="onsubmit-confirm" action="{{ path('groups_delete', { 'id': group.id}) }}" style="float: right" method="POST">
                                     {{ form_widget(csrfForm.createView._token) }}
                                     <button type="submit" class="btn btn-danger" title="Delete">Delete</button>
                                 </form>

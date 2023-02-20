@@ -21,7 +21,7 @@
             <a href="{{ path('users_update', {name: user.userIdentifier}) }}" class="btn btn-primary">Edit</a>
         </div>
         <div class="btn-group btn-group-xs">
-            <form class="delete action" action="{{ path('user_delete', {name: user.userIdentifier}) }}" method="post" onsubmit="return confirm('Are you sure?');">
+            <form class="delete onsubmit-confirm action" action="{{ path('user_delete', {name: user.userIdentifier}) }}" method="post" >
                 {{ form_widget(deleteForm._token) }}
                 <button class="btn btn-danger" type="submit">Delete</button>
             </form>

@@ -27,7 +27,7 @@
 
 {% block scripts %}
     <script src="{{ asset('libs/datepicker/bootstrap-datepicker.min.js') }}"></script>
-    <script>
+    <script nonce="{{ csp_nonce('script') }}">
         $(function(){
             $('.js-datepicker').datepicker({
                 format: 'yyyy-mm-dd'

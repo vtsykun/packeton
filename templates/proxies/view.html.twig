@@ -6,6 +6,7 @@
     <script src="{{ asset('packeton/js/proxies.js')}}"></script>
 {% endblock %}
 {% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/json.human.css') }}" />
     <style>
         .checkbox-id {
             margin: 0!important;
@@ -55,13 +56,14 @@
                 </div>
 
 
-                <form class="update action" action="" method="PUT">
+                <form class="update action" action="{{ path('proxy_update', { 'alias': proxy.alias }) }}" method="PUT">
                     <input type="hidden" name="token" value="{{ csrfToken }}"/>
                     <input class="btn btn-success" type="submit" value="Update" />
                 </form>
 
-                <form class="force-update action" action="" method="PUT">
+                <form class="update action" action="{{ path('proxy_update', { 'alias': proxy.alias }) }}" method="PUT">
                     <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input type="hidden" name="force" value="1">
                     <input class="btn btn-danger" type="submit" value="Force resync" />
                 </form>
             </div>
@@ -111,20 +113,22 @@
             </div>
 
             <ul class="nav nav-tabs" role="tablist">
-                {% for vendor, items in usedPackages %}
-                {% set title = vendor ~ ' (' ~ items|length ~ ')' %}
+                {% for vendor, data in usedPackages %}
+                {% set title = vendor ~ ' (' ~ data['count'] ~ (data['new'] > 0 ? '*' : '') ~ ')' %}
+                {% set title = title ~ (data['private'] > 0 ? '<i class="fa fa-exclamation-triangle"  style="color: #8B0000FF" title="Warning"></i>' : '') %}
                 {% set vid = 'vendor-' ~ vendor  %}
                 <li role="presentation" class="{{ loop.first ? 'active' : '' }}">
-                    <a href="#{{ vid }}" aria-controls="{{ vid }}" role="tab" data-toggle="tab">{{ title|capitalize }}</a>
+                    <a href="#{{ vid }}" aria-controls="{{ vid }}" role="tab" data-toggle="tab">{{ title|capitalize|raw }}</a>
                 </li>
                 {% endfor %}
             </ul>
 
             <div class="tab-content">
-                {% for vendor, items in usedPackages %}
+                {% for vendor, data in usedPackages %}
                 {% set vid = 'vendor-' ~ vendor  %}
                 <div role="tabpanel" class="tab-pane {{ loop.first ? 'active' : '' }}" id="{{ vid }}">
-                    <a href="#" class="tabpanel-packages">Select All</a>
+                    <a href="#" class="tabpanel-packages">Select All</a>|
+                    <a href="#" class="tabpanel-packages-new">Not approved</a>
                     <table class="table table-bordered">
                         <thead>
                         <tr>
@@ -135,13 +139,18 @@
                         </tr>
                         </thead>
                         <tbody>
-                            {% for p in items %}
+                            {% for p in data['items'] %}
                                 <tr>
                                     <th scope="row">
                                         <span>{{ loop.index }}</span>
-                                        <input type="checkbox" class="checkbox-id" name="{{ p['name'] }}">
+                                        <input type="checkbox" class="checkbox-id {{ p['approved'] ? '' : 'checkbox-new' }}" name="{{ p['name'] }}">
                                     </th>
-                                    <td>{{ p['name'] }}</td>
+                                    <td>
+                                        <a class="package-info" href="{{ path('proxy_package_meta', { 'alias': proxy.alias, 'package': p['name'] }) }}">{{ p['name'] }}</a>
+                                        {% if p['private'] %}
+                                            <i class="fa fa-exclamation-triangle"  style="color: #8B0000FF" title="This package already registered in the your private repository. Attacker may replace dependencies, please check it"></i>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
                                     <td>{{ p['approved'] ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-times" style="color: #8B0000FF"></i>' }}</td>
                                 </tr>
@@ -150,6 +159,19 @@
                     </table>
                 </div>
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="json-model" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Package Info</h4>
+            </div>
+            <div class="modal-body">
             </div>
         </div>
     </div>

@@ -23,6 +23,10 @@
         {% endblock %}
         {% block docker_head %}{% endblock %}
 
+        {% block head_scripts %}
+            <script src="{{ asset('packeton/js/init.js') }}"></script>
+        {% endblock %}
+
         {% block stylesheets %}{% endblock %}
 
         {% block head_feeds %}
