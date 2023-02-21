@@ -21,7 +21,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     {
         return $this->proxyOptions ??= new ProxyOptions(
             $this->repoConfig
-            + ['root' => $this->rootMetadata()?->decodeJson()]
+            + ['root' => $this->getRootMetadataInfo()]
             + ['stats' => $this->getStats()]
         );
     }
@@ -29,7 +29,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $name): ?JsonMetadata
+    public function findPackageMetadata(string $name, int $modifiedSince = null): ?JsonMetadata
     {
         return null;
     }
@@ -37,7 +37,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $name): ?JsonMetadata
+    public function findProviderMetadata(string $name, int $modifiedSince = null): ?JsonMetadata
     {
         return null;
     }
@@ -45,7 +45,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(): ?JsonMetadata
+    public function rootMetadata(int $modifiedSince = null): ?JsonMetadata
     {
         return null;
     }
@@ -62,5 +62,16 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     public function resetProxyOptions(): void
     {
         $this->proxyOptions = null;
+    }
+
+    protected function getRootMetadataInfo(): array
+    {
+        if ($meta = $this->rootMetadata()) {
+            $data = $meta->decodeJson();
+            $data['modified_since'] = $meta->lastModified()->getTimestamp();
+            return $data;
+        }
+
+        return [];
     }
 }

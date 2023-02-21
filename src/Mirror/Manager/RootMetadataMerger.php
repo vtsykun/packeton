@@ -21,7 +21,7 @@ class RootMetadataMerger
         $config = $stamps->getOptions();
 
         // To avoid call parent host
-        unset($rootFile['providers-api']);
+        unset($rootFile['providers-api'], $rootFile['search'], $rootFile['list']);
 
         if (!$config->parentNotify()) {
             unset($rootFile['notify-batch']);
@@ -67,6 +67,11 @@ class RootMetadataMerger
             unset($rootFile['provider-includes'], $rootFile['providers-url']);
             $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $config->getAlias()]);
             $rootFile['providers-lazy-url'] = \str_replace('VND/PKG','%package%', $url);
+        }
+
+        if ($config->disableV2Format()) {
+            $composerApi = 1;
+            unset($newFile['metadata-url'], $rootFile['metadata-url']);
         }
 
         // generate lazy load includes if enabled composer strict approve mode.

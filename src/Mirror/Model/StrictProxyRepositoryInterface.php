@@ -7,25 +7,20 @@ namespace Packeton\Mirror\Model;
 interface StrictProxyRepositoryInterface extends ProxyRepositoryInterface
 {
     /**
-     * @return JsonMetadata
-     *
+     * {@inheritDoc}
      * @throw \Packeton\Mirror\Exception\MetadataNotFoundException
      */
-    public function rootMetadata(): JsonMetadata;
+    public function rootMetadata(int $modifiedSince = null): JsonMetadata;
 
     /**
-     * @param string $name
-     * @return JsonMetadata
-     *
+     * {@inheritDoc}
      * @throw \Packeton\Mirror\Exception\MetadataNotFoundException
      */
-    public function findProviderMetadata(string $name): JsonMetadata;
+    public function findProviderMetadata(string $name, int $modifiedSince = null): JsonMetadata;
 
     /**
-     * @param string $name
-     * @return JsonMetadata
-     *
+     * {@inheritDoc}
      * @throw \Packeton\Mirror\Exception\MetadataNotFoundException
      */
-    public function findPackageMetadata(string $name): JsonMetadata;
+    public function findPackageMetadata(string $name, int $modifiedSince = null): JsonMetadata;
 }

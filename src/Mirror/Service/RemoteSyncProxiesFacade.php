@@ -39,6 +39,7 @@ class RemoteSyncProxiesFacade
         } finally {
             $this->signal = null;
             $this->syncProvider->reset();
+            $this->errorMap = [];
         }
     }
 
@@ -54,7 +55,7 @@ class RemoteSyncProxiesFacade
             $cfs = new \Composer\Util\Filesystem();
             $cfs->remove($repo->getRootDir());
 
-            $repo->clearStats();
+            $repo->clearAll();
             $io->notice('All data removed!');
         }
 
@@ -67,8 +68,11 @@ class RemoteSyncProxiesFacade
         }
 
         if ($config->isLazy() && $config->hasV2Api()) {
-            $stats += $this->syncLazyV2($repo, $io, $config);
-            $repo->dumpRootMeta($root);
+            $stats += $this->syncLazyV2($repo, $io, $config, $updated);
+            if ($updated > 0) {
+                $repo->dumpRootMeta($root);
+            }
+
             return $stats;
         }
 
@@ -96,7 +100,7 @@ class RemoteSyncProxiesFacade
 
         $availablePackages = \array_merge(
             $this->loadRootPackagesNames($root, $repo),
-            $this->loadProviderPackagesNames($repo, $config->maxCountOfAvailablePackages())
+            $this->loadProviderPackagesNames($repo, $config->maxCountOfAvailablePackages(), $config)
         );
 
         $stats['available_packages'] = \count($availablePackages) < $config->maxCountOfAvailablePackages() ? $availablePackages : [];
@@ -143,10 +147,10 @@ class RemoteSyncProxiesFacade
         return $stats;
     }
 
-    private function loadProviderPackagesNames(RPR $repo, int $limit): array
+    private function loadProviderPackagesNames(RPR $repo, int $limit, ProxyOptions $config): array
     {
         $packages = [];
-        foreach ($repo->lookupAllProviders() as $providerInclude) {
+        foreach ($repo->lookupAllProviders($config) as $providerInclude) {
             $packages = \array_merge($packages, \array_keys($providerInclude));
             if (\count($packages) > $limit) {
                 break;
@@ -222,12 +226,12 @@ class RemoteSyncProxiesFacade
             return $stats;
         }
 
-        $this->requestMetadataVia1($http, $packages, $config->getMetadataV1Url(), $onFulfilled, null, $repo->lookupAllProviders());
+        $this->requestMetadataVia1($http, $packages, $config->getMetadataV1Url(), $onFulfilled, null, $repo->lookupAllProviders($config));
 
         return $stats;
     }
 
-    private function syncLazyV2(RPR $repo, IOInterface $io, ProxyOptions $config): array
+    private function syncLazyV2(RPR $repo, IOInterface $io, ProxyOptions $config, &$updated = null): array
     {
         $stats = [];
         $rmp = $repo->getPackageManager();
@@ -270,10 +274,14 @@ class RemoteSyncProxiesFacade
         $updated = 0;
         $onFulfilled = static function (string $name, $meta) use ($repo, &$updated) {
             $updated++;
-            $repo->dumpPackage($name, $meta);
+           // $repo->dumpPackage($name, $meta);
         };
 
-        $this->requestMetadataVia2($http, $packages, $config->getMetadataV2Url(), $onFulfilled);
+        $modifiedSinceLoader = static function($package) use ($repo) {
+            return $repo->packageModifiedSince($package);
+        };
+
+        $this->requestMetadataVia2($http, $packages, $config->getMetadataV2Url(), $onFulfilled, $this->onErrorIgnore($io), $modifiedSinceLoader);
 
         $io->info('Updated packages: ' . $updated);
 

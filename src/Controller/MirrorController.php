@@ -61,9 +61,14 @@ class MirrorController extends AbstractController
         $devStability = \str_ends_with($package, '~dev');
         $package = \preg_replace('/~dev$/', '', $package);
 
-        $metadata = $this->wrap404Error($alias, fn (PRI $repo) => $repo->findPackageMetadata($package));
+        $modifiedSince = $request->headers->get('If-Modified-Since');
+        $modifiedSince = $modifiedSince ? (\strtotime($modifiedSince) ?: null) : null;
 
-        $metadata = $metadata->withContent(fn ($package) => $this->minifier->minify($package, $devStability));
+        $metadata = $this->wrap404Error($alias, fn (PRI $repo) => $repo->findPackageMetadata($package, $modifiedSince));
+
+        if (false === $metadata->isNotModified()) {
+            $metadata = $metadata->withContent(fn ($package) => $this->minifier->minify($package, $devStability));
+        }
 
         return $this->renderMetadata($metadata, $request);
     }
@@ -114,6 +119,9 @@ class MirrorController extends AbstractController
         $response = new Response($metadata->getContent(), 200, ['Content-Type' => 'application/json']);
         $response->setLastModified($metadata->lastModified());
         $notModified = $response->isNotModified($request);
+        if ($metadata->isNotModified()) {
+            $response->setNotModified();
+        }
 
         if (null !== $lazyLoad && false === $notModified) {
             $metadata = $lazyLoad($metadata);

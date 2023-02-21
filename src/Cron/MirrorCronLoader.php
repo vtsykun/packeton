@@ -28,6 +28,10 @@ class MirrorCronLoader implements ScheduleLoaderInterface
 
         foreach ($this->registry->getAllRepos() as $name => $repo) {
             if ($repo instanceof RemoteProxyRepository) {
+                if (!$repo->getPackageManager()->isAutoSync()) {
+                    continue;
+                }
+
                 $repo->resetProxyOptions();
                 $config = $repo->getConfig();
                 $expr = '@random ' . $this->getSyncInterval($config);

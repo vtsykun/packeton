@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Packeton\Mirror\Decorator;
 
 use Packeton\Mirror\Exception\ApproveRestrictException;
-use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\ApprovalRepoInterface;
 use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as RPI;
@@ -30,16 +29,18 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(): JsonMetadata
+    public function rootMetadata(int $modifiedSince = null): JsonMetadata
     {
-        $metadata = $this->repository->rootMetadata();
+        $metadata = $this->repository->rootMetadata($modifiedSince);
+        $metadata->setOptions($this->approval->getSettings());
+
         if ($this->approval->requireApprove()) {
             $approved = $this->approval->getApproved();
             $metadata->setOption('available_packages', $approved);
 
             if (null !== $this->remote) {
                 $metadata->setOption('includes', function () use ($approved) {
-                    [$includes] = IncludeV1ApiMetadata::buildInclude($approved, $this->remote);
+                    [$includes] = IncludeV1ApiMetadata::buildIncludes($approved, $this->remote);
                     return $includes;
                 });
             }
@@ -51,25 +52,25 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $nameOrUri): JsonMetadata
+    public function findProviderMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
     {
         if (\str_starts_with($nameOrUri, 'include-packeton/all$') && null !== $this->remote) {
             $approved = $this->approval->getApproved();
-            [$includes, $content] = IncludeV1ApiMetadata::buildInclude($approved, $this->remote);
+            [$includes, $content] = IncludeV1ApiMetadata::buildIncludes($approved, $this->remote);
             if (isset($includes[$nameOrUri])) {
                 return new JsonMetadata($content);
             }
         }
 
-        return $this->repository->findProviderMetadata($nameOrUri);
+        return $this->repository->findProviderMetadata($nameOrUri, $modifiedSince);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $nameOrUri): JsonMetadata
+    public function findPackageMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
     {
-        $metadata = $this->repository->findPackageMetadata($nameOrUri);
+        $metadata = $this->repository->findPackageMetadata($nameOrUri, $modifiedSince);
 
         [$package, ] = \explode('$', $nameOrUri);
         if ($this->approval->requireApprove()) {

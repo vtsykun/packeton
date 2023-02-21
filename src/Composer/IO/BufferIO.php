@@ -26,9 +26,9 @@ class BufferIO extends ConsoleIO
     protected $verbosityMatrixCapacity = 3;
 
     protected $verbosityMatrix = [
-        IOInterface::VERBOSE => 3,
-        IOInterface::VERY_VERBOSE => 2,
-        IOInterface::DEBUG => 2,
+        IOInterface::VERBOSE => 10,
+        IOInterface::VERY_VERBOSE => 6,
+        IOInterface::DEBUG => 6,
     ];
 
     public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null)
@@ -117,13 +117,14 @@ class BufferIO extends ConsoleIO
         if ($verbosity === self::NORMAL && $this->verbosityMatrixCapacity > 0) {
             foreach ($this->verbosityMatrix as $verb => $value) {
                 if ($value <= 0) {
-                    $this->verbosityMatrix[$verb] = 2;
+                    $this->verbosityMatrix[$verb] = 6;
                     $this->verbosityMatrixCapacity--;
                 }
             }
         }
 
         if (isset($this->verbosityMatrix[$verbosity]) && $this->verbosityMatrix[$verbosity] > 0) {
+            $this->verbosityMatrix[$verbosity]--;
             return self::NORMAL;
         }
 

@@ -60,11 +60,6 @@ class ProxyOptions extends MetadataOptions
         return \str_replace(['%package%', '%hash%'], [$package ?? '%package%', $hash ?? '%hash%'], $url);
     }
 
-    public function getRoot(): array
-    {
-        return $this->config['root'] ?? [];
-    }
-
     public function getRootProviders(): array
     {
         return $this->config['root']['providers'] ?? [];
@@ -93,15 +88,38 @@ class ProxyOptions extends MetadataOptions
         return $this->config['sync_interval'] ?? null;
     }
 
+    public function lastModifiedUnix(): int
+    {
+        return (int)($this->config['root']['modified_since'] ?? \time());
+    }
+
+    public function lastModified(): \DateTimeInterface
+    {
+        return new \DateTime('@'. $this->lastModifiedUnix());
+    }
+
+    public function matchCaps(RepoCaps|array $match): bool
+    {
+        $caps = $this->capabilities();
+        $match = \is_array($match) ? $match : [$match];
+        foreach ($match as $cap) {
+            if (\in_array($cap, $caps, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function capabilities(): array
     {
         $flags = [
-            isset($this->config['root']['metadata-url']) ? 'API_V2' : null,
-            isset($this->config['root']['providers-url']) || isset($this->config['root']['providers-lazy-url']) ? 'API_V1' : null,
-            isset($this->config['root']['metadata-changes-url']) ? 'API_META_CHANGE' : null,
-            !isset($this->config['root']['providers-url']) && isset($this->config['root']['providers-lazy-url']) ? 'API_V1_LAZY' : null,
-            ($this->config['root']['packages'] ?? []) ? 'API_V1_PACKAGES' : null,
-            ($this->config['root']['includes'] ?? []) ? 'API_V1_INCLUDES' : null,
+            isset($this->config['root']['metadata-url']) ? RepoCaps::V2 : null,
+            isset($this->config['root']['providers-url']) || isset($this->config['root']['providers-lazy-url']) ? RepoCaps::V1 : null,
+            isset($this->config['root']['metadata-changes-url']) ? RepoCaps::META_CHANGE : null,
+            !isset($this->config['root']['providers-url']) && isset($this->config['root']['providers-lazy-url']) ? RepoCaps::LAZY : null,
+            ($this->config['root']['packages'] ?? ($this->config['root']['__packages'] ?? null)) ? RepoCaps::PACKAGES : null,
+            ($this->config['root']['includes'] ?? []) ? RepoCaps::INCLUDES : null,
         ];
 
         return \array_values(\array_filter($flags));

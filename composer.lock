@@ -3116,16 +3116,16 @@
         },
         {
             "name": "okvpn/cron-bundle",
-            "version": "0.2.1",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vtsykun/cron-bundle.git",
-                "reference": "835df9afd2fcaf300de3246b5582e6f167b99a2d"
+                "reference": "9185eab70ff4e1443bcb211733284db40a53095c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vtsykun/cron-bundle/zipball/835df9afd2fcaf300de3246b5582e6f167b99a2d",
-                "reference": "835df9afd2fcaf300de3246b5582e6f167b99a2d",
+                "url": "https://api.github.com/repos/vtsykun/cron-bundle/zipball/9185eab70ff4e1443bcb211733284db40a53095c",
+                "reference": "9185eab70ff4e1443bcb211733284db40a53095c",
                 "shasum": ""
             },
             "require": {
@@ -3179,7 +3179,7 @@
                 "issues": "https://github.com/vtsykun/cron-bundle/issues",
                 "source": "https://github.com/vtsykun/cron-bundle/releases"
             },
-            "time": "2023-01-28T21:29:36+00:00"
+            "time": "2023-02-20T14:29:12+00:00"
         },
         {
             "name": "oro/doctrine-extensions",

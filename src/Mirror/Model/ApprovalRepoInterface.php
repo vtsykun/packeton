@@ -14,6 +14,11 @@ interface ApprovalRepoInterface
     public function getApproved(): array;
 
     /**
+     * @return array
+     */
+    public function getSettings(): array;
+
+    /**
      * Remove approve for package.
      *
      * @param string $name

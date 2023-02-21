@@ -14,7 +14,7 @@ class MetadataMinifier
     /**
      * Convert metadata v1 to metadata v2
      */
-    public function minify(array $metadata, bool $isDev = true, &$lastModified = null): array
+    public function minify(array $metadata, ?bool $isDev = true, &$lastModified = null): array
     {
         $packages = $metadata['packages'] ?? [];
         $metadata['minified'] = 'composer/2.0';
@@ -23,7 +23,7 @@ class MetadataMinifier
         $obj->time = '1970-01-01T00:00:00+00:00';
 
         foreach ($packages as $packName => $versions) {
-            $versions = \array_filter($versions, fn($v) => $this->isValidStability($v, $isDev));
+            $versions = \array_filter($versions, fn($v) => $isDev === null || $this->isValidStability($v, $isDev));
 
             \usort($versions, fn($v1, $v2) => -1 * version_compare($v1['version_normalized'], $v2['version_normalized']));
             \array_map(fn($v) => $obj->time < ($v['time'] ?? 0) ? $obj->time = ($v['time'] ?? 0) : null, $versions);

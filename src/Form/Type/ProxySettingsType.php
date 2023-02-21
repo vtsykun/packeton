@@ -25,7 +25,15 @@ class ProxySettingsType extends AbstractType
                     'All (new packages are automatically added when requested by composer)' => false,
                 ]
             ])
+            ->add('disable_v2', ChoiceType::class, [
+                'label' => 'Disable Composer API v2',
+                'choices' => [
+                    'No' => false,
+                    'Yes' => true,
+                ]
+            ])
             ->add('enabled_sync', CheckboxType::class, [
+                'required' => false,
                 'label' => 'Enable automatically synchronization',
             ]);
     }

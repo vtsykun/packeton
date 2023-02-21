@@ -15,7 +15,7 @@
 </p>
 
 <p class="link-gray">
-    Repo Capabilities: {{ proxy.capabilities|map(value => "<span class='role-name'>#{value}</span>")|join(' ')|raw }} <br>
+    Repo Capabilities: {{ proxy.capabilities|map(value => "<span class='role-name'>#{value.value}</span>")|join(' ')|raw }} <br>
     Lazy sync: {{ proxy.lazy ? 'Yes' : 'No' }} <br>
 </p>
 

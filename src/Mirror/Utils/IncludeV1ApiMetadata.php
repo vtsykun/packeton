@@ -8,14 +8,24 @@ use Packeton\Mirror\RemoteProxyRepository;
 
 class IncludeV1ApiMetadata
 {
-    public static function buildInclude(array $packages, RemoteProxyRepository $repository): array
+    public static function buildIncludes(array $packages, RemoteProxyRepository $repository): array
+    {
+        return static::buildIncludesLazy(
+            $packages,
+            fn ($p) => $repository->findPackageMetadata($p)?->decodeJson()['packages'][$p] ?? null
+        );
+    }
+
+    public static function buildIncludesLazy(array $packages, callable $packageProvider): array
     {
         if (empty($packages)) {
             $metadataString = \json_encode(['packages' => []]);
         } else {
             $metadataString = '{"packages": {';
             foreach ($packages as $i => $package) {
-                $item = $repository->findPackageMetadata($package)?->decodeJson()['packages'][$package] ?? [];
+                if (!$item = $packageProvider($package)) {
+                    continue;
+                }
                 $metadataString .= \sprintf('%s: %s', \json_encode($package, \JSON_UNESCAPED_SLASHES),  \json_encode($item, \JSON_UNESCAPED_SLASHES));
                 if (\count($packages) !== $i+1) {
                     $metadataString .= ", ";

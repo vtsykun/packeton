@@ -26,7 +26,7 @@
                         {% set caps = proxy.capabilities %}
                         {% if caps|length > 0 %}
                         <p class="link-gray" style="font-size: 12px">
-                            Capabilities: {{ caps|map(value => "<span class='role-name'>#{value}</span>")|join(' ')|raw }}
+                            Capabilities: {{ caps|map(value => "<span class='role-name'>#{value.value}</span>")|join(' ')|raw }}
                         </p>
                         {% endif %}
                         <p class="link-gray" style="font-size: 12px">

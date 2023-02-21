@@ -7,9 +7,11 @@ namespace Packeton\Mirror;
 use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Mirror\Model\GZipTrait;
 use Packeton\Mirror\Model\JsonMetadata;
-use Packeton\Mirror\Service\Filesystem;
+use Packeton\Mirror\Model\ProxyOptions;
+use Packeton\Mirror\Model\RepoCaps;
 use Packeton\Mirror\Service\RemotePackagesManager;
 use Packeton\Mirror\Service\ZipballDownloadManager;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Filesystem mirror proxy repo for metadata.
@@ -24,6 +26,10 @@ class RemoteProxyRepository extends AbstractProxyRepository
     protected string $rootFilename;
     protected string $providersDir;
     protected string $packageDir;
+
+    protected string $redisRootKey;
+    protected string $redisStatKey;
+
     protected string $ds;
 
     public function __construct(
@@ -45,6 +51,9 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $this->providersDir = $this->mirrorRepoMetaDir . $this->ds . 'p' . $this->ds;
         $this->packageDir = $this->mirrorRepoMetaDir . $this->ds . 'package' . $this->ds;
 
+        $this->redisRootKey = "proxy-root-{$this->repoConfig['name']}";
+        $this->redisStatKey = "proxy-info-{$this->repoConfig['name']}";
+
         $this->zipballManager->setRepository($this);
     }
 
@@ -60,7 +69,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(): ?JsonMetadata
+    public function rootMetadata(int $modifiedSince = null): ?JsonMetadata
     {
         if ($this->filesystem->exists($this->rootFilename)) {
             return $this->createMetadataFromFile($this->rootFilename);
@@ -72,7 +81,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $providerName): ?JsonMetadata
+    public function findProviderMetadata(string $providerName, int $modifiedSince = null): ?JsonMetadata
     {
         $filename = $this->providersDir . $this->providerKey($providerName);
 
@@ -86,27 +95,31 @@ class RemoteProxyRepository extends AbstractProxyRepository
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $name): ?JsonMetadata
+    public function findPackageMetadata(string $name, int $modifiedSince = null): ?JsonMetadata
     {
         @[$package, $hash] = \explode('$', $name);
 
-        // Load packages data from root.
-        if ($packages = $this->lookIncludePackageMetadata($this->getConfig()->getRoot(), $package)) {
-            $content = \json_encode(['packages' => [$package => $packages]], \JSON_UNESCAPED_SLASHES);
-            $unix = @\filemtime($this->rootFilename) ?: null;
-            return new JsonMetadata($content, $unix, null, $this->repoConfig);
+        $config = $this->getConfig();
+        // Satis API. Check includes without loading big data
+        if ($config->matchCaps([RepoCaps::INCLUDES, RepoCaps::PACKAGES])) {
+            if ($modifiedSince && $config->lastModifiedUnix() <= $modifiedSince) {
+                return JsonMetadata::createNotModified($config->lastModifiedUnix());
+            }
+
+            $root = $this->rootMetadata()?->decodeJson() ?: [];
+            if ($packages = $this->lookIncludePackageMetadata($root, $package)) {
+                $content = \json_encode(['packages' => [$package => $packages]], \JSON_UNESCAPED_SLASHES);
+                $unix = $config->lastModifiedUnix();
+                return new JsonMetadata($content, $unix, null, $this->repoConfig);
+            }
         }
 
-        $packageName  = \explode('/', $package)[1];
         $filename = $this->packageDir . $this->packageKey($package, $hash);
-
         if ($this->filesystem->exists($filename)) {
-            return $this->createMetadataFromFile($filename, $hash);
+            return $this->createMetadataFromFile($filename, $hash, $modifiedSince);
         }
 
-        $dir = \rtrim(\dirname($filename), $this->ds) . $this->ds;
-        $last = $this->filesystem->globLast($dir . $packageName . self::HASH_SEPARATOR . '*');
-        return $last ? $this->createMetadataFromFile($last) : null;
+        return null;
     }
 
     // See loadIncludes in the ComposerRepository
@@ -144,26 +157,62 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $packages;
     }
 
-    protected function createMetadataFromFile(string $filename, string $hash = null): JsonMetadata
+    protected function createMetadataFromFile(string $filename, string $hash = null, int $modifiedSince = null): JsonMetadata
     {
-        $content = \file_get_contents($filename);
-        $unix = \filemtime($filename) ?: null;
+        $unix = @\filemtime($filename) ?: null;
+        if ($modifiedSince && $unix && $unix <= $modifiedSince) {
+            return JsonMetadata::createNotModified($modifiedSince);
+        }
 
+        $content = \file_get_contents($filename);
         return new JsonMetadata($content, $unix, $hash, $this->repoConfig);
     }
 
     public function dumpRootMeta(array $root): void
     {
-        $rootJson = \json_encode($root, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $rootJson = \json_encode($root, \JSON_UNESCAPED_SLASHES);
         $this->filesystem->dumpFile($this->rootFilename, $rootJson);
+        $this->updateRootStats($root);
+
         $this->proxyOptions = null;
+    }
+
+    protected function updateRootStats(array $root = null): array
+    {
+        $root ??= $this->rootMetadata()?->decodeJson() ?: [];
+        if ($root) {
+            $modifiedSince = @\filemtime($this->rootFilename) ?: \time();
+            $root['__packages'] = (bool)($root['packages'] ?? ($root['__packages'] ?? false));
+            $root['modified_since'] = $modifiedSince;
+            unset($root['packages']);
+
+            $this->redis->set($this->redisRootKey, \json_encode($root));
+            return $root;
+        }
+
+        return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getRootMetadataInfo(): array
+    {
+        $root = $this->redis->get($this->redisRootKey);
+        $root = $root ? \json_decode($root, true) : [];
+
+        if (empty($root) && ($root = parent::getRootMetadataInfo())) {
+            $root = $this->updateRootStats($root);
+        }
+
+        return $root;
     }
 
     public function isRootFresh(array $root): bool
     {
         if ($this->filesystem->exists($this->rootFilename)) {
-            $rootJson = \json_encode($root, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            return \sha1_file($this->rootFilename) === sha1($rootJson);
+            $rootJson = \json_encode($root, \JSON_UNESCAPED_SLASHES);
+            return \sha1_file($this->rootFilename) === \sha1($rootJson);
         }
         return false;
     }
@@ -172,6 +221,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
     {
         if ($this->filesystem->exists($this->rootFilename)) {
             $this->filesystem->touch($this->rootFilename);
+
+            $root = $this->redis->get($this->redisRootKey);
+            if ($root = $root ? \json_decode($root, true) : null) {
+                $modifiedSince = @\filemtime($this->rootFilename) ?: \time();
+                $root['modified_since'] = $modifiedSince;
+                $this->redis->set($this->redisRootKey, \json_encode($root));
+            }
         }
     }
 
@@ -179,6 +235,12 @@ class RemoteProxyRepository extends AbstractProxyRepository
     {
         $filename = $this->packageDir . $this->packageKey($package, $hash);
         return $this->filesystem->exists($filename);
+    }
+
+    public function packageModifiedSince(string $package): ?int
+    {
+        $filename = $this->packageDir . $this->packageKey($package);
+        return $this->filesystem->exists($filename) ? (@\filemtime($filename) ?: null) : null;
     }
 
     public function dumpPackage(string $package, string|array|null $content, ?string $hash = null): void
@@ -191,6 +253,11 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
         $filename = $this->packageDir . $this->packageKey($package, $hash);
         $this->filesystem->dumpFile($filename, $content);
+
+        if ($hash !== null) {
+            $filename = $this->packageDir . $this->packageKey($package);
+            $this->filesystem->dumpFile($filename, $content);
+        }
     }
 
     public function hasProvider(string $uri): bool
@@ -209,9 +276,9 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $this->filesystem->dumpFile($filename, $content);
     }
 
-    public function lookupAllProviders(): iterable
+    public function lookupAllProviders(ProxyOptions $config = null): iterable
     {
-        $config = $this->getConfig();
+        $config ??= $this->getConfig();
         if ($config->getRootProviders()) {
             yield $config->getRootProviders();
         }
@@ -234,22 +301,28 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function getStats(): array
     {
-        $stats = $this->redis->get("proxy-info-{$this->repoConfig['name']}");
+        $stats = $this->redis->get($this->redisStatKey);
         $stats = $stats ? \json_decode($stats, true) : [];
 
         return \is_array($stats) ? $stats : [];
     }
 
+    public function clearAll(): void
+    {
+        $this->clearStats();
+        $this->redis->del($this->redisRootKey);
+    }
+
     public function clearStats(array $stats = []): void
     {
-        $this->redis->set("proxy-info-{$this->repoConfig['name']}", \json_encode($stats));
+        $this->redis->set($this->redisStatKey, \json_encode($stats));
     }
 
     public function setStats(array $stats = []): void
     {
         $stats = \array_merge($this->getStats(), $stats);
 
-        $this->redis->set("proxy-info-{$this->repoConfig['name']}", \json_encode($stats, \JSON_UNESCAPED_SLASHES));
+        $this->redis->set($this->redisStatKey, \json_encode($stats, \JSON_UNESCAPED_SLASHES));
     }
 
     public function getPackageManager(): RemotePackagesManager

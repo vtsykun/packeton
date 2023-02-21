@@ -1747,3 +1747,9 @@ pre.github {
     border-radius: 3px;
     cursor: pointer;
 }
+
+@media (min-width: 1200px) {
+    .modal-lg {
+        width:1150px
+    }
+}

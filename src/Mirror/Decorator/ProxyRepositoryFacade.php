@@ -33,7 +33,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $nameOrUri): JsonMetadata
+    public function findPackageMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
     {
         [$package, ] = \explode('$', $nameOrUri);
 
@@ -53,7 +53,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $nameOrUri): JsonMetadata
+    public function findProviderMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
     {
         return $this->fetch(__FUNCTION__, func_get_args(), function () {
             throw new MetadataNotFoundException('Not found');
@@ -63,7 +63,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(): JsonMetadata
+    public function rootMetadata(int $modifiedSince = null): JsonMetadata
     {
         $metadata = $this->fetch(__FUNCTION__, [], function () {
             try {

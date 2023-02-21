@@ -22,6 +22,7 @@ class RemotePackagesManager implements ApprovalRepoInterface
         return [
             'strict_mirror' => (bool)($settings['strict_mirror'] ?? false),
             'enabled_sync' => (bool)($settings['enabled_sync'] ?? true),
+            'disable_v2' => (bool)($settings['disable_v2'] ?? false),
         ];
     }
 

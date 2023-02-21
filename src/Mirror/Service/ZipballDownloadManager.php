@@ -7,6 +7,7 @@ namespace Packeton\Mirror\Service;
 use Composer\Package\Loader\ArrayLoader;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\RemoteProxyRepository;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class ZipballDownloadManager

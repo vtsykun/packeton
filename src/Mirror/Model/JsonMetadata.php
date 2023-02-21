@@ -8,6 +8,8 @@ class JsonMetadata
 {
     use GZipTrait;
 
+    protected bool $notModified = false;
+
     public function __construct(
         private string $content,
         private ?int $unix = null,
@@ -24,6 +26,11 @@ class JsonMetadata
         return (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($this->unix);
     }
 
+    public function isNotModified(): bool
+    {
+        return $this->notModified;
+    }
+
     public function getContent(): string
     {
         return $this->decode($this->content);
@@ -38,6 +45,11 @@ class JsonMetadata
     public function hash(): ?string
     {
         return $this->hash;
+    }
+
+    public function setOptions(array $options): void
+    {
+        $this->options = \array_merge($this->options, $options);
     }
 
     public function setOption(string $name, mixed $value): void
@@ -63,5 +75,13 @@ class JsonMetadata
         $clone->hash = null;
 
         return $clone;
+    }
+
+    public static function createNotModified(int $unix): static
+    {
+        $object = new static('', $unix);
+        $object->notModified = true;
+
+        return $object;
     }
 }

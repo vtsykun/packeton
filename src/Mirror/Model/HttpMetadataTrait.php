@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Mirror\Model;
 
 use Composer\Downloader\TransportException;
+use Composer\IO\IOInterface;
 use Composer\Util\Http\Response;
 use Composer\Util\HttpDownloader;
 use Packeton\Composer\Util\SignalLoop;
@@ -14,10 +15,12 @@ trait HttpMetadataTrait
 {
     protected ?SignalHandler $signal = null;
 
+    private $errorMap = [];
+
     /**
      * @throws TransportException
      */
-    private function requestMetadataVia2(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null): void
+    private function requestMetadataVia2(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, callable $lastModifyLoader = null): void
     {
         $queue = new \ArrayObject();
         $loop = new SignalLoop($downloader, $this->signal);
@@ -33,13 +36,24 @@ trait HttpMetadataTrait
 
         foreach ($packages as $package) {
             $requester = function (Response $response) use ($package, &$queue, &$onFulfilled) {
+                if ($response->getStatusCode() > 299) {
+                    return;
+                }
+
+                try {
+                    $body = $response->decodeJson();
+                } catch (\Throwable $e) {
+                    $this->handleUnexpectedException($e);
+                    return;
+                }
+
                 if (isset($queue[$package])) {
-                    $metadata = $this->metadataMinifier->expand($queue[$package], $response->decodeJson());
+                    $metadata = $this->metadataMinifier->expand($queue[$package], $body);
                     unset($queue[$package]);
 
                     $onFulfilled($package, $metadata);
                 } else {
-                    $queue[$package] = $response->decodeJson();
+                    $queue[$package] = $body;
                 }
             };
 
@@ -47,8 +61,23 @@ trait HttpMetadataTrait
                 return $onReject($e, $package);
             };
 
-            $promise[] = $downloader->add(\str_replace('%package%', $package, $url))->then($requester, $reject);
-            $promise[] = $downloader->add(\str_replace('%package%', $package . '~dev', $url))->then($requester, $reject);
+            $options = [];
+            if ($lastModified = $lastModifyLoader ? $lastModifyLoader($package) : null) {
+                $headers = ['If-Modified-Since: '.$lastModified];
+                $options = ['http' => ['header' => $headers]];
+            }
+
+            $promise[] = $downloader->add(\str_replace('%package%', $package, $url), $options)->then($requester, $reject);
+            $promise[] = $downloader->add(\str_replace('%package%', $package . '~dev', $url), $options)->then($requester, $reject);
+        }
+
+        $loop->wait($promise);
+
+        $promise = [];
+        // Try without last modify only uncompleted.
+        if ($lastModifyLoader && $queue->count() > 0) {
+            $packages = \array_keys($queue);
+            $this->requestMetadataVia2($downloader, $packages, $url, $onFulfilled, $onReject);
         }
 
         $loop->wait($promise);
@@ -98,5 +127,33 @@ trait HttpMetadataTrait
         }
 
         $loop->wait($promise);
+    }
+
+    private function onErrorIgnore(IOInterface $io): callable
+    {
+        return function ($e, $package) use ($io) {
+            if ($e instanceof TransportException) {
+                $code = $e->getStatusCode() === 404;
+                if (\in_array($code, [401, 403])) {
+                    throw $e;
+                }
+
+                $this->errorMap[$code] = ($this->errorMap[$code] ?? 0) + 1;
+                if ($this->errorMap[$code] < 12) {
+                    $io->error("[$code] [$package] " . $e->getMessage());
+                } else if ($this->errorMap[$code] === 12) {
+                    $io->critical("A lot of exceptions [$code]. Stop logging.");
+                }
+
+                return false;
+            }
+
+            $this->handleUnexpectedException($e);
+            return false;
+        };
+    }
+
+    private function handleUnexpectedException($e): void
+    {
     }
 }

@@ -51,7 +51,7 @@ if [ -f /var/tmp/data/handler.sh ]; then
     bash /var/tmp/data/handler.sh
 fi
 
-mkdir var/cache var/log
+mkdir -p var/cache var/log
 rm -rf var/cache/*
 
 app cache:clear

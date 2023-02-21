@@ -107,7 +107,7 @@ class ProxiesController extends AbstractController
         }
 
         $json = $meta->decodeJson();
-        $metadata = $this->metadataMinifier->minify($json)['packages'][$package] ?? [];
+        $metadata = $this->metadataMinifier->minify($json, null)['packages'][$package] ?? [];
 
         return new Response($jsonHuman->buildToHtml($metadata));
     }
