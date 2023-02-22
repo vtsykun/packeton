@@ -23,8 +23,10 @@ class ZipballDownloadManager
         protected Filesystem $filesystem,
         protected LoggerInterface $logger,
         protected PackagistFactory $packagistFactory,
+        protected string $aliasName,
         protected string $mirrorDistDir,
     ) {
+        $this->mirrorDistDir = rtrim($mirrorDistDir, '/') . '/' . $aliasName;
     }
 
     public function setRepository(RemoteProxyRepository $repository): void
@@ -32,6 +34,7 @@ class ZipballDownloadManager
         $this->repository = $repository;
     }
 
+    // ZipArchiver only supported by composer now
     public function distPath(string $package, string $version, string $ref, string $format = 'zip'): string
     {
         $etag = \preg_replace('#[^a-z0-9-]#i', '-', $version) . '-' . \sha1($package.$version.$ref) . '.zip';
@@ -103,7 +106,6 @@ class ZipballDownloadManager
                 break;
             }
         }
-
 
         if (false === $hasFile) {
             foreach ($package->getSourceUrls() as $url) {

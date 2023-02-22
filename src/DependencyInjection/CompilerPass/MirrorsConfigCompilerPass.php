@@ -40,7 +40,8 @@ final class MirrorsConfigCompilerPass implements CompilerPassInterface
         $rmp->setArgument('$repo', $name);
         $container->setDefinition($rmpId = 'packeton.mirror_rmp.' . $name, $rmp);
 
-        $container->setDefinition($dmId = 'packeton.mirror_dm.' . $name, new ChildDefinition(ZipballDownloadManager::class));
+        $container->setDefinition($dmId = 'packeton.mirror_dm.' . $name, new ChildDefinition(ZipballDownloadManager::class))
+            ->setArgument('$aliasName', $name);
 
         $service = new ChildDefinition(RemoteProxyRepository::class);
 
