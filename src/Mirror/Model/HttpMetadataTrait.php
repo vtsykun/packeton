@@ -73,14 +73,11 @@ trait HttpMetadataTrait
 
         $loop->wait($promise);
 
-        $promise = [];
-        // Try without last modify only uncompleted.
+        // Try without last modify check
         if ($lastModifyLoader && $queue->count() > 0) {
-            $packages = \array_keys($queue);
+            $packages = \array_keys($queue->getArrayCopy());
             $this->requestMetadataVia2($downloader, $packages, $url, $onFulfilled, $onReject);
         }
-
-        $loop->wait($promise);
     }
 
     private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, iterable $providersGenerator = []): void
@@ -129,31 +126,48 @@ trait HttpMetadataTrait
         $loop->wait($promise);
     }
 
-    private function onErrorIgnore(IOInterface $io): callable
+    private function onErrorIgnore(IOInterface $io, $skipAllErrors = true): callable
     {
-        return function ($e, $package) use ($io) {
+        return function ($e, $package = null) use ($io, $skipAllErrors) {
             if ($e instanceof TransportException) {
-                $code = $e->getStatusCode() === 404;
-                if (\in_array($code, [401, 403])) {
+                $code = $e->getStatusCode();
+                if (\in_array($code, [401, 403], true)) {
                     throw $e;
                 }
 
                 $this->errorMap[$code] = ($this->errorMap[$code] ?? 0) + 1;
                 if ($this->errorMap[$code] < 12) {
-                    $io->error("[$code] [$package] " . $e->getMessage());
+                    $code === 404 ? $io->warning("Not found [$package] " . $e->getMessage()) : $io->error("[$code] [$package] " . $e->getMessage());
                 } else if ($this->errorMap[$code] === 12) {
-                    $io->critical("A lot of exceptions [$code]. Stop logging.");
+                    $io->error("A lot of exceptions [$code]. Skip logging.");
                 }
 
                 return false;
             }
 
-            $this->handleUnexpectedException($e);
+            if ($e instanceof \Throwable) {
+                if ($skipAllErrors === true) {
+                    $value = $this->errorMap[-1] = ($this->errorMap[-1] ?? 0) + 1;
+                    $io->critical($e->getMessage());
+
+                    // Skip sync if a lot of exception.
+                    if ($value >= 12) {
+                        throw $e;
+                    }
+
+                    return false;
+                }
+                throw $e;
+            }
+
             return false;
         };
     }
 
     private function handleUnexpectedException($e): void
     {
+        if ($e instanceof \Throwable) {
+            throw $e;
+        }
     }
 }

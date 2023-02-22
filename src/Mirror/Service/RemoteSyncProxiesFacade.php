@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Service;
 
-use Composer\Downloader\TransportException;
 use Composer\IO\IOInterface;
 use Composer\Util\Http\Response;
 use Packeton\Composer\MetadataMinifier;
@@ -47,7 +46,7 @@ class RemoteSyncProxiesFacade
     {
         $this->providersCacheKeys = [];
 
-        $stats = ['last_sync' => \date('Y-m-d H:i:s')];
+        $stats = ['last_sync' => \date('Y-m-d H:i:s').' UTC'];
         if (self::FULL_RESET & $flags) {
             $io->notice('Remove all sync data and execute full resync!');
 
@@ -86,6 +85,7 @@ class RemoteSyncProxiesFacade
             $io->info('Loading provider includes...');
 
             $this->providersCacheKeys = \array_merge($this->providersCacheKeys, \array_map($repo->providerKey(...), $providerIncludes));
+            $this->syncProvider->setErrorHandler($this->onErrorIgnore($io, false));
             [$providersForUpdate, ] = $this->syncProvider->loadProvidersInclude($repo, $providerIncludes);
         } else {
             $io->info('Not found any provider-includes in packages.json');
@@ -103,7 +103,8 @@ class RemoteSyncProxiesFacade
             $this->loadProviderPackagesNames($repo, $config->maxCountOfAvailablePackages(), $config)
         );
 
-        $stats['available_packages'] = \count($availablePackages) < $config->maxCountOfAvailablePackages() ? $availablePackages : [];
+        $stats['pkg_total'] = $availableCount = \count($availablePackages);
+        $stats['available_packages'] = $availableCount < $config->maxCountOfAvailablePackages() ? $availablePackages : [];
 
         $providerUrl = $config->getMetadataV1Url();
 
@@ -117,31 +118,18 @@ class RemoteSyncProxiesFacade
             return $stats;
         }
 
-        $updated = $success = 0;
-        $maxErrors = 3;
+        $updated = 0;
+
+        $this->syncProvider->setErrorHandler($this->onErrorIgnore($io));
         foreach ($this->getAllProviders($providersForUpdate, $repo, $config) as $provName => $providersChunk) {
             $io->info("Loading chunk #$provName");
 
-            try {
-                [$packages, $skipped] = $this->syncProvider->loadPackages($repo, $providersChunk, $providerUrl);
-            } catch (TransportException $e) {
-                $io->error($e->getMessage());
-                $io->warning("Skip chunk #$provName");
-                \sleep(2);
-
-                if ($maxErrors--) {
-                    continue;
-                } else {
-                    break;
-                }
-            }
-
+            [$packages] = $this->syncProvider->loadPackages($repo, $providersChunk, $providerUrl);
             $updated += \count($packages);
-            $success += \count($packages) + \count($skipped);
             $io->info("Total updated $updated packages.");
         }
 
-        $stats += ['pkg_updated' => $updated, 'pkg_total' => $success];
+        $stats += ['pkg_updated' => $updated];
         $repo->dumpRootMeta($root);
 
         return $stats;
@@ -237,6 +225,13 @@ class RemoteSyncProxiesFacade
         $rmp = $repo->getPackageManager();
         $packages = $rmp->getEnabled();
 
+        $modifiedSinceLoader = static function($package) use ($repo) {
+            if ($since = $repo->packageModifiedSince($package)) {
+                return (new \DateTime("@$since", new \DateTimeZone('UTC')))->format('D, d M Y H:i:s').' GMT';
+            }
+            return null;
+        };
+
         $http = $this->syncProvider->initHttpDownloader($config);
         if ($apiUrl = $config->getV2SyncApi()) {
             $stats['metadata_timestamp'] = \time() * 10000;
@@ -244,6 +239,7 @@ class RemoteSyncProxiesFacade
 
             try {
                 $response = $http->get("$apiUrl?since=$timestamp");
+                $modifiedSinceLoader = null;
             } catch (\Throwable $e) {
                 $io->warning($e->getMessage());
                 $response = null;
@@ -274,11 +270,7 @@ class RemoteSyncProxiesFacade
         $updated = 0;
         $onFulfilled = static function (string $name, $meta) use ($repo, &$updated) {
             $updated++;
-           // $repo->dumpPackage($name, $meta);
-        };
-
-        $modifiedSinceLoader = static function($package) use ($repo) {
-            return $repo->packageModifiedSince($package);
+            $repo->dumpPackage($name, $meta);
         };
 
         $this->requestMetadataVia2($http, $packages, $config->getMetadataV2Url(), $onFulfilled, $this->onErrorIgnore($io), $modifiedSinceLoader);

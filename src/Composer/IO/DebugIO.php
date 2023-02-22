@@ -7,6 +7,7 @@ namespace Packeton\Composer\IO;
 use Composer\IO\ConsoleIO;
 use Composer\IO\IOInterface;
 use Composer\Pcre\Preg;
+use Psr\Log\LogLevel;
 use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -17,18 +18,29 @@ use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\StreamOutput;
 
 /**
- * To show more logs in UI, allow to out limit count of debugs logs.
+ * To show debug more logs in UI.
+ * Limit count of debug logs to prevent memory leaks.
  */
-class BufferIO extends ConsoleIO
+class DebugIO extends ConsoleIO
 {
     protected $output;
 
-    protected $verbosityMatrixCapacity = 3;
+    protected $verbosityMatrixCapacity = 5;
 
     protected $verbosityMatrix = [
-        IOInterface::VERBOSE => 10,
-        IOInterface::VERY_VERBOSE => 6,
-        IOInterface::DEBUG => 6,
+        IOInterface::VERBOSE => 12,
+        IOInterface::VERY_VERBOSE => 12,
+        IOInterface::DEBUG => 12,
+    ];
+
+    protected $maxLoggingMatrix = [
+        LogLevel::EMERGENCY => 1000,
+        LogLevel::ALERT => 1000,
+        LogLevel::CRITICAL => 1000,
+        LogLevel::ERROR => 1000,
+        LogLevel::WARNING => 100,
+        LogLevel::NOTICE => 100,
+        LogLevel::INFO => 100,
     ];
 
     public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null)
@@ -109,22 +121,37 @@ class BufferIO extends ConsoleIO
 
     public function log($level, $message, array $context = []): void
     {
-        parent::log($level, \htmlspecialchars((string) $message), $context);
+        if (isset($this->maxLoggingMatrix[$level])) {
+            $value = --$this->maxLoggingMatrix[$level];
+
+            if ($value === 0) {
+                parent::write("Too many [$level] logs, suppress logging...");
+            }
+            if ($value <= 0) {
+                return;
+            }
+        }
+
+        parent::log($level, strip_tags((string) $message), $context);
     }
 
     protected function dynamicVerbosity($verbosity)
     {
         if ($verbosity === self::NORMAL && $this->verbosityMatrixCapacity > 0) {
             foreach ($this->verbosityMatrix as $verb => $value) {
-                if ($value <= 0) {
-                    $this->verbosityMatrix[$verb] = 6;
+                if ($value < 12) {
+                    $this->verbosityMatrix[$verb] = 12;
                     $this->verbosityMatrixCapacity--;
                 }
             }
         }
 
         if (isset($this->verbosityMatrix[$verbosity]) && $this->verbosityMatrix[$verbosity] > 0) {
-            $this->verbosityMatrix[$verbosity]--;
+            $value = --$this->verbosityMatrix[$verbosity];
+            if ($value === 0) {
+                parent::write('Too many debug logs, suppress debug logging...');
+            }
+
             return self::NORMAL;
         }
 

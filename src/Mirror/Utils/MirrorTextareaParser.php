@@ -47,6 +47,12 @@ class MirrorTextareaParser
             return $packages[1];
         }
 
+        // Invalid packages.json.
+        \preg_match_all('#\s+"(' . $this->packageRegexp . ')",#', $string, $packages);
+        if ($packages[1] ?? null) {
+            return $packages[1];
+        }
+
         // Use composer info output
         if (\preg_match('#(\d+)\.(\d+)\.(\d+)#', $string)) {
             $list = \explode(PHP_EOL, $string);

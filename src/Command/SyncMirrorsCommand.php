@@ -8,6 +8,7 @@ use Composer\IO\ConsoleIO;
 use Packeton\Mirror\RemoteProxyRepository;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\Service\RemoteSyncProxiesFacade;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Helper\HelperSet;
@@ -17,11 +18,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand('packagist:sync:mirrors', 'Sync mirror repository proxy.')]
 class SyncMirrorsCommand extends Command
 {
-    protected static $defaultName = 'packagist:sync:mirrors';
-    protected static $defaultDescription = 'Sync mirror repository proxy.';
-
     public function __construct(
         protected ProxyRepositoryRegistry $repoRegistry,
         protected RemoteSyncProxiesFacade $syncFacade
@@ -62,7 +61,7 @@ class SyncMirrorsCommand extends Command
     private function syncRepo(RemoteProxyRepository $repo, InputInterface $input, OutputInterface $output): int
     {
         $io = new ConsoleIO($input, $output, new HelperSet());
-        $flags = $input->getOption('force') ? 1 : 0;
+        $flags = $input->getOption('force') ? RemoteSyncProxiesFacade::FULL_RESET : RemoteSyncProxiesFacade::UI_RESET;
         $stats = $this->syncFacade->sync($repo, $io, $flags);
         $repo->setStats($stats);
 

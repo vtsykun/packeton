@@ -8,7 +8,7 @@ use Composer\IO\ConsoleIO;
 use Composer\IO\IOInterface;
 use Composer\Util\Http\Response;
 use Composer\Util\HttpDownloader;
-use Packeton\Composer\IO\BufferIO;
+use Packeton\Composer\IO\DebugIO;
 use Packeton\Composer\Util\SignalLoop;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\RemoteProxyRepository;
@@ -75,19 +75,26 @@ class SyncProviderService
         return $this->httpLoop($providerIncludes, $repo->getConfig(), $loopCallback);
     }
 
-    public function loadPackages(RemoteProxyRepository $repo, iterable $providers, string $providerUrl = null, callable $minifier = null): array
+    public function loadPackages(RemoteProxyRepository $repo, iterable $providers, string $providerUrl = null): array
     {
-        $loopCallback = function ($name, $provider, HttpDownloader $http) use ($repo, $providerUrl, $minifier) {
+        $loopCallback = function ($name, $provider, HttpDownloader $http) use ($repo, $providerUrl) {
             $hash = $provider['sha256'] ?? null;
             $uri = $providerUrl ? \str_replace(['%package%', '%hash%'], [$name, (string)$hash], $providerUrl) :
                 $repo->getConfig()->getMetadataV1Url($name, (string)$hash);
 
-            if ($repo->hasPackage($name, $hash)) {
+            if ($hash !== null && $repo->hasPackage($name, $hash)) {
                 return null;
             }
 
+            $onRejected = null;
+            if (null !== $this->onRejected) {
+                $onRejected = function ($e) use ($name) {
+                    return ($this->onRejected)($e, $name);
+                };
+            }
+
             return $http->add($repo->getUrl($uri))
-                ->then(fn (Response $rs) => $repo->dumpPackage($name, $minifier ? $minifier($rs->getBody()) : $rs->getBody(), $hash), $this->onRejected);
+                ->then(fn (Response $rs) => $repo->dumpPackage($name, $rs->getBody(), $hash), $onRejected);
         };
 
         return $this->httpLoop($providers, $repo->getConfig(), $loopCallback);
@@ -104,7 +111,7 @@ class SyncProviderService
         $loop = new SignalLoop($http, $this->signal);
         $progress = $this->io instanceof ConsoleIO ? $this->io->getProgressBar() : null;
 
-        if ($this->io instanceof BufferIO) {
+        if ($this->io instanceof DebugIO) {
             $progress = null;
         }
 

@@ -76,7 +76,7 @@ class MirrorPackagesValidate
         return [
             'name' => $package,
             'license' => \json_encode($item['license'] ?? null),
-            'description' => $item['description'],
+            'description' => $item['description'] ?? null,
         ];
     }
 }

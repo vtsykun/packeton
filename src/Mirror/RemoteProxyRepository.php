@@ -289,7 +289,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
                 $content = \file_get_contents($filename);
                 $content = $content ? $this->decode($content) : null;
                 $content = $content ? \json_decode($content, true) : [];
-                yield $content;
+                yield $content['providers'] ?? [];
             }
         }
     }

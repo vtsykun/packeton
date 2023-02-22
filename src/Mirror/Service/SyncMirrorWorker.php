@@ -7,7 +7,7 @@ namespace Packeton\Mirror\Service;
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Factory;
 use Packeton\Attribute\AsWorker;
-use Packeton\Composer\IO\BufferIO;
+use Packeton\Composer\IO\DebugIO;
 use Packeton\Entity\Job;
 use Packeton\Exception\SignalException;
 use Packeton\Mirror\ProxyRepositoryRegistry;
@@ -45,7 +45,7 @@ class SyncMirrorWorker
             ];
         }
 
-        $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
+        $io = new DebugIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
 
         $locker = $this->lockFactory->createLock('package_update_' . $arguments['mirror'], 1800);
         if (!$locker->acquire()) {
