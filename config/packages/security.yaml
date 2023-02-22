@@ -42,7 +42,7 @@ security:
                 user_providers: all_users
                 name: pauth
                 always_remember_me: true
-                samesite: 'strict'
+                samesite: 'lax'
                 lifetime: 31104000 # 1y
             logout:       true
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Security\Api;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\Security\Http\Firewall\ContextListener;
 
@@ -14,6 +15,17 @@ use Symfony\Component\Security\Http\Firewall\ContextListener;
  */
 class ApiContextListener extends ContextListener
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function supports(Request $request): ?bool
+    {
+        return $request->getMethod() === 'GET';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function authenticate(RequestEvent $event)
     {
         parent::authenticate($event);
