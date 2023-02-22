@@ -117,7 +117,7 @@ class PackagistFactory
      */
     public function createRepository(string $url, IOInterface $io = null, Config $config = null, CredentialsInterface $credentials = null, array $repoConfig = [])
     {
-        $io = $io ?: new NullIO();
+        $io ??= new NullIO();
         if (null === $config) {
             $config = $this->createConfig($credentials);
             $io->loadConfiguration($config);

@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Service;
 
+use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
+use Packeton\Composer\PackagistFactory;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\RemoteProxyRepository;
+use Packeton\Model\CredentialsInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -17,6 +21,8 @@ class ZipballDownloadManager
     public function __construct(
         protected SyncProviderService $service,
         protected Filesystem $filesystem,
+        protected LoggerInterface $logger,
+        protected PackagistFactory $packagistFactory,
         protected string $mirrorDistDir,
     ) {
     }
@@ -26,7 +32,7 @@ class ZipballDownloadManager
         $this->repository = $repository;
     }
 
-    public function distPath(string $package, string $version, string $ref): string
+    public function distPath(string $package, string $version, string $ref, string $format = 'zip'): string
     {
         $etag = \preg_replace('#[^a-z0-9-]#i', '-', $version) . '-' . \sha1($package.$version.$ref) . '.zip';
         $distDir = $this->generatePackageDir($package);
@@ -35,6 +41,7 @@ class ZipballDownloadManager
             return $filename;
         }
 
+        $config = $this->repository->getConfig();
         $packages = $this->repository->findPackageMetadata($package)?->decodeJson();
         $packages = $packages['packages'][$package] ?? [];
         $accessor = PropertyAccess::createPropertyAccessor();
@@ -78,13 +85,17 @@ class ZipballDownloadManager
         [$package] = $loader->loadPackages([$candidate + ['name' => $package, 'version' => $version]]);
         $urls = $package->getDistUrls();
 
+        $cause = '';
         $hasFile = false;
         $targetDir = \dirname($filename);
         $this->filesystem->mkdir($targetDir);
+
+        $e = null;
         foreach ($urls as $url) {
             try {
                 $http->copy($url, $filename);
             } catch (\Exception $e) {
+                $cause .= $e->getMessage() . '. ';
                 continue;
             }
 
@@ -93,16 +104,48 @@ class ZipballDownloadManager
             }
         }
 
-        // todo try to download from source.
 
         if (false === $hasFile) {
-            throw new MetadataNotFoundException('Unable to download dist from source');
+            foreach ($package->getSourceUrls() as $url) {
+                $cred = $config->getSshCredential($url);
+                try {
+                    $generated = $this->createArchiveFormSource($package, $url, $filename, $cred);
+                } catch (\Throwable $ex) {
+                    $this->logger->error($ex->getMessage(), ['e' => $ex]);
+                    $cause .= $ex->getMessage();
+                    continue;
+                }
+
+                if (null !== $generated) {
+                    $hasFile = true;
+                    if ($generated !== $filename) {
+                        $this->filesystem->rename($generated, $filename);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (false === $hasFile) {
+            throw new MetadataNotFoundException('Unable to download dist from source. ' . $cause);
         }
 
         return $filename;
     }
 
-    public function generatePackageDir(string $packageName): string
+    private function createArchiveFormSource(CompletePackageInterface $package, string $url, string $saveTo, CredentialsInterface $cred = null): ?string
+    {
+        $vcsRepository = $this->packagistFactory->createRepository($url, null, null, $cred);
+        $vcsRepository->getPackages();
+
+        $archiveManager = $this->packagistFactory->createArchiveManager($vcsRepository->getIO(), $vcsRepository);
+        $archiveManager->setOverwriteFiles(false);
+
+        return $archiveManager->archive($package, 'zip', \dirname($saveTo), \basename($saveTo));
+    }
+
+    private function generatePackageDir(string $packageName): string
     {
         $intermediatePath = \preg_replace('#[^a-z0-9-_/]#i', '-', $packageName);
         return \sprintf('%s/%s', \rtrim($this->mirrorDistDir, '/'), $intermediatePath);

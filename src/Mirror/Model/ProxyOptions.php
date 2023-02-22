@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Model;
 
+use Packeton\Model\ComposerCredentials;
+use Packeton\Model\CredentialsInterface;
+
 class ProxyOptions extends MetadataOptions
 {
     /**
@@ -171,5 +174,36 @@ class ProxyOptions extends MetadataOptions
     {
         $stats = $this->config['stats'] ?? [];
         return $name ? $stats[$name] ?? $default : $stats;
+    }
+
+    public function getSshCredential(string $url): ?CredentialsInterface
+    {
+        if ($sshKey = $this->getGitSshKey($url)) {
+            return new ComposerCredentials(sshKeyFile: $sshKey);
+        }
+        return null;
+    }
+
+    public function getGitSshKey(string $url): ?string
+    {
+        if (!$keys = $this->config['git_ssh_keys'] ?? null) {
+            return null;
+        }
+
+        if (\is_string($keys)) {
+            return $keys;
+        }
+
+        if (!\is_array($keys)) {
+            return null;
+        }
+
+        foreach ($keys as $path => $key) {
+            if (\str_contains($url, (string)$path)) {
+                return $key;
+            }
+        }
+
+        return null;
     }
 }

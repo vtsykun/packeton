@@ -87,13 +87,13 @@ class MirrorController extends AbstractController
         requirements: ['package' => '%mirror_metadata_regex%'],
         methods: ['GET']
     )]
-    public function zipball(string $alias, string $package, string $version, string $ref): Response
+    public function zipball(string $alias, string $package, string $version, string $ref, string $type): Response
     {
         try {
             $this->checkAccess($alias);
             $dm = $this->proxyRegistry->getProxyDownloadManager($alias);
 
-            $path = $dm->distPath($package, $version, $ref);
+            $path = $dm->distPath($package, $version, $ref, $type);
         } catch (MetadataNotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
         }

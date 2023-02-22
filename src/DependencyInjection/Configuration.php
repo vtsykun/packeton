@@ -109,6 +109,7 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('enable_dist_mirror')->defaultTrue()->end()
                 ->booleanNode('parent_notify')->end()
                 ->booleanNode('disable_v1')->end()
+                ->variableNode('git_ssh_keys')->end()
                 ->scalarNode('info_cmd_message')->end()
                 ->scalarNode('logo')->end()
                 ->integerNode('available_packages_count_limit')->end()
