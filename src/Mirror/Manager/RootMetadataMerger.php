@@ -63,7 +63,7 @@ class RootMetadataMerger
             unset($rootFile['packages']);
         }
 
-        if ($config->isLazy()) {
+        if ($config->isLazy() || true === ($rootFile['providers-lazy-url'] ?? false)) {
             unset($rootFile['provider-includes'], $rootFile['providers-url']);
             $url = $this->router->generate('mirror_metadata_v1', ['package' => 'VND/PKG', 'alias' => $config->getAlias()]);
             $rootFile['providers-lazy-url'] = \str_replace('VND/PKG','%package%', $url);

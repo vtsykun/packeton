@@ -44,6 +44,12 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
                     return $includes;
                 });
             }
+
+            $root = $metadata->decodeJson();
+            $root['providers-lazy-url'] = true;
+            unset($root['providers'], $root['provider-includes'], $root['packages'], $root['providers-url']);
+
+            $metadata = $metadata->withContent($root);
         }
 
         return $metadata;
