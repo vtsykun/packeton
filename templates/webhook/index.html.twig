@@ -27,7 +27,8 @@
     {% for webhook in webhooks %}
         <div class="panel panel-default">
             {% set viewUrl = path('webhook_update', {id: webhook.id}) %}
-            <div class="panel-heading" title="Update hook {{ webhook.name }}" style="cursor: pointer;" onclick="window.location='{{ viewUrl }}';">
+
+            <div class="panel-heading" title="Update hook {{ webhook.name }}">
                 <a href="{{ viewUrl }}" class="link" style="font-size: 1.2em">{{ webhook.name }}</a>
             </div>
             <div class="panel-body">

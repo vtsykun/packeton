@@ -15,6 +15,7 @@ namespace Packeton\Controller;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Version;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -26,10 +27,8 @@ class ApiDocController extends AbstractController
         protected ManagerRegistry $registry
     ){}
 
-    /**
-     * @Route("/apidoc", name="api_doc")
-     */
-    public function indexAction()
+    #[Route('/apidoc', name: 'api_doc')]
+    public function indexAction(): Response
     {
         $qb = $this->registry->getRepository(Version::class)
             ->createQueryBuilder('v');
@@ -41,7 +40,7 @@ class ApiDocController extends AbstractController
 
         try {
             $examplePackage = $qb->getQuery()->getSingleScalarResult();
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             $examplePackage = 'monolog/monolog';
         }
 

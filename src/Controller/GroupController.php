@@ -20,15 +20,11 @@ class GroupController extends AbstractController
 {
     public function __construct(
         protected ManagerRegistry $registry
-    ){}
+    ){
+    }
 
-    /**
-     * @Route("/groups/", name="groups_index")
-     *
-     * @param Request $request
-     * @return mixed
-     */
-    public function indexAction(Request $request)
+    #[Route('/groups', name: 'groups_index')]
+    public function indexAction(Request $request): Response
     {
         $page = $request->query->get('page', 1);
         $qb = $this->registry->getRepository(Group::class)
@@ -55,13 +51,8 @@ class GroupController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/groups/create", name="groups_create")
-     *
-     * @param Request $request
-     * @return mixed
-     */
-    public function createAction(Request $request)
+    #[Route('/groups/create', name: 'groups_create')]
+    public function createAction(Request $request): Response
     {
         $group = new Group();
         $data = $this->handleUpdate($request, $group, 'Group has been saved successfully');
@@ -69,30 +60,18 @@ class GroupController extends AbstractController
         return $data instanceof Response ? $data : $this->render('group/update.html.twig', $data);
     }
 
-    /**
-     * @Route("/groups/{id}/update", name="groups_update")
-     *
-     * @param Group $group
-     * @param Request $request
-     * @return mixed
-     */
-    public function updateAction(Request $request, #[Vars] Group $group)
+    #[Route('/groups/{id}/update', name: 'groups_update')]
+    public function updateAction(Request $request, #[Vars] Group $group): Response
     {
         $data = $this->handleUpdate($request, $group, 'Group has been saved successfully');
 
         return $data instanceof Response ? $data : $this->render('group/update.html.twig', $data);
     }
 
-    /**
-     * @Route("/groups/{id}/delete", name="groups_delete")
-     *
-     * @param Group $group
-     * @param Request $request
-     * @return mixed
-     */
-    public function deleteAction(Request $request, #[Vars] Group $group)
+    #[Route('/groups/{id}/delete', name: 'groups_delete')]
+    public function deleteAction(Request $request, #[Vars] Group $group): Response
     {
-        $form = $this->createFormBuilder([])->getForm();
+        $form = $this->createFormBuilder()->getForm();
         $form->submit($request->get('form'));
         if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->registry->getManager();

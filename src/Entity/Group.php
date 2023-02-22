@@ -29,6 +29,13 @@ class Group
     private $name;
 
     /**
+     * @var array
+     *
+     * @ORM\Column(name="proxies", type="simple_array", nullable=true)
+     */
+    private $proxies;
+
+    /**
      * @var GroupAclPermission[]|Collection
      *
      * @ORM\OneToMany(targetEntity="Packeton\Entity\GroupAclPermission", mappedBy="group", cascade={"all"}, orphanRemoval=true)
@@ -73,6 +80,24 @@ class Group
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return array
+     */
+    public function getProxies()
+    {
+        return $this->proxies;
+    }
+
+    /**
+     * @param array $proxies
+     * @return Group
+     */
+    public function setProxies(?array $proxies)
+    {
+        $this->proxies = $proxies;
+        return $this;
     }
 
     /**
@@ -126,7 +151,7 @@ class Group
     {
         if ($this->aclPermissions->contains($permission)) {
             $this->aclPermissions->removeElement($permission);
-            $permission->setGroup(null);
+            $permission->setGroup();
         }
 
         return $this;

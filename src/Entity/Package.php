@@ -448,7 +448,16 @@ class Package
         if (preg_match('{(://|@)bitbucket.org[:/]}i', $this->repository)) {
             return preg_replace('{^(?:git@|https://|git://)bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $this->repository);
         }
-        return preg_replace('{^(git://github.com/|git@github.com:)}', 'https://github.com/', $this->repository);
+
+        if (preg_match('{^(git://github.com/|git@github.com:)}', $this->repository)) {
+            return preg_replace('{^(git://github.com/|git@github.com:)}', 'https://github.com/', $this->repository);
+        }
+
+        if (preg_match('{^((git|ssh)@(.+))}', $this->repository, $match) && isset($match[3])) {
+            return 'https://' . str_replace(':', '/', $match[3]);
+        }
+
+        return $this->repository;
     }
 
     /**

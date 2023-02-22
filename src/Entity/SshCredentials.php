@@ -3,6 +3,7 @@
 namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Packeton\Model\CredentialsInterface;
 
 /**
  * SshCredentials
@@ -10,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="ssh_credentials")
  * @ORM\Entity()
  */
-class SshCredentials implements OwnerAwareInterface
+class SshCredentials implements OwnerAwareInterface, CredentialsInterface
 {
     /**
      * @var int
@@ -122,7 +123,7 @@ class SshCredentials implements OwnerAwareInterface
      *
      * @return string
      */
-    public function getKey()
+    public function getKey(): ?string
     {
         return $this->key;
     }
@@ -180,7 +181,7 @@ class SshCredentials implements OwnerAwareInterface
      *
      * @return mixed|null
      */
-    public function getComposerConfigOption(string $name)
+    public function getComposerConfigOption(string $name): mixed
     {
         return $this->composerConfig[$name] ?? null;
     }
@@ -227,5 +228,10 @@ class SshCredentials implements OwnerAwareInterface
     public function getVisibility(): ?string
     {
         return OwnerAwareInterface::STRICT_VISIBLE;
+    }
+
+    public function getPrivkeyFile(): ?string
+    {
+        return null;
     }
 }

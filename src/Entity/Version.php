@@ -15,6 +15,7 @@ namespace Packeton\Entity;
 use Composer\Package\Version\VersionParser;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Packeton\Composer\MetadataMinifier;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -243,7 +244,7 @@ class Version
             'keywords' => $tags,
             'homepage' => (string) $this->getHomepage(),
             'version' => $this->getVersion(),
-            'version_normalized' => $this->getNormalizedVersionV1(),
+            'version_normalized' => MetadataMinifier::getNormalizedVersionV1($this->normalizedVersion),
             'version_normalized_v2' => $this->getNormalizedVersion(),
             'license' => $this->getLicense(),
             'authors' => $authors,
@@ -298,15 +299,6 @@ class Version
         }
 
         return $data;
-    }
-
-    public function getNormalizedVersionV1()
-    {
-        if (in_array($this->normalizedVersion, ['dev-master', 'dev-default', 'dev-trunk'], true)) {
-            return '9999999-dev';
-        }
-
-        return $this->normalizedVersion;
     }
 
     public function equals(Version $version)

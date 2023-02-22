@@ -6,10 +6,12 @@ namespace Packeton\Cron;
 
 use Okvpn\Bundle\CronBundle\Model\OutputStamp;
 use Okvpn\Bundle\CronBundle\Runner\ScheduleRunnerInterface;
+use Packeton\Attribute\AsWorker;
 use Packeton\Entity\Job;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
 
+#[AsWorker('cron:execute')]
 class CronWorker
 {
     public function __construct(

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of Packagist.
  *
@@ -51,13 +53,11 @@ class UserController extends AbstractController
         protected ManagerRegistry $registry,
         protected FavoriteManager $favoriteManager,
         protected DownloadManager $downloadManager,
-    ){}
+    ){
+    }
 
-    /**
-     * Show the user.
-     * @Route("/profile", name="profile_show")
-     */
-    public function showAction(Request $request)
+    #[Route('/profile', name: 'profile_show')]
+    public function showAction(Request $request): Response
     {
         $packages = $this->getUser() instanceof User ? $this->getUserPackages($request, $this->getUser()) : [];
 
@@ -68,11 +68,8 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * Show the user.
-     * @Route("/profile/edit", name="profile_edit")
-     */
-    public function editAction(Request $request)
+    #[Route('/profile/edit', name: 'profile_edit')]
+    public function editAction(Request $request): Response
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
@@ -97,9 +94,9 @@ class UserController extends AbstractController
 
     /**
      * Change pass
-     * @Route("/change-password", name="change_password", methods={"GET", "POST"})
      */
-    public function changePasswordAction(Request $request)
+    #[Route('/change-password', name: 'change_password', methods: ['GET', 'POST'])]
+    public function changePasswordAction(Request $request): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -129,10 +126,8 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/users/", name="users_list")
-     */
-    public function listAction(Request $request)
+    #[Route('/users/', name: 'users_list')]
+    public function listAction(Request $request): Response
     {
         $page = $request->query->get('page', 1);
         $searchUser = $request->query->get('search_user');
@@ -163,10 +158,8 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/users/{name}/update", name="users_update")
-     */
-    public function updateAction(Request $request, #[Vars(['name' => 'username'])] User $user)
+    #[Route('/users/{name}/update', name: 'users_update')]
+    public function updateAction(Request $request, #[Vars(['name' => 'username'])] User $user): Response
     {
         $currentUser = $this->getUser();
         if ($currentUser->getUserIdentifier() !== $user->getUserIdentifier() && !$user->isAdmin()) {
@@ -176,13 +169,8 @@ class UserController extends AbstractController
         throw new AccessDeniedHttpException('You can not update yourself or admin user');
     }
 
-    /**
-     * @Route("/users/create", name="users_create")
-     *
-     * @param Request $request
-     * @return mixed
-     */
-    public function createAction(Request $request)
+    #[Route('/users/create', name: 'users_create')]
+    public function createAction(Request $request): Response
     {
         $user = new User();
         $user->generateApiToken();
@@ -221,9 +209,7 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/users/{name}/packages", name="user_packages")
-     */
+    #[Route('/users/{name}/packages', name: 'user_packages')]
     public function packagesAction(Request $req, #[Vars(['name' => 'username'])] User $user)
     {
         $packages = $this->getUserPackages($req, $user);
@@ -235,12 +221,9 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     *  @Route("/users/sshkey", name="user_add_sshkey", methods={"GET", "POST"})
-     *  @Route("/users/sshkey/{id}", name="user_edit_sshkey", methods={"GET", "POST"})
-     * {@inheritdoc}
-     */
-    public function addSSHKeyAction(Request $request, #[Vars] SshCredentials $key = null)
+    #[Route('/users/sshkey', name: 'user_add_sshkey', methods: ['GET', 'POST'])]
+    #[Route('/users/sshkey/{id}', name: 'user_edit_sshkey', methods: ['GET', 'POST'])]
+    public function addSSHKeyAction(Request $request, #[Vars] SshCredentials $key = null): Response
     {
         if ($key && !$this->isGranted('VIEW', $key)) {
             throw new AccessDeniedException();
@@ -286,10 +269,8 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/users/{name}", name="user_profile")
-     */
-    public function profileAction(Request $req, #[Vars(['name' => 'username'])] User $user)
+    #[Route('/users/{name}', name: 'user_profile')]
+    public function profileAction(Request $req, #[Vars(['name' => 'username'])] User $user): Response
     {
         $deleteForm = $this->createFormBuilder()->getForm();
         $packages = $this->getUserPackages($req, $user);
@@ -302,15 +283,12 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/users/{name}/delete", name="user_delete")
-     */
-    public function deleteAction(Request $request, #[Vars(['name' => 'username'])] User $user)
+    #[Route('/users/{name}/delete', name: 'user_delete', methods: ['POST'])]
+    public function deleteAction(Request $request, #[Vars(['name' => 'username'])] User $user): Response
     {
-        $form = $this->createFormBuilder([])->getForm();
+        $form = $this->createFormBuilder()->getForm();
         $form->submit($request->request->get('form'));
         if ($form->isValid()) {
-            $request->getSession()->save();
             $em = $this->registry->getManager();
             $em->remove($user);
             $em->flush();
@@ -321,10 +299,8 @@ class UserController extends AbstractController
         return new Response('Invalid form input', 400);
     }
 
-    /**
-     * @Route("/users/{name}/favorites", name="user_favorites", methods={"GET"})
-     */
-    public function favoritesAction(Request $req, #[Vars(['name' => 'username'])] User $user)
+    #[Route('/users/{name}/favorites', name: 'user_favorites', methods: ['GET'])]
+    public function favoritesAction(Request $req, #[Vars(['name' => 'username'])] User $user): Response
     {
         $paginator = new Pagerfanta(
             new RedisAdapter($this->favoriteManager, $user, 'getFavorites', 'getFavoriteCount')
@@ -339,10 +315,8 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/users/{name}/favorites", name="user_add_fav", defaults={"_format" = "json"}, methods={"POST"})
-     */
-    public function postFavoriteAction(Request $req, #[Vars(['name' => 'username'])] User $user)
+    #[Route('/users/{name}/favorites', name: 'user_add_fav', defaults: ['_format' => 'json'], methods: ['POST'])]
+    public function postFavoriteAction(Request $req, #[Vars(['name' => 'username'])] User $user): Response
     {
         if ($user->getId() !== $this->getUser()->getId()) {
             throw new AccessDeniedException('You can only change your own favorites');
@@ -362,16 +336,14 @@ class UserController extends AbstractController
         return new JsonResponse(['status' => 'success'], 201);
     }
 
-    /**
-     * @Route(
-     *     "/users/{name}/favorites/{package}",
-     *     name="user_remove_fav",
-     *     defaults={"_format" = "json"},
-     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
-     *     methods={"DELETE"}
-     * )
-     */
-    public function deleteFavoriteAction(#[Vars(['name' => 'username'])] User $user, #[Vars('name')] Package $package)
+    #[Route(
+        '/users/{name}/favorites/{package}',
+        name: 'user_remove_fav',
+        requirements: ['package' => '%package_name_regex%'],
+        defaults: ['_format' => 'json'],
+        methods: ['DELETE']
+    )]
+    public function deleteFavoriteAction(#[Vars(['name' => 'username'])] User $user, #[Vars('name')] Package $package): Response
     {
         if ($user->getId() !== $this->getUser()->getId()) {
             throw new AccessDeniedException('You can only change your own favorites');

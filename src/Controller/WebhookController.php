@@ -26,23 +26,18 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
-/**
- * @Route("/webhooks")
- */
+#[Route('/webhooks')]
 class WebhookController extends AbstractController
 {
     public function __construct(
         protected ManagerRegistry $registry,
         protected HookTestAction $testAction,
         protected CsrfTokenManagerInterface $csrfTokenManager,
-    ){}
+    ){
+    }
 
-    /**
-     * @Route("", name="webhook_index")
-     *
-     * {@inheritdoc}
-     */
-    public function indexAction(Request $request)
+    #[Route('', name: 'webhook_index')]
+    public function indexAction(): Response
     {
         $user = $this->getUser();
         $qb = $this->registry
@@ -65,12 +60,8 @@ class WebhookController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/create", name="webhook_create")
-     *
-     * {@inheritdoc}
-     */
-    public function createAction(Request $request)
+    #[Route('/create', name: 'webhook_create')]
+    public function createAction(Request $request): Response
     {
         $hook = new Webhook();
         $data = $this->handleUpdate($request, $hook, 'Successfully saved.');
@@ -78,12 +69,8 @@ class WebhookController extends AbstractController
         return $data instanceof Response ? $data : $this->render('webhook/update.html.twig', $data);
     }
 
-    /**
-     * @Route("/update/{id}", name="webhook_update", requirements={"id"="\d+"})
-     *
-     * {@inheritdoc}
-     */
-    public function updateAction(Request $request, #[Vars] Webhook $hook)
+    #[Route('/update/{id}', name: 'webhook_update', requirements: ['id' => '\d+'])]
+    public function updateAction(Request $request, #[Vars] Webhook $hook): Response
     {
         if (!$this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException();
@@ -99,11 +86,8 @@ class WebhookController extends AbstractController
         return $data instanceof Response ? $data : $this->render('webhook/update.html.twig', $data);
     }
 
-    /**
-     * @Route("/delete/{id}", name="webhook_delete")
-     * {@inheritdoc}
-     */
-    public function deleteAction(Request $request, #[Vars] Webhook $hook)
+    #[Route('/delete/{id}', name: 'webhook_delete', requirements: ['id' => '\d+'], methods: ['DELETE'])]
+    public function deleteAction(Request $request, #[Vars] Webhook $hook): Response
     {
         if (!$this->isGranted('VIEW', $hook)) {
             throw new AccessDeniedException;
@@ -118,12 +102,8 @@ class WebhookController extends AbstractController
         return new Response('', 204);
     }
 
-    /**
-     * @Route("/job/{id}", name="webhook_job_action")
-     *
-     * {@inheritdoc}
-     */
-    public function jobAction(#[Vars] Job $entity)
+    #[Route('/job/{id}', name: 'webhook_job_action')]
+    public function jobAction(#[Vars] Job $entity): Response
     {
         $hook = $this->registry->getRepository(Webhook::class)
             ->find($entity->getPackageId());
@@ -144,12 +124,8 @@ class WebhookController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/test/{id}/send", name="webhook_test_action", requirements={"id"="\d+"})
-     *
-     * {@inheritdoc}
-     */
-    public function testAction(Request $request, #[Vars] Webhook $entity)
+    #[Route('/test/{id}/send', name: 'webhook_test_action', requirements: ['id' => '\d+'])]
+    public function testAction(Request $request, #[Vars] Webhook $entity): Response
     {
         if (!$this->isGranted('VIEW', $entity)) {
             throw new AccessDeniedException();

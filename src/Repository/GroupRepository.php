@@ -101,4 +101,24 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
 
         return ['packages' => $packages];
     }
+
+    public function getAllowedProxies(?UserInterface $user)
+    {
+        if (!$user instanceof User) {
+            return [];
+        }
+
+        $proxies = $this->getEntityManager()->createQueryBuilder()
+            ->select('g.proxies')
+            ->from(User::class, 'u')
+            ->innerJoin('u.groups', 'g')
+            ->where('u.id = :uid')
+            ->setParameter('uid', $user->getId())
+            ->getQuery()
+            ->getArrayResult();
+
+        $proxies = array_column($proxies, 'proxies');
+
+        return $proxies ? \array_unique(\array_merge(...$proxies)) : [];
+    }
 }

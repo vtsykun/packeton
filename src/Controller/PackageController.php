@@ -47,20 +47,17 @@ class PackageController extends AbstractController
         protected FavoriteManager $favoriteManager,
         protected ProviderManager $providerManager,
         protected LoggerInterface $logger,
-    ){}
+    ){
+    }
 
-    /**
-     * @Route("/packages/", name="all_packages")
-     */
-    public function allAction(Request $req)
+    #[Route('/packages/', name: 'all_packages')]
+    public function allAction(Request $req): Response
     {
         return new RedirectResponse($this->generateUrl('browse'), Response::HTTP_MOVED_PERMANENTLY);
     }
 
-    /**
-     * @Route("/packages/list.json", name="list", defaults={"_format"="json"}, methods={"GET"})
-     */
-    public function listAction(Request $req)
+    #[Route('/packages/list.json', name: 'list', defaults: ['_format' => 'json'], methods: ['GET'])]
+    public function listAction(Request $req): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
@@ -107,10 +104,8 @@ class PackageController extends AbstractController
         return new JsonResponse(['packageNames' => $names]);
     }
 
-    /**
-     * @Route("/packages/submit", name="submit")
-     */
-    public function submitPackageAction(Request $req)
+    #[Route('/packages/submit', name: 'submit')]
+    public function submitPackageAction(Request $req): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException();
@@ -149,11 +144,8 @@ class PackageController extends AbstractController
         );
     }
 
-    /**
-     * @Route("/packages/fetch-info", name="submit.fetch_info", defaults={"_format"="json"})
-     * {@inheritdoc}
-     */
-    public function fetchInfoAction(Request $req)
+    #[Route('/packages/fetch-info', name: 'submit.fetch_info', defaults: ['_format' => 'json'])]
+    public function fetchInfoAction(Request $req): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
@@ -210,9 +202,7 @@ class PackageController extends AbstractController
         return new JsonResponse(['status' => 'error', 'reason' => 'No data posted.']);
     }
 
-    /**
-     * @Route("/packages/{vendor}/", name="view_vendor", requirements={"vendor"="[A-Za-z0-9_.-]+"})
-     */
+    #[Route('/packages/{vendor}/', name: 'view_vendor', requirements: ['vendor' => '[A-Za-z0-9_.-]+'])]
     public function viewVendorAction($vendor)
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
@@ -237,16 +227,9 @@ class PackageController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route(
-     *     "/providers/{name}",
-     *     name="view_providers",
-     *     requirements={"name"="[A-Za-z0-9/_.-]+?"},
-     *     defaults={"_format"="html"},
-     *     methods={"GET"}
-     * )
-     */
-    public function viewProvidersAction($name, \Redis $redis)
+
+    #[Route('/providers/{name}/', name: 'view_providers', requirements: ['name' => '[A-Za-z0-9/_.-]+?'], defaults: ['_format' => 'html'], methods: ['GET'])]
+    public function viewProvidersAction($name, \Redis $redis): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
@@ -284,16 +267,9 @@ class PackageController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route(
-     *     "/packages/{name}.{_format}",
-     *     name="view_package",
-     *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "_format"="(json)"},
-     *     defaults={"_format"="html"},
-     *     methods={"GET"}
-     * )
-     */
-    public function viewPackageAction(Request $req, $name, CsrfTokenManagerInterface $csrfTokenManager)
+
+    #[Route('/packages/{name}.{_format}', name: 'view_package', requirements: ['name' => '%package_name_regex%', '_format' => '(json)'], defaults: ['_format' => 'html'], methods: ['GET'])]
+    public function viewPackageAction(Request $req, $name, CsrfTokenManagerInterface $csrfTokenManager): Response
     {
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
             if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
@@ -396,19 +372,9 @@ class PackageController extends AbstractController
         return $this->render('package/viewPackage.html.twig', $data);
     }
 
-    /**
-     * @Route(
-     *     "/packages/{package}/changelog",
-     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"},
-     *     name="package_changelog",
-     *     methods={"GET"}
-     * )
-     *
-     * @param string $package
-     * @param Request $request
-     * @return Response
-     */
-    public function changelogAction($package, Request $request)
+
+    #[Route('/packages/{package}/changelog', name: 'package_changelog', requirements: ['name' => '%package_name_regex%'], methods: ['GET'])]
+    public function changelogAction($package, Request $request): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
@@ -450,15 +416,9 @@ class PackageController extends AbstractController
         );
     }
 
-    /**
-     * @Route(
-     *     "/packages/{name}/downloads.{_format}",
-     *     name="package_downloads_full",
-     *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "_format"="(json)"},
-     *     methods={"GET"}
-     * )
-     */
-    public function viewPackageDownloadsAction(Request $req, $name)
+
+    #[Route('/packages/{name}/downloads.{_format}', name: 'package_downloads_full', requirements: ['name' => '%package_name_regex%', '_format' => '(json)'], methods: ['GET'])]
+    public function viewPackageDownloadsAction(Request $req, $name): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedHttpException();
@@ -500,15 +460,9 @@ class PackageController extends AbstractController
         return $response;
     }
 
-    /**
-     * @Route(
-     *     "/versions/{versionId}.{_format}",
-     *     name="view_version",
-     *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "versionId"="[0-9]+", "_format"="(json)"},
-     *     methods={"GET"}
-     * )
-     */
-    public function viewPackageVersionAction(Request $req, $versionId)
+
+    #[Route('/versions/{versionId}.{_format}', name: 'view_version', requirements: ['name' => '%package_name_regex%', 'versionId' => '[0-9]+', '_format' => '(json)'], methods: ['GET'])]
+    public function viewPackageVersionAction(Request $req, $versionId): Response
     {
         /** @var VersionRepository $repo  */
         $repo = $this->registry->getRepository(Version::class);
@@ -524,17 +478,9 @@ class PackageController extends AbstractController
         return new JsonResponse(['content' => $html]);
     }
 
-    /**
-     * @Route(
-     *     "/versions/{versionId}/delete",
-     *     name="delete_version",
-     *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "versionId"="[0-9]+"},
-     *     methods={"DELETE"}
-     * )
-     *
-     * {@inheritdoc}
-     */
-    public function deletePackageVersionAction(Request $req, $versionId)
+
+    #[Route('/versions/{versionId}/delete', name: 'delete_version', requirements: ['name' => '%package_name_regex%', 'versionId' => '[0-9]+', '_format' => '(json)'], methods: ['DELETE'])]
+    public function deletePackageVersionAction(Request $req, $versionId): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
@@ -562,11 +508,9 @@ class PackageController extends AbstractController
         return new Response('', 204);
     }
 
-    /**
-     * @Route("/packages/{name}", name="update_package", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, defaults={"_format" = "json"}, methods={"PUT"})
-     * @inheritDoc
-     */
-    public function updatePackageAction(Request $req, $name)
+
+    #[Route('/packages/{name}', name: 'update_package', requirements: ['name' => '%package_name_regex%', '_format' => 'json'], methods: ['PUT'])]
+    public function updatePackageAction(Request $req, $name): Response
     {
         $doctrine = $this->registry;
 
@@ -621,10 +565,9 @@ class PackageController extends AbstractController
         return new JsonResponse(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)',], 404);
     }
 
-    /**
-     * @Route("/packages/{name}", name="delete_package", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"}, methods={"DELETE"})
-     */
-    public function deletePackageAction(Request $req, $name)
+
+    #[Route('/packages/{name}', name: 'delete_package', requirements: ['name' => '%package_name_regex%', '_format' => 'json'], methods: ['DELETE'])]
+    public function deletePackageAction(Request $req, $name): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
@@ -656,10 +599,8 @@ class PackageController extends AbstractController
         return new Response('Invalid form input', 400);
     }
 
-    /**
-     * @Route("/packages/{name}/maintainers", name="add_maintainer", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"})
-     */
-    public function createMaintainerAction(Request $req, $name)
+    #[Route('/packages/{name}/maintainers', name: 'add_maintainer', requirements: ['name' => '%package_name_regex%'])]
+    public function createMaintainerAction(Request $req, $name): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
@@ -716,10 +657,8 @@ class PackageController extends AbstractController
         return $this->render('package/viewPackage.html.twig', $data);
     }
 
-    /**
-     * @Route("/packages/{name}/maintainers/delete", name="remove_maintainer", requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"})
-     */
-    public function removeMaintainerAction(Request $req, $name)
+    #[Route('/packages/{name}/maintainers/delete', name: 'remove_maintainer', requirements: ['name' => '%package_name_regex%'])]
+    public function removeMaintainerAction(Request $req, $name): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
@@ -774,14 +713,8 @@ class PackageController extends AbstractController
         return $this->render('package/viewPackage.html.twig', $data);
     }
 
-    /**
-     * @Route(
-     *     "/packages/{name}/edit",
-     *     name="edit_package",
-     *     requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
-     * )
-     */
-    public function editAction(Request $req, #[Vars('name')] Package $package)
+    #[Route('/packages/{name}/edit', name: 'edit_package', requirements: ['name' => '%package_name_regex%'])]
+    public function editAction(Request $req, #[Vars] Package $package): Response
     {
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
@@ -817,14 +750,8 @@ class PackageController extends AbstractController
         );
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/abandon",
-     *      name="abandon_package",
-     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
-     * )
-     */
-    public function abandonAction(Request $request, #[Vars] Package $package)
+    #[Route('/packages/{name}/abandon', name: 'abandon_package', requirements: ['name' => '%package_name_regex%'])]
+    public function abandonAction(Request $request, #[Vars] Package $package): Response
     {
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
@@ -851,14 +778,8 @@ class PackageController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/unabandon",
-     *      name="unabandon_package",
-     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
-     * )
-     */
-    public function unabandonAction(#[Vars] Package $package)
+    #[Route('/packages/{name}/unabandon', name: 'unabandon_package', requirements: ['name' => '%package_name_regex%'])]
+    public function unabandonAction(#[Vars] Package $package): Response
     {
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
@@ -876,15 +797,8 @@ class PackageController extends AbstractController
         return $this->redirect($this->generateUrl('view_package', ['name' => $package->getName()]));
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/stats.{_format}",
-     *      name="view_package_stats",
-     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "_format"="(json)"},
-     *      defaults={"_format"="html"}
-     * )
-     */
-    public function statsAction(Request $req, #[Vars('name')] Package $package)
+    #[Route('/packages/{name}/stats.{_format}', name: 'view_package_stats', requirements: ['name' => '%package_name_regex%', '_format' => '(json)'], defaults: ['_format' => 'html'])]
+    public function statsAction(Request $req, #[Vars] Package $package): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
@@ -924,14 +838,12 @@ class PackageController extends AbstractController
         return $this->render('package/stats.html.twig', $data);
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/dependents",
-     *      name="view_package_dependents",
-     *      requirements={"name"="([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)"}
-     * )
-     */
-    public function dependentsAction(Request $req, $name)
+    #[Route(
+        '/packages/{name}/dependents',
+        name: 'view_package_dependents',
+        requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'],
+    )]
+    public function dependentsAction(Request $req, $name): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
@@ -957,14 +869,12 @@ class PackageController extends AbstractController
         return $this->render('package/dependents.html.twig', $data);
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/suggesters",
-     *      name="view_package_suggesters",
-     *      requirements={"name"="([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)"}
-     * )
-     */
-    public function suggestersAction(Request $req, $name)
+    #[Route(
+        '/packages/{name}/suggesters',
+        name: 'view_package_suggesters',
+        requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'],
+    )]
+    public function suggestersAction(Request $req, $name): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
@@ -990,14 +900,8 @@ class PackageController extends AbstractController
         return $this->render('package/suggesters.html.twig', $data);
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/stats/all.json",
-     *      name="package_stats",
-     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?"}
-     * )
-     */
-    public function overallStatsAction(Request $req, \Redis $redis, #[Vars('name')] Package $package, Version $version = null)
+    #[Route('/packages/{name}/stats/all.json', name: 'package_stats', requirements: ['name' => '%package_name_regex%'])]
+    public function overallStatsAction(Request $req, \Redis $redis, #[Vars] Package $package, Version $version = null): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;
@@ -1068,14 +972,12 @@ class PackageController extends AbstractController
         return $response;
     }
 
-    /**
-     * @Route(
-     *      "/packages/{name}/stats/{version}.json",
-     *      name="version_stats",
-     *      requirements={"name"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "version"=".+?"}
-     * )
-     */
-    public function versionStatsAction(\Redis $redis, Request $req, #[Vars('name')] Package $package, $version)
+    #[Route(
+        '/packages/{name}/stats/{version}.json',
+        name: 'version_stats',
+        requirements: ['name' => '%package_name_regex%', 'version' => '.+?'])
+    ]
+    public function versionStatsAction(\Redis $redis, Request $req, #[Vars('name')] Package $package, $version): Response
     {
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
             throw new AccessDeniedException;

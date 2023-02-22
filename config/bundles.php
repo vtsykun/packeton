@@ -15,6 +15,7 @@ $bundles =  [
     Symfony\Bundle\DebugBundle\DebugBundle::class => ['dev' => true],
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true,],
     BabDev\PagerfantaBundle\BabDevPagerfantaBundle::class => ['all' => true],
+    Nelmio\SecurityBundle\NelmioSecurityBundle::class => ['all' => true],
 ];
 
 if (!class_exists(Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class)) {

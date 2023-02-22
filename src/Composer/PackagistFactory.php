@@ -14,7 +14,7 @@ use Composer\Util\Loop;
 use Packeton\Composer\Repository\VcsRepository;
 use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Composer\Util\ProcessExecutor;
-use Packeton\Entity\SshCredentials;
+use Packeton\Model\CredentialsInterface;
 
 class PackagistFactory
 {
@@ -71,10 +71,10 @@ class PackagistFactory
     }
 
     /**
-     * @param SshCredentials|null $credentials
+     * @param CredentialsInterface|null $credentials
      * @return \Composer\Config
      */
-    public function createConfig(SshCredentials $credentials = null)
+    public function createConfig(CredentialsInterface $credentials = null)
     {
         $config = ConfigFactory::createConfig();
 
@@ -97,6 +97,9 @@ class PackagistFactory
                 ProcessExecutor::inheritEnv(['GIT_SSH_COMMAND']);
 
                 $config->merge(['config' => ['ssh-key-file' => $credentialsFile]]);
+            } else if ($credentials->getPrivkeyFile()) {
+                putenv("GIT_SSH_COMMAND=ssh -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {$credentials->getPrivkeyFile()}");
+                ProcessExecutor::inheritEnv(['GIT_SSH_COMMAND']);
             }
         }
 
@@ -107,14 +110,14 @@ class PackagistFactory
      * @param string $url
      * @param IOInterface|null $io
      * @param Config|null $config
-     * @param SshCredentials|null $credentials
+     * @param CredentialsInterface|null $credentials
      * @param array $repoConfig
      *
      * @return Repository\VcsRepository
      */
-    public function createRepository(string $url, IOInterface $io = null, Config $config = null, SshCredentials $credentials = null, array $repoConfig = [])
+    public function createRepository(string $url, IOInterface $io = null, Config $config = null, CredentialsInterface $credentials = null, array $repoConfig = [])
     {
-        $io = $io ?: new NullIO();
+        $io ??= new NullIO();
         if (null === $config) {
             $config = $this->createConfig($credentials);
             $io->loadConfiguration($config);

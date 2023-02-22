@@ -1,0 +1,10 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<h2 class="title">Mirror {{ alias }}</h2>
+<section class="row">
+    <section class="col-md-12">
+        {% include 'proxies/info_repo.html.twig' %}
+    </section>
+</section>
+{% endblock %}

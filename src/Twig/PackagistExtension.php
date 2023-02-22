@@ -7,8 +7,10 @@ use Packeton\Entity\Group;
 use Packeton\Entity\Job;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Form\Model\PackagePermission;
 use Packeton\Model\ProviderManager;
 use Packeton\Security\JWTUserManager;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -38,6 +40,7 @@ class PackagistExtension extends AbstractExtension
         return [
             new TwigFunction('package_job_result', [$this, 'getLatestJobResult']),
             new TwigFunction('get_group_data', [$this, 'getGroupData']),
+            new TwigFunction('get_group_acl_form_data', [$this, 'getGroupAclForm']),
             new TwigFunction('get_api_token', [$this, 'getApiToken']),
         ];
     }
@@ -49,6 +52,39 @@ class PackagistExtension extends AbstractExtension
             new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash']),
             new TwigFilter('truncate', [$this, 'truncate']),
         ];
+    }
+
+    public function getGroupAclForm(FormView $items)
+    {
+        $byVendors = [];
+        foreach ($items->children as $item) {
+            $data = $item->vars['data'] ?? null;
+            if ($data instanceof PackagePermission) {
+                [$vendor] = \explode('/', $data->getName());
+                $byVendors[$vendor][] = $item;
+            }
+        }
+
+        $grouped = $otherVendors = [];
+        \uasort($byVendors, fn($a, $b) => -1 * (\count($a) <=> \count($b)));
+        foreach ($byVendors as $vendorName => $children) {
+            if (\count($grouped) < 4 && \count($children) > 1) {
+                $grouped[$vendorName] = $children;
+            } else {
+                $otherVendors = \array_merge($otherVendors, $children);
+            }
+        }
+
+        if ($otherVendors) {
+            $grouped['other'] = $otherVendors;
+        }
+        foreach ($grouped as $vendor => $children) {
+            \usort($children, fn($a, $b) => $a->vars['data']->getName() <=> $b->vars['data']->getName());
+            $selected = \count(\array_filter($children, fn($a) => $a->vars['data']->getSelected()));
+            $grouped[$vendor] = ['items' => $children, 'selected' => $selected];
+        }
+
+        return $grouped;
     }
 
     public function getGroupData(Group|int $group): array
@@ -71,13 +107,13 @@ class PackagistExtension extends AbstractExtension
         return null;
     }
 
-    public function getLatestJobResult($package): ?Job
+    public function getLatestJobResult($package, $type = 'package:updates'): ?Job
     {
         if ($package instanceof Package) {
             $package = $package->getId();
         }
 
-        return $this->registry->getRepository(Job::class)->findLastJobByType('package:updates', $package);
+        return $this->registry->getRepository(Job::class)->findLastJobByType($type, $package);
     }
 
     public function truncate($string, $length)

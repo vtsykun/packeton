@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
@@ -23,12 +25,11 @@ class ProviderController extends AbstractController
     public function __construct(
         private readonly PackageManager $packageManager,
         private readonly ManagerRegistry $registry,
-    ){}
+    ){
+    }
 
-    /**
-     * @Route("/packages.json", name="root_packages", defaults={"_format" = "json"}, methods={"GET"})
-     */
-    public function packagesAction(Request $request)
+    #[Route('/packages.json', name: 'root_packages', defaults: ['_format' => 'json'], methods: ['GET'])]
+    public function packagesAction(Request $request): Response
     {
         $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser());
 
@@ -42,18 +43,8 @@ class ProviderController extends AbstractController
         return $response;
     }
 
-    /**
-     * @Route(
-     *     "/p/providers${hash}.json",
-     *     requirements={"hash"="[a-f0-9]+"},
-     *     name="root_providers", defaults={"_format" = "json"},
-     *     methods={"GET"}
-     * )
-     *
-     * @param string $hash
-     * @return Response
-     */
-    public function providersAction($hash)
+    #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'], defaults: ['_format' => 'json'], methods: ['GET'])]
+    public function providersAction($hash): Response
     {
         $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash);
         if (!$providers) {
@@ -66,10 +57,9 @@ class ProviderController extends AbstractController
     /**
      * Copy from Packagist. Can be used for https://workers.cloudflare.com sync mirrors.
      * Used two unix format: Packagist and RFC-3399
-     *
-     * @Route("/metadata/changes.json", name="metadata_changes", methods={"GET"})
      */
-    public function metadataChangesAction(Request $request)
+    #[Route('/metadata/changes.json', name: 'metadata_changes', defaults: ['_format' => 'json'], methods: ['GET'])]
+    public function metadataChangesAction(Request $request): Response
     {
         $now = time() * 10000;
         $since = $request->query->getInt('since');
@@ -95,18 +85,14 @@ class ProviderController extends AbstractController
         return new JsonResponse(['actions' => array_merge($updatesDev, $updatesStab), 'timestamp' => $now]);
     }
 
-    /**
-     * @Route(
-     *     "/p/{package}.json",
-     *     requirements={"package"="[\w+\/\-\$]+"},
-     *     name="root_package", defaults={"_format" = "json"},
-     *     methods={"GET"}
-     * )
-     *
-     * @param string $package
-     * @return Response
-     */
-    public function packageAction(string $package)
+    #[Route(
+        '/p/{package}.json',
+        name: 'root_package',
+        requirements: ['package' => '%package_name_regex_v1%'],
+        defaults: ['_format' => 'json'],
+        methods: ['GET']
+    )]
+    public function packageAction(string $package): Response
     {
         $package = \explode('$', $package);
         if (\count($package) !== 2) {
@@ -125,15 +111,14 @@ class ProviderController extends AbstractController
         return new JsonResponse($package);
     }
 
-    /**
-     * @Route(
-     *     "/p2/{package}.json",
-     *     requirements={"package"="[\w+\/\-\~]+"},
-     *     name="root_package_v2", defaults={"_format" = "json"},
-     *     methods={"GET"}
-     * )
-     */
-    public function packageV2Action(Request $request, string $package)
+    #[Route(
+        '/p2/{package}.json',
+        name: 'root_package_v2',
+        requirements: ['package' => '%package_name_regex_v2%'],
+        defaults: ['_format' => 'json'],
+        methods: ['GET']
+    )]
+    public function packageV2Action(Request $request, string $package): Response
     {
         $isDev = str_ends_with($package, '~dev');
         $package = preg_replace('/~dev$/', '', $package);
@@ -144,6 +129,7 @@ class ProviderController extends AbstractController
         }
 
         $response = new JsonResponse($package);
+        $response->setEncodingOptions(\JSON_UNESCAPED_SLASHES);
         if ($lastModified !== null) {
             $response->setLastModified(new \DateTime($lastModified));
             $response->isNotModified($request);
@@ -152,15 +138,13 @@ class ProviderController extends AbstractController
         return $response;
     }
 
-    /**
-     * @Route(
-     *     "/zipball/{package}/{hash}",
-     *     name="download_dist_package",
-     *     requirements={"package"="[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?", "hash"="[a-f0-9]{40}\.[a-z]+?"},
-     *     methods={"GET"}
-     * )
-     */
-    public function zipballAction(#[Vars('name')] Package $package, $hash)
+    #[Route(
+        '/zipball/{package}/{hash}',
+        name: 'download_dist_package',
+        requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}\.[a-z]+?'],
+        methods: ['GET']
+    )]
+    public function zipballAction(#[Vars('name')] Package $package, $hash): Response
     {
         $distManager = $this->container->get(DistManager::class);
         if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match) or !($reference = $match[0])) {
@@ -192,7 +176,7 @@ class ProviderController extends AbstractController
         return $this->createNotFound();
     }
 
-    protected function createNotFound(?string $msg = null)
+    protected function createNotFound(?string $msg = null): Response
     {
         return new JsonResponse(['status' => 'error', 'message' => $msg ?: 'Not Found'], 404);
     }

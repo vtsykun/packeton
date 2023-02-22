@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Attribute\AsWorker;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Event\UpdaterErrorEvent;
 use Packeton\Exception\JobException;
@@ -25,6 +26,7 @@ use Composer\Downloader\TransportException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Lock\LockFactory;
 
+#[AsWorker('package:updates')]
 class UpdaterWorker
 {
     public function __construct(

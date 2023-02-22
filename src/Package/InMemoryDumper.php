@@ -85,7 +85,6 @@ class InMemoryDumper
         $rootFile['providers-url'] = '/p/%package%$%hash%.json';
 
         $rootFile['metadata-url'] = '/p2/%package%.json';
-        $rootFile['available-packages'] = $availablePackages;
 
         $userHash = \hash('sha256', \json_encode($providers));
         $rootFile['provider-includes'] = [
@@ -93,6 +92,7 @@ class InMemoryDumper
                 'sha256' => $userHash
             ]
         ];
+        $rootFile['available-packages'] = $availablePackages;
 
         return [$rootFile, $providers, $packagesData];
     }

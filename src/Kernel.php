@@ -7,6 +7,7 @@ use Packeton\DBAL\Types\EncryptedArrayType;
 use Packeton\DBAL\Types\EncryptedTextType;
 use Packeton\DependencyInjection\CompilerPass\ApiFirewallCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\LdapServicesPass;
+use Packeton\DependencyInjection\CompilerPass\MirrorsConfigCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packeton\DependencyInjection\PacketonExtension;
 use Packeton\DependencyInjection\Security\ApiHttpBasicFactory;
@@ -77,6 +78,7 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new LdapServicesPass());
         $container->addCompilerPass(new ApiFirewallCompilerPass());
         $container->addCompilerPass(new WorkerLocatorPass());
+        $container->addCompilerPass(new MirrorsConfigCompilerPass());
     }
 
     /**
@@ -91,5 +93,9 @@ class Kernel extends BaseKernel
 
         EncryptedTextType::setCrypter($crypter);
         EncryptedArrayType::setCrypter($crypter);
+
+        if (class_exists(DebugClassLoader::class)) {
+            DebugClassLoader::disable();;
+        }
     }
 }

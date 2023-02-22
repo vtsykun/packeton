@@ -129,6 +129,7 @@ class QueueWorker
 
         try {
             $result = $processor($job, $signal);
+            $result = $result + ['status' => Job::STATUS_COMPLETED, 'message' => 'Success'];
         } catch (JobException $e) {
             $result = [
                 'status' => Job::STATUS_ERRORED,

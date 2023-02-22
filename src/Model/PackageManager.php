@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\Model;
 
-use Composer\MetadataMinifier\MetadataMinifier;
-use Composer\Semver\VersionParser;
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Composer\MetadataMinifier;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
@@ -36,6 +35,7 @@ class PackageManager
         protected PackagistFactory $packagistFactory,
         protected EventDispatcherInterface $dispatcher,
         protected CacheInterface $packagesCachePool,
+        protected MetadataMinifier $metadataMinifier,
         protected \Redis $redis,
     ) {}
 
@@ -177,40 +177,7 @@ class PackageManager
             return [];
         }
 
-        $packages = $metadata['packages'] ?? [];
-        $metadata['minified'] = 'composer/2.0';
-
-        $obj = new \stdClass();
-        $obj->time = '1970-01-01T00:00:00+00:00';
-
-        foreach ($packages as $packName => $versions) {
-            $versions = array_filter($versions, fn($v) => $this->isValidStability($v, $isDev));
-
-            usort($versions, fn($v1, $v2) => -1 * version_compare($v1['version_normalized'], $v2['version_normalized']));
-            array_map(fn($v) => $obj->time < $v['time'] ? $obj->time = $v['time'] : null, $versions);
-
-            foreach ($versions as $i => $v) {
-                if (isset($v['version_normalized_v2'])) {
-                    $v['version_normalized'] = $v['version_normalized_v2'];
-                    unset($v['version_normalized_v2']);
-                }
-
-                $versions[$i] = $v;
-            }
-
-            $metadata['packages'][$packName] = MetadataMinifier::minify(array_values($versions));
-        }
-
-        $lastModified = $obj->time;
-
-        return $metadata;
-    }
-
-    private function isValidStability($version, bool $isDev)
-    {
-        $stab = VersionParser::parseStability($version['version']);
-
-        return $isDev ? $stab === 'dev' : $stab !== 'dev';
+        return $this->metadataMinifier->minify($metadata, $isDev, $lastModified);
     }
 
     /**
@@ -239,7 +206,7 @@ class PackageManager
             $user = null;
         }
 
-        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0);
+        $cacheKey = \sha1('pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0));
 
         $item = $this->packagesCachePool->getItem($cacheKey);
         @[$ctime, $data] = $item->get();
@@ -257,6 +224,23 @@ class PackageManager
         }
 
         return $data;
+    }
+
+    public function getPackageNames(): array
+    {
+        $cacheKey = 'all_packages_';
+        $lastModify = $this->getLastModify()?->getTimestamp();
+
+        $item = $this->packagesCachePool->getItem($cacheKey);
+        @[$ctime, $data] = $item->get();
+
+        if ($ctime < $lastModify || !$item->isHit()) {
+            $data = $this->doctrine->getRepository(Package::class)->getPackageNames();
+            $item->set([time(), $data]);
+            $this->packagesCachePool->save($item);
+        }
+
+        return is_array($data) ? $data : [];
     }
 
     public function setLastModify(): void

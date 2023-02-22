@@ -262,6 +262,7 @@ strong {
 .nav-user .nav-user-menu span {
     float: right;
     font-size: 20px;
+    margin-top: 5px;
 }
 
 .nav-user .nav-user-menu span.normal {
@@ -772,10 +773,12 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     font-size: 12px;
 }
 
-.btn.loading, .btn.loading:hover, .btn.loading:active {
+.btn.loading, .btn.loading:hover, .btn.loading:active, .btn.loading:focus {
     background-image: url("../img/loader.gif");
     background-position: 95% 50%;
     background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0.75;
 }
 
 .btn-default {
@@ -1743,4 +1746,10 @@ pre.github {
     background-color: rgba(209,227,237,.5);
     border-radius: 3px;
     cursor: pointer;
+}
+
+@media (min-width: 1200px) {
+    .modal-lg {
+        width:1150px
+    }
 }

@@ -34,6 +34,18 @@ parameters:
         use_forward: false
         check_path: /login
         failure_path: null
+    
+    composer_home_dir: '%env(resolve:APP_COMPOSER_HOME)%'
+    mirror_repos_meta_dir: '%composer_home_dir%/proxy-meta'
+    mirror_repos_dist_dir: '%composer_home_dir%/proxy-dist'
+    
+    package_name_regex: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+'
+    package_name_regex_v2: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'
+    package_name_regex_v1: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.$-]+' # package$hash
+
+    mirror_metadata_regex: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.-]+'
+    mirror_metadata_regex_v2: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.~-]+'
+    mirror_metadata_regex_v1: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.$-]+'
 
 services:
     # default configuration for services in *this* file
@@ -44,6 +56,9 @@ services:
             $redis: '@snc_redis.default'
             $jwtTokenConfig: '%packeton_jws_config%'
             $jwtSignAlgorithm: '%packeton_jws_algo%'
+            $mirrorRepoMetaDir: '%mirror_repos_meta_dir%'
+            $mirrorDistDir: '%mirror_repos_dist_dir%'
+            $packageRegexp: '%package_name_regex%'
             'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:
@@ -54,6 +69,7 @@ services:
             - '../src/Event/'
             - '../src/Kernel.php'
             - '../src/Repository/'
+            - '../src/Mirror/Decorator/'
             - '../src/Webhook/Twig/'
 
     packeton.menu.profile:
@@ -98,23 +114,13 @@ services:
 
     Packeton\Composer\PackagistFactory:
         arguments:
-            $composerHome: '%env(resolve:APP_COMPOSER_HOME)%'
+            $composerHome: '%composer_home_dir%'
             $githubNoApi: '%packeton_github_no_api%'
-
-    Packeton\Service\UpdaterWorker:
-        tags:
-            - { name: queue_worker, topic: package:updates }
 
     Packeton\Cron\CronWorker:
         arguments:
             $consoleHandler: '@?monolog.handler.console'
             $scheduleRunner: '@okvpn_cron.runner_default'
-        tags:
-            - { name: queue_worker, topic: cron:execute }
-
-    Packeton\Webhook\SenderWorker:
-        tags:
-            - { name: queue_worker, topic: webhook:send }
 
     Packeton\EventListener\DoctrineListener:
         tags:

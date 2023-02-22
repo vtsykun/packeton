@@ -1,0 +1,21 @@
+<h2 class="title" style="display: flex">
+    <a href="{{ path('proxies_list') }}" style="margin-right: 10px; margin-top: 3px" title="Go to Proxy List">
+        <i class="fa fa-home" style="color: grey" aria-hidden="true"></i>
+    </a>
+    <a href="{{ path('proxy_view', {'alias': proxy.alias}) }}">
+        {% if proxy.logo %}
+            <img height="40" src="{{ proxy.logo }}" alt="{{ proxy.url }}">
+        {% endif %}
+        {{ proxy.alias }}
+        <span class="role-name" style="font-size: 0.55em">{{ proxy.url }}</span>
+    </a>
+</h2>
+<p class="link-gray">
+    Last updated: {{ proxy.getStats('last_sync', 'N/A') }}
+</p>
+
+<p class="link-gray">
+    Repo Capabilities: {{ proxy.capabilities|map(value => "<span class='role-name'>#{value.value}</span>")|join(' ')|raw }} <br>
+    Lazy sync: {{ proxy.lazy ? 'Yes' : 'No' }} <br>
+</p>
+

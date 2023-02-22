@@ -1,0 +1,179 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}{{ proxy.alias }} - Proxy - {{ parent() }}{% endblock %}
+
+{% block scripts %}
+    <script src="{{ asset('packeton/js/proxies.js')}}"></script>
+{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/json.human.css') }}" />
+    <style>
+        .checkbox-id {
+            margin: 0!important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% set csrfToken = csrf_token('actions') %}
+    <div class="col-xs-12 package">
+        <div class="row">
+            <div class="col-md-7">
+                {% include 'proxies/info_caps.html.twig' %}
+
+                {% set lastJob = package_job_result(proxy.reference, 'sync:mirrors') %}
+                {% if lastJob is not null %}
+                    <p>Job result:
+                        {% if lastJob.errored %}
+                            <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #8B0000FF" title="{{ lastJob.getResult('message') }}"></i>
+                        {% endif %}
+
+                        <a style="font-size: 0.9em; cursor: pointer"
+                           class="view-log"
+                           data-msg="{{ lastJob.getResult('message') ~ "\n" ~ lastJob.getResult('exceptionMsg') }}"
+                           data-details="{{ lastJob.getResult('details') }}"
+                        >View logs</a>
+                    </p>
+                {% endif %}
+            </div>
+            <div class="col-md-5">
+                {% include 'proxies/info_repo.html.twig' %}
+            </div>
+        </div>
+        <hr>
+
+        <div class="row">
+            <div class="btn-group btn-group-xs">
+                <form class="settings action" action="{{ path('proxy_settings', {'alias': proxy.alias }) }}">
+                    <input class="btn btn-default" type="submit" value="Settings" />
+                </form>
+
+                <div class="settings action">
+                    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse-push" aria-expanded="false" aria-controls="collapse-push">
+                        Mass mirror packages
+                    </button>
+                </div>
+
+
+                <form class="update action" action="{{ path('proxy_update', { 'alias': proxy.alias }) }}" method="PUT">
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input class="btn btn-success" type="submit" value="Update" />
+                </form>
+
+                <form class="update action" action="{{ path('proxy_update', { 'alias': proxy.alias }) }}" method="PUT">
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input type="hidden" name="force" value="1">
+                    <input class="btn btn-danger" type="submit" value="Force resync" />
+                </form>
+            </div>
+
+            <div class="collapse" id="collapse-push">
+                <form name="packages_mirror" id="packages_mirror" method="POST" action="{{ path('proxy_mark_mass', { 'alias': proxy.alias }) }}">
+                    <p class="card card-body" style="font-size: 1.2em">
+                        Here you can add mirrored packages. If strict mirrored mode is enabled, the Packeton will
+                        prevent you from using packages that have not been approved by your.
+                    </p>
+
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+
+                    <div class="form-group">
+                        <label for="package_action_type">Action</label>
+                        <select id="package_action_type" class="form-control" name="action">
+                            <option value="approve">Enable and Approve</option>
+                            <option value="enable">Only Enable</option>
+                            <option value="remove">Remove</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="package_payload">
+                            Put your composer.json, composer.lock, composer info output or packages names separated by spaces or comma.
+                            The file composer.json may is invalid json and can be partially copied, but match with regexp: #"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)":#
+                        </label>
+                        <textarea id="package_payload" class="form-control" name="packages" style="resize: none" rows="15"></textarea>
+                    </div>
+                    <div id="result-validate" ></div>
+                    <input id="mirror-submit" class="btn btn-success"  style="min-width: 200px;" type="submit" value="Check Packages" />
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <h2 style="text-align: center">Used packages</h2>
+            <div style="text-align: right" class="grid-buttons">
+                <form class="action" action="{{ path('proxy_mark_approved', {'alias': proxy.alias}) }}" method="PUT">
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input class="btn btn-success" type="submit" value="Mark Approved" />
+                </form>
+                <form class="action" action="{{ path('proxy_remove_approved', {'alias': proxy.alias}) }}" method="DELETE">
+                    <input type="hidden" name="token" value="{{ csrfToken }}"/>
+                    <input class="btn btn-danger" type="submit" value="Remove" />
+                </form>
+            </div>
+
+            <ul class="nav nav-tabs" role="tablist">
+                {% for vendor, data in usedPackages %}
+                {% set title = vendor ~ ' (' ~ data['count'] ~ (data['new'] > 0 ? '*' : '') ~ ')' %}
+                {% set title = title ~ (data['private'] > 0 ? '<i class="fa fa-exclamation-triangle"  style="color: #8B0000FF" title="Warning"></i>' : '') %}
+                {% set vid = 'vendor-' ~ vendor  %}
+                <li role="presentation" class="{{ loop.first ? 'active' : '' }}">
+                    <a href="#{{ vid }}" aria-controls="{{ vid }}" role="tab" data-toggle="tab">{{ title|capitalize|raw }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="tab-content">
+                {% for vendor, data in usedPackages %}
+                {% set vid = 'vendor-' ~ vendor  %}
+                <div role="tabpanel" class="tab-pane {{ loop.first ? 'active' : '' }}" id="{{ vid }}">
+                    <a href="#" class="tabpanel-packages">Select All</a>|
+                    <a href="#" class="tabpanel-packages-new">Not approved</a>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Package name</th>
+                            <th scope="col">Enabled</th>
+                            <th scope="col">Approved</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in data['items'] %}
+                                <tr>
+                                    <th scope="row">
+                                        <span>{{ loop.index }}</span>
+                                        <input type="checkbox" class="checkbox-id {{ p['approved'] ? '' : 'checkbox-new' }}" name="{{ p['name'] }}">
+                                    </th>
+                                    <td>
+                                        <a class="package-info" href="{{ path('proxy_package_meta', { 'alias': proxy.alias, 'package': p['name'] }) }}">{{ p['name'] }}</a>
+                                        {% if p['private'] %}
+                                            <i class="fa fa-exclamation-triangle"  style="color: #8B0000FF" title="This package already registered in the your private repository. Attacker may replace dependencies, please check it"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
+                                    <td>{{ p['approved'] ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-times" style="color: #8B0000FF"></i>' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="json-model" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Package Info</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

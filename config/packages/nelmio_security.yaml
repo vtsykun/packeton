@@ -1,0 +1,48 @@
+nelmio_security:
+    clickjacking:
+        paths:
+            '^/.*': DENY
+
+    content_type:
+        nosniff: true
+
+    xss_protection:
+        enabled: true
+        mode_block: true
+
+    csp:
+        enabled: true
+        hash:
+            algorithm: sha256
+        report_logger_service: logger
+        hosts: []
+        content_types: []
+        enforce:
+            browser_adaptive:
+                enabled: false
+            default-src:
+                - 'self'
+            script-src:
+                - 'self'
+                - 'https://cdn.jsdelivr.net'
+            connect-src:
+                - 'self'
+            img-src:
+                - 'self'
+                - 'https:'
+                - 'data:'
+            object-src:
+                - 'none'
+            style-src:
+                - 'self'
+                - 'unsafe-inline'
+                - 'https://fonts.googleapis.com'
+                - 'https://cdn.jsdelivr.net'
+            font-src:
+                - 'self'
+                - 'https://fonts.googleapis.com'
+                - 'https://fonts.gstatic.com'
+            frame-src:
+                - 'self'
+            base-uri:
+                - 'none'

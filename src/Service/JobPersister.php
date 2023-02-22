@@ -29,7 +29,7 @@ class JobPersister
                 ->getQuery()
                 ->getResult();
         } else {
-            $job->setId(bin2hex(random_bytes(20)));
+            $job->setId(\bin2hex(\random_bytes(20)));
         }
 
         $data = [
@@ -60,6 +60,23 @@ class JobPersister
         }
     }
 
+    public function getPendingJob(string $type, int $hash): ?string
+    {
+        $result = $this->getConn()->fetchAssociative(
+            'SELECT id FROM job WHERE packageId = :package AND status = :status AND type = :type LIMIT 1',
+            [
+                'package' => $hash,
+                'type' => $type,
+                'status' => Job::STATUS_QUEUED,
+            ]
+        );
+
+        if ($result) {
+            return $result['id'];
+        }
+
+        return null;
+    }
 
     /**
      * @return \Doctrine\DBAL\Connection

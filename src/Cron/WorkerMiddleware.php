@@ -6,6 +6,7 @@ namespace Packeton\Cron;
 
 use Okvpn\Bundle\CronBundle\Middleware\MiddlewareEngineInterface;
 use Okvpn\Bundle\CronBundle\Middleware\StackInterface;
+use Okvpn\Bundle\CronBundle\Model\ArgumentsStamp;
 use Okvpn\Bundle\CronBundle\Model\ScheduleEnvelope;
 use Packeton\Service\JobScheduler;
 
@@ -19,7 +20,7 @@ class WorkerMiddleware implements MiddlewareEngineInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function handle(ScheduleEnvelope $envelope, StackInterface $stack): ScheduleEnvelope
     {
@@ -27,8 +28,17 @@ class WorkerMiddleware implements MiddlewareEngineInterface
             return $stack->next()->handle($envelope, $stack);
         }
 
+        /** @var WorkerStamp $stamp */
+        $stamp = $envelope->get(WorkerStamp::class);
+        if (true === $stamp->asJob) {
+            $args = $envelope->get(ArgumentsStamp::class) ? $envelope->get(ArgumentsStamp::class)->getArguments() : [];
+            $this->jobScheduler->publish($envelope->getCommand(), $args, $stamp->hash);
+            return $stack->end()->handle($envelope, $stack);
+        }
+
         $envelopeData = \serialize($envelope->without(WorkerStamp::class));
-        $this->jobScheduler->publish(WorkerStamp::JOB_NAME, [
+
+        $this->jobScheduler->publish(WorkerStamp::DEFAULT_JOB_NAME, [
             'envelope' => $envelopeData
         ]);
 

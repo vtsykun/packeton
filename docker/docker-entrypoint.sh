@@ -23,7 +23,12 @@ if [ ! -f /data/.env ]; then
     echo "APP_SECRET=$(tr -dc 0-9a-f </dev/urandom | head -c 32)" >> /data/.env
 fi
 
+if [ ! -f /data/config.yaml ]; then
+    touch /data/config.yaml
+fi
+
 [ ! -f .env.local ] && ln -s /data/.env .env.local
+[ ! -f config/packages/zzz_config.yaml ] && ln -s /data/config.yaml config/packages/zzz_config.yaml
 [ ! -d /var/www/.ssh ] && ln -s /data/ssh /var/www/.ssh
 
 touch /var/www/.ssh/known_hosts
@@ -46,7 +51,7 @@ if [ -f /var/tmp/data/handler.sh ]; then
     bash /var/tmp/data/handler.sh
 fi
 
-mkdir var/cache var/log
+mkdir -p var/cache var/log
 rm -rf var/cache/*
 
 app cache:clear
