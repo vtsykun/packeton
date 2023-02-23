@@ -202,7 +202,7 @@ Also, possible to create zip archives from git repositories of mirroring package
     + 57 packages
 </code></pre>
 <p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
-<p><a href="../img/packeton_proxies.png">logo</a></p>
+<p><a href="../img/packeton_proxies.png"><img src="../img/packeton_proxies.png" alt="logo" /></a></p>
 <h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
 <p>Example how to enable proxies in your local configuration.
 Create a file <code>config/packages/any-name.yaml</code> with config.</p>
@@ -246,15 +246,31 @@ Create a file <code>config/packages/any-name.yaml</code> with config.</p>
 <tr><td>Full</td><td>86400</td></tr>
 </tbody></table>
 </div>
+<h3 id="commands-for-debug"><a class="header" href="#commands-for-debug">Commands for Debug</a></h3>
+<pre><code>php bin/console packagist:sync:mirrors firegento -vvv
+
+Description:
+  Sync mirror repository proxy.
+
+Usage:
+  packagist:sync:mirrors [options] [--] [&lt;mirror&gt;]
+
+Arguments:
+  mirror                Mirror name in config file.
+
+Options:
+      --force           Remote all data and sync again
+  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+</code></pre>
 <h2 id="manual-approve-dependencies"><a class="header" href="#manual-approve-dependencies">Manual approve dependencies</a></h2>
 <p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
 enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
 This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
 See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
 <p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
-<p><a href="../img/mirr1.png">strict</a></p>
+<p><a href="../img/mirr1.png"><img src="../img/mirr1.png" alt="strict" /></a></p>
 <p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
-<p><a href="../img/mirr2.png">strict</a></p>
+<p><a href="../img/mirr2.png"><img src="../img/mirr2.png" alt="strict" /></a></p>
 
                     </main>
 
