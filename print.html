@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -1604,6 +1604,330 @@ or <code>/data/composer/auth.json</code> for docker installation. </p>
 <p>All credentials are encrypted in database by custom DBAL type <code>EncryptedTextType</code>.
 Encrypted key is <code>APP_SECRET</code> so it must be permanent.</p>
 <p><a href="usage/../img/keys.png"><img src="usage/../img/keys.png" alt="Groups" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="mirroring-and-composer-proxies"><a class="header" href="#mirroring-and-composer-proxies">Mirroring and Composer proxies</a></h1>
+<p>Packeton may work as a proxy for the composer's repository, including requiring an authorization.
+This can be used to give all developers and clients access to private repositories like Magento.
+Also, possible to create zip archives from git repositories of mirroring packages, if http dist is not available.</p>
+<h2 id="main-features-1"><a class="header" href="#main-features-1">Main Features</a></h2>
+<ul>
+<li>Support full and lazy sync for all - smail and big composer repositories.</li>
+<li>Support Packagist fast <code>metadata-changes-url</code> API.</li>
+<li>Strict mode and Dependencies approvement.</li>
+<li>Dist mirroring</li>
+</ul>
+<p>Example metadata with Strict mode and manual dependencies approvement.</p>
+<pre><code class="language-json">{
+    &quot;includes&quot;: {
+        &quot;include-packeton/all$f05f56b8bd12d014a753cdbe6a7d749facd40908.json&quot;: {
+            &quot;sha1&quot;: &quot;f05f56b8bd12d014a753cdbe6a7d749facd40908&quot;
+        }
+    },
+    &quot;mirrors&quot;: [
+        {
+            &quot;dist-url&quot;: &quot;/mirror/orocrm/zipball/%package%/%version%/%reference%.%type%&quot;,
+            &quot;preferred&quot;: true
+        }
+    ],
+    &quot;metadata-url&quot;: &quot;/mirror/orocrm/p2/%package%.json&quot;,
+    &quot;available-packages&quot;: [
+        &quot;romanpitak/dotmailer-api-v2-client&quot;,
+        &quot;oro/platform-enterprise&quot;,
+        &quot;oro/crm-enterprise&quot;,
+        &quot;oro/api-doc-bundle&quot;,
+        &quot;oro/flotr2&quot;,
+        &quot;oro/crm-pro-ldap-bundle&quot;,
+        &quot;oro/multi-host&quot;,
+        &quot;akeneo/batch-bundle&quot;
+    ]
+}
+</code></pre>
+<p>Original metadata is:</p>
+<pre><code class="language-json">{
+    &quot;packages&quot;: [],
+    &quot;providers-url&quot;: &quot;/p/%package%$%hash%.json&quot;,
+    &quot;providers&quot;: {
+        &quot;actualys/drupal-commerce-connector-bundle&quot;: {
+            &quot;sha256&quot;: &quot;4163f3b470b3b824cbcebee5a0d58ea3d516b7b5fa78617ba21120eeec9e494f&quot;
+        },
+        &quot;agencednd/oro-api-connector-bundle&quot;: {
+            &quot;sha256&quot;: &quot;169c0963fd8442c190f2e9303e0e6fa1fe9ad0c9fb2f6782176d02e65a48eada&quot;
+        },
+        &quot;akeneo/batch-bundle&quot;: {
+            &quot;sha256&quot;: &quot;4f2c1b9a43124524da45b35236acabd3ee1ad329980b885089e9eb408c1bca01&quot;
+        },
+    ...
+    + 57 packages
+</code></pre>
+<p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
+<p><a href="usage/../img/packeton_proxies.png">logo</a></p>
+<h2 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h2>
+<p>Example how to enable proxies in your local configuration.
+Create a file <code>config/packages/any-name.yaml</code> with config.</p>
+<pre><code class="language-yaml">packeton:
+    mirrors:
+        packagist:
+            url: https://repo.packagist.org
+        orocrm:
+            url: https://satis.oroinc.com/
+            git_ssh_keys:
+                git@github.com:oroinc: '/var/www/.ssh/private_key1'
+                git@github.com:org2: '/var/www/.ssh/private_key2'
+        example:
+            url: https://satis.example.com/
+            logo: 'https://example.com/logo.png'
+            http_basic:
+                username: 123
+                password: 123
+            sync_lazy: true # default false 
+            enable_dist_mirror: false # default true
+            available_package_patterns: # Additional restriction, but you can restrict it in UI
+                - 'vend1/*' 
+            available_packages:
+                - 'pack1/name1' # but you can restrict it in UI
+            composer_auth: '{&quot;...&quot;}' # JSON. auth.json to pass composer opts.
+            sync_interval: 3600 # default auto.
+            info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
+</code></pre>
+<h2 id="metadata-proxy-specification"><a class="header" href="#metadata-proxy-specification">Metadata proxy specification.</a></h2>
+<p>It depends on the type of repository and sync strategy.</p>
+<div class="table-wrapper"><table><thead><tr><th>API</th><th>Full sync</th><th>Lazy sync</th><th>Mirroring (strict)</th></tr></thead><tbody>
+<tr><td>V1</td><td>provider-includes (parent)</td><td>providers-lazy-url</td><td>includes</td></tr>
+<tr><td>V2</td><td>meta v2 + available-packages (depends on size)</td><td>meta v2</td><td>meta v2 + available-packages</td></tr>
+</tbody></table>
+</div>
+<h3 id="default-sync-intervals"><a class="header" href="#default-sync-intervals">Default sync intervals</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Repo</th><th>Interval in sec.</th></tr></thead><tbody>
+<tr><td>Packagist.org</td><td>900</td></tr>
+<tr><td>Lazy and API v2</td><td>1800</td></tr>
+<tr><td>Lazy and API v1</td><td>7200</td></tr>
+<tr><td>Full</td><td>86400</td></tr>
+</tbody></table>
+</div>
+<h2 id="manual-approve-dependencies"><a class="header" href="#manual-approve-dependencies">Manual approve dependencies</a></h2>
+<p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
+enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
+This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
+See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
+<p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
+<p><a href="usage/../img/mirr1.png">strict</a></p>
+<p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
+<p><a href="usage/../img/mirr2.png">strict</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="mirroring-and-composer-proxies-1"><a class="header" href="#mirroring-and-composer-proxies-1">Mirroring and Composer proxies</a></h1>
+<p>Packeton may work as a proxy for the composer's repository, including requiring an authorization.
+This can be used to give all developers and clients access to private repositories like Magento.
+Also, possible to create zip archives from git repositories of mirroring packages, if http dist is not available.</p>
+<h2 id="main-features-2"><a class="header" href="#main-features-2">Main Features</a></h2>
+<ul>
+<li>Support full and lazy sync for all - smail and big composer repositories.</li>
+<li>Support Packagist fast <code>metadata-changes-url</code> API.</li>
+<li>Strict mode and Dependencies approvement.</li>
+<li>Dist mirroring</li>
+</ul>
+<p>Example metadata with Strict mode and manual dependencies approvement.</p>
+<pre><code class="language-json">{
+    &quot;includes&quot;: {
+        &quot;include-packeton/all$f05f56b8bd12d014a753cdbe6a7d749facd40908.json&quot;: {
+            &quot;sha1&quot;: &quot;f05f56b8bd12d014a753cdbe6a7d749facd40908&quot;
+        }
+    },
+    &quot;mirrors&quot;: [
+        {
+            &quot;dist-url&quot;: &quot;/mirror/orocrm/zipball/%package%/%version%/%reference%.%type%&quot;,
+            &quot;preferred&quot;: true
+        }
+    ],
+    &quot;metadata-url&quot;: &quot;/mirror/orocrm/p2/%package%.json&quot;,
+    &quot;available-packages&quot;: [
+        &quot;romanpitak/dotmailer-api-v2-client&quot;,
+        &quot;oro/platform-enterprise&quot;,
+        &quot;oro/crm-enterprise&quot;,
+        &quot;oro/api-doc-bundle&quot;,
+        &quot;oro/flotr2&quot;,
+        &quot;oro/crm-pro-ldap-bundle&quot;,
+        &quot;oro/multi-host&quot;,
+        &quot;akeneo/batch-bundle&quot;
+    ]
+}
+</code></pre>
+<p>Original metadata is:</p>
+<pre><code class="language-json">{
+    &quot;packages&quot;: [],
+    &quot;providers-url&quot;: &quot;/p/%package%$%hash%.json&quot;,
+    &quot;providers&quot;: {
+        &quot;actualys/drupal-commerce-connector-bundle&quot;: {
+            &quot;sha256&quot;: &quot;4163f3b470b3b824cbcebee5a0d58ea3d516b7b5fa78617ba21120eeec9e494f&quot;
+        },
+        &quot;agencednd/oro-api-connector-bundle&quot;: {
+            &quot;sha256&quot;: &quot;169c0963fd8442c190f2e9303e0e6fa1fe9ad0c9fb2f6782176d02e65a48eada&quot;
+        },
+        &quot;akeneo/batch-bundle&quot;: {
+            &quot;sha256&quot;: &quot;4f2c1b9a43124524da45b35236acabd3ee1ad329980b885089e9eb408c1bca01&quot;
+        },
+    ...
+    + 57 packages
+</code></pre>
+<p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
+<p><a href="usage/../img/packeton_proxies.png">logo</a></p>
+<h2 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h2>
+<p>Example how to enable proxies in your local configuration.
+Create a file <code>config/packages/any-name.yaml</code> with config.</p>
+<pre><code class="language-yaml">packeton:
+    mirrors:
+        packagist:
+            url: https://repo.packagist.org
+        orocrm:
+            url: https://satis.oroinc.com/
+            git_ssh_keys:
+                git@github.com:oroinc: '/var/www/.ssh/private_key1'
+                git@github.com:org2: '/var/www/.ssh/private_key2'
+        example:
+            url: https://satis.example.com/
+            logo: 'https://example.com/logo.png'
+            http_basic:
+                username: 123
+                password: 123
+            sync_lazy: true # default false 
+            enable_dist_mirror: false # default true
+            available_package_patterns: # Additional restriction, but you can restrict it in UI
+                - 'vend1/*' 
+            available_packages:
+                - 'pack1/name1' # but you can restrict it in UI
+            composer_auth: '{&quot;...&quot;}' # JSON. auth.json to pass composer opts.
+            sync_interval: 3600 # default auto.
+            info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
+</code></pre>
+<h2 id="metadata-proxy-specification-1"><a class="header" href="#metadata-proxy-specification-1">Metadata proxy specification.</a></h2>
+<p>It depends on the type of repository and sync strategy.</p>
+<div class="table-wrapper"><table><thead><tr><th>API</th><th>Full sync</th><th>Lazy sync</th><th>Mirroring (strict)</th></tr></thead><tbody>
+<tr><td>V1</td><td>provider-includes (parent)</td><td>providers-lazy-url</td><td>includes</td></tr>
+<tr><td>V2</td><td>meta v2 + available-packages (depends on size)</td><td>meta v2</td><td>meta v2 + available-packages</td></tr>
+</tbody></table>
+</div>
+<h3 id="default-sync-intervals-1"><a class="header" href="#default-sync-intervals-1">Default sync intervals</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Repo</th><th>Interval in sec.</th></tr></thead><tbody>
+<tr><td>Packagist.org</td><td>900</td></tr>
+<tr><td>Lazy and API v2</td><td>1800</td></tr>
+<tr><td>Lazy and API v1</td><td>7200</td></tr>
+<tr><td>Full</td><td>86400</td></tr>
+</tbody></table>
+</div>
+<h2 id="manual-approve-dependencies-1"><a class="header" href="#manual-approve-dependencies-1">Manual approve dependencies</a></h2>
+<p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
+enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
+This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
+See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
+<p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
+<p><a href="usage/../img/mirr1.png">strict</a></p>
+<p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
+<p><a href="usage/../img/mirr2.png">strict</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="mirroring-and-composer-proxies-2"><a class="header" href="#mirroring-and-composer-proxies-2">Mirroring and Composer proxies</a></h1>
+<p>Packeton may work as a proxy for the composer's repository, including requiring an authorization.
+This can be used to give all developers and clients access to private repositories like Magento.
+Also, possible to create zip archives from git repositories of mirroring packages, if http dist is not available.</p>
+<h2 id="main-features-3"><a class="header" href="#main-features-3">Main Features</a></h2>
+<ul>
+<li>Support full and lazy sync for all - smail and big composer repositories.</li>
+<li>Support Packagist fast <code>metadata-changes-url</code> API.</li>
+<li>Strict mode and Dependencies approvement.</li>
+<li>Dist mirroring</li>
+</ul>
+<p>Example metadata with Strict mode and manual dependencies approvement.</p>
+<pre><code class="language-json">{
+    &quot;includes&quot;: {
+        &quot;include-packeton/all$f05f56b8bd12d014a753cdbe6a7d749facd40908.json&quot;: {
+            &quot;sha1&quot;: &quot;f05f56b8bd12d014a753cdbe6a7d749facd40908&quot;
+        }
+    },
+    &quot;mirrors&quot;: [
+        {
+            &quot;dist-url&quot;: &quot;/mirror/orocrm/zipball/%package%/%version%/%reference%.%type%&quot;,
+            &quot;preferred&quot;: true
+        }
+    ],
+    &quot;metadata-url&quot;: &quot;/mirror/orocrm/p2/%package%.json&quot;,
+    &quot;available-packages&quot;: [
+        &quot;romanpitak/dotmailer-api-v2-client&quot;,
+        &quot;oro/platform-enterprise&quot;,
+        &quot;oro/crm-enterprise&quot;,
+        &quot;oro/api-doc-bundle&quot;,
+        &quot;oro/flotr2&quot;,
+        &quot;oro/crm-pro-ldap-bundle&quot;,
+        &quot;oro/multi-host&quot;,
+        &quot;akeneo/batch-bundle&quot;
+    ]
+}
+</code></pre>
+<p>Original metadata is:</p>
+<pre><code class="language-json">{
+    &quot;packages&quot;: [],
+    &quot;providers-url&quot;: &quot;/p/%package%$%hash%.json&quot;,
+    &quot;providers&quot;: {
+        &quot;actualys/drupal-commerce-connector-bundle&quot;: {
+            &quot;sha256&quot;: &quot;4163f3b470b3b824cbcebee5a0d58ea3d516b7b5fa78617ba21120eeec9e494f&quot;
+        },
+        &quot;agencednd/oro-api-connector-bundle&quot;: {
+            &quot;sha256&quot;: &quot;169c0963fd8442c190f2e9303e0e6fa1fe9ad0c9fb2f6782176d02e65a48eada&quot;
+        },
+        &quot;akeneo/batch-bundle&quot;: {
+            &quot;sha256&quot;: &quot;4f2c1b9a43124524da45b35236acabd3ee1ad329980b885089e9eb408c1bca01&quot;
+        },
+    ...
+    + 57 packages
+</code></pre>
+<p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
+<p><a href="usage/../img/packeton_proxies.png">logo</a></p>
+<h2 id="configuration-3"><a class="header" href="#configuration-3">Configuration</a></h2>
+<p>Example how to enable proxies in your local configuration.
+Create a file <code>config/packages/any-name.yaml</code> with config.</p>
+<pre><code class="language-yaml">packeton:
+    mirrors:
+        packagist:
+            url: https://repo.packagist.org
+        orocrm:
+            url: https://satis.oroinc.com/
+            git_ssh_keys:
+                git@github.com:oroinc: '/var/www/.ssh/private_key1'
+                git@github.com:org2: '/var/www/.ssh/private_key2'
+        example:
+            url: https://satis.example.com/
+            logo: 'https://example.com/logo.png'
+            http_basic:
+                username: 123
+                password: 123
+            sync_lazy: true # default false 
+            enable_dist_mirror: false # default true
+            available_package_patterns: # Additional restriction, but you can restrict it in UI
+                - 'vend1/*' 
+            available_packages:
+                - 'pack1/name1' # but you can restrict it in UI
+            composer_auth: '{&quot;...&quot;}' # JSON. auth.json to pass composer opts.
+            sync_interval: 3600 # default auto.
+            info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
+</code></pre>
+<h2 id="metadata-proxy-specification-2"><a class="header" href="#metadata-proxy-specification-2">Metadata proxy specification.</a></h2>
+<p>It depends on the type of repository and sync strategy.</p>
+<div class="table-wrapper"><table><thead><tr><th>API</th><th>Full sync</th><th>Lazy sync</th><th>Mirroring (strict)</th></tr></thead><tbody>
+<tr><td>V1</td><td>provider-includes (parent)</td><td>providers-lazy-url</td><td>includes</td></tr>
+<tr><td>V2</td><td>meta v2 + available-packages (depends on size)</td><td>meta v2</td><td>meta v2 + available-packages</td></tr>
+</tbody></table>
+</div>
+<h3 id="default-sync-intervals-2"><a class="header" href="#default-sync-intervals-2">Default sync intervals</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Repo</th><th>Interval in sec.</th></tr></thead><tbody>
+<tr><td>Packagist.org</td><td>900</td></tr>
+<tr><td>Lazy and API v2</td><td>1800</td></tr>
+<tr><td>Lazy and API v1</td><td>7200</td></tr>
+<tr><td>Full</td><td>86400</td></tr>
+</tbody></table>
+</div>
+<h2 id="manual-approve-dependencies-2"><a class="header" href="#manual-approve-dependencies-2">Manual approve dependencies</a></h2>
+<p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
+enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
+This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
+See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
+<p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
+<p><a href="usage/../img/mirr1.png">strict</a></p>
+<p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
+<p><a href="usage/../img/mirr2.png">strict</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="user-authentication"><a class="header" href="#user-authentication">User Authentication</a></h1>
 <p>Packeton may support multiple methods of authenticating users. It can additionally be extended to support 
 custom authentication schemes.</p>
