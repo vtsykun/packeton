@@ -64,7 +64,7 @@ Original metadata is:
 For performance if composer user-agent is not 1 we remove `includes` and use `providers-lazy-url`
 
 
-[logo](../img/packeton_proxies.png)
+[![logo](../img/packeton_proxies.png)](../img/packeton_proxies.png)
 
 ## Configuration
 
@@ -117,6 +117,24 @@ It depends on the type of repository and sync strategy.
 | Lazy and API v1 | 7200             |
 | Full            | 86400            |
 
+### Commands for Debug
+
+```
+php bin/console packagist:sync:mirrors firegento -vvv
+
+Description:
+  Sync mirror repository proxy.
+
+Usage:
+  packagist:sync:mirrors [options] [--] [<mirror>]
+
+Arguments:
+  mirror                Mirror name in config file.
+
+Options:
+      --force           Remote all data and sync again
+  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+```
 
 ## Manual approve dependencies
 
@@ -127,8 +145,8 @@ See about [dependency confusion](https://blog.packagist.com/preventing-dependenc
 
 To enable strict mode go to proxy settings page Composer proxies -> Packagist (or any name) -> Settings
 
-[strict](../img/mirr1.png)
+[![strict](../img/mirr1.png)](../img/mirr1.png)
 
 Next go to view proxy page and click "Mass mirror packages" button
 
-[strict](../img/mirr2.png)
+[![strict](../img/mirr2.png)](../img/mirr2.png)
