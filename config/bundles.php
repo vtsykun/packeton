@@ -13,7 +13,7 @@ $bundles =  [
     Okvpn\Bundle\CronBundle\OkvpnCronBundle::class => ['all' => true],
     Symfony\Bundle\MakerBundle\MakerBundle::class => ['dev' => true],
     Symfony\Bundle\DebugBundle\DebugBundle::class => ['dev' => true],
-    Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true,],
+    Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true],
     BabDev\PagerfantaBundle\BabDevPagerfantaBundle::class => ['all' => true],
     Nelmio\SecurityBundle\NelmioSecurityBundle::class => ['all' => true],
 ];
