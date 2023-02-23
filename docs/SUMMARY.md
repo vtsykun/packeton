@@ -19,7 +19,9 @@
     - [Update Webhooks](usage/update-packages.md)
     - [Customer Users](usage/customers.md)
     - [SSH Credential](usage/credential.md)
-
+    - [Mirroring Packages](usage/mirroring.md)
+      - [Configuration](usage/mirroring.md)
+      - [Strict mode](usage/mirroring.md)
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
     - [LDAP Configuration](authentication-ldap.md)

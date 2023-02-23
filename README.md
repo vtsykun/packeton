@@ -21,6 +21,7 @@ Features
 - Compatible with Composer API v2, bases on Symfony 5.4.
 - Support update webhook for GitHub, Bitbucket and GitLab or custom format.
 - Customers user and ACL groups and limit access by vendor and versions.
+- Composer Proxies. [docs](docs/usage/mirroring.md)
 - Generic Packeton [webhooks](docs/webhook.md)
 - Allow to freeze updates for the new releases after expire a customers license.
 - Mirroring for packages zip files and downloads it's from your host.
