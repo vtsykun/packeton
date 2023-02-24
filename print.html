@@ -1605,17 +1605,18 @@ or <code>/data/composer/auth.json</code> for docker installation. </p>
 Encrypted key is <code>APP_SECRET</code> so it must be permanent.</p>
 <p><a href="usage/../img/keys.png"><img src="usage/../img/keys.png" alt="Groups" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="mirroring-and-composer-proxies"><a class="header" href="#mirroring-and-composer-proxies">Mirroring and Composer proxies</a></h1>
-<p>Packeton may work as a proxy for the composer's repository, including requiring an authorization.
-This can be used to give all developers and clients access to private repositories like Magento.
-Also, possible to create zip archives from git repositories of mirroring packages, if http dist is not available.</p>
+<p>Packeton can function as a proxy for the Composer repository, including requiring an authorization.
+This feature can be used to grant all developers and clients access to private repositories such as Magento.
+Additionally, it is possible to create ZIP archives from mirrored Git repositories of packages, in cases where HTTP dist
+is unavailable.</p>
 <h2 id="main-features-1"><a class="header" href="#main-features-1">Main Features</a></h2>
 <ul>
-<li>Support full and lazy sync for all - smail and big composer repositories.</li>
-<li>Support Packagist fast <code>metadata-changes-url</code> API.</li>
-<li>Strict mode and Dependencies approvement.</li>
-<li>Dist mirroring</li>
+<li>Supports full and lazy synchronization for small and large Composer repositories.</li>
+<li>Supports the Packagist fast <code>metadata-changes-url</code> API.</li>
+<li>Includes Strict Mode and Dependencies Approval functionality.</li>
+<li>Supports Dist/SSH mirroring of source code.</li>
 </ul>
-<p>Example metadata with Strict mode and manual dependencies approvement.</p>
+<p>Example metadata with Strict mode and manual dependencies' approval.</p>
 <pre><code class="language-json">{
     &quot;includes&quot;: {
         &quot;include-packeton/all$f05f56b8bd12d014a753cdbe6a7d749facd40908.json&quot;: {
@@ -1658,11 +1659,12 @@ Also, possible to create zip archives from git repositories of mirroring package
     ...
     + 57 packages
 </code></pre>
-<p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
+<p>For performance if composer user-agent == 1 then <code>includes</code> replaced with <code>providers-lazy-url</code></p>
 <p><a href="usage/../img/packeton_proxies.png"><img src="usage/../img/packeton_proxies.png" alt="logo" /></a></p>
 <h2 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h2>
 <p>Example how to enable proxies in your local configuration.
-Create a file <code>config/packages/any-name.yaml</code> with config.</p>
+To enable proxies in your local configuration, create a file with any name
+like <code>config/packages/any-name.yaml</code> and add the following configuration:</p>
 <pre><code class="language-yaml">packeton:
     mirrors:
         packagist:
@@ -1678,18 +1680,28 @@ Create a file <code>config/packages/any-name.yaml</code> with config.</p>
             http_basic:
                 username: 123
                 password: 123
+            public_access: true # Allow public access, default false
             sync_lazy: true # default false 
             enable_dist_mirror: false # default true
             available_package_patterns: # Additional restriction, but you can restrict it in UI
                 - 'vend1/*' 
             available_packages:
                 - 'pack1/name1' # but you can restrict it in UI
-            composer_auth: '{&quot;...&quot;}' # JSON. auth.json to pass composer opts.
+            composer_auth: '{&quot;auth.json...&quot;}' # JSON. auth.json to pass composer opts.
             sync_interval: 3600 # default auto.
             info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
 </code></pre>
-<h2 id="metadata-proxy-specification"><a class="header" href="#metadata-proxy-specification">Metadata proxy specification.</a></h2>
-<p>It depends on the type of repository and sync strategy.</p>
+<p>The configuration allows you to use multiple SSH key settings for different GitHub accounts.</p>
+<pre><code>...
+git_ssh_keys:
+    git@github.com:oroinc: '/var/www/.ssh/private_key1'
+    git@github.com:org2: '/var/www/.ssh/private_key2'
+
+# Or one key
+git_ssh_keys: '/var/www/.ssh/private_key1'
+</code></pre>
+<h2 id="metadata-proxy-specification"><a class="header" href="#metadata-proxy-specification">Metadata Proxy Specification.</a></h2>
+<p>The specification for the metadata proxy depends on the type of repository and the synchronization strategy being used.</p>
 <div class="table-wrapper"><table><thead><tr><th>API</th><th>Full sync</th><th>Lazy sync</th><th>Mirroring (strict)</th></tr></thead><tbody>
 <tr><td>V1</td><td>provider-includes (parent)</td><td>providers-lazy-url</td><td>includes</td></tr>
 <tr><td>V2</td><td>meta v2 + available-packages (depends on size)</td><td>meta v2</td><td>meta v2 + available-packages</td></tr>
@@ -1719,27 +1731,37 @@ Options:
       --force           Remote all data and sync again
   -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 </code></pre>
-<h2 id="manual-approve-dependencies"><a class="header" href="#manual-approve-dependencies">Manual approve dependencies</a></h2>
-<p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
-enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
-This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
-See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
-<p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
+<h2 id="manual-approval-of-dependencies"><a class="header" href="#manual-approval-of-dependencies">Manual Approval of Dependencies</a></h2>
+<p>By default, all new packages are automatically enabled and added to your repository when you run composer update. 
+However, you can enable strict mode to use only approved packages and avoid including untrusted packages in your metadata. 
+This can be useful in preventing dependency confusion attacks, especially if you use a 3rd-party Composer repository 
+like <code>https://satis.oroinc.com/</code>. For more information on preventing dependency hacking, please see <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
+<p>To enable strict mode, go to the Proxy Settings page and select Composer Proxies -&gt; Packagist (or any other name) -&gt; Settings.</p>
 <p><a href="usage/../img/mirr1.png"><img src="usage/../img/mirr1.png" alt="strict" /></a></p>
-<p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
+<p>Next, go to the View Proxy page and click the &quot;Mass Mirror Packages&quot; button.</p>
 <p><a href="usage/../img/mirr2.png"><img src="usage/../img/mirr2.png" alt="strict" /></a></p>
+<h2 id="mirror-public-access"><a class="header" href="#mirror-public-access">Mirror Public Access</a></h2>
+<p>Use the following configuration:</p>
+<pre><code class="language-yaml">packeton:
+    mirrors:
+        youname:
+            url: https://repo.example.org
+            public_access: true
+</code></pre>
+<p><a href="usage/../img/mirr3.png"><img src="usage/../img/mirr2.png" alt="strict" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="mirroring-and-composer-proxies-1"><a class="header" href="#mirroring-and-composer-proxies-1">Mirroring and Composer proxies</a></h1>
-<p>Packeton may work as a proxy for the composer's repository, including requiring an authorization.
-This can be used to give all developers and clients access to private repositories like Magento.
-Also, possible to create zip archives from git repositories of mirroring packages, if http dist is not available.</p>
+<p>Packeton can function as a proxy for the Composer repository, including requiring an authorization.
+This feature can be used to grant all developers and clients access to private repositories such as Magento.
+Additionally, it is possible to create ZIP archives from mirrored Git repositories of packages, in cases where HTTP dist
+is unavailable.</p>
 <h2 id="main-features-2"><a class="header" href="#main-features-2">Main Features</a></h2>
 <ul>
-<li>Support full and lazy sync for all - smail and big composer repositories.</li>
-<li>Support Packagist fast <code>metadata-changes-url</code> API.</li>
-<li>Strict mode and Dependencies approvement.</li>
-<li>Dist mirroring</li>
+<li>Supports full and lazy synchronization for small and large Composer repositories.</li>
+<li>Supports the Packagist fast <code>metadata-changes-url</code> API.</li>
+<li>Includes Strict Mode and Dependencies Approval functionality.</li>
+<li>Supports Dist/SSH mirroring of source code.</li>
 </ul>
-<p>Example metadata with Strict mode and manual dependencies approvement.</p>
+<p>Example metadata with Strict mode and manual dependencies' approval.</p>
 <pre><code class="language-json">{
     &quot;includes&quot;: {
         &quot;include-packeton/all$f05f56b8bd12d014a753cdbe6a7d749facd40908.json&quot;: {
@@ -1782,11 +1804,12 @@ Also, possible to create zip archives from git repositories of mirroring package
     ...
     + 57 packages
 </code></pre>
-<p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
+<p>For performance if composer user-agent == 1 then <code>includes</code> replaced with <code>providers-lazy-url</code></p>
 <p><a href="usage/../img/packeton_proxies.png"><img src="usage/../img/packeton_proxies.png" alt="logo" /></a></p>
 <h2 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h2>
 <p>Example how to enable proxies in your local configuration.
-Create a file <code>config/packages/any-name.yaml</code> with config.</p>
+To enable proxies in your local configuration, create a file with any name
+like <code>config/packages/any-name.yaml</code> and add the following configuration:</p>
 <pre><code class="language-yaml">packeton:
     mirrors:
         packagist:
@@ -1802,18 +1825,28 @@ Create a file <code>config/packages/any-name.yaml</code> with config.</p>
             http_basic:
                 username: 123
                 password: 123
+            public_access: true # Allow public access, default false
             sync_lazy: true # default false 
             enable_dist_mirror: false # default true
             available_package_patterns: # Additional restriction, but you can restrict it in UI
                 - 'vend1/*' 
             available_packages:
                 - 'pack1/name1' # but you can restrict it in UI
-            composer_auth: '{&quot;...&quot;}' # JSON. auth.json to pass composer opts.
+            composer_auth: '{&quot;auth.json...&quot;}' # JSON. auth.json to pass composer opts.
             sync_interval: 3600 # default auto.
             info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
 </code></pre>
-<h2 id="metadata-proxy-specification-1"><a class="header" href="#metadata-proxy-specification-1">Metadata proxy specification.</a></h2>
-<p>It depends on the type of repository and sync strategy.</p>
+<p>The configuration allows you to use multiple SSH key settings for different GitHub accounts.</p>
+<pre><code>...
+git_ssh_keys:
+    git@github.com:oroinc: '/var/www/.ssh/private_key1'
+    git@github.com:org2: '/var/www/.ssh/private_key2'
+
+# Or one key
+git_ssh_keys: '/var/www/.ssh/private_key1'
+</code></pre>
+<h2 id="metadata-proxy-specification-1"><a class="header" href="#metadata-proxy-specification-1">Metadata Proxy Specification.</a></h2>
+<p>The specification for the metadata proxy depends on the type of repository and the synchronization strategy being used.</p>
 <div class="table-wrapper"><table><thead><tr><th>API</th><th>Full sync</th><th>Lazy sync</th><th>Mirroring (strict)</th></tr></thead><tbody>
 <tr><td>V1</td><td>provider-includes (parent)</td><td>providers-lazy-url</td><td>includes</td></tr>
 <tr><td>V2</td><td>meta v2 + available-packages (depends on size)</td><td>meta v2</td><td>meta v2 + available-packages</td></tr>
@@ -1843,27 +1876,37 @@ Options:
       --force           Remote all data and sync again
   -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 </code></pre>
-<h2 id="manual-approve-dependencies-1"><a class="header" href="#manual-approve-dependencies-1">Manual approve dependencies</a></h2>
-<p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
-enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
-This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
-See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
-<p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
+<h2 id="manual-approval-of-dependencies-1"><a class="header" href="#manual-approval-of-dependencies-1">Manual Approval of Dependencies</a></h2>
+<p>By default, all new packages are automatically enabled and added to your repository when you run composer update. 
+However, you can enable strict mode to use only approved packages and avoid including untrusted packages in your metadata. 
+This can be useful in preventing dependency confusion attacks, especially if you use a 3rd-party Composer repository 
+like <code>https://satis.oroinc.com/</code>. For more information on preventing dependency hacking, please see <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
+<p>To enable strict mode, go to the Proxy Settings page and select Composer Proxies -&gt; Packagist (or any other name) -&gt; Settings.</p>
 <p><a href="usage/../img/mirr1.png"><img src="usage/../img/mirr1.png" alt="strict" /></a></p>
-<p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
+<p>Next, go to the View Proxy page and click the &quot;Mass Mirror Packages&quot; button.</p>
 <p><a href="usage/../img/mirr2.png"><img src="usage/../img/mirr2.png" alt="strict" /></a></p>
+<h2 id="mirror-public-access-1"><a class="header" href="#mirror-public-access-1">Mirror Public Access</a></h2>
+<p>Use the following configuration:</p>
+<pre><code class="language-yaml">packeton:
+    mirrors:
+        youname:
+            url: https://repo.example.org
+            public_access: true
+</code></pre>
+<p><a href="usage/../img/mirr3.png"><img src="usage/../img/mirr2.png" alt="strict" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="mirroring-and-composer-proxies-2"><a class="header" href="#mirroring-and-composer-proxies-2">Mirroring and Composer proxies</a></h1>
-<p>Packeton may work as a proxy for the composer's repository, including requiring an authorization.
-This can be used to give all developers and clients access to private repositories like Magento.
-Also, possible to create zip archives from git repositories of mirroring packages, if http dist is not available.</p>
+<p>Packeton can function as a proxy for the Composer repository, including requiring an authorization.
+This feature can be used to grant all developers and clients access to private repositories such as Magento.
+Additionally, it is possible to create ZIP archives from mirrored Git repositories of packages, in cases where HTTP dist
+is unavailable.</p>
 <h2 id="main-features-3"><a class="header" href="#main-features-3">Main Features</a></h2>
 <ul>
-<li>Support full and lazy sync for all - smail and big composer repositories.</li>
-<li>Support Packagist fast <code>metadata-changes-url</code> API.</li>
-<li>Strict mode and Dependencies approvement.</li>
-<li>Dist mirroring</li>
+<li>Supports full and lazy synchronization for small and large Composer repositories.</li>
+<li>Supports the Packagist fast <code>metadata-changes-url</code> API.</li>
+<li>Includes Strict Mode and Dependencies Approval functionality.</li>
+<li>Supports Dist/SSH mirroring of source code.</li>
 </ul>
-<p>Example metadata with Strict mode and manual dependencies approvement.</p>
+<p>Example metadata with Strict mode and manual dependencies' approval.</p>
 <pre><code class="language-json">{
     &quot;includes&quot;: {
         &quot;include-packeton/all$f05f56b8bd12d014a753cdbe6a7d749facd40908.json&quot;: {
@@ -1906,11 +1949,12 @@ Also, possible to create zip archives from git repositories of mirroring package
     ...
     + 57 packages
 </code></pre>
-<p>For performance if composer user-agent is not 1 we remove <code>includes</code> and use <code>providers-lazy-url</code></p>
+<p>For performance if composer user-agent == 1 then <code>includes</code> replaced with <code>providers-lazy-url</code></p>
 <p><a href="usage/../img/packeton_proxies.png"><img src="usage/../img/packeton_proxies.png" alt="logo" /></a></p>
 <h2 id="configuration-3"><a class="header" href="#configuration-3">Configuration</a></h2>
 <p>Example how to enable proxies in your local configuration.
-Create a file <code>config/packages/any-name.yaml</code> with config.</p>
+To enable proxies in your local configuration, create a file with any name
+like <code>config/packages/any-name.yaml</code> and add the following configuration:</p>
 <pre><code class="language-yaml">packeton:
     mirrors:
         packagist:
@@ -1926,18 +1970,28 @@ Create a file <code>config/packages/any-name.yaml</code> with config.</p>
             http_basic:
                 username: 123
                 password: 123
+            public_access: true # Allow public access, default false
             sync_lazy: true # default false 
             enable_dist_mirror: false # default true
             available_package_patterns: # Additional restriction, but you can restrict it in UI
                 - 'vend1/*' 
             available_packages:
                 - 'pack1/name1' # but you can restrict it in UI
-            composer_auth: '{&quot;...&quot;}' # JSON. auth.json to pass composer opts.
+            composer_auth: '{&quot;auth.json...&quot;}' # JSON. auth.json to pass composer opts.
             sync_interval: 3600 # default auto.
             info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
 </code></pre>
-<h2 id="metadata-proxy-specification-2"><a class="header" href="#metadata-proxy-specification-2">Metadata proxy specification.</a></h2>
-<p>It depends on the type of repository and sync strategy.</p>
+<p>The configuration allows you to use multiple SSH key settings for different GitHub accounts.</p>
+<pre><code>...
+git_ssh_keys:
+    git@github.com:oroinc: '/var/www/.ssh/private_key1'
+    git@github.com:org2: '/var/www/.ssh/private_key2'
+
+# Or one key
+git_ssh_keys: '/var/www/.ssh/private_key1'
+</code></pre>
+<h2 id="metadata-proxy-specification-2"><a class="header" href="#metadata-proxy-specification-2">Metadata Proxy Specification.</a></h2>
+<p>The specification for the metadata proxy depends on the type of repository and the synchronization strategy being used.</p>
 <div class="table-wrapper"><table><thead><tr><th>API</th><th>Full sync</th><th>Lazy sync</th><th>Mirroring (strict)</th></tr></thead><tbody>
 <tr><td>V1</td><td>provider-includes (parent)</td><td>providers-lazy-url</td><td>includes</td></tr>
 <tr><td>V2</td><td>meta v2 + available-packages (depends on size)</td><td>meta v2</td><td>meta v2 + available-packages</td></tr>
@@ -1967,15 +2021,24 @@ Options:
       --force           Remote all data and sync again
   -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 </code></pre>
-<h2 id="manual-approve-dependencies-2"><a class="header" href="#manual-approve-dependencies-2">Manual approve dependencies</a></h2>
-<p>By default, all new packages are automatically enabled and added to your repository then you run composer update. But you can 
-enable strict mode to use only approved packages and avoid including into metadata untrusted packages.
-This can be useful to prevent dependency confusion attacks, for example if you use 3-d party composer repo like this <code>https://satis.oroinc.com/</code>
-See about <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
-<p>To enable strict mode go to proxy settings page Composer proxies -&gt; Packagist (or any name) -&gt; Settings</p>
+<h2 id="manual-approval-of-dependencies-2"><a class="header" href="#manual-approval-of-dependencies-2">Manual Approval of Dependencies</a></h2>
+<p>By default, all new packages are automatically enabled and added to your repository when you run composer update. 
+However, you can enable strict mode to use only approved packages and avoid including untrusted packages in your metadata. 
+This can be useful in preventing dependency confusion attacks, especially if you use a 3rd-party Composer repository 
+like <code>https://satis.oroinc.com/</code>. For more information on preventing dependency hacking, please see <a href="https://blog.packagist.com/preventing-dependency-hijacking">dependency confusion</a> </p>
+<p>To enable strict mode, go to the Proxy Settings page and select Composer Proxies -&gt; Packagist (or any other name) -&gt; Settings.</p>
 <p><a href="usage/../img/mirr1.png"><img src="usage/../img/mirr1.png" alt="strict" /></a></p>
-<p>Next go to view proxy page and click &quot;Mass mirror packages&quot; button</p>
+<p>Next, go to the View Proxy page and click the &quot;Mass Mirror Packages&quot; button.</p>
 <p><a href="usage/../img/mirr2.png"><img src="usage/../img/mirr2.png" alt="strict" /></a></p>
+<h2 id="mirror-public-access-2"><a class="header" href="#mirror-public-access-2">Mirror Public Access</a></h2>
+<p>Use the following configuration:</p>
+<pre><code class="language-yaml">packeton:
+    mirrors:
+        youname:
+            url: https://repo.example.org
+            public_access: true
+</code></pre>
+<p><a href="usage/../img/mirr3.png"><img src="usage/../img/mirr2.png" alt="strict" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="user-authentication"><a class="header" href="#user-authentication">User Authentication</a></h1>
 <p>Packeton may support multiple methods of authenticating users. It can additionally be extended to support 
 custom authentication schemes.</p>
