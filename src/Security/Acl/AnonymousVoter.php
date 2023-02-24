@@ -9,7 +9,8 @@ class AnonymousVoter implements VoterInterface
 {
     public function __construct(
         private readonly bool $isAnonymousAccess,
-        private readonly bool $isAnonymousArchiveAccess
+        private readonly bool $isAnonymousArchiveAccess,
+        private readonly bool $isAnonymousMirror,
     ){}
 
     public function vote(TokenInterface $token, $subject, array $attributes): int
@@ -21,6 +22,10 @@ class AnonymousVoter implements VoterInterface
         }
 
         if (true === $this->isAnonymousArchiveAccess && in_array('PACKETON_ARCHIVE_PUBLIC', $attributes, true)) {
+            return self::ACCESS_GRANTED;
+        }
+
+        if (true === $this->isAnonymousMirror && in_array('PACKETON_MIRROR_PUBLIC', $attributes, true)) {
             return self::ACCESS_GRANTED;
         }
 

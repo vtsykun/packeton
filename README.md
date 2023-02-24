@@ -19,9 +19,9 @@ Features
 --------
 
 - Compatible with Composer API v2, bases on Symfony 5.4.
-- Support update webhook for GitHub, Bitbucket and GitLab or custom format.
+- Support update webhook for GitHub, Gitea, Bitbucket and GitLab or custom format.
 - Customers user and ACL groups and limit access by vendor and versions.
-- Composer Proxies. [docs](docs/usage/mirroring.md)
+- Composer Proxies and Mirroring.
 - Generic Packeton [webhooks](docs/webhook.md)
 - Allow to freeze updates for the new releases after expire a customers license.
 - Mirroring for packages zip files and downloads it's from your host.
@@ -54,6 +54,7 @@ Table of content
     - [Bitbucket](#bitbucket-webhooks)
     - [Manual hook](#manual-hook-setup)
     - [Custom webhook format](#custom-webhook-format-transformer)
+- [Mirroring Composer repos](docs/usage/mirroring.md)
 - [Usage](#usage-and-authentication)
     - [Create admin user](#create-admin-user)
 
@@ -104,6 +105,7 @@ docker-compose up -f docker-compose-prod.yml -d # Or split
 - `REDIS_URL` - Redis DB, default redis://localhost
 - `PACKAGIST_DIST_HOST` - Hostname, (auto) default use the current host header in the request.
 - `TRUSTED_PROXIES` - Ips for Reverse Proxy. See [Symfony docs](https://symfony.com/doc/current/deployment/proxies.html)
+- `TRUSTED_HOSTS` - Trusted host, set if you've enabled public access and your nginx configuration uses without `server_name`. Otherwise, possible the DDoS attack with generated a big cache size for each host.
 - `PUBLIC_ACCESS` - Allow anonymous users access to read packages metadata, default: `false`
 - `MAILER_DSN` - Mailter for reset password, default disabled
 - `MAILER_FROM` - Mailter from
@@ -246,8 +248,16 @@ it would with any other git repository. You can enable it again with env option 
 
 Update Webhooks
 ---------------
-You can use GitLab, GitHub, and Bitbucket project post-receive hook to keep your packages up to date 
-every time you push code.
+You can use GitLab, Gitea, GitHub, and Bitbucket project post-receive hook to keep your packages up to date 
+every time you push code. More simple way use group webhooks, to prevent from being added it per each repository manually.
+
+| Provider  | Group webhook support | Target Path                                               |
+|-----------|-----------------------|-----------------------------------------------------------|
+| GitHub    | Yes                   | `https://example.org/api/github?token=`                   |
+| GitLab    | Only paid plan        | `https://example.org/api/update-package?token=`           |
+| Gitea     | Yes                   | `https://example.org/api/update-package?token=`           |
+| Bitbucket | Yes                   | `https://example.org/api/bitbucket?token=`                |
+| Custom    | -                     | `https://example.org/api/update-package/{packnam}?token=` |
 
 #### Bitbucket Webhooks
 To enable the Bitbucket web hook, go to your BitBucket repository, 
@@ -273,11 +283,11 @@ Enter `https://<app>/api/update-package?token=user:token` as URL.
 To enable the GitHub webhook go to your GitHub repository. Click the "Settings" button, click "Webhooks". 
 Add a new hook. Enter `https://<app>/api/github?token=user:token` as URL.
 
-#### Manual hook setup
+#### Manual or other hook setup
 
 If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually 
 from a git post-receive hook or similar. You have to do a POST request to 
-`https://pkg.okvpn.org/api/update-package?token=user:api_token` with a request body looking like this:
+`https://example.org/api/update-package?token=user:api_token` with a request body looking like this:
 
 ```
 {
@@ -287,24 +297,18 @@ from a git post-receive hook or similar. You have to do a POST request to
 }
 ```
 
-Also, you can overwrite regex that was used to parse the repository url, 
-see [ApiController](src/Controller/ApiController.php#L348)
+It will be works with Gitea by default.
+
+Also, you can use package name in path parameter, see [ApiController](src/Controller/ApiController.php#L78)
 
 ```
-{
-  "repository": {
-    "url": "PACKAGIST_PACKAGE_URL"
-  },
-  "packeton": {
-    "regex": "{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(scm/)?(?P<path>[\\w.-]+(?:/[\\w.-]+?)+)(?:\\.git|/)?$}i"
-  }
-}
+https://example.org/api/update-package/acme/packet1?token=<token>
 ```
 
 You can do this using curl for example:
 
 ```
-curl -XPOST -H 'content-type:application/json' 'https://pkg.okvpn.org/api/update-package?token=user:api_token' -d' {"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'
+curl -XPOST -H 'content-type:application/json' 'https://example.org/api/update-package?token=user:api_token' -d' {"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'
 ```
 
 Instead of using repo url you can use directly composer package name. 
@@ -329,7 +333,7 @@ You have to do a POST request with a request body.
 #### Custom webhook format transformer
 
 You can create a proxy middleware to transform JSON payload to the applicable inner format.
-In first you need create a new Rest Endpoint to accept external request.
+In the first you need create a new Rest Endpoint to accept external request.
 
 Go to `Settings > Webhooks` and click `Add webhook`. Fill the form:
  - url - `https://<app>/api/update-package?token=user:token`
@@ -386,7 +390,7 @@ The customer users can only see related packages and own profile with instructio
 To authenticate composer access to repository needs add credentials globally into auth.json, for example:
 
 ```
-composer config --global --auth http-basic.pkg.okvpn.org <user> <token>
+composer config --global --auth http-basic.example.org <user> <token>
 ```
 
 API Token you can found in your Profile.

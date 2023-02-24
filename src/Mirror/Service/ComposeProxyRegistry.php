@@ -8,6 +8,7 @@ use Packeton\Composer\MetadataMinifier;
 use Packeton\Mirror\Decorator\ProxyRepositoryACLDecorator;
 use Packeton\Mirror\Decorator\ProxyRepositoryFacade;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
+use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
@@ -28,6 +29,11 @@ class ComposeProxyRegistry
         $repo = $this->getRemoteProxyRepository($name);
 
         return new ProxyRepositoryFacade($repo, $this->syncService, $this->metadataMinifier);
+    }
+
+    public function getProxyConfig(string $name): ProxyOptions
+    {
+        return $this->getRemoteProxyRepository($name)->getConfig();
     }
 
     public function createACLAwareRepository(string $name): PRI

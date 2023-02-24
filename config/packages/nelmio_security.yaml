@@ -24,7 +24,8 @@ nelmio_security:
                 - 'self'
             script-src:
                 - 'self'
-                - 'https://cdn.jsdelivr.net'
+                - 'https://cdn.jsdelivr.net/npm/d3@3.5.17/'
+                - 'https://cdn.jsdelivr.net/npm/nvd3@1.8.6/'
             connect-src:
                 - 'self'
             img-src:

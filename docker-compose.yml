@@ -12,6 +12,8 @@ services:
             ADMIN_PASSWORD: 123456
             ADMIN_EMAIL: admin@example.com
             TRUSTED_PROXIES: 172.16.0.0/12
+            # Default SQLite
+            # DATABASE_URL: "mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&charset=utf8mb4"
         ports:
             - '127.0.0.1:8088:80'
         volumes:

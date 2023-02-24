@@ -64,6 +64,11 @@ class MetadataOptions
         return $includes;
     }
 
+    public function withoutPathPrefix(): bool
+    {
+        return $this->config['without_path_prefix'] ?? false;
+    }
+
     public function getAvailablePackages(): array
     {
         return $this->config['available_packages'] ?? [];

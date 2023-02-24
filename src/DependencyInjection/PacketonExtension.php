@@ -25,6 +25,9 @@ class PacketonExtension extends Extension
             $container->setParameter('packeton_archive_opts', $config['archive_options'] ?? []);
         }
 
+        $hasPublicMirror = array_filter($config['mirrors'] ?? [] , fn ($i) => $i['public_access'] ?? false);
+        $container->setParameter('anonymous_mirror_access', (bool) $hasPublicMirror);
+
         $container->setParameter('anonymous_access', $config['anonymous_access'] ?? false);
         $container->setParameter('anonymous_archive_access', $config['anonymous_archive_access'] ?? false);
 
