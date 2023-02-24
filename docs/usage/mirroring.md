@@ -178,4 +178,4 @@ packeton:
             public_access: true
 ```
 
-[![strict](../img/mirr2.png)](../img/mirr3.png)
+[![strict](../img/mirr3.png)](../img/mirr3.png)
