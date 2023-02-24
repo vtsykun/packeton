@@ -98,6 +98,7 @@ services:
         arguments:
             $isAnonymousAccess: '%anonymous_access%'
             $isAnonymousArchiveAccess: '%anonymous_archive_access%'
+            $isAnonymousMirror: '%anonymous_mirror_access%'
 
     Packeton\Service\DistConfig:
         arguments:

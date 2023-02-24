@@ -163,6 +163,14 @@ class ProxyOptions extends MetadataOptions
     }
 
     /**
+     * @return bool
+     */
+    public function isPublicAccess(): bool
+    {
+        return $this->config['public_access'] ?? false;
+    }
+
+    /**
      * @return array|null
      */
     public function getComposerAuth(): ?array

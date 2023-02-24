@@ -34,14 +34,14 @@ class MirrorController extends AbstractController
     {
         try {
             $this->checkAccess($alias);
-            $this->proxyRegistry->createRepository($alias);
+            $config = $this->proxyRegistry->getProxyConfig($alias);
         } catch (MetadataNotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
         }
 
         $repo = $this->generateUrl('mirror_index', ['alias' => $alias], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        return $this->render('proxies/mirror.html.twig', ['alias' => $alias, 'repoUrl' => $repo]);
+        return $this->render('proxies/mirror.html.twig', ['alias' => $alias, 'repoUrl' => $repo, 'repo' => $config]);
     }
 
     #[Route('/{alias}/packages.json', name: 'mirror_root', methods: ['GET'])]
@@ -136,7 +136,6 @@ class MirrorController extends AbstractController
         try {
             $this->checkAccess($alias);
             $repo = $this->proxyRegistry->createACLAwareRepository($alias);
-
             return $callback($repo);
         } catch (MetadataNotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
@@ -145,9 +144,20 @@ class MirrorController extends AbstractController
 
     protected function checkAccess(string $alias)
     {
-        // ROLE_ADMIN have access to all proxies views
-        if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('VIEW', new ObjectIdentity($alias, PRI::class))) {
-            throw $this->createAccessDeniedException();
+        try {
+            $config = $this->proxyRegistry->getProxyConfig($alias);
+        } catch (MetadataNotFoundException) {
+            throw $this->createNotFoundException();
+        }
+
+        if (false === $config->isPublicAccess()) {
+            if (null !== $this->getUser()) {
+                if (!$this->isGranted('ROLE_MAINTAINER') && !$this->isGranted('VIEW', new ObjectIdentity($alias, PRI::class))) {
+                    throw $this->createAccessDeniedException();
+                }
+            } else {
+                throw $this->createNotFoundException();
+            }
         }
     }
 }

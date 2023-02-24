@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Model;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Composer\Cache\MetadataCache;
 use Packeton\Composer\MetadataMinifier;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\User;
@@ -19,7 +20,6 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Contracts\Cache\CacheInterface;
 use Twig\Environment;
 
 class PackageManager
@@ -34,7 +34,7 @@ class PackageManager
         protected AuthorizationCheckerInterface $authorizationChecker,
         protected PackagistFactory $packagistFactory,
         protected EventDispatcherInterface $dispatcher,
-        protected CacheInterface $packagesCachePool,
+        protected MetadataCache $cache,
         protected MetadataMinifier $metadataMinifier,
         protected \Redis $redis,
     ) {}
@@ -206,39 +206,17 @@ class PackageManager
             $user = null;
         }
 
-        $cacheKey = \sha1('pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0));
+        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0);
 
-        $item = $this->packagesCachePool->getItem($cacheKey);
-        @[$ctime, $data] = $item->get();
-
-        $needRefresh = false;
-        if (false === $ignoreLastModify) {
-            $lastModify = $this->getLastModify()?->getTimestamp() ?: 0;
-            $needRefresh = $ctime < $lastModify || $ctime + 1800 < time(); // 1800 sec max ttl for root package request, but default TTL = 3600
-        }
-
-        if (!$item->isHit() || $needRefresh || empty($data)) {
-            $data = $this->dumper->dump($user);
-            $item->set([time(), $data]);
-            $this->packagesCachePool->save($item);
-        }
-
-        return $data;
+        $lastModify = false === $ignoreLastModify ? ($this->getLastModify()?->getTimestamp() ?: 0) : null;
+        return $this->cache->get($cacheKey, fn () => $this->dumper->dump($user), $lastModify);
     }
 
     public function getPackageNames(): array
     {
         $cacheKey = 'all_packages_';
         $lastModify = $this->getLastModify()?->getTimestamp();
-
-        $item = $this->packagesCachePool->getItem($cacheKey);
-        @[$ctime, $data] = $item->get();
-
-        if ($ctime < $lastModify || !$item->isHit()) {
-            $data = $this->doctrine->getRepository(Package::class)->getPackageNames();
-            $item->set([time(), $data]);
-            $this->packagesCachePool->save($item);
-        }
+        $data = $this->cache->get($cacheKey, fn () => $this->doctrine->getRepository(Package::class)->getPackageNames(), $lastModify);
 
         return is_array($data) ? $data : [];
     }
