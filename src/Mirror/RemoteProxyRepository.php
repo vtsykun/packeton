@@ -341,6 +341,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
         $vendor = $this->safeName($vendor);
         $pkg = $this->safeName($pkg) ?: '_null_';
+        $hash = $hash ? $this->safeName($hash) : null;
 
         return $vendor . $this->ds . $pkg . ($hash ? self::HASH_SEPARATOR . $hash : '') . '.json.gz';
     }

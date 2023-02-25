@@ -16,7 +16,7 @@ class MetadataCache
     ) {
     }
 
-    public function get(string $key, callable $callback, int $lastModify = null)
+    public function get(string $key, callable $callback, int $lastModify = null, callable $needClearCache = null)
     {
         // Use host key to prevent Cache Poisoning attack, if dist URL generated dynamic.
         // But for will protection must be used trusted_hosts
@@ -27,8 +27,11 @@ class MetadataCache
         @[$ctime, $data] = $item->get();
 
         $needRefresh = false;
-        if ($lastModify !== null) {
+        if (null !== $lastModify) {
             $needRefresh = $ctime < $lastModify || $ctime + $this->maxTtl < time();
+        }
+        if (null !== $needClearCache) {
+            $needRefresh = $needRefresh || $needClearCache($data);
         }
 
         if (!$item->isHit() || $needRefresh || empty($data)) {

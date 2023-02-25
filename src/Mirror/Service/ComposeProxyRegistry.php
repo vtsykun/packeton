@@ -12,7 +12,7 @@ use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
-use Packeton\Model\PackageManager;
+use Packeton\Model\ProviderManager;
 
 class ComposeProxyRegistry
 {
@@ -20,7 +20,7 @@ class ComposeProxyRegistry
         protected ProxyRepositoryRegistry $proxyRegistry,
         protected SyncProviderService $syncService,
         protected MetadataMinifier $metadataMinifier,
-        protected PackageManager $packageManager,
+        protected ProviderManager $providerManager,
     ) {
     }
 
@@ -46,7 +46,7 @@ class ComposeProxyRegistry
             $repo,
             $repo->getConfig()->getAvailablePackages(),
             $repo->getConfig()->getAvailablePatterns(),
-            $this->packageManager->getPackageNames(),
+            $this->providerManager->getPackageNames(),
         );
     }
 

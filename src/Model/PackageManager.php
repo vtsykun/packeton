@@ -37,7 +37,8 @@ class PackageManager
         protected MetadataCache $cache,
         protected MetadataMinifier $metadataMinifier,
         protected \Redis $redis,
-    ) {}
+    ) {
+    }
 
     public function deletePackage(Package $package)
     {
@@ -131,20 +132,24 @@ class PackageManager
         return true;
     }
 
-    public function getRootPackagesJson(UserInterface $user = null)
+    public function getRootPackagesJson(UserInterface $user = null, int $apiVersion = null)
     {
-        $packagesData = $this->dumpInMemory($user, false);
+        $packagesData = $this->dumpInMemory($user, false, $apiVersion);
         return $packagesData[0];
     }
 
     /**
      * @param User|null|object $user
      * @param string $hash
-     * @return bool
+     * @return bool|array
      */
     public function getProvidersJson(?UserInterface $user, $hash)
     {
-        list($root, $providers) = $this->dumpInMemory($user);
+        [$root, $providers] = $this->dumpInMemory($user);
+        if (null === $providers || !isset($root['provider-includes'])) {
+            return false;
+        }
+
         $rootHash = \reset($root['provider-includes']);
         if ($hash && $rootHash['sha256'] !== $hash) {
             return false;
@@ -165,19 +170,18 @@ class PackageManager
             $user = null;
         }
 
-        return $this->dumper->dumpPackage($user, $package);
+        $meta = $this->dumper->dumpPackage($user, $package);
+        return $meta ? ['packages' => [$package => $meta]] : [];
     }
 
-    public function getPackageV2Json(?UserInterface $user, string $package, bool $isDev = true, &$lastModified = null): array
+    public function getPackageV2Json(?UserInterface $user, string $package, bool $isDev = true): array
     {
-        $metadata = $this->getCachedPackageJson($user, $package) ?:
-            $this->getPackageJson($user, $package);
-
+        $metadata = $this->getPackageJson($user, $package);
         if (empty($metadata)) {
             return [];
         }
 
-        return $this->metadataMinifier->minify($metadata, $isDev, $lastModified);
+        return $this->metadataMinifier->minify($metadata, $isDev);
     }
 
     /**
@@ -200,37 +204,19 @@ class PackageManager
         return $packages[$package];
     }
 
-    private function dumpInMemory(UserInterface $user = null, bool $ignoreLastModify = true)
+    private function dumpInMemory(UserInterface $user = null, bool $ignoreLastModify = true, int $apiVersion = null)
     {
         if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
-        $cacheKey = 'pkg_user_cache_' . ($user ? $user->getUserIdentifier() : 0);
+        $cacheKey = 'pkg_user_cache_' . $this->dumper->getFormat()->value . '_' . ($user ? $user->getUserIdentifier() : 0);
 
-        $lastModify = false === $ignoreLastModify ? ($this->getLastModify()?->getTimestamp() ?: 0) : null;
-        return $this->cache->get($cacheKey, fn () => $this->dumper->dump($user), $lastModify);
-    }
-
-    public function getPackageNames(): array
-    {
-        $cacheKey = 'all_packages_';
-        $lastModify = $this->getLastModify()?->getTimestamp();
-        $data = $this->cache->get($cacheKey, fn () => $this->doctrine->getRepository(Package::class)->getPackageNames(), $lastModify);
-
-        return is_array($data) ? $data : [];
-    }
-
-    public function setLastModify(): void
-    {
-        try {
-            $this->redis->set('packages-last-modify', time());
-        } catch (\Exception) {}
-    }
-
-    public function getLastModify(): ?\DateTimeInterface
-    {
-        $unix = $this->redis->get('packages-last-modify');
-        return $unix ? \DateTime::createFromFormat('U', $unix) : null;
+        return $this->cache->get(
+            $cacheKey,
+            fn () => [...$this->dumper->dump($user, $apiVersion), $apiVersion],
+            false === $ignoreLastModify ? $this->providerManager->getRootLastModify()->getTimestamp() : null,
+            fn ($meta) => $ignoreLastModify === false && (($meta[4] ?? null) !== $apiVersion)
+        );
     }
 }

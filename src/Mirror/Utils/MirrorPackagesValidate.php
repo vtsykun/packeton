@@ -6,20 +6,20 @@ namespace Packeton\Mirror\Utils;
 
 use Packeton\Mirror\RemoteProxyRepository;
 use Packeton\Mirror\Service\FetchPackageMetadataService;
-use Packeton\Model\PackageManager;
+use Packeton\Model\ProviderManager;
 
 class MirrorPackagesValidate
 {
     public function __construct(
         private readonly FetchPackageMetadataService $fetchMetadataService,
-        private readonly PackageManager $packageManager
+        private readonly ProviderManager $providerManager
     ) {
     }
 
     public function checkPackages(RemoteProxyRepository $repo, array $packages, array $enabled): array
     {
         $waiting = $valid = [];
-        $excluded = $this->packageManager->getPackageNames();
+        $excluded = $this->providerManager->getPackageNames();
         foreach ($packages as $package) {
             if ($meta = $this->getData($repo->findPackageMetadata($package)?->decodeJson(), $package)) {
                 $valid[$package] = $meta;

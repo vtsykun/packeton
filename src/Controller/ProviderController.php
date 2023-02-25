@@ -10,7 +10,9 @@ use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Model\PackageManager;
+use Packeton\Model\ProviderManager;
 use Packeton\Service\DistManager;
+use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,21 +26,27 @@ class ProviderController extends AbstractController
 
     public function __construct(
         private readonly PackageManager $packageManager,
+        private readonly ProviderManager $providerManager,
         private readonly ManagerRegistry $registry,
-    ){
+    ) {
     }
 
     #[Route('/packages.json', name: 'root_packages', defaults: ['_format' => 'json'], methods: ['GET'])]
     public function packagesAction(Request $request): Response
     {
-        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser());
-
-        $response = new JsonResponse($rootPackages);
-        $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-        if ($lastModify = $this->packageManager->getLastModify()) {
-            $response->setLastModified($lastModify);
-            $response->isNotModified($request);
+        $response = new JsonResponse([]);
+        $response->setLastModified($this->providerManager->getRootLastModify());
+        if ($response->isNotModified($request)) {
+            return $response;
         }
+
+        $ua = new UserAgentParser($request->headers->get('User-Agent'));
+        $apiVersion = $request->query->get('ua') ? (int) $request->query->get('ua') : $ua->getComposerMajorVersion();
+
+        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser(), $apiVersion);
+
+        $response->setData($rootPackages);
+        $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
         return $response;
     }
@@ -120,20 +128,22 @@ class ProviderController extends AbstractController
     )]
     public function packageV2Action(Request $request, string $package): Response
     {
+        $response = new JsonResponse([]);
+        $response->setLastModified($this->providerManager->getLastModify($package));
+        if ($response->isNotModified($request)) {
+            return $response;
+        }
+
         $isDev = str_ends_with($package, '~dev');
         $package = preg_replace('/~dev$/', '', $package);
 
-        $package = $this->packageManager->getPackageV2Json($this->getUser(), $package, $isDev, $lastModified);
+        $package = $this->packageManager->getPackageV2Json($this->getUser(), $package, $isDev);
         if (!$package) {
             return $this->createNotFound();
         }
 
-        $response = new JsonResponse($package);
         $response->setEncodingOptions(\JSON_UNESCAPED_SLASHES);
-        if ($lastModified !== null) {
-            $response->setLastModified(new \DateTime($lastModified));
-            $response->isNotModified($request);
-        }
+        $response->setData($package);
 
         return $response;
     }

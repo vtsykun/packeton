@@ -501,6 +501,7 @@ class PackageController extends AbstractController
             throw new AccessDeniedException;
         }
 
+        $this->providerManager->setLastModify($package->getName());
         $repo->remove($version);
         $this->registry->getManager()->flush();
         $this->registry->getManager()->clear();
