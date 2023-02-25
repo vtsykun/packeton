@@ -63,8 +63,6 @@ class ProviderManager
                 $nameSlice = array_splice($names, 0, 1000);
                 $this->redis->sadd('set:packages', $nameSlice);
             }
-
-            $this->redis->setOption($cacheKey, $lastModify);
         }
 
         $names = $this->redis->smembers('set:packages');
