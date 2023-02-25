@@ -1,5 +1,1 @@
 blank_issues_enabled: true
-contact_links:
-    -   name: Reporting a vulnerability
-        url: https://github.com/vtsykun/packeton/security/policy
-        about: For security concerns, please send a mail privately instead of opening a public issue.
