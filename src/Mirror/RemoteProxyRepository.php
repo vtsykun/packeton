@@ -142,7 +142,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         }
 
         if (isset($data['packages'][$package])) {
-            return $data['packages'][$package];
+            return $data['packages'][$package] ?: [];
         }
 
         if (isset($data['includes']) && \is_array($data['includes'])) {
