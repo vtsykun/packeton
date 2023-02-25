@@ -104,6 +104,10 @@ services:
         arguments:
             $config: '%packeton_archive_opts%'
 
+    Packeton\Package\InMemoryDumper:
+        arguments:
+            $config: '%packeton_dumper_opts%'
+
     Packeton\DBAL\OpensslCrypter:
         public: true
         arguments:

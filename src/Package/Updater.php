@@ -36,6 +36,7 @@ use Packeton\Entity\Tag;
 use Packeton\Entity\Version;
 use Packeton\Entity\SuggestLink;
 use Packeton\Event\UpdaterEvent;
+use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -84,6 +85,7 @@ class Updater
         protected ManagerRegistry $doctrine,
         protected DistConfig $distConfig,
         protected PackagistFactory $packagistFactory,
+        protected ProviderManager $providerManager,
         protected EventDispatcherInterface $dispatcher,
     ) {
         ErrorHandler::register();
@@ -109,6 +111,7 @@ class Updater
             $start = new \DateTime();
         }
 
+        $stabilityVersionUpdated = 0;
         $deleteDate = clone $start;
         $deleteDate->modify('-1day');
 
@@ -158,6 +161,7 @@ class Updater
                 $versionRepository->remove($version);
             }
 
+            $stabilityVersionUpdated = 3;
             $em->flush();
             $em->refresh($package);
         }
@@ -196,6 +200,8 @@ class Updater
                 if (!isset($result['id']) && $version instanceof Version) {
                     $result['id'] = $version->getId();
                 }
+
+                $stabilityVersionUpdated |= $lastProcessed->isDev() ? ProviderManager::DEV_UPDATED : ProviderManager::STAB_UPDATED;
             } else {
                 $idsToMarkUpdated[] = $result['id'];
             }
@@ -226,6 +232,7 @@ class Updater
             } else {
                 // set it to be soft-deleted so next update that occurs after deleteDate (1day) if the
                 // version is still missing it will be really removed
+                $stabilityVersionUpdated = 3;
                 $em->getConnection()->executeStatement(
                     'UPDATE package_version SET softDeletedAt = :now WHERE id = :id',
                     ['now' => date('Y-m-d H:i:s'), 'id' => $version['id']]
@@ -244,7 +251,9 @@ class Updater
         }
 
         foreach ($deletedVersions as $versionId) {
-            $versionRepository->remove($versionRepository->findOneById($versionId));
+            $stabilityVersionUpdated = 3;
+            $version = $versionRepository->find($versionId);
+            $versionRepository->remove($version);
         }
 
         if (preg_match('{^(?:git://|git@|https?://)github.com[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match) && $repository instanceof VcsRepository) {
@@ -253,15 +262,24 @@ class Updater
             $this->updateReadme($io, $package, $repository);
         }
 
+        if ($stabilityVersionUpdated !== 0) {
+            $this->providerManager->setLastModify($package->getName(), $stabilityVersionUpdated);
+        }
+
         $package->setUpdatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
         $package->setCrawledAt(new \DateTime('now', new \DateTimeZone('UTC')));
         $em->flush();
-        if ($repository->hadInvalidBranches()) {
-            throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
-        }
 
         if (true === $isNewPackage) {
             $this->dispatcher->dispatch(new UpdaterEvent($package, $flags), UpdaterEvent::PACKAGE_PERSIST);
+        }
+
+        if (!$this->providerManager->packageExists($package->getName())) {
+            $this->providerManager->getPackageNames(true);
+        }
+
+        if ($repository->hadInvalidBranches()) {
+            throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
         }
 
         return $package;

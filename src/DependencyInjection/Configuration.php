@@ -3,6 +3,7 @@
 namespace Packeton\DependencyInjection;
 
 use Firebase\JWT\JWT;
+use Packeton\Composer\MetadataFormat;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -27,6 +28,12 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->booleanNode('github_no_api')->end()
                 ->scalarNode('rss_max_items')->defaultValue(40)->end()
+                ->arrayNode('metadata')
+                    ->children()
+                        ->enumNode('format')->values(array_map(fn($o) => $o->value, MetadataFormat::cases()))->end()
+                        ->scalarNode('info_cmd_message')->end()
+                    ->end()
+                ->end()
                 ->booleanNode('anonymous_access')->defaultFalse()->end()
                 ->booleanNode('anonymous_archive_access')->defaultFalse()->end()
                 ->booleanNode('archive')

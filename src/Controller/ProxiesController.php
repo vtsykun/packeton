@@ -18,6 +18,7 @@ use Packeton\Mirror\Utils\MirrorPackagesValidate;
 use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Packeton\Mirror\Utils\MirrorUIFormatter;
 use Packeton\Model\PackageManager;
+use Packeton\Model\ProviderManager;
 use Packeton\Service\JobScheduler;
 use Packeton\Util\HtmlJsonHuman;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -38,7 +39,7 @@ class ProxiesController extends AbstractController
         private readonly JobScheduler $jobScheduler,
         private readonly MirrorPackagesValidate $mirrorValidate,
         private readonly MetadataMinifier $metadataMinifier,
-        private readonly PackageManager $packageManager,
+        private readonly ProviderManager $providerManager,
     ) {
     }
 
@@ -204,7 +205,7 @@ class ProxiesController extends AbstractController
         $repoUrl = $this->generateUrl('mirror_index', ['alias' => $config->getAlias()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $rpm = $repo->getPackageManager();
-        $privatePackages = $this->packageManager->getPackageNames();
+        $privatePackages = $this->providerManager->getPackageNames();
 
         $packages = MirrorUIFormatter::getGridPackagesData($rpm->getApproved(), $rpm->getEnabled(), $privatePackages);
 

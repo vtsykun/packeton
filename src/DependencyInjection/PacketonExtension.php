@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\DependencyInjection;
 
 use Packeton\Attribute\AsWorker;
+use Packeton\Package\InMemoryDumper;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
@@ -24,6 +25,8 @@ class PacketonExtension extends Extension
         if (true === $config['archive']) {
             $container->setParameter('packeton_archive_opts', $config['archive_options'] ?? []);
         }
+
+        $container->setParameter('packeton_dumper_opts', $config['metadata'] ?? []);
 
         $hasPublicMirror = array_filter($config['mirrors'] ?? [] , fn ($i) => $i['public_access'] ?? false);
         $container->setParameter('anonymous_mirror_access', (bool) $hasPublicMirror);

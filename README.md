@@ -47,6 +47,8 @@ Table of content
         - [JIRA issue fix version](/docs/webhook.md#jira-create-a-new-release-and-set-fix-version)
         - [Gitlab setup auto webhook](/docs/webhook.md#gitlab-auto-webhook)
 - [Ssh key access](#ssh-key-access-and-composer-oauth-token)
+- [Configuration](#configuration)
+- [LPAD Authenticating](/docs/authentication-ldap.md)
 - [Update Webhooks](#update-webhooks)
     - [Github](#github-webhooks)
     - [GitLab](#gitlab-service)
@@ -56,7 +58,7 @@ Table of content
     - [Custom webhook format](#custom-webhook-format-transformer)
 - [Mirroring Composer repos](docs/usage/mirroring.md)
 - [Usage](#usage-and-authentication)
-    - [Create admin user](#create-admin-user)
+    - [Create admin user](#create-admin-and-maintainer-users)
 
 Demo
 ----
@@ -124,7 +126,7 @@ Installation
 1. Clone the repository
 2. Install dependencies: `composer install`
 3. Create .env.local and copy needed environment variables into it, see docker Environment variables section
-4. Run `bin/console doctrine:schema:create` to setup the DB
+4. Run `bin/console doctrine:schema:update --force --complete` to set up the DB
 5. Create admin user via console.
 
 ```
@@ -132,10 +134,15 @@ php bin/console packagist:user:manager username --email=admin@example.com --pass
 ```
 
 6. Enable cron tabs and background jobs.
-Enable crontab `crontab -e -u www-data` 
+Enable crontab `crontab -e -u www-data` or use Docker friendly build-in cron demand runner.
 
 ```
-* * * * * /var/www/packagist/bin/console --env=prod okvpn:cron >> /dev/null
+* * * * * /var/www/packagist/bin/console okvpn:cron >> /dev/null
+```
+
+Example, run cron as background process without crontab. Can use with supervisor.
+```
+bin/console okvpn:cron --demand
 ```
 
 Setup Supervisor to run worker.
@@ -245,6 +252,72 @@ in the UI credentials form.
 We disable usage GitHub API by default to force use ssh key or clone the repository via https as
 it would with any other git repository. You can enable it again with env option `GITHUB_NO_API` 
 [see here](https://getcomposer.org/doc/06-config.md#use-github-api).
+
+Configuration
+-------------
+
+In order to add a configuration add a file with any name to the folder `config/packages/*`. 
+The config will merge with default values in priority sorted by filename.
+
+The configuration for Docker installation is available at `/data/config.yaml`.
+Also, you can use docker volume to add config directly at path `config/packages/ldap.yaml`.
+
+```yaml
+...
+        volumes:
+            - .docker:/data
+            - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
+```
+
+Where `/var/www/packagist/` default ROOT for docker installation.
+
+Full example of configuration.
+
+```yaml
+packeton:
+    github_no_api: '%env(bool:GITHUB_NO_API)%' # default true
+    rss_max_items: 30
+    archive: true
+    
+    # default false
+    anonymous_access: '%env(bool:PUBLIC_ACCESS)%'
+
+    anonymous_archive_access: '%env(bool:PUBLIC_ACCESS)%' # default false
+    
+    archive_options:
+        format: zip
+        basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'
+        endpoint: '%env(PACKAGIST_DIST_HOST)%' # default auto detect by host headers 
+        include_archive_checksum: false
+    
+    # disable by default 
+    jwt_authentication:
+        algo: EdDSA
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem'
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem'
+        passphrase: ~
+
+    # See mirrors section
+    mirrors: ~
+    
+    metadata:
+        format: auto # Default, see about metadata.
+        info_cmd_message: ~ # Bash logo, example - \u001b[37;44m#StandWith\u001b[30;43mUkraine\u001b[0m
+```
+
+### Metadata format.
+
+Packeton support metadata for Composer 1 and 2. For performance reasons, for Composer 1 uses metadata
+depending on the user-agent header: `providers-lazy-url` if ua != 1; `provider-includes` if ua == 1;
+
+| Format strategy | UA 1                           | UA 2                            | UA is NULL                      |
+|-----------------|--------------------------------|---------------------------------|---------------------------------|
+| auto            | provider-includes metadata-url | providers-lazy-url metadata-url | providers-lazy-url metadata-url |
+| only_v1         | provider-includes              | provider-includes               | provider-includes               |
+| only_v2         | metadata-url                   | metadata-url                    | metadata-url                    |
+| full            | provider-includes metadata-url | provider-includes metadata-url  | provider-includes metadata-url  |
+
+Where `UA 1` - Composer User-Agent = 1. `UA 2` - Composer User-Agent = 2.
 
 Update Webhooks
 ---------------
@@ -415,10 +488,10 @@ Configure this private repository in your `composer.json`.
 
 **Application Roles**
 
-- ROLE_USER - minimal access level, these users only can read metadata only for selected packages.
-- ROLE_FULL_CUSTOMER - Can read all packages metadata.
-- ROLE_MAINTAINER -  Can submit a new package and read all metadata.
-- ROLE_ADMIN - Can create a new customer users, management webhooks and credentials.
+- `ROLE_USER` - minimal access level, these users only can read metadata only for selected packages.
+- `ROLE_FULL_CUSTOMER` - Can read all packages metadata.
+- `ROLE_MAINTAINER` -  Can submit a new package and read all metadata.
+- `ROLE_ADMIN` - Can create a new customer users, management webhooks and credentials.
 
 You can create a user and then promote to admin or maintainer via console using fos user bundle commands.
 

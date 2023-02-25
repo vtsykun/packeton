@@ -18,14 +18,18 @@ use Packeton\Repository\PackageRepository;
 
 class ProviderManager
 {
-    protected $redis;
-    protected $registry;
+    public const DEV_UPDATED = 1;
+    public const STAB_UPDATED = 2;
+
     protected $initializedProviders = false;
 
-    public function __construct(\Redis $redis, ManagerRegistry $registry)
-    {
-        $this->redis = $redis;
-        $this->registry = $registry;
+    protected $initializedPackages = [];
+    protected $initializedPackagesUnix = false;
+
+    public function __construct(
+        protected \Redis $redis,
+        protected ManagerRegistry $registry
+    ) {
     }
 
     public function packageExists($name)
@@ -45,20 +49,85 @@ class ProviderManager
         return (bool) $this->redis->sismember('set:providers', strtolower($name));
     }
 
-    public function getPackageNames()
+    public function getPackageNames(bool $reload = false): array
     {
-        if (!$this->redis->scard('set:packages')) {
+        $cacheKey = 'set:packages:last-modify';
+        $lastModify = $this->getRootLastModify()->getTimestamp();
+        if (false === $reload && $this->initializedPackagesUnix === $lastModify) {
+            return $this->initializedPackages;
+        }
+
+        if (true === $reload || $lastModify !== (int)$this->redis->get($cacheKey)) {
             $names = $this->getRepo()->getPackageNames();
             while ($names) {
                 $nameSlice = array_splice($names, 0, 1000);
                 $this->redis->sadd('set:packages', $nameSlice);
             }
+
+            $this->redis->setOption($cacheKey, $lastModify);
         }
 
         $names = $this->redis->smembers('set:packages');
         sort($names, SORT_STRING);
+        $this->initializedPackagesUnix = $lastModify;
 
-        return $names;
+        return $this->initializedPackages = $names;
+    }
+
+    public function setRootLastModify(int $unix = null): void
+    {
+        try {
+            $this->redis->set('packages-last-modify', $unix ?: time());
+        } catch (\Exception) {}
+    }
+
+    public function getRootLastModify(): \DateTimeInterface
+    {
+        $unix = $this->redis->get('packages-last-modify');
+        if (empty($unix) || !is_numeric($unix)) {
+            $this->setRootLastModify($unix = time());
+        }
+
+        return \DateTime::createFromFormat('U', (int)$unix);
+    }
+
+    public function setLastModify(string $package, int $flags = null, int $unix = null): void
+    {
+        try {
+            $flags ??= 3;
+            $unix ??= time();
+            $keys = [];
+            if ($flags & self::DEV_UPDATED) {
+                $keys[] = $package . '~dev';
+            }
+            if ($flags & self::STAB_UPDATED) {
+                $keys[] = $package;
+            }
+
+            foreach ($keys as $key) {
+                $this->redis->set('lm:'.$key, $unix);
+            }
+        } catch (\Exception) {}
+    }
+
+    public function getLastModify(string $package, bool $isDev = null): \DateTimeInterface
+    {
+        $key = match ($isDev) {
+            $isDev === true => $package . '~dev',
+            default => $package,
+        };
+
+        $key = 'lm:'.$key;
+        $unix = $this->redis->get($key);
+        if (empty($unix) || !is_numeric($unix)) {
+            if (!$this->packageExists(preg_replace('/~dev$/', '', $package))) {
+                $unix = time();
+            } else {
+                $this->setLastModify($package, null, $unix = time());
+            }
+        }
+
+        return \DateTime::createFromFormat('U', (int)$unix);
     }
 
     public function insertPackage(Package $package)
@@ -69,6 +138,8 @@ class ProviderManager
     public function deletePackage(Package $package)
     {
         $this->redis->srem('set:packages', strtolower($package->getName()));
+        $this->redis->del('lm:'.$package->getName());
+        $this->redis->del('lm:'.$package->getName().'~dev');
     }
 
     private function populateProviders()

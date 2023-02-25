@@ -12,7 +12,7 @@ use Packeton\Entity\GroupAclPermission;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
-use Packeton\Model\PackageManager;
+use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -28,7 +28,7 @@ class DoctrineListener
 
     public function __construct(
         private readonly RequestStack $requestStack,
-        private readonly PackageManager $packageManager,
+        private readonly ProviderManager $providerManager,
     ){
     }
 
@@ -65,7 +65,7 @@ class DoctrineListener
         foreach ($changes as $object) {
             $class = ClassUtils::getClass($object);
             if (isset(self::$trackLastModifyClasses[$class])) {
-                $this->packageManager->setLastModify();
+                $this->providerManager->setRootLastModify();
                 return;
             }
         }
