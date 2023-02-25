@@ -69,3 +69,47 @@ After:
     environment:
         DATABASE_URL: mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&charset=utf8mb4
 ```
+
+## UPGRADE FROM 2.0 to 2.1
+
+The metadata root format `/packages.json` has been changed. Now it is configurable. By default, for performance it depends on Composer `User-Agent`
+If you use `/packages.json` API directly (without composer) please add query parameter `ua=1` for 1 format.
+See [metadata configuration](/README.md#configuration)
+
+Before:
+```json
+{
+    "packages": [],
+    "notify": "/downloads/%package%",
+    "notify-batch": "/downloads/",
+    "metadata-changes-url": "/metadata/changes.json",
+    "providers-url": "/p/%package%$%hash%.json",
+    "metadata-url": "/p2/%package%.json",
+    "provider-includes": {
+        "p/providers$%hash%.json": {
+            "sha256": "af2f8f8f8b403ef309e0aca59b080b65fd7465ede21c12a157a1422af8001f42"
+        }
+    },
+    "available-packages": ["okvpn/cron-bundle"]
+}
+```
+
+After:
+
+```json
+{
+    "packages": [],
+    "notify": "/downloads/%package%",
+    "notify-batch": "/downloads/",
+    "metadata-changes-url": "/metadata/changes.json",
+    "providers-url": "/p/%package%$%hash%.json",
+    "metadata-url": "/p2/%package%.json",
+    "available-packages": ["okvpn/cron-bundle"]
+}
+```
+
+The lazy route `/p/%package%.json` now return Сomposer compatible data:
+
+```
+{"packages": {"name": {versions}}
+```
