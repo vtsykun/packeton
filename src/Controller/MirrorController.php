@@ -8,6 +8,7 @@ use Packeton\Composer\MetadataMinifier;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Manager\RootMetadataMerger;
 use Packeton\Mirror\Model\JsonMetadata;
+use Packeton\Mirror\Model\ProxyRepositoryInterface;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\Service\ComposeProxyRegistry;
 use Packeton\Security\Acl\ObjectIdentity;
@@ -152,7 +153,7 @@ class MirrorController extends AbstractController
 
         if (false === $config->isPublicAccess()) {
             if (null !== $this->getUser()) {
-                if (!$this->isGranted('ROLE_MAINTAINER') && !$this->isGranted('VIEW', new ObjectIdentity($alias, PRI::class))) {
+                if (!$this->isGranted('ROLE_MAINTAINER') && !$this->isGranted('VIEW', new ObjectIdentity($alias, ProxyRepositoryInterface::class))) {
                     throw $this->createAccessDeniedException();
                 }
             } else {
