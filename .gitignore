@@ -9,3 +9,8 @@
 /vendor/
 ###< symfony/framework-bundle ###
 /book/
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###
