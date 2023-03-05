@@ -131,8 +131,11 @@ HELP
 
         if ($input->hasOption('password')) {
             $io->writeln("Creating a user {$username}...");
-            $password = $io->askHidden('Enter password');
-            $input->setOption('password', $password);
+
+            if (empty($input->getOption('password'))) {
+                $password = $io->askHidden('Enter password');
+                $input->setOption('password', $password);
+            }
         }
 
         $password = $input->getOption('password') ?: hash('sha512', random_bytes(50));

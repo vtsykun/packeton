@@ -52,7 +52,7 @@ class Kernel extends BaseKernel
         $container->import($configDir.'/{packages}/*.yaml');
         $container->import($configDir.'/{packages}/'.$this->environment.'/*.yaml');
 
-        if (class_exists(WebProfilerBundle::class)) {
+        if (class_exists(WebProfilerBundle::class) && $this->environment !== 'test') {
             $container->import($configDir.'/{packages}/withdev/*.yaml');
         }
     }
@@ -62,7 +62,7 @@ class Kernel extends BaseKernel
         $this->traitConfigureRoutes($routes);
 
         $configDir = $this->getConfigDir();
-        if (class_exists(WebProfilerBundle::class)) {
+        if (class_exists(WebProfilerBundle::class) && $this->environment !== 'test') {
             $routes->import($configDir.'/{routes}/withdev/*.yaml');
         }
     }
