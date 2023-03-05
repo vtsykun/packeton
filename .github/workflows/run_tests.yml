@@ -1,0 +1,43 @@
+name: "Run Tests"
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+    branches:
+      - master
+  pull_request:
+
+env:
+  APP_ENV: test
+
+jobs:
+  tests:
+    name: "Tests"
+    runs-on: ubuntu-20.04
+    
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+      
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: "none"
+          extensions: "intl, zip, redis"
+          php-version: "8.1"
+          tools: composer
+      
+      - name: "Install dependencies"
+        uses: "ramsey/composer-install@v2"
+        with:
+          composer-options: "--ansi --no-interaction"
+      
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.2.0
+        with:
+          redis-version: 6
+      
+      - name: "Run tests"
+        run: "composer tests"

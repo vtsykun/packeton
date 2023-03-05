@@ -196,7 +196,7 @@ class WebController extends AbstractController
      */
     protected function getFilteredOrderedBys(Request $req)
     {
-        $orderBys = $req->query->get('orderBys', []);
+        $orderBys = $req->query->get('orderBys') ?: [];
         if (!$orderBys) {
             $orderBys = $req->query->get('search_query');
             $orderBys = $orderBys['orderBys'] ?? [];

@@ -1,0 +1,6 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/Phpunit/ErrorHandler.php';
+
+include dirname(__DIR__) . '/vendor/bin/phpunit';
