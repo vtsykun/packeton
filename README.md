@@ -1,9 +1,9 @@
 Packeton - Private PHP package repository for vendors
 ======================================================
 
-[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/packeton/packeton)
-[![Docker pulls](https://img.shields.io/docker/pulls/okvpn/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/packeton/packeton)
-[![Docker stars](https://img.shields.io/docker/stars/okvpn/packeton.svg?label=docker+stars)](https://hub.docker.com/r/packeton/packeton)
+[![Run Tests](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml/badge.svg)](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml)
+[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
+[![Docker pulls](https://img.shields.io/docker/pulls/packeton/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/packeton/packeton)
 [![License](http://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
 
 Fork of [Packagist](https://github.com/composer/packagist). 
