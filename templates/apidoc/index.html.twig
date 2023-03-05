@@ -1,6 +1,13 @@
 {% extends "layout.html.twig" %}
 {% block content %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.17/swagger-ui.min.css">
+    {{ parent() }}
+
+    <script id="swagger-data" type="application/json">{{ swagger_data|json_encode(65)|raw }}</script>
+{% endblock %}
+
 <h2 class="title">{{ 'api_doc.title'|trans }}</h2>
 
 <ul class="toc">
@@ -13,6 +20,7 @@
   </li>
   <li><a href="#list-changelog">{{ 'api_doc.changelog_name'|trans }}</a></li>
   <li><a href="#get-package-data">{{ 'api_doc.get_package_data'|trans }}</a></li>
+  <li><a href="#swagger-ui">Swagger</a></li>
 </ul>
 {% set apiToken = get_api_token(app.user)|default('<api_token>') %}
 {% set packagist_url = app.request.getSchemeAndHttpHost() %}
@@ -152,4 +160,24 @@ GET {{ packagist_url }}/packages/[vendor]/[package].json?token={{ apiToken }}
 
 </section>
 
+<div id="swagger-ui">
+    <h2 id="swagger-docs">Swagger Docs</h2>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.17/swagger-ui-bundle.min.js"></script>
+
+    <script nonce="{{ csp_nonce('script') }}">
+        (function () {
+            const data = JSON.parse(document.getElementById('swagger-data').innerText);
+            window.onload = () => {
+                window.ui = SwaggerUIBundle({
+                    spec: data,
+                    dom_id: '#swagger-ui',
+                });
+            };
+        })();
+    </script>
 {% endblock %}

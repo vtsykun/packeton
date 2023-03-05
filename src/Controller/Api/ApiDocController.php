@@ -10,11 +10,14 @@
  * file that was distributed with this source code.
  */
 
-namespace Packeton\Controller;
+namespace Packeton\Controller\Api;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Version;
+use Packeton\Service\SwaggerDumper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -24,11 +27,13 @@ use Symfony\Component\Routing\Annotation\Route;
 class ApiDocController extends AbstractController
 {
     public function __construct(
-        protected ManagerRegistry $registry
-    ){}
+        protected ManagerRegistry $registry,
+        protected SwaggerDumper $swagger,
+    ){
+    }
 
-    #[Route('/apidoc', name: 'api_doc')]
-    public function indexAction(): Response
+    #[Route('/apidoc.{_format}', name: 'api_doc', defaults: ['_format' => 'html'])]
+    public function indexAction(Request $req): Response
     {
         $qb = $this->registry->getRepository(Version::class)
             ->createQueryBuilder('v');
@@ -44,8 +49,14 @@ class ApiDocController extends AbstractController
             $examplePackage = 'monolog/monolog';
         }
 
+        $OAS = $this->swagger->dump(['{{ package }}' => $examplePackage]);
+        if ($req->getRequestFormat() === 'json') {
+            return new JsonResponse($OAS);
+        }
+
         return $this->render('apidoc/index.html.twig', [
-            'examplePackage' => $examplePackage
+            'examplePackage' => $examplePackage,
+            'swagger_data' => $OAS,
         ]);
     }
 }

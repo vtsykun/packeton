@@ -1,0 +1,35 @@
+openapi: '3.0.2'
+
+info:
+    title: 'Packeton Swagger OpenAPI'
+
+tags:
+    name: 'users'
+    description: 'Customer Users'
+
+paths:
+    '/api/users':
+        put:
+            tags: [ users ]
+            summary: 'Update an existing user'
+            example: $User
+
+        post:
+            tags: [ users ]
+            summary: 'Update an existing user 2'
+            example: $User
+
+        delete:
+            tags: [ users ]
+            summary: 'Update an existing user 2'
+
+#    github_postreceive:
+#        tags: [ users ]
+#        summary: 'Update an existing pet'
+
+examples:
+    User: |
+        {
+          "id": 10,
+          "groups": [1,10, 18]
+        }
