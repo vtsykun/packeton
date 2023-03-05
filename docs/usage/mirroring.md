@@ -1,6 +1,6 @@
 # Mirroring and Composer proxies
 
-Packeton can function as a proxy for the Composer repository, including requiring an authorization.
+Packeton can function as a proxy for the Composer repository, including which require authentication.
 This feature can be used to grant all developers and clients access to private repositories such as Magento.
 Additionally, it is possible to create ZIP archives from mirrored Git repositories of packages, in cases where HTTP dist
 is unavailable.
