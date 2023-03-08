@@ -2,34 +2,109 @@ openapi: '3.0.2'
 
 info:
     title: 'Packeton Swagger OpenAPI'
+    description: |
+        <b>Info</b> For basic authorizations use api token instead of password <br>
 
+
+components:
+    securitySchemes:
+        BasicAuth:
+            type: http
+            scheme: basic
+
+security:
+    - BasicAuth: []
 tags:
-    name: 'users'
-    description: 'Customer Users'
+    - name: "Users"
+      description: "Customer Users"
+    - name: "Groups"
+      description: "ACL user croups"
+
+x-cget-param: &cget-param
+    parameters:
+        -   name: "page"
+            in: "query"
+
+x-get-param: &get-param
+    parameters:
+        -   name: "id"
+            in: "path"
+            required: true
+            type: "integer"
+            format: "int64"
 
 paths:
     '/api/users':
-        put:
-            tags: [ users ]
-            summary: 'Update an existing user'
-            example: $User
+        get:
+            tags: [ Users ]
+            summary: 'Get customer users'
+            <<: *cget-param
 
         post:
-            tags: [ users ]
-            summary: 'Update an existing user 2'
+            tags: [ Users ]
+            summary: 'Create customer user'
             example: $User
 
-        delete:
-            tags: [ users ]
-            summary: 'Update an existing user 2'
+    '/api/user/{id}':
+        get:
+            tags: [ Users ]
+            summary: 'View user'
+            <<: *get-param
 
-#    github_postreceive:
-#        tags: [ users ]
-#        summary: 'Update an existing pet'
+        put:
+            tags: [ Users ]
+            summary: 'Update an existing user'
+            example: $User
+            <<: *get-param
+
+        delete:
+            tags: [ Users ]
+            summary: 'Delete customer user'
+            <<: *get-param
+    
+    '/api/groups':
+        get:
+            tags: [ Groups ]
+            summary: 'Get ACL user groups'
+            <<: *cget-param
+    
+        post:
+            tags: [ Groups ]
+            summary: 'Create ACL group'
+            example: $Groups
+
+    '/api/group/{id}':
+        get:
+            tags: [ Groups ]
+            summary: 'View group data'
+            <<: *get-param
+    
+        put:
+            tags: [ Groups ]
+            summary: 'Update group'
+            example: $Groups
+            <<: *get-param
+    
+        delete:
+            tags: [ Groups ]
+            summary: 'Delete group'
+            <<: *get-param
 
 examples:
     User: |
-        {
-          "id": 10,
-          "groups": [1,10, 18]
-        }
+      {
+          "username": "customer2",
+          "enabled": true,
+          "expiresAt": "2030-01-31",
+          "expiredUpdatesAt": "2030-01-31",
+          "fullAccess": false,
+          "groups": [1]
+      }
+
+    Groups: |
+      {
+          "name": "Ambe Packages",
+          "aclPermissions": [
+              "{{ package }}"
+          ]
+      }

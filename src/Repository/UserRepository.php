@@ -13,6 +13,7 @@
 namespace Packeton\Repository;
 
 use Doctrine\ORM\EntityRepository;
+use Packeton\Entity\Group;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 
@@ -54,5 +55,28 @@ class UserRepository extends EntityRepository
         }
 
         return $qb;
+    }
+
+    public function getApiData(User $user): array
+    {
+        $repo =  $this->getEntityManager()->getRepository(Group::class);
+
+        return [
+            'id' => $user->getId(),
+            'username' => $user->getUserIdentifier(),
+            'email' => $user->getEmailCanonical(),
+            'enabled' => $user->isEnabled(),
+            'createdAt' => $user->getCreatedAt(),
+            'expireAt' => $user->getExpiresAt(),
+            'expiredUpdatesAt' => $user->getExpiredUpdatesAt(),
+            'apiToken' => $user->getApiToken(),
+            'roles' => $user->getRoles(),
+            'groups' => $user->getGroups()->map(fn($g) => $g->getId())->toArray(),
+            'allowedPackages' => $repo->getAllowedPackagesForUser($user, 1),
+            'allowedProxies' => $repo->getAllowedProxies($user),
+            'isMaintainer' => $user->isMaintainer(),
+            'gravatarUrl' => $user->getGravatarUrl(),
+            'fullAccess' => $user->isMaintainer() || $user->hasRole('ROLE_FULL_CUSTOMER')
+        ];
     }
 }

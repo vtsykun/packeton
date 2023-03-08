@@ -167,16 +167,32 @@ GET {{ packagist_url }}/packages/[vendor]/[package].json?token={{ apiToken }}
 {% endblock %}
 
 {% block scripts %}
+    {% set apiToken = get_api_token(app.user, false)|default('api_token') %}
+    {% set username = app.user ? app.user.userIdentifier : '' %}
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.17/swagger-ui-bundle.min.js"></script>
 
     <script nonce="{{ csp_nonce('script') }}">
         (function () {
             const data = JSON.parse(document.getElementById('swagger-data').innerText);
             window.onload = () => {
-                window.ui = SwaggerUIBundle({
+                const ui = SwaggerUIBundle({
                     spec: data,
                     dom_id: '#swagger-ui',
+                    securityDefinitions: {
+                        JWT: {
+                            type: "apiKey",
+                            description: "",
+                            name: "Authorization",
+                            in: "header"
+                        }
+                    },
+                    onComplete: () => {
+                        // "basicAuth" is the key name of the security scheme in securityDefinitions
+                        ui.preauthorizeBasic("BasicAuth", "{{ username }}", "{{ apiToken }}");
+                    }
                 });
+
+                window.ui = ui;
             };
         })();
     </script>

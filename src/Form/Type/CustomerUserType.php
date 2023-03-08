@@ -15,6 +15,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class CustomerUserType extends AbstractType
 {
@@ -24,8 +25,8 @@ class CustomerUserType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('email', EmailType::class)
-            ->add('username', null)
+            ->add('email', EmailType::class, ['required' => false])
+            ->add('username', null, ['constraints' => [new NotBlank()]])
             ->add('enabled', CheckboxType::class, ['required' => false])
             ->add('plainPassword', RepeatedType::class, [
                 'required' => false,
@@ -80,7 +81,7 @@ class CustomerUserType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'data_class' => User::class
+            'data_class' => User::class,
         ]);
     }
 }

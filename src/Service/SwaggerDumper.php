@@ -28,13 +28,47 @@ class SwaggerDumper
         }
 
         $spec = $this->wrapExamples($spec);
+        $spec = $this->wrapResponse($spec);
 
         if ($replacement) {
             $template = json_encode($spec, \JSON_UNESCAPED_SLASHES);
-            str_replace(array_keys($replacement), array_values($replacement), $template);
+            $template = str_replace(array_keys($replacement), array_values($replacement), $template);
             $spec = json_decode($template, true);
         }
 
+        return $spec;
+    }
+
+    protected function wrapResponse(array $spec): array
+    {
+        $paths = $spec['paths'] ?? [];
+        foreach ($paths as $path => $resources) {
+            if (!is_array($resources)) {
+                continue;
+            }
+            foreach ($resources as $name => $resource) {
+                if (isset($resource['responses'])) {
+                    continue;
+                }
+
+                $resource['responses'] = [
+                    '200' => ['description' => 'Successful operation'],
+                    '400' => ['description' => 'Bad request'],
+                ];
+                if ($name !== 'get') {
+                    $resource['responses']['401'] = ['description' => 'Basic authorization with api_token required'];
+                }
+                if ($name === 'post') {
+                    $resource['responses']['201'] = ['description' => 'Successful created'];
+                }
+                if ($name === 'put' || $name === 'delete') {
+                    $resource['responses']['204'] = ['description' => 'Successful operation'];
+                }
+                $resources[$name] = $resource;
+            }
+            $paths[$path] = $resources;
+        }
+        $spec['paths'] = $paths;
         return $spec;
     }
 

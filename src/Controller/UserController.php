@@ -145,7 +145,7 @@ class UserController extends AbstractController
         }
 
         $paginator = new Pagerfanta(new QueryAdapter($qb, false));
-        $paginator->setMaxPerPage(6);
+        $paginator->setMaxPerPage(10);
 
         $csrfForm = $this->createFormBuilder([])->getForm();
         $paginator->setCurrentPage((int)$page);
