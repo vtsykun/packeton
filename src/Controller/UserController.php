@@ -20,6 +20,7 @@ use Packeton\Attribute\Vars;
 use Packeton\Entity\Package;
 use Packeton\Entity\SshCredentials;
 use Packeton\Entity\User;
+use Packeton\Form\Handler\UserFormHandler;
 use Packeton\Form\Type\ChangePasswordFormType;
 use Packeton\Form\Type\CustomerUserType;
 use Packeton\Form\Type\ProfileFormType;
@@ -53,6 +54,7 @@ class UserController extends AbstractController
         protected ManagerRegistry $registry,
         protected FavoriteManager $favoriteManager,
         protected DownloadManager $downloadManager,
+        protected UserFormHandler $formHandler,
     ){
     }
 
@@ -145,7 +147,7 @@ class UserController extends AbstractController
         }
 
         $paginator = new Pagerfanta(new QueryAdapter($qb, false));
-        $paginator->setMaxPerPage(6);
+        $paginator->setMaxPerPage(10);
 
         $csrfForm = $this->createFormBuilder([])->getForm();
         $paginator->setCurrentPage((int)$page);
@@ -181,23 +183,9 @@ class UserController extends AbstractController
     protected function handleUpdate(Request $request, User $user, $flashMessage)
     {
         $form = $this->createForm(CustomerUserType::class, $user);
+
         if ($request->getMethod() === 'POST') {
-            $form->handleRequest($request);
-            if ($form->isSubmitted() && $form->isValid()) {
-                /** @var User $user */
-                $user = $form->getData();
-                if ($planPassword = $user->getPlainPassword()) {
-                    $user->setPassword(
-                        $this->container->get(UserPasswordHasherInterface::class)->hashPassword($user, $planPassword)
-                    );
-                }
-
-                $form->get('fullAccess')->getData() ? $user->addRole('ROLE_FULL_CUSTOMER') :
-                    $user->removeRole('ROLE_FULL_CUSTOMER');
-
-                $this->getEM()->persist($user);
-                $this->getEM()->flush();
-
+            if ($this->formHandler->handle($request, $form)) {
                 $this->addFlash('success', $flashMessage);
                 return new RedirectResponse($this->generateUrl('users_list'));
             }

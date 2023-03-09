@@ -9,6 +9,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class GroupType extends AbstractType
 {
@@ -25,7 +26,7 @@ class GroupType extends AbstractType
         $proxyChoice = \array_combine($proxyChoice, $proxyChoice);
 
         $builder
-            ->add('name', TextType::class, ['label' => 'Name']);
+            ->add('name', TextType::class, ['label' => 'Name', 'constraints' => [new NotBlank()]]);
 
         if ($proxyChoice) {
             $builder

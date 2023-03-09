@@ -8,6 +8,7 @@ use Packeton\Entity\Group;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Symfony\Component\Security\Core\User\UserInterface;
+use function Symfony\Component\String\b;
 
 /**
  * GruopRepository
@@ -48,11 +49,11 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
 
     /**
      * @param User|UserInterface $user
-     * @param bool $hydration
+     * @param bool $hydration flags
      *
      * @return Package[]
      */
-    public function getAllowedPackagesForUser(?UserInterface $user, bool $hydration = true)
+    public function getAllowedPackagesForUser(?UserInterface $user, bool|int $hydration = true)
     {
         if (!$user instanceof User) {
             return [];
@@ -70,17 +71,31 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             ->setParameter('uid', $user->getId());
 
         $result = $qb->getQuery()->getResult();
-        if ($hydration && $result) {
+        if (empty($result)) {
+            return [];
+        }
+
+        $result = array_column($result, 'id');
+        if (true === $hydration) {
             $qb = $this->getEntityManager()->createQueryBuilder();
             $qb->select('p')
                 ->from(Package::class, 'p')
                 ->where('p.id IN (:ids)')
-                ->setParameter('ids', array_column($result, 'id'));
+                ->setParameter('ids', $result);
 
             return $qb->getQuery()->getResult();
         }
+        $hydration = (int)$hydration;
+        if ($hydration & 1) {
+            $qb = $this->getEntityManager()->createQueryBuilder();
+            $qb->select('p.name')
+                ->from(Package::class, 'p')
+                ->where('p.id IN (:ids)')
+                ->setParameter('ids', $result);
+            return $qb->getQuery()->getSingleColumnResult();
+        }
 
-        return $result ? array_column($result, 'id') : [];
+        return $result;
     }
 
     public function getGroupsData(Group|int $group): array
@@ -100,6 +115,15 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         $packages = array_column($result, 'name');
 
         return ['packages' => $packages];
+    }
+
+    public function getApiData(Group $group)
+    {
+        return [
+            'id' => $group->getId(),
+            'name' => $group->getName(),
+            'proxies' => $group->getProxies(),
+        ] + $this->getGroupsData($group);
     }
 
     public function getAllowedProxies(?UserInterface $user)
