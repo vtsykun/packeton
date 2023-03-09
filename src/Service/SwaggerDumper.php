@@ -23,7 +23,7 @@ class SwaggerDumper
         foreach ($list as $file) {
             $spec = array_merge_recursive(
                 $spec,
-                Yaml::parse(file_get_contents($this->swaggerDocsDir . '/' . $file))
+                Yaml::parse(file_get_contents($this->swaggerDocsDir . '/' . $file)) ?: []
             );
         }
 

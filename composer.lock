@@ -3119,16 +3119,16 @@
         },
         {
             "name": "okvpn/cron-bundle",
-            "version": "0.2.4",
+            "version": "0.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vtsykun/cron-bundle.git",
-                "reference": "b3a5928914887f88fea0709b812bc5b3d502b1c9"
+                "reference": "8be098eefabee8e8f4c222feb0eb144a033f1677"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vtsykun/cron-bundle/zipball/b3a5928914887f88fea0709b812bc5b3d502b1c9",
-                "reference": "b3a5928914887f88fea0709b812bc5b3d502b1c9",
+                "url": "https://api.github.com/repos/vtsykun/cron-bundle/zipball/8be098eefabee8e8f4c222feb0eb144a033f1677",
+                "reference": "8be098eefabee8e8f4c222feb0eb144a033f1677",
                 "shasum": ""
             },
             "require": {
@@ -3162,7 +3162,7 @@
                     "email": "tsykun314@gmail.com"
                 }
             ],
-            "description": "Symfony cron bundle for handle scheduled tasks consistently, parallel or across a cluster, like Symfony Messenger",
+            "description": "Docker friendly Symfony cron bundle for handle scheduled tasks consistently, parallel or across a cluster, like Symfony Messenger",
             "homepage": "https://github.com/vtsykun/cron-bundle",
             "keywords": [
                 "Messenger",
@@ -3182,7 +3182,7 @@
                 "issues": "https://github.com/vtsykun/cron-bundle/issues",
                 "source": "https://github.com/vtsykun/cron-bundle/releases"
             },
-            "time": "2023-02-20T14:40:11+00:00"
+            "time": "2023-03-05T23:26:40+00:00"
         },
         {
             "name": "oro/doctrine-extensions",

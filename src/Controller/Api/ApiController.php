@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Controller;
+namespace Packeton\Controller\Api;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
+use Packeton\Controller\ControllerTrait;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
@@ -15,10 +16,10 @@ use Packeton\Service\Scheduler;
 use Packeton\Webhook\HookBus;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -62,13 +63,14 @@ class ApiController extends AbstractController
             $em = $this->registry->getManager();
             $em->persist($package);
             $em->flush();
-
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), ['exception', $e]);
             return new JsonResponse(['status' => 'error', 'message' => 'Error saving package'], 500);
         }
 
-        return new JsonResponse(['status' => 'success'], 202);
+        $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
+
+        return new JsonResponse(['status' => 'success', 'job' => $job->getId()], 202);
     }
 
     #[Route('/api/github', name: 'github_postreceive')]

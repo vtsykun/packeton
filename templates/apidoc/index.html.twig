@@ -178,14 +178,6 @@ GET {{ packagist_url }}/packages/[vendor]/[package].json?token={{ apiToken }}
                 const ui = SwaggerUIBundle({
                     spec: data,
                     dom_id: '#swagger-ui',
-                    securityDefinitions: {
-                        JWT: {
-                            type: "apiKey",
-                            description: "",
-                            name: "Authorization",
-                            in: "header"
-                        }
-                    },
                     onComplete: () => {
                         // "basicAuth" is the key name of the security scheme in securityDefinitions
                         ui.preauthorizeBasic("BasicAuth", "{{ username }}", "{{ apiToken }}");
