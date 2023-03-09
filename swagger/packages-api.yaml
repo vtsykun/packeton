@@ -67,7 +67,7 @@ paths:
                     schema:
                         type: array
                         items:
-                            type: string # 36dfc8e855b3f0880c009adc78b50331e95c8984
+                            type: string
 
     '/api/packages/{name}':
         get:
