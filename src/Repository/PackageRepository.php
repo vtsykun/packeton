@@ -47,6 +47,10 @@ class PackageRepository extends EntityRepository
             ->resetDQLPart('select')
             ->select('p.name');
 
+        if (is_array($allowed) && empty($allowed)) {
+            return [];
+        }
+
         if ($allowed) {
             $query->where('p.id IN (:ids)')->setParameter('ids', $allowed);
         }
