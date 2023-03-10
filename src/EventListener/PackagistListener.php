@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\EventListener;
 
+use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
+use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostLoadEventArgs;
@@ -12,11 +14,16 @@ use Packeton\Entity\GroupAclPermission;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Event\FormHandlerEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
-class DoctrineListener
+#[AsEventListener(event: 'formHandler')]
+#[AsDoctrineListener(event: 'onFlush')]
+#[AsEntityListener(event: 'postLoad', entity: 'Packeton\Entity\Version')]
+class PackagistListener
 {
     private static $trackLastModifyClasses = [
         GroupAclPermission::class => true,
@@ -64,10 +71,17 @@ class DoctrineListener
 
         foreach ($changes as $object) {
             $class = ClassUtils::getClass($object);
-            if (isset(self::$trackLastModifyClasses[$class])) {
+            if (isset(static::$trackLastModifyClasses[$class])) {
                 $this->providerManager->setRootLastModify();
                 return;
             }
+        }
+    }
+
+    public function onFormHandler(FormHandlerEvent $event): void
+    {
+        if (isset(static::$trackLastModifyClasses[$event->getEntityClass()])) {
+            $this->providerManager->setRootLastModify();
         }
     }
 }

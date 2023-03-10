@@ -128,11 +128,6 @@ services:
             $consoleHandler: '@?monolog.handler.console'
             $scheduleRunner: '@okvpn_cron.runner_default'
 
-    Packeton\EventListener\DoctrineListener:
-        tags:
-            - { name: doctrine.orm.entity_listener, event: postLoad, entity: Packeton\Entity\Version }
-            - { name: doctrine.event_listener, event: onFlush }
-
     Packeton\Webhook\EventListener\HookListener:
         tags:
             - { name: kernel.event_listener, event: packageRefresh }

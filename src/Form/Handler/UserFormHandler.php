@@ -6,15 +6,18 @@ namespace Packeton\Form\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;
+use Packeton\Event\FormHandlerEvent;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class UserFormHandler
 {
     public function __construct(
         protected UserPasswordHasherInterface $passwordHasher,
         protected ManagerRegistry $registry,
+        protected EventDispatcherInterface $dispatcher
     ){
     }
 
@@ -47,6 +50,9 @@ class UserFormHandler
 
             $em->persist($user);
             $em->flush();
+
+            $this->dispatcher->dispatch(new FormHandlerEvent($form, User::class), FormHandlerEvent::NAME);
+
             return true;
         }
 
