@@ -13,7 +13,6 @@
 namespace Packeton\Package;
 
 use cebe\markdown\GithubMarkdown;
-use Composer\Factory;
 use Composer\Package\Archiver\ArchiveManager;
 use Composer\Package\AliasPackage;
 use Composer\Package\CompletePackageInterface;
@@ -27,9 +26,11 @@ use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
 use Composer\Config;
 use Composer\IO\IOInterface;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
+use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Author;
 use Packeton\Entity\Package;
 use Packeton\Entity\Tag;
@@ -38,21 +39,16 @@ use Packeton\Entity\SuggestLink;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
-use Doctrine\DBAL\Connection;
+use Packeton\Util\PacketonUtils;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class Updater
+class Updater implements UpdaterInterface
 {
     const UPDATE_EQUAL_REFS = 1;
     const DELETE_BEFORE = 2;
-
-    /**
-     * @var ArchiveManager
-     */
-    protected $archiveManager;
 
     /**
      * Supported link types
@@ -92,16 +88,15 @@ class Updater
     }
 
     /**
-     * Update a project
-     *
-     * @param IOInterface $io
-     * @param Config $config
-     * @param \Packeton\Entity\Package $package
-     * @param RepositoryInterface $repository the repository instance used to update from
-     * @param int $flags a few of the constants of this class
-     * @param \DateTime $start
-     *
-     * @return Package
+     * {@inheritdoc}
+     */
+    public static function supportRepoTypes(): iterable
+    {
+        return ['vcs'];
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, \DateTime $start = null): Package
     {
@@ -117,43 +112,18 @@ class Updater
 
         /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
-        $rootIdentifier = null;
+        $rootIdentifier = $archiveManager = null;
 
-        $downloadManager = $this->packagistFactory->createDownloadManager($io, $repository);
-        $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository, $downloadManager);
-        $archiveManager->setOverwriteFiles(false);
+        if ($repository instanceof PacketonRepositoryInterface) {
+            $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository);
+            $archiveManager->setOverwriteFiles(false);
+        }
 
         if ($repository instanceof VcsRepository) {
             $rootIdentifier = $repository->getDriver()->getRootIdentifier();
         }
 
-        $versions = $repository->getPackages();
-        usort($versions, function (PackageInterface $a, PackageInterface $b) {
-            $aVersion = $a->getVersion();
-            $bVersion = $b->getVersion();
-            if ($aVersion === '9999999-dev' || str_starts_with($aVersion, 'dev-')) {
-                $aVersion = 'dev';
-            }
-            if ($bVersion === '9999999-dev' || str_starts_with($bVersion, 'dev-')) {
-                $bVersion = 'dev';
-            }
-            $aIsDev = $aVersion === 'dev' || str_ends_with($aVersion, '-dev');
-            $bIsDev = $bVersion === 'dev' || str_ends_with($bVersion, '-dev');
-
-            // push dev versions to the end
-            if ($aIsDev !== $bIsDev) {
-                return $aIsDev ? 1 : -1;
-            }
-
-            // equal versions are sorted by date
-            if ($aVersion === $bVersion) {
-                return $a->getReleaseDate() > $b->getReleaseDate() ? 1 : -1;
-            }
-
-            // the rest is sorted by version
-            return version_compare($aVersion, $bVersion);
-        });
-
+        $versions = PacketonUtils::sort($repository->getPackages());
         $versionRepository = $this->doctrine->getRepository(Version::class);
 
         if ($flags & self::DELETE_BEFORE) {
@@ -222,7 +192,7 @@ class Updater
         $em->getConnection()->executeStatement(
             'UPDATE package_version SET updatedAt = :now, softDeletedAt = NULL WHERE id IN (:ids)',
             ['now' => date('Y-m-d H:i:s'), 'ids' => $idsToMarkUpdated],
-            ['ids' => Connection::PARAM_INT_ARRAY]
+            ['ids' => ArrayParameterType::INTEGER]
         );
 
         // remove outdated versions
@@ -256,10 +226,14 @@ class Updater
             $versionRepository->remove($version);
         }
 
-        if (preg_match('{^(?:git://|git@|https?://)github.com[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match) && $repository instanceof VcsRepository) {
-            $this->updateGitHubInfo($rfs, $package, $match[1], $match[2], $repository);
-        } else {
-            $this->updateReadme($io, $package, $repository);
+        if ($repository instanceof VcsRepository) {
+            $isUpdated = false;
+            if (preg_match('{^(?:git://|git@|https?://)github.com[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match)) {
+                $isUpdated = $this->updateGitHubInfo($rfs, $package, $match[1], $match[2], $repository);
+            }
+            if (false === $isUpdated) {
+                $this->updateReadme($io, $package, $repository);
+            }
         }
 
         if ($stabilityVersionUpdated !== 0) {
@@ -278,7 +252,7 @@ class Updater
             $this->providerManager->getPackageNames(true);
         }
 
-        if ($repository->hadInvalidBranches()) {
+        if ($repository instanceof VcsRepository && $repository->hadInvalidBranches()) {
             throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
         }
 
@@ -286,15 +260,7 @@ class Updater
     }
 
     /**
-     * @param ArchiveManager $archiveManager
-     */
-    public function setArchiveManager(ArchiveManager $archiveManager)
-    {
-        $this->archiveManager = $archiveManager;
-    }
-
-    /**
-     * @param ArchiveManager $archiveManager
+     * @param ArchiveManager|null $archiveManager
      * @param Package $package
      * @param array $existingVersions
      * @param PackageInterface|CompletePackageInterface $data
@@ -308,7 +274,7 @@ class Updater
      *                    - object (Version instance if it was updated)
      */
     private function updateInformation(
-        ArchiveManager $archiveManager,
+        ?ArchiveManager $archiveManager,
         Package $package,
         array $existingVersions,
         PackageInterface $data,
@@ -562,19 +528,19 @@ class Updater
     }
 
     /**
-     * @param ArchiveManager $archiveManager
+     * @param ArchiveManager|null $archiveManager
      * @param PackageInterface|CompletePackageInterface $data
      *
      * @return array|null
      */
-    private function updateArchive(ArchiveManager $archiveManager, PackageInterface $data): ?array
+    private function updateArchive(?ArchiveManager $archiveManager, PackageInterface $data): ?array
     {
         if ($this->distConfig->isEnable() === false) {
             return null;
         }
 
-        if (false === $this->distConfig->isLazy()) {
-            $fileName= $this->distConfig->getFileName(
+        if (false === $this->distConfig->isLazy() && $archiveManager !== null) {
+            $fileName = $this->distConfig->getFileName(
                 $data->getSourceReference(),
                 $data->getVersion()
             );
@@ -664,23 +630,19 @@ class Updater
         }
     }
 
-    private function updateGitHubInfo(RemoteFilesystem $rfs, Package $package, $owner, $repo, VcsRepository $repository)
+    private function updateGitHubInfo(RemoteFilesystem $rfs, Package $package, $owner, $repo, VcsRepository $repository): bool
     {
         $baseApiUrl = 'https://api.github.com/repos/'.$owner.'/'.$repo;
-
-        $driver = $repository->getDriver();
-        if (!$driver instanceof GitHubDriver) {
-            return;
+        if ($package->getSubDirectory()) {
+            $baseApiUrl .= '/' . trim($package->getSubDirectory(), '/');
         }
-
-        $repoData = $driver->getRepoData();
 
         try {
             $opts = ['http' => ['header' => ['Accept: application/vnd.github.v3.html']]];
             $readme = $rfs->getContents('github.com', $baseApiUrl.'/readme', false, $opts);
         } catch (\Exception $e) {
             if (!$e instanceof \Composer\Downloader\TransportException || $e->getCode() !== 404) {
-                return;
+                return false;
             }
             // 404s just mean no readme present so we proceed with the rest
         }
@@ -689,6 +651,12 @@ class Updater
             $package->setReadme($this->prepareReadme($readme, true, $owner, $repo));
         }
 
+        $driver = $repository->getDriver();
+        if (!$driver instanceof GitHubDriver) {
+            return true;
+        }
+
+        $repoData = $driver->getRepoData();
         if (!empty($repoData['language'])) {
             $package->setLanguage($repoData['language']);
         }
@@ -704,6 +672,8 @@ class Updater
         if (isset($repoData['open_issues_count'])) {
             $package->setGitHubOpenIssues($repoData['open_issues_count']);
         }
+
+        return true;
     }
 
     /**

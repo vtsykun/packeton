@@ -54,9 +54,7 @@ class InMemoryDumper
     public function dumpPackage(?UserInterface $user, $package, array $versionData = null): array
     {
         if (is_string($package)) {
-            $package = $this->registry
-                ->getRepository(Package::class)
-                ->findOneBy(['name' => $package]);
+            $package = $this->registry->getRepository(Package::class)->findOneByName($package);
         }
 
         if (!$package instanceof Package) {
@@ -78,10 +76,12 @@ class InMemoryDumper
         $versionRepo = $this->registry->getRepository(Version::class);
         $versionData = $versionData === null ? $versionRepo->getVersionData(\array_keys($versionIds)) : $versionData;
         foreach ($versionIds as $version) {
-            $packageData[$version->getVersion()] = \array_merge(
-                $version->toArray($versionData),
-                ['uid' => $version->getId()]
-            );
+            $data = $version->toArray($versionData);
+            if (!$package->isSourceEnabled()) {
+                unset($data['source']);
+            }
+
+            $packageData[$version->getVersion()] = \array_merge($data, ['uid' => $version->getId()]);
         }
 
         return $packageData;

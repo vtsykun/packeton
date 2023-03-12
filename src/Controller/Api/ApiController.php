@@ -19,6 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -153,6 +154,9 @@ class ApiController extends AbstractController
         $user = $this->getUser();
         if (!$package->getMaintainers()->contains($user) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException();
+        }
+        if (!$package->isUpdatable()) {
+            throw new NotFoundHttpException("Package is readonly");
         }
 
         $payload = $this->getJsonPayload($request);
@@ -333,6 +337,10 @@ class ApiController extends AbstractController
         $jobs = [];
 
         foreach ($packages as $package) {
+            if (false === $package->isUpdatable()) {
+                continue;
+            }
+
             $package->setAutoUpdated(true);
             $this->getEM()->flush($package);
 
@@ -362,6 +370,7 @@ class ApiController extends AbstractController
             if (\preg_match($urlRegex, $package->getRepository(), $candidate)
                 && \strtolower($candidate['host']) === \strtolower($matched['host'])
                 && \strtolower($candidate['path']) === \strtolower($matched['path'])
+                && $package->isUpdatable()
             ) {
                 $packages[] = $package;
             }

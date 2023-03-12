@@ -9,9 +9,9 @@ use Composer\Downloader\DownloadManager;
 use Composer\IO\IOInterface;
 use Composer\IO\NullIO;
 use Composer\Package\Archiver\ArchiveManager;
-use Composer\Repository\RepositoryInterface;
 use Composer\Util\Loop;
-use Packeton\Composer\Repository\VcsRepository;
+use Composer\Package\Archiver as CA;
+use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Composer\Util\ProcessExecutor;
 use Packeton\Model\CredentialsInterface;
@@ -19,16 +19,14 @@ use Packeton\Model\CredentialsInterface;
 class PackagistFactory
 {
     protected $tmpDir;
-    protected $githubNoApi;
-    protected $repositoryFactory;
     protected $factory;
 
-    public function __construct(VcsRepositoryFactory $repositoryFactory, bool $githubNoApi = null, string $composerHome = null)
-    {
-        $this->repositoryFactory = $repositoryFactory;
+    public function __construct(
+        protected PacketonRepositoryFactory $repositoryFactory,
+        protected bool $githubNoApi = true,
+        string $composerHome = null
+    ) {
         $this->tmpDir = $composerHome ?: sys_get_temp_dir();
-
-        $this->githubNoApi = $githubNoApi;
         if ($composerHome) {
             ConfigFactory::setHomeDir($composerHome);
         }
@@ -38,11 +36,11 @@ class PackagistFactory
 
     /**
      * @param IOInterface $io
-     * @param RepositoryInterface|VcsRepository $repository
+     * @param PacketonRepositoryInterface $repository
      *
      * @return \Composer\Downloader\DownloadManager
      */
-    public function createDownloadManager(IOInterface $io, RepositoryInterface $repository): DownloadManager
+    public function createDownloadManager(IOInterface $io, PacketonRepositoryInterface $repository): DownloadManager
     {
         return $this->factory->createDownloadManager(
             $io,
@@ -54,20 +52,29 @@ class PackagistFactory
 
     /**
      * @param Config $config
-     * @param RepositoryInterface|VcsRepository $repository
+     * @param PacketonRepositoryInterface $repository
      * @param DownloadManager|null $dm
      *
      * @return \Composer\Package\Archiver\ArchiveManager
      */
-    public function createArchiveManager(IOInterface $io, RepositoryInterface $repository, DownloadManager $dm = null): ArchiveManager
+    public function createArchiveManager(IOInterface $io, PacketonRepositoryInterface $repository, DownloadManager $dm = null): ArchiveManager
     {
-        $dm = $dm ?: $this->createDownloadManager($io, $repository);
+        $dm ??= $this->createDownloadManager($io, $repository);
+        $repoConfig = $repository->getRepoConfig();
 
-        return $this->factory->createArchiveManager(
-            $repository->getConfig(),
-            $dm,
-            new Loop($repository->getHttpDownloader(), $repository->getProcessExecutor())
-        );
+        $am = new Archiver\ArchiveManager($dm, new Loop($repository->getHttpDownloader(), $repository->getProcessExecutor()));
+        if (class_exists(\ZipArchive::class)) {
+            $am->addArchiver(new CA\ZipArchiver);
+        }
+        if (class_exists(\Phar::class)) {
+            $am->addArchiver(new CA\PharArchiver);
+        }
+
+        if (isset($repoConfig['subDirectory']) && $repoConfig['subDirectory']) {
+            $am->setSubDirectory($repoConfig['subDirectory']);
+        }
+
+        return $am;
     }
 
     /**
@@ -113,9 +120,9 @@ class PackagistFactory
      * @param CredentialsInterface|null $credentials
      * @param array $repoConfig
      *
-     * @return Repository\VcsRepository
+     * @return PacketonRepositoryInterface
      */
-    public function createRepository(string $url, IOInterface $io = null, Config $config = null, CredentialsInterface $credentials = null, array $repoConfig = [])
+    public function createRepository(string $url, IOInterface $io = null, Config $config = null, CredentialsInterface $credentials = null, array $repoConfig = []): PacketonRepositoryInterface
     {
         $io ??= new NullIO();
         if (null === $config) {
@@ -124,6 +131,10 @@ class PackagistFactory
         }
 
         $repoConfig['url'] = $url;
+        if (isset($repoConfig['subDirectory'])) {
+            $repoConfig['driver'] = 'git-tree';
+        }
+
         if (null !== $credentials || true === $this->githubNoApi) {
             // Disable API if used ssh key
             if (null === $credentials?->getComposerConfigOption('use-github-api') || !empty($credentials?->getKey())) {
@@ -131,6 +142,6 @@ class PackagistFactory
             }
         }
 
-        return $this->repositoryFactory->create($repoConfig, $io, $config);
+        return $this->repositoryFactory->create($repoConfig, $io, $config, $repoConfig['repoType'] ?? null);
     }
 }

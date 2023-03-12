@@ -15,7 +15,7 @@ use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 use Packeton\Composer\VcsDriverFactory;
 
-class VcsRepository extends ComposerVcsRepository
+class VcsRepository extends ComposerVcsRepository implements PacketonRepositoryInterface
 {
     protected $drivers;
 
@@ -29,6 +29,11 @@ class VcsRepository extends ComposerVcsRepository
     {
         parent::__construct($repoConfig, $io, $config, $httpDownloader, $dispatcher, $process, [], $versionCache);
         $this->driverFactory = $driverFactory;
+    }
+
+    public function setDriver(VcsDriverInterface $driver): void
+    {
+        $this->driver = $driver;
     }
 
     /**
@@ -46,39 +51,39 @@ class VcsRepository extends ComposerVcsRepository
             $this->config,
             $this->httpDownloader,
             $this->processExecutor,
-            $this->type,
+            $this->repoConfig['driver'] ?? $this->type,
             ['url' => $this->url]
         );
     }
 
     /**
-     * @return HttpDownloader
+     * {@inheritdoc}
      */
-    public function getHttpDownloader()
+    public function getHttpDownloader(): HttpDownloader
     {
         return $this->httpDownloader;
     }
 
     /**
-     * @return ProcessExecutor
+     * {@inheritdoc}
      */
-    public function getProcessExecutor()
+    public function getProcessExecutor(): ProcessExecutor
     {
         return $this->processExecutor;
     }
 
     /**
-     * @return Config
+     * {@inheritdoc}
      */
-    public function getConfig()
+    public function getConfig(): Config
     {
         return $this->config;
     }
 
     /**
-     * @return IOInterface
+     * {@inheritdoc}
      */
-    public function getIO()
+    public function getIO(): IOInterface
     {
         return $this->io;
     }

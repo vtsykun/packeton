@@ -524,7 +524,7 @@ class PackageController extends AbstractController
             return new JsonResponse(['status' => 'error', 'message' => 'Package not found'], 404);
         }
 
-        if ($package->isAbandoned() && $package->getReplacementPackage() === 'spam/spam') {
+        if (false === $package->isUpdatable()) {
             throw new NotFoundHttpException('This is a spam package');
         }
 
@@ -719,6 +719,9 @@ class PackageController extends AbstractController
     {
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
+        }
+        if (!$package->isUpdatable()) {
+            throw new NotFoundHttpException("Package is readonly");
         }
 
         $form = $this->createForm(PackageType::class, $package, [

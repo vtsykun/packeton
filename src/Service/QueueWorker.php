@@ -6,16 +6,19 @@ namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Exception\JobException;
+use Packeton\Model\ConsoleAwareInterface;
 use Packeton\Repository\JobRepository;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Packeton\Entity\Job;
 use Seld\Signal\SignalHandler;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class QueueWorker
+class QueueWorker implements ConsoleAwareInterface
 {
     private $processedJobs = 0;
     private $logResetter;
+    private $output;
 
     public function __construct(
         private readonly \Redis $redis,
@@ -28,9 +31,11 @@ class QueueWorker
     }
 
     /**
-     * @param string|int $count
+     * @param int $count
+     * @param bool $executeOnce
+     * @return void
      */
-    public function processMessages(int $count)
+    public function processMessages(int $count, bool $executeOnce = false): void
     {
         $signal = SignalHandler::create(null, $this->logger);
 
@@ -66,6 +71,9 @@ class QueueWorker
 
             if (!$result) {
                 $this->logger->debug('No message in queue');
+                if (true === $executeOnce) {
+                    return;
+                }
                 continue;
             }
 
@@ -126,6 +134,9 @@ class QueueWorker
         $this->logResetter->reset();
 
         $this->logger->debug('Processing ' . $job->getType() . ' job', ['job' => $job->getPayload()]);
+        if ($processor instanceof ConsoleAwareInterface) {
+            $processor->setOutput($this->output);
+        }
 
         try {
             $result = $processor($job, $signal);
@@ -144,6 +155,10 @@ class QueueWorker
                 'message' => 'An unexpected failure occurred',
                 'exception' => $e,
             ];
+        } finally {
+            if ($processor instanceof ConsoleAwareInterface) {
+                $processor->setOutput();
+            }
         }
 
         // If an exception is thrown during a transaction the EntityManager is closed
@@ -202,5 +217,13 @@ class QueueWorker
         $this->logger->popProcessor();
 
         return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setOutput(OutputInterface $output = null): void
+    {
+        $this->output = $output;
     }
 }

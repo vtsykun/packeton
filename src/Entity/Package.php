@@ -22,6 +22,8 @@ use Packeton\Repository\VersionRepository;
  */
 class Package
 {
+    use PackageSerializedTrait;
+
     /**
      * @ORM\Id
      * @ORM\Column(type="integer")
@@ -40,6 +42,11 @@ class Package
      * @ORM\Column(nullable=true)
      */
     private $type;
+
+    /**
+     * @ORM\Column(name="repo_type", type="string", length=32, nullable=true)
+     */
+    private $repoType;
 
     /**
      * @ORM\Column(type="text", nullable=true)
@@ -92,8 +99,6 @@ class Package
      */
     private $repository;
 
-    // dist-tags / rel or runtime?
-
     /**
      * @ORM\Column(type="datetime", name="createdat")
      */
@@ -137,6 +142,14 @@ class Package
     private $replacementPackage;
 
     /**
+     * @var Package
+     *
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Package")
+     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE", nullable=true)
+     */
+    private $parentPackage;
+
+    /**
      * @ORM\Column(type="boolean", options={"default"=false}, name="updatefailurenotified")
      */
     private $updateFailureNotified = false;
@@ -144,10 +157,15 @@ class Package
     /**
      * @var SshCredentials
      *
-     * @ORM\ManyToOne(targetEntity="SshCredentials")
+     * @ORM\ManyToOne(targetEntity="Packeton\Entity\SshCredentials")
      * @ORM\JoinColumn(name="credentials_id", referencedColumnName="id", onDelete="SET NULL", nullable=true)
      */
     private $credentials;
+
+    /**
+     * @ORM\Column(name="serialized_data", type="json", nullable=true)
+     */
+    private $serializedData;
 
     /**
      * @internal
@@ -445,19 +463,99 @@ class Package
      */
     public function getBrowsableRepository()
     {
-        if (preg_match('{(://|@)bitbucket.org[:/]}i', $this->repository)) {
-            return preg_replace('{^(?:git@|https://|git://)bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $this->repository);
+        $repository = $this->parentPackage ? $this->parentPackage->getRepository() : $this->repository;
+
+        if (preg_match('{(://|@)bitbucket.org[:/]}i', $repository)) {
+            return preg_replace('{^(?:git@|https://|git://)bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $repository);
         }
 
-        if (preg_match('{^(git://github.com/|git@github.com:)}', $this->repository)) {
-            return preg_replace('{^(git://github.com/|git@github.com:)}', 'https://github.com/', $this->repository);
+        if (preg_match('{^(git://github.com/|git@github.com:)}', $repository)) {
+            return preg_replace('{^(git://github.com/|git@github.com:)}', 'https://github.com/', $repository);
         }
 
-        if (preg_match('{^((git|ssh)@(.+))}', $this->repository, $match) && isset($match[3])) {
+        if (preg_match('{^((git|ssh)@(.+))}', $repository, $match) && isset($match[3])) {
             return 'https://' . str_replace(':', '/', $match[3]);
         }
 
-        return $this->repository;
+        return $repository;
+    }
+
+    public function getRepoConfig(): array
+    {
+        $repoConfig = [
+            'repoType' => $this->repoType ?: 'vcs',
+            'subDirectory' => $this->getSubDirectory(),
+        ];
+
+        return array_filter($repoConfig);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getRepoType(): ?string
+    {
+        return $this->repoType;
+    }
+
+    /**
+     * @param string|null $repoType
+     * @return Package
+     */
+    public function setRepoType(string $repoType = null)
+    {
+        $this->repoType = $repoType;
+        return $this;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getSerializedData(): ?array
+    {
+        return $this->serializedData;
+    }
+
+    /**
+     * @param array|null $serializedData
+     * @return Package
+     */
+    public function setSerializedData(array $serializedData = null)
+    {
+        $this->serializedData = $serializedData;
+        return $this;
+    }
+
+    /**
+     * @return Package|null
+     */
+    public function getParentPackage(): ?Package
+    {
+        return $this->parentPackage;
+    }
+
+    /**
+     * @param Package $parentPackage
+     * @return $this
+     */
+    public function setParentPackage(Package $package = null)
+    {
+        $this->parentPackage = $package;
+        return $this;
+    }
+
+    public function isUpdatable(): bool
+    {
+        return $this->parentPackage === null;
+    }
+
+    public function isSourceEnabled(): bool
+    {
+        $false = $this->parentPackage !== null
+            || ($this->serializedData['subDirectory'] ?? null)
+            || $this->repoType === 'artifact';
+
+        return !$false;
     }
 
     /**

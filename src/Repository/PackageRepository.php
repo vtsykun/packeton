@@ -26,6 +26,15 @@ use Packeton\Entity\Version;
  */
 class PackageRepository extends EntityRepository
 {
+    public function findOneByName(string $name):?Package
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.name = :name')
+            ->setParameter('name', $name)
+            ->setMaxResults(1)
+            ->getQuery()->getOneOrNullResult();
+    }
+
     public function findProviders($name)
     {
         $query = $this->createQueryBuilder('p')
@@ -144,14 +153,15 @@ class PackageRepository extends EntityRepository
         $conn = $this->getEntityManager()->getConnection();
 
         return $conn->fetchAllAssociative(
-            'SELECT p.id FROM package p
+            "SELECT p.id FROM package p
             WHERE p.abandoned = false
+            AND p.parent_id is NULL
             AND (
                 p.crawledAt IS NULL
                 OR (p.autoUpdated = false AND p.crawledAt < :crawled)
                 OR (p.crawledAt < :autocrawled)
             )
-            ORDER BY p.id ASC',
+            ORDER BY p.id ASC",
             [
                 // crawl packages without auto-update once a hour
                 'crawled' => date('Y-m-d H:i:s', time() - ($interval ?: 14400)),

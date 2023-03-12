@@ -14,18 +14,15 @@ namespace Packeton\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[AsCommand('packagist:stats:compile', description: 'Updates the redis stats indices')]
 class CompileStatsCommand extends Command
 {
-    protected static $defaultName = 'packagist:stats:compile';
-
     public function __construct(
         protected ManagerRegistry $registry,
         protected \Redis $redis,

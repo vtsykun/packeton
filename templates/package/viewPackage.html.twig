@@ -62,7 +62,7 @@
                 <div class="col-md-8">
                     <p class="requireme"><i class="glyphicon glyphicon-save"></i> <input type="text" readonly="readonly" value="composer {% if package.type == 'project' %}create-project{% else %}require{% endif %} {{ "#{package.vendor}/#{package.packageName}" }}" /></p>
 
-                    {% if not package.autoUpdated and app.user and (package.maintainers.contains(app.user) or is_granted('ROLE_UPDATE_PACKAGES')) %}
+                    {% if not package.autoUpdated and app.user and package.updatable (package.maintainers.contains(app.user) or is_granted('ROLE_UPDATE_PACKAGES')) %}
                         {% if "github.com" in package.repository %}
                             <div class="alert alert-danger">This package is not auto-updated. Please set up the <a href="{{ path('about') }}#how-to-update-packages">GitHub Service Hook</a> for Packagist so that it gets updated whenever you push!</div>
                         {% elseif "bitbucket.org" in package.repository %}
@@ -108,13 +108,13 @@
                                     <input class="btn btn-danger" type="submit" value="Delete" />
                                 </form>
                             {% endif %}
-                            {% if is_granted('ROLE_UPDATE_PACKAGES') or package.maintainers.contains(app.user) %}
+                            {% if package.updatable and (is_granted('ROLE_UPDATE_PACKAGES') or package.maintainers.contains(app.user)) %}
                                 <form class="force-update action" action="{{ path('update_package', {name: package.name}) }}" method="PUT">
                                     <input type="hidden" name="update" value="1" />
                                     <input class="btn btn-success" type="submit" value="Update" />
                                 </form>
                             {% endif %}
-                            {% if is_granted('ROLE_EDIT_PACKAGES') or package.maintainers.contains(app.user) %}
+                            {% if package.updatable and (is_granted('ROLE_EDIT_PACKAGES') or package.maintainers.contains(app.user)) %}
                                 <form class="action" action="{{ path("edit_package", {name: package.name}) }}">
                                     <input class="btn btn-primary" type="submit" value="Edit" />
                                 </form>
@@ -170,6 +170,16 @@
                         </div>
 
                         <div class="facts col-xs-12 col-sm-6 col-md-12">
+                            {% if package.repoType %}
+                                <p><span>Type:</span>{{ package.repoType|upper }}</p>
+                            {% endif %}
+
+                            {% if package.parentPackage %}
+                                <p>
+                                    <span><a href="{{ path('view_package', {'name': package.parentPackage.name }) }}">Mono-repo</a>:</span>
+                                    {{ package.parentPackage.name }}
+                                </p>
+                            {% endif %}
                             <p>
                                 <span>
                                     <a href="{{ path('view_package_stats', {name: package.name}) }}" rel="nofollow">Installs</a>:
