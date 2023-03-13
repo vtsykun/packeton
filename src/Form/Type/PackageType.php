@@ -46,6 +46,14 @@ class PackageType extends AbstractType
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getParent()
+    {
+        return BasePackageType::class;
+    }
+
+    /**
      * @param FormEvent $event
      */
     public function updateRepository(FormEvent $event)

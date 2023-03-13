@@ -9,6 +9,7 @@ use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
+use Packeton\Package\RepTypes;
 use Packeton\Service\Scheduler;
 use Packeton\Util\ChangelogUtils;
 use Doctrine\ORM\NoResultException;
@@ -104,17 +105,21 @@ class PackageController extends AbstractController
         return new JsonResponse(['packageNames' => $names]);
     }
 
-    #[Route('/packages/submit', name: 'submit')]
-    public function submitPackageAction(Request $req): Response
+    #[Route('/packages/submit/{type}', name: 'submit', defaults: ['type' => 'vcs'])]
+    public function submitPackageAction(Request $req, string $type = null): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException();
         }
 
         $package = new Package();
-        $form = $this->createForm(PackageType::class, $package, [
+        $package->setRepoType(RepTypes::normalizeType($type));
+
+        $formType = RepTypes::getFormType($type);
+        $form = $this->createForm($formType, $package, [
             'action' => $this->generateUrl('submit'),
-            'validation_groups' => ['Create']
+            'validation_groups' => ['Create'],
+            'is_created' => true,
         ]);
 
         if ($this->getUser() instanceof User) {
@@ -144,15 +149,23 @@ class PackageController extends AbstractController
         );
     }
 
-    #[Route('/packages/fetch-info', name: 'submit.fetch_info', defaults: ['_format' => 'json'])]
-    public function fetchInfoAction(Request $req): Response
+    #[Route('/packages/fetch-info/{type}', name: 'submit.fetch_info', defaults: ['_format' => 'json', 'type' => 'vcs'])]
+    public function fetchInfoAction(Request $req, string $type = null): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER')) {
             throw new AccessDeniedException;
         }
 
-        $package = new Package;
-        $form = $this->createForm(PackageType::class, $package, ['validation_groups' => ['Create']]);
+        $package = new Package();
+        $package->setRepoType(RepTypes::normalizeType($type));
+        $form = $this->createForm(
+            RepTypes::getFormType($type),
+            $package,
+            [
+                'validation_groups' => ['Create'],
+                'is_created' => true,
+            ]
+        );
 
         if ($this->getUser() instanceof User) {
             $package->addMaintainer($this->getUser());
@@ -525,7 +538,7 @@ class PackageController extends AbstractController
         }
 
         if (false === $package->isUpdatable()) {
-            throw new NotFoundHttpException('This is a spam package');
+            throw new NotFoundHttpException('This is not updatable package');
         }
 
         $username = $req->request->has('username') ?
@@ -724,7 +737,8 @@ class PackageController extends AbstractController
             throw new NotFoundHttpException("Package is readonly");
         }
 
-        $form = $this->createForm(PackageType::class, $package, [
+        $formTypeClass = RepTypes::getFormType($package->getRepoType());
+        $form = $this->createForm($formTypeClass, $package, [
             'action' => $this->generateUrl('edit_package', ['name' => $package->getName()]),
             'validation_groups' => ['Update'],
         ]);

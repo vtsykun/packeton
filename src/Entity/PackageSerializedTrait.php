@@ -28,10 +28,10 @@ trait PackageSerializedTrait
 
     public function isSkipNotModifyTag(): ?bool
     {
-        return $this->serializedData['skip_empty_tag'] ?? null;
+        return (bool)($this->serializedData['skip_empty_tag'] ?? null);
     }
 
-    public function setSkipNotModifyTag($value): void
+    public function setSkipNotModifyTag(?bool $value): void
     {
         $this->setSerializedField('skip_empty_tag', $value);
     }
