@@ -51,21 +51,21 @@ class ProviderManager
 
     public function getPackageNames(bool $reload = false): array
     {
-        $cacheKey = 'set:packages:last-modify';
         $lastModify = $this->getRootLastModify()->getTimestamp();
         if (false === $reload && $this->initializedPackagesUnix === $lastModify) {
             return $this->initializedPackages;
         }
 
-        if (true === $reload || $lastModify !== (int)$this->redis->get($cacheKey)) {
+        if (true === $reload) {
             $names = $this->getRepo()->getPackageNames();
+            $this->redis->del('set:packages');
             while ($names) {
                 $nameSlice = array_splice($names, 0, 1000);
-                $this->redis->sadd('set:packages', $nameSlice);
+                $this->redis->sAddArray('set:packages', $nameSlice);
             }
         }
 
-        $names = $this->redis->smembers('set:packages');
+        $names = $this->redis->sMembers('set:packages');
         sort($names, SORT_STRING);
         $this->initializedPackagesUnix = $lastModify;
 
@@ -145,7 +145,7 @@ class ProviderManager
         $names = $this->getRepo()->getProvidedNames();
         while ($names) {
             $nameSlice = array_splice($names, 0, 1000);
-            $this->redis->sadd('set:providers', $nameSlice);
+            $this->redis->sAddArray('set:providers', $nameSlice);
         }
 
         $this->redis->expire('set:providers', 3600);
