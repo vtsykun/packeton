@@ -185,7 +185,7 @@ class UpdaterWorker implements ConsoleAwareInterface
         return [
             'status' => Job::STATUS_COMPLETED,
             'message' => 'Update of '.$package->getName().' complete',
-            'details' => '<pre>' . substr($io->getOutput(), 0, 100000) . '</pre>'
+            'details' => '<pre>' . substr($io->getOutput(), 0, 250000) . '</pre>'
         ];
     }
 
