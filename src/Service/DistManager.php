@@ -45,7 +45,7 @@ class DistManager
             return $path;
         }
 
-        return $this->download($version, $reference, $path);
+        return $this->download($version, $reference);
     }
 
     public function getDistByOrphanedRef(string $reference, Package $package, &$version = null): string
@@ -130,13 +130,14 @@ class DistManager
         return null;
     }
 
-    private function download(Version $version, string $reference, string $fileName): ?string
+    private function download(Version $version, string $reference): ?string
     {
         $repository = $this->createRepositoryAndIo($version->getPackage());
         $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
 
         $targetDir = $this->config->generateTargetDir($version->getName());
+        $fileName = $this->config->getFileName($reference, $version->getVersion());;
 
         if ($package = $this->tryFromVersion($version)) {
             try {
@@ -158,6 +159,7 @@ class DistManager
         $repo = $this->registry->getRepository(Version::class);
         $data = $repo->getVersionData([$version->getId()]);
         $data = $version->toArray($data);
+        unset($data['dist']);
         $loader = new ArrayLoader();
 
         try {
