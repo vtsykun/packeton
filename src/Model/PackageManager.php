@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Model;
 
+use Composer\Repository\VcsRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\Cache\MetadataCache;
 use Packeton\Composer\MetadataMinifier;
@@ -44,14 +45,16 @@ class PackageManager
     {
         /** @var VersionRepository $versionRepo */
         $versionRepo = $this->doctrine->getRepository(Version::class);
-        $this->dispatcher->dispatch(new UpdaterEvent($package), UpdaterEvent::PACKAGE_REMOVE);
-
-        foreach ($package->getVersions() as $version) {
-            $versionRepo->remove($version);
+        $repo = $this->doctrine->getRepository(Package::class);
+        $child = $repo->getChildPackages($package);
+        foreach ($child as $item) {
+            $this->deletePackage($item);
         }
 
-        $this->providerManager->deletePackage($package);
+        $this->dispatcher->dispatch(new UpdaterEvent($package), UpdaterEvent::PACKAGE_REMOVE);
+        $versionRepo->remove($package->getVersions()->toArray());
 
+        $this->providerManager->deletePackage($package);
         $em = $this->doctrine->getManager();
         $em->remove($package);
         $em->flush();
@@ -75,10 +78,11 @@ class PackageManager
                 $package->getRepository(),
                 null,
                 null,
-                $package->getCredentials()
+                $package->getCredentials(),
+                $package->getRepoConfig(),
             );
 
-            $driver = $package->vcsDriver = $repository->getDriver();
+            $driver = $package->vcsDriver = $repository instanceof VcsRepository ? $repository->getDriver() : null;
             if (!$driver) {
                 return;
             }

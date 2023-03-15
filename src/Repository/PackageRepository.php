@@ -69,6 +69,19 @@ class PackageRepository extends EntityRepository
         return array_map('strtolower', $names);
     }
 
+    /**
+     * @param Package $package
+     * @return Package[]
+     */
+    public function getChildPackages(Package $package): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('IDENTITY(p.parentPackage) = :pid')
+            ->setParameter('pid', $package->getId())
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getProvidedNames()
     {
         $query = $this->getEntityManager()

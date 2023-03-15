@@ -611,12 +611,30 @@ class Updater implements UpdaterInterface
                     break;
 
                 case '.md':
-                    $source = $driver->getFileContent($readmeFile, $driver->getRootIdentifier());
+                    $source = null;
+                    $tries = array_unique([$readmeFile, strtolower($readmeFile), 'README.md', 'Readme.md']);
+                    try {
+                        foreach ($tries as $readmeFile) {
+                            if ($source = $driver->getFileContent($readmeFile, $driver->getRootIdentifier())) {
+                                break;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                    }
+
+                    if (empty($source)) {
+                        return;
+                    }
+
                     $parser = new GithubMarkdown();
                     $readme = $parser->parse($source);
 
                     if (!empty($readme)) {
-                        $package->setReadme($this->prepareReadme($readme));
+                        if (preg_match('{^(?:git://|git@|https?://)(gitlab.com|github.com|bitbucket.org)[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match)) {
+                            $package->setReadme($this->prepareReadme($readme, $match[1], $match[2], $match[3]));
+                        } else {
+                            $package->setReadme($this->prepareReadme($readme));
+                        }
                     }
                     break;
             }
@@ -636,6 +654,9 @@ class Updater implements UpdaterInterface
         if ($package->getSubDirectory()) {
             $baseApiUrl .= '/' . trim($package->getSubDirectory(), '/');
         }
+        if (null !== $package->getParentPackage()) {
+            return false; // Skip to avoid github rate limit.
+        }
 
         try {
             $opts = ['http' => ['header' => ['Accept: application/vnd.github.v3.html']]];
@@ -648,7 +669,7 @@ class Updater implements UpdaterInterface
         }
 
         if (!empty($readme)) {
-            $package->setReadme($this->prepareReadme($readme, true, $owner, $repo));
+            $package->setReadme($this->prepareReadme($readme, 'github.com', $owner, $repo));
         }
 
         $driver = $repository->getDriver();
@@ -676,16 +697,7 @@ class Updater implements UpdaterInterface
         return true;
     }
 
-    /**
-     * Prepare the readme by stripping elements and attributes that are not supported .
-     *
-     * @param string $readme
-     * @param bool $isGithub
-     * @param null $owner
-     * @param null $repo
-     * @return string
-     */
-    private function prepareReadme($readme, $isGithub = false, $owner = null, $repo = null)
+    private function prepareReadme(string $readme, ?string $host = null, ?string $owner = null, ?string $repo = null): string
     {
         $elements = [
             'p',
@@ -704,51 +716,79 @@ class Updater implements UpdaterInterface
             'table', 'thead', 'tbody', 'th', 'tr', 'td',
             'a', 'span',
             'img',
+            'details', 'summary',
         ];
 
         $attributes = [
             'img.src', 'img.title', 'img.alt', 'img.width', 'img.height', 'img.style',
             'a.href', 'a.target', 'a.rel', 'a.id',
             'td.colspan', 'td.rowspan', 'th.colspan', 'th.rowspan',
-            '*.class'
+            'th.align', 'td.align', 'p.align',
+            'h1.align', 'h2.align', 'h3.align', 'h4.align', 'h5.align', 'h6.align',
+            '*.class', 'details.open',
         ];
+
+        // detect base path for github readme if file is located in a subfolder like docs/README.md
+        $basePath = '';
+        if ($host === 'github.com' && preg_match('{^<div id="readme" [^>]+?data-path="([^"]+)"}', $readme, $match) && str_contains((string)$match[1], '/')) {
+            $basePath = dirname($match[1]);
+        }
+        if ($basePath) {
+            $basePath .= '/';
+        }
 
         $config = \HTMLPurifier_Config::createDefault();
         $config->set('HTML.AllowedElements', implode(',', $elements));
         $config->set('HTML.AllowedAttributes', implode(',', $attributes));
         $config->set('Attr.EnableID', true);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
+
+        // add custom HTML tag definitions
+        $def = $config->getHTMLDefinition(true);
+        $def->addElement('details', 'Block', 'Flow', 'Common', [
+            'open' => 'Bool#open',
+        ]);
+        $def->addElement('summary', 'Inline', 'Inline', 'Common');
+
         $purifier = new \HTMLPurifier($config);
         $readme = $purifier->purify($readme);
 
+        libxml_use_internal_errors(true);
         $dom = new \DOMDocument();
         $dom->loadHTML('<?xml encoding="UTF-8">' . $readme);
 
         // Links can not be trusted, mark them nofollow and convert relative to absolute links
         $links = $dom->getElementsByTagName('a');
         foreach ($links as $link) {
-            $link->setAttribute('rel', 'nofollow noindex noopener external');
+            $link->setAttribute('rel', 'nofollow noindex noopener external ugc');
             if (str_starts_with($link->getAttribute('href'), '#')) {
                 $link->setAttribute('href', '#user-content-'.substr($link->getAttribute('href'), 1));
             } elseif (str_starts_with($link->getAttribute('href'), 'mailto:')) {
                 // do nothing
-            } elseif ($isGithub && !str_contains($link->getAttribute('href'), '//')) {
+            } elseif ($host === 'github.com' && !str_contains($link->getAttribute('href'), '//')) {
                 $link->setAttribute(
                     'href',
-                    'https://github.com/'.$owner.'/'.$repo.'/blob/HEAD/'.$link->getAttribute('href')
+                    'https://github.com/'.$owner.'/'.$repo.'/blob/HEAD/'.$basePath.$link->getAttribute('href')
+                );
+            } elseif ($host === 'gitlab.com' && !str_contains($link->getAttribute('href'), '//')) {
+                $link->setAttribute(
+                    'href',
+                    'https://gitlab.com/'.$owner.'/'.$repo.'/-/blob/HEAD/'.$basePath.$link->getAttribute('href')
                 );
             }
         }
 
-        if ($isGithub) {
-            // convert relative to absolute images
+        // embed images of selected hosts by converting relative links to accessible URLs
+        if (in_array($host, ['github.com', 'gitlab.com', 'bitbucket.org'], true)) {
             $images = $dom->getElementsByTagName('img');
             foreach ($images as $img) {
                 if (!str_contains($img->getAttribute('src'), '//')) {
-                    $img->setAttribute(
-                        'src',
-                        'https://raw.github.com/'.$owner.'/'.$repo.'/HEAD/'.$img->getAttribute('src')
-                    );
+                    $imgSrc = match ($host) {
+                        'github.com' => 'https://raw.github.com/'.$owner.'/'.$repo.'/HEAD/'.$basePath.$img->getAttribute('src'),
+                        'gitlab.com' => 'https://gitlab.com/'.$owner.'/'.$repo.'/-/raw/HEAD/'.$basePath.$img->getAttribute('src'),
+                        'bitbucket.org' => 'https://bitbucket.org/'.$owner.'/'.$repo.'/raw/HEAD/'.$basePath.$img->getAttribute('src'),
+                    };
+                    $img->setAttribute('src', $imgSrc);
                 }
             }
         }
@@ -761,18 +801,25 @@ class Updater implements UpdaterInterface
         }
 
         if ($first && ('h1' === $first->nodeName || 'h2' === $first->nodeName)) {
-            $first->parentNode->removeChild($first);
+            $first->parentNode?->removeChild($first);
         }
 
-        $readme = $dom->saveHTML();
-        $readme = substr($readme, strpos($readme, '<body>')+6);
-        $readme = substr($readme, 0, strrpos($readme, '</body>'));
+        $readme = $dom->saveHTML() ?: '';
+        $readme = substr($readme, strpos($readme, '<body>') + 6);
+        $readme = substr($readme, 0, strrpos($readme, '</body>') ?: PHP_INT_MAX);
+
+        libxml_use_internal_errors(false);
+        libxml_clear_errors();
 
         return str_replace("\r\n", "\n", $readme);
     }
 
-    private function sanitize($str)
+    private function sanitize(string|null $str): string|null
     {
+        if (null === $str) {
+            return null;
+        }
+
         // remove escape chars
         $str = preg_replace("{\x1B(?:\[.)?}u", '', $str);
 

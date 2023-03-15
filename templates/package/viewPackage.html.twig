@@ -176,8 +176,8 @@
 
                             {% if package.parentPackage %}
                                 <p>
-                                    <span><a href="{{ path('view_package', {'name': package.parentPackage.name }) }}">Mono-repo</a>:</span>
-                                    {{ package.parentPackage.name }}
+                                    <span>Mono-repo:</span>
+                                    <a href="{{ path('view_package', {'name': package.parentPackage.name }) }}">{{ package.parentPackage.name }}</a>
                                 </p>
                             {% endif %}
                             <p>

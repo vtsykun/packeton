@@ -6,6 +6,7 @@
         $('ul.package-errors, ul.similar-packages, div.confirmation', this).remove();
         success = function (data) {
             let html = '';
+            $('.hide-unchecked').show();
             $('#submit').removeClass('loading');
             if (data.status === 'error') {
                 $.each(data.reason, function (k, v) {
@@ -30,6 +31,11 @@
                         '<p>Similarly named packages:'
                     ).append($similar));
                 }
+
+                if (data['details']) {
+                    $('#submit-package-form input[type="submit"]').before($('<div>').append('<pre>' + data['details'] + '</pre>'));
+                }
+
                 $('#submit-package-form input[type="submit"]').before(
                     '<div class="confirmation">The package name found for your repository is: <strong>'+data.name+'</strong>, press Submit to confirm.</div>'
                 );
@@ -38,19 +44,21 @@
             }
         };
 
-        let url = $(this).data('check-url') + '/' + $('.repo-type').val();
+        let url = $(this).data('check-url');
         $.post(url, $(this).serializeArray(), success);
         $('#submit').addClass('loading');
         e.preventDefault();
     };
 
-    $('#package_repository').change(function() {
+    let packRepo = $('.package-repo-info');
+    packRepo.change(function() {
         form.unbind('submit');
         form.submit(onSubmit);
         $('#submit').val('Check');
     });
 
-    $('#package_repository').triggerHandler('change');
+    $('.hide-unchecked').hide();
+    packRepo.triggerHandler('change');
 
     $('.repo-type').on('change', () => {
         let repoType = $('.repo-type').val();

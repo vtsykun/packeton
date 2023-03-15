@@ -10,12 +10,10 @@
 <h2 class="title">{{ 'submit.title'|trans }}</h2>
 
 <section class="row">
-    {{ form_start(form, { attr: { class: 'col-md-6', 'data-check-url': path('submit.fetch_info'), 'data-submit-url': path('submit'), id: 'submit-package-form' } }) }}
+    {{ form_start(form, { attr: { class: 'col-md-6', 'data-check-url': path('submit.fetch_info', {'type': type}), 'data-submit-url': path('submit'), id: 'submit-package-form' } }) }}
         {% block submit_form %}
             {{ form_widget(form) }}
-
             {{ form_rest(form) }}
-
             <input class="btn btn-block btn-success btn-lg" id="submit" type="submit" value="{{ 'submit.submit'|trans }}" />
         {% endblock %}
     {{ form_end(form) }}

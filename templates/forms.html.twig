@@ -112,3 +112,33 @@
         {% endfor -%}
     </div>
 {%- endblock choice_widget_expanded -%}
+
+{%- block mono_repo_package_widget -%}
+    {{ form_errors(form) }}
+    {{ form_widget(form) }}
+
+    <div class="hide-unchecked" style="margin-bottom: 5px">
+        <a href="{{ path('fetch_monorepo_info') }}" class="test-item" title="Run tests to lookup composer.json by glob expr">Test list</a>
+    </div>
+    <pre class="debug-container" style="display: none"></pre>
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+            let debug = $('.debug-container');
+            let $el = $('.test-item');
+
+            $el.on('click', (e) => {
+                let url = $el.attr('href');
+                e.preventDefault();
+                debug.html('');
+                $.post(url, $el.closest('form').serializeArray(), (data) => {
+                    debug.show();
+                    if (data['list']) {
+                        debug.html(data['list']);
+                    } else {
+                        console.log(data);
+                    }
+                });
+            });
+        });
+    </script>
+{%- endblock mono_repo_package_widget -%}

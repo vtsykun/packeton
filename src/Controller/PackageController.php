@@ -4,6 +4,7 @@ namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
+use Packeton\Composer\Repository\Vcs\TreeGitDriver;
 use Packeton\Entity\User;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
@@ -20,8 +21,8 @@ use Packeton\Form\Type\AbandonedType;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Form\Type\AddMaintainerRequestType;
-use Packeton\Form\Type\PackageType;
 use Packeton\Form\Type\RemoveMaintainerRequestType;
+use Packeton\Util\PacketonUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -117,7 +118,7 @@ class PackageController extends AbstractController
 
         $formType = RepTypes::getFormType($type);
         $form = $this->createForm($formType, $package, [
-            'action' => $this->generateUrl('submit'),
+            'action' => $this->generateUrl('submit', ['type' => $type]),
             'validation_groups' => ['Create'],
             'is_created' => true,
         ]);
@@ -145,7 +146,7 @@ class PackageController extends AbstractController
 
         return $this->render(
             'package/submitPackage.html.twig',
-            ['form' => $form->createView(), 'page' => 'submit']
+            ['form' => $form->createView(), 'page' => 'submit', 'type' => $type]
         );
     }
 
@@ -173,8 +174,11 @@ class PackageController extends AbstractController
 
         $form->handleRequest($req);
         if ($form->isSubmitted() && $form->isValid()) {
-            list(, $name) = explode('/', $package->getName(), 2);
+            if (empty($package->getName())) {
+                return new JsonResponse(['status' => 'error', 'reason' => 'Not able to found the package name.']);
+            }
 
+            [, $name] = explode('/', $package->getName(), 2);
             $existingPackages = $this->getEM()
                 ->getConnection()
                 ->fetchAllAssociative(
@@ -191,7 +195,8 @@ class PackageController extends AbstractController
                 ];
             }
 
-            return new JsonResponse(['status' => 'success', 'name' => $package->getName(), 'similar' => $similar]);
+            $details = $package->vcsDebugInfo ? strip_tags($package->vcsDebugInfo) : null;
+            return new JsonResponse(['status' => 'success', 'name' => $package->getName(), 'similar' => $similar, 'details' => $details]);
         }
 
         if ($form->isSubmitted()) {
@@ -213,6 +218,42 @@ class PackageController extends AbstractController
         }
 
         return new JsonResponse(['status' => 'error', 'reason' => 'No data posted.']);
+    }
+
+    #[Route('/packages/fetch-monorepo-info', name: 'fetch_monorepo_info', defaults: ['_format' => 'json'])]
+    public function fetchMonoRepoInfo(Request $req): Response
+    {
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
+            throw new AccessDeniedException;
+        }
+
+        $package = new Package();
+        $package->setRepoType(RepTypes::MONO_REPO);
+        $form = $this->createForm(
+            RepTypes::getFormType(RepTypes::MONO_REPO),
+            $package,
+            [
+                'validation_groups' => ['Update'],
+                'is_created' => false,
+                'allow_extra_fields' => true
+            ]
+        );
+
+        try {
+            PacketonUtils::toggleNetwork(false);
+            $form->handleRequest($req);
+            $driver = $package->vcsDriver;
+            if ($driver instanceof TreeGitDriver) {
+                $list = PacketonUtils::matchGlob($driver->getRepoTree(), $package->getGlob(), $package->getExcludedGlob());
+                return new JsonResponse(['list' => implode("\n", $list)]);
+            }
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Unable to test git-tree list due exception. ' . $e->getMessage()], 400);
+        } finally {
+            PacketonUtils::toggleNetwork(true);
+        }
+
+        return new JsonResponse(['error' => 'Unable to test, you must click to check the page to clone this repository'], 400);
     }
 
     #[Route('/packages/{vendor}/', name: 'view_vendor', requirements: ['vendor' => '[A-Za-z0-9_.-]+'])]
@@ -541,23 +582,11 @@ class PackageController extends AbstractController
             throw new NotFoundHttpException('This is not updatable package');
         }
 
-        $username = $req->request->has('username') ?
-            $req->request->get('username') :
-            $req->query->get('username');
-
-        $apiToken = $req->request->has('apiToken') ?
-            $req->request->get('apiToken') :
-            $req->query->get('apiToken');
-
         $update = $req->request->get('update', $req->query->get('update'));
         $autoUpdated = $req->request->get('autoUpdated', $req->query->get('autoUpdated'));
         $updateEqualRefs = (bool)$req->request->get('updateAll', $req->query->get('updateAll'));
 
-        $user = $this->getUser() ?: $doctrine
-            ->getRepository(User::class)
-            ->findOneBy(['username' => $username, 'apiToken' => $apiToken]);
-
-        if (!$user) {
+        if (!$user = $this->getUser()) {
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid credentials'], 403);
         }
 

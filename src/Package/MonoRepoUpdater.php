@@ -14,8 +14,8 @@ use Packeton\Composer\PacketonRepositoryFactory;
 use Packeton\Composer\Repository\Vcs\TreeGitDriver;
 use Packeton\Composer\Repository\VcsRepository;
 use Packeton\Entity\Package;
+use Packeton\Entity\User;
 use Packeton\Util\PacketonUtils;
-use Symfony\Component\Finder\Glob;
 
 class MonoRepoUpdater implements UpdaterInterface
 {
@@ -63,14 +63,12 @@ class MonoRepoUpdater implements UpdaterInterface
 
         $exception = null;
         $alreadyProcessed = [];
+
         $listFiles = $driver->getRepoTree();
-        $filterRegex = Glob::toRegex($package->getGlob());
-        $listOfPackageResources = array_filter($listFiles, fn($name) => preg_match($filterRegex, $name) && str_ends_with($name, '/composer.json'));
-        sort($listOfPackageResources);
+        $listOfResources = PacketonUtils::matchGlob($listFiles, $package->getGlob(), $package->getExcludedGlob());
+        $listOfResources = array_map(fn($res) => dirname($res), $listOfResources);
 
-        $listOfPackageResources = array_map(fn($res) => dirname($res), $listOfPackageResources);
-
-        foreach ($listOfPackageResources as $resource) {
+        foreach ($listOfResources as $resource) {
             $io->info("Reading repository path $resource/composer.json");
             $baseConfig = $repository->getRepoConfig();
             $subDirectory = $baseConfig['subDirectory'] = $resource;
@@ -105,13 +103,19 @@ class MonoRepoUpdater implements UpdaterInterface
             }
 
             $subPackage = $repo->findOneByName($packageName);
-
             if ($subPackage === null) {
                 $subPackage = new Package();
                 $subPackage->setName($packageName);
                 $subPackage->setRepository($package->getRepository());
                 $subPackage->setParentPackage($package);
                 $subPackage->setSubDirectory($subDirectory);
+
+                // if em is clear
+                foreach ($package->getMaintainers() as $maintainer) {
+                    if ($maintainer = $em->find(User::class, $maintainer->getId())) {
+                        $subPackage->addMaintainer($maintainer);
+                    }
+                }
 
                 $em->persist($subPackage);
                 $em->flush();
@@ -123,7 +127,7 @@ class MonoRepoUpdater implements UpdaterInterface
             }
 
             $prevSubDir = $subPackage->getSubDirectory();
-            if ($prevSubDir && $prevSubDir !== $subDirectory && in_array($prevSubDir, $listOfPackageResources)) {
+            if ($prevSubDir && $prevSubDir !== $subDirectory && in_array($prevSubDir, $listOfResources)) {
                 $io->error("The package $packageName define into two dirs $prevSubDir, $subDirectory at the same time was skipped.");
                 continue;
             }

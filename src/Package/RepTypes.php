@@ -13,6 +13,12 @@ class RepTypes
     public const MONO_REPO = 'mono-repo';
     public const ARTIFACT = 'artifact';
 
+    private static $types = [
+        self::ARTIFACT,
+        self::MONO_REPO,
+        self::VCS,
+    ];
+
     public static function getFormType(?string $type): string
     {
         return match ($type) {

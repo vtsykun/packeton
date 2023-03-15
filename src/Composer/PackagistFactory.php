@@ -15,6 +15,7 @@ use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Composer\Util\ProcessExecutor;
 use Packeton\Model\CredentialsInterface;
+use Packeton\Package\RepTypes;
 
 class PackagistFactory
 {
@@ -131,7 +132,7 @@ class PackagistFactory
         }
 
         $repoConfig['url'] = $url;
-        if (isset($repoConfig['subDirectory'])) {
+        if (isset($repoConfig['subDirectory']) || ($repoConfig['repoType'] ?? null) === RepTypes::MONO_REPO) {
             $repoConfig['driver'] = 'git-tree';
         }
 

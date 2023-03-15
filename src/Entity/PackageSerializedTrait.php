@@ -26,6 +26,16 @@ trait PackageSerializedTrait
         $this->setSerializedField('glob', $glob);
     }
 
+    public function getExcludedGlob(): ?string
+    {
+        return $this->serializedData['excludedGlob'] ?? null;
+    }
+
+    public function setExcludedGlob(?string $glob): void
+    {
+        $this->setSerializedField('excludedGlob', $glob);
+    }
+
     public function isSkipNotModifyTag(): ?bool
     {
         return (bool)($this->serializedData['skip_empty_tag'] ?? null);

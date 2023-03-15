@@ -179,6 +179,11 @@ class Package
     public $vcsDriverError;
 
     /**
+     * @internal
+     */
+    public $vcsDebugInfo;
+
+    /**
      * @var array lookup table for versions
      */
     private $cachedVersions;
@@ -439,7 +444,7 @@ class Package
         }
 
         // normalize protocol case
-        $repoUrl = preg_replace_callback('{^(https?|git|svn)://}i', function ($match) { return strtolower($match[1]) . '://'; }, $repoUrl);
+        $repoUrl = preg_replace_callback('{^(https?|git|svn)://}i', fn ($match) => strtolower($match[1]) . '://', $repoUrl);
         if ($this->repository !== $repoUrl) {
             $this->repository = $repoUrl;
             $this->vcsDriver = $this->vcsDriverError = null;

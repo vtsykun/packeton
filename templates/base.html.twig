@@ -247,5 +247,11 @@
     {% block scripts %}{% endblock %}
     {% block docker_scripts %}{% endblock %}
 
+    <script nonce="{{ csp_nonce('script') }}">
+        if (window._deferExec !== undefined) {
+            window._deferExec();
+        }
+    </script>
+
     </body>
 </html>

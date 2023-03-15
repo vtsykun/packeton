@@ -38,6 +38,7 @@ class PackageType extends AbstractType
             ->add('repository', TextType::class, [
                 'label' => 'Repository URL (Git/Svn/Hg)',
                 'attr'  => [
+                    'class' => 'package-repo-info',
                     'placeholder' => 'e.g.: https://github.com/composer/composer',
                 ]
             ]);

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Packeton\Validator\Constraint;
 
 use Packeton\Entity\Package;
+use Packeton\Package\RepTypes;
+use Packeton\Util\PacketonUtils;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -33,6 +35,10 @@ class PackageRepositoryValidator extends ConstraintValidator
             return;
         }
 
+        if ($value->getRepoType() === RepTypes::ARTIFACT) {
+            return;
+        }
+
         $property = 'repository';
         $driver = $value->vcsDriver;
         if (!is_object($driver)) {
@@ -56,13 +62,26 @@ class PackageRepositoryValidator extends ConstraintValidator
         }
 
         try {
-            $information = $driver->getComposerInformation($driver->getRootIdentifier());
+            $information = $driver->getComposerInformation($rootId = $driver->getRootIdentifier());
             if (false === $information) {
                 $this->context->buildViolation('No composer.json was found in the '.$driver->getRootIdentifier().' branch.')
                     ->atPath($property)
                     ->addViolation()
                 ;
                 return;
+            }
+
+            if ($value->getRepoType() === RepTypes::MONO_REPO) {
+                try {
+                    $list = $driver->getRepoTree($rootId);
+                    if (!$list = PacketonUtils::matchGlob($list, $value->getGlob(), $value->getExcludedGlob())) {
+                        $this->context->buildViolation("No any composer.json found for git tree by glob expr {$value->getGlob()}")->atPath($property)->addViolation();
+                    } else {
+                        $value->vcsDebugInfo = "Found/s composer.json:\n" . implode("\n", $list);
+                    }
+                } catch (\Throwable $e) {
+                    $this->context->buildViolation($e->getMessage())->atPath($property)->addViolation();
+                }
             }
 
             if (empty($information['name'])) {
