@@ -14,7 +14,6 @@ use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\StringInput;
-use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
@@ -46,12 +45,13 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
         LogLevel::INFO => 100,
     ];
 
-    public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null)
+    public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null, protected ?int $maxBufferSize = null)
     {
         $input = new StringInput($input);
         $input->setInteractive(false);
 
         $this->output = $output = new BufferedOutput($verbosity, $formatter && $formatter->isDecorated(), $formatter);
+        $output->setMaxSize($this->maxBufferSize);
 
         parent::__construct($input, $output, new HelperSet([
             new QuestionHelper(),
@@ -177,6 +177,7 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
         if (null !== $this->consoleOutput && $this->consoleOutput->getVerbosity() >= $verbosity * 16) {
             $messages = !is_array($messages) ? [$messages] : $messages;
             foreach ($messages as $message) {
+                $message = str_replace(['<warning>', '</warning>'], ['<comment>', '</comment>'], $message);
                 $this->consoleOutput->writeln($message);
             }
         }

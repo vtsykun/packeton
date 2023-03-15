@@ -63,7 +63,7 @@ class UpdaterWorker implements ConsoleAwareInterface
         }
 
         $this->logger->info('Updating '.$package->getName());
-        $io = new DebugIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
+        $io = new DebugIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()), 200000);
         $io->setOutput($this->cmdOutput);
 
         try {
@@ -185,7 +185,7 @@ class UpdaterWorker implements ConsoleAwareInterface
         return [
             'status' => Job::STATUS_COMPLETED,
             'message' => 'Update of '.$package->getName().' complete',
-            'details' => '<pre>' . substr($io->getOutput(), 0, 250000) . '</pre>'
+            'details' => '<pre>' . substr($io->getOutput(), 0, 1000000) . '</pre>'
         ];
     }
 

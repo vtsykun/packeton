@@ -156,7 +156,7 @@ class ApiController extends AbstractController
             throw new AccessDeniedException();
         }
         if (!$package->isUpdatable()) {
-            throw new NotFoundHttpException("Package is readonly");
+            return new JsonResponse(['status' => 'error', 'message' => 'Package is readonly'], 400);
         }
 
         $payload = $this->getJsonPayload($request);
