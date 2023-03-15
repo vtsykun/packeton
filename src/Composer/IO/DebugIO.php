@@ -25,7 +25,7 @@ use Symfony\Component\Console\Output\StreamOutput;
 class DebugIO extends ConsoleIO implements ConsoleAwareInterface
 {
     protected $output;
-    protected ?OutputInterface $consoleOutput;
+    protected ?OutputInterface $consoleOutput = null;
 
     protected $verbosityMatrixCapacity = 5;
 
