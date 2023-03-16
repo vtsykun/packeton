@@ -19,7 +19,7 @@ class BasePackageType extends AbstractType
                 'choices' => [
                     'VCS (auto)' => RepTypes::VCS,
                     'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
-                    'Artifacts (zip archives)' => RepTypes::ARTIFACT,
+                   // 'Artifacts (zip archives)' => RepTypes::ARTIFACT,
                 ],
                 'attr' => ['class' => 'repo-type']
             ]);

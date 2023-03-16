@@ -16,6 +16,7 @@ use Packeton\Composer\Repository\VcsRepository;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Util\PacketonUtils;
+use Seld\Signal\SignalHandler;
 
 class MonoRepoUpdater implements UpdaterInterface
 {
@@ -41,7 +42,7 @@ class MonoRepoUpdater implements UpdaterInterface
     /**
      * {@inheritdoc}
      */
-    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, \DateTime $start = null): Package
+    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, int $flags = 0, SignalHandler $signal = null): Package
     {
         if (!$repository instanceof VcsRepository) {
             $io->error("Only vcs repos support for mono-repo type, skip update");
@@ -142,7 +143,7 @@ class MonoRepoUpdater implements UpdaterInterface
             }
 
             try {
-                $this->vcsUpdater->update($io, $config, $subPackage, $subRepo, $flags, $start);
+                $this->vcsUpdater->update($io, $config, $subPackage, $subRepo, $flags, $signal);
             } catch (\Exception $e) {
                 $io->error("Error when process package $packageName: " . $e->getMessage());
                 $exception = $e;
@@ -152,6 +153,10 @@ class MonoRepoUpdater implements UpdaterInterface
             $em->clear();
             $package = $em->find(Package::class, $package->getId());
             $alreadyProcessed[$packageName] = $subDirectory;
+            if ($signal->isTriggered()) {
+                $io->warning("Mono-repo sync interrupted by signal");
+                return $package;
+            }
         }
 
         try {
@@ -160,7 +165,7 @@ class MonoRepoUpdater implements UpdaterInterface
                 $package = $em->find(Package::class, $package->getId());
 
                 $repository->setDriver($driver);
-                $this->vcsUpdater->update($io, $config, $package, $repository, $flags, $start);
+                $this->vcsUpdater->update($io, $config, $package, $repository, $flags, $signal);
             }
         } catch (\Exception $e) {
             $io->error($e->getMessage());

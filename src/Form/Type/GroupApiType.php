@@ -27,14 +27,10 @@ class GroupApiType extends AbstractType
 
         $builder->add('aclPermissions', UnstructuredType::class);
 
-        $fun = function ($items) {
-            return null;
-        };
-
         $builder->get('aclPermissions')
             ->resetModelTransformers()
             ->resetViewTransformers()
-            ->addModelTransformer(new CallbackTransformer($fun, function ($value) {
+            ->addModelTransformer(new CallbackTransformer(fn() => null, function ($value) {
                 if (empty($value) || !\is_array($value)) {
                     return null;
                 }

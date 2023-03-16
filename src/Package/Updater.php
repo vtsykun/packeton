@@ -40,6 +40,7 @@ use Packeton\Event\UpdaterEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
 use Packeton\Util\PacketonUtils;
+use Seld\Signal\SignalHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -98,16 +99,12 @@ class Updater implements UpdaterInterface
     /**
      * {@inheritdoc}
      */
-    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, \DateTime $start = null): Package
+    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, SignalHandler $signal = null): Package
     {
         $rfs = new RemoteFilesystem($io, $config);
 
-        if (null === $start) {
-            $start = new \DateTime();
-        }
-
         $stabilityVersionUpdated = 0;
-        $deleteDate = clone $start;
+        $deleteDate = new \DateTime();
         $deleteDate->modify('-1day');
 
         /** @var EntityManagerInterface $em */

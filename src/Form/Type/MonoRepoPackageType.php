@@ -21,7 +21,8 @@ class MonoRepoPackageType extends AbstractType
             ])
             ->add('excludedGlob', TextareaType::class, [
                 'required' => false,
-                'label' => 'List of excluded paths',
+                'label' => 'List of excluded paths composer.json',
+                'attr' => ['placeholder' => 'e.g.: src/Symfony/Component/Notifier/composer.json',],
             ])
             ->add('skipNotModifyTag', CheckboxType::class, [
                 'required' => false,

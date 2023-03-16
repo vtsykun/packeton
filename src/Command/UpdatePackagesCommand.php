@@ -26,8 +26,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand('packagist:update', 'Updates packages')]
 class UpdatePackagesCommand extends Command
 {
-    protected static $defaultName = 'packagist:update';
-
     public function __construct(
         protected ManagerRegistry $registry,
         protected Scheduler $scheduler,
@@ -76,7 +74,7 @@ class UpdatePackagesCommand extends Command
             }
             $randomTimes = false;
         } elseif ($force) {
-            $packages = $em->getConnection()->fetchAllAssociative('SELECT id FROM package ORDER BY id ASC');
+            $packages = $em->getConnection()->fetchAllAssociative('SELECT p.id FROM package p WHERE p.parent_id IS NULL ORDER BY p.id ASC');
             $updateEqualRefs = true;
         } else {
             $packages = $this->registry->getRepository(Package::class)->getStalePackages($interval);

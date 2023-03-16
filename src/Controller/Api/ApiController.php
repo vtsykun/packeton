@@ -366,13 +366,12 @@ class ApiController extends AbstractController
 
         $packages = [];
         $repo = $this->registry->getRepository(Package::class);
-        foreach ($repo->findAll() as $package) {
-            if (\preg_match($urlRegex, $package->getRepository(), $candidate)
+        foreach ($repo->getWebhookDataForUpdate() as $package) {
+            if (\preg_match($urlRegex, $package['repository'], $candidate)
                 && \strtolower($candidate['host']) === \strtolower($matched['host'])
                 && \strtolower($candidate['path']) === \strtolower($matched['path'])
-                && $package->isUpdatable()
             ) {
-                $packages[] = $package;
+                $packages[] = $repo->find($package['id']);
             }
         }
 

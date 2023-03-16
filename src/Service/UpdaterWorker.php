@@ -93,7 +93,7 @@ class UpdaterWorker implements ConsoleAwareInterface
             }
 
             // perform the actual update (fetch and re-scan the repository's source)
-            $package = $updater->update($io, $config, $package, $repository, $flags);
+            $package = $updater->update($io, $config, $package, $repository, $flags, $signal);
         } catch (\Throwable $e) {
             $output = $io->getOutput();
 

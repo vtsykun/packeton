@@ -82,6 +82,17 @@ class PackageRepository extends EntityRepository
             ->getResult();
     }
 
+    public function getWebhookDataForUpdate(): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->resetDQLPart('select')
+            ->select(['p.id', 'p.name', 'p.repository'])
+            ->where('p.repository IS NOT NULL')
+            ->andWhere('p.parentPackage IS NULL');
+
+        return $qb->getQuery()->getArrayResult();
+    }
+
     public function getProvidedNames()
     {
         $query = $this->getEntityManager()
