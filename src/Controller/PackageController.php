@@ -321,8 +321,7 @@ class PackageController extends AbstractController
         ]);
     }
 
-
-    #[Route('/packages/{name}.{_format}', name: 'view_package', requirements: ['name' => '%package_name_regex%', '_format' => '(json)'], defaults: ['_format' => 'html'], methods: ['GET'])]
+    #[Route('/packages/{name}.{_format}', name: 'view_package', requirements: ['name' => '%package_name_regex%?', '_format' => '(json)'], defaults: ['_format' => 'html'], methods: ['GET'])]
     public function viewPackageAction(Request $req, $name, CsrfTokenManagerInterface $csrfTokenManager): Response
     {
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
