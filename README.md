@@ -3,6 +3,7 @@ Packeton - Private PHP package repository for vendors
 
 [![Run Tests](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml/badge.svg)](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml)
 [![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
+[![Hits-of-Code](https://hitsofcode.com/github/vtsykun/packeton?branch=master&label=Hits-of-Code)](https://hitsofcode.com/github/vtsykun/packeton/view?branch=master&label=Hits-of-Code)
 [![Docker pulls](https://img.shields.io/docker/pulls/packeton/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/packeton/packeton)
 [![License](http://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
 
@@ -25,7 +26,8 @@ Features
 - Generic Packeton [webhooks](docs/webhook.md)
 - Allow to freeze updates for the new releases after expire a customers license.
 - Mirroring for packages zip files and downloads it's from your host.
-- Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.
+- Credentials and Authentication http-basic config or ssh keys.
+- Support monolithic repositories, like `symfony/symfony`
 
 What was changed in this fork?
 -----------------------------
