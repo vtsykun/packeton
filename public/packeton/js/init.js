@@ -7,3 +7,13 @@ if (!String.prototype.htmlSpecialChars) {
             .replace(/>/g, '&gt;');
     };
 }
+
+if (window.defer === undefined) {
+    let __defer = [];
+    window._deferExec = function () {
+        for (const f of __defer) { f(); }
+    };
+    window.defer = function (func) {
+        __defer.push(func);
+    }
+}

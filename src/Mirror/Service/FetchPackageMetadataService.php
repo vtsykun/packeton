@@ -55,7 +55,7 @@ class FetchPackageMetadataService
 
         $http = $this->syncService->initHttpDownloader($config);
 
-        if ($apiUrl =  $config->getMetadataV2Url()) {
+        if ($apiUrl = $config->getMetadataV2Url()) {
             $this->requestMetadataVia2($http, $packages, $apiUrl, $onFulfilled);
         } else if ($apiUrl = $config->getMetadataV1Url()) {
             $this->requestMetadataVia1($http, $packages, $apiUrl, $onFulfilled, null, $repo->lookupAllProviders());

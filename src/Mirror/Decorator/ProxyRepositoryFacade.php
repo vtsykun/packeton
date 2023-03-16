@@ -119,7 +119,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
             $this->requestMetadataVia1($http, [$package], $apiUrl, fn ($name, array $meta) => $queue->enqueue($meta), $reject, $this->repository->lookupAllProviders());
         }
 
-        if (!empty($meta = $queue->dequeue())) {
+        if (!$queue->isEmpty() && !empty($meta = $queue->dequeue())) {
             return $meta;
         }
 

@@ -4,6 +4,7 @@ namespace Packeton\Command;
 
 use Firebase\JWT\JWT;
 use Packeton\Security\JWSTokenProvider;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputInterface;
@@ -12,11 +13,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 
+#[AsCommand('packagist:jwt:generate-keypair', description: 'Generate JWT public/private keys for packeton jwt_authentication')]
 class GenerateJWTPairsCommand extends Command
 {
-    protected static $defaultName = 'packagist:jwt:generate-keypair';
-    protected static $defaultDescription = 'Generate JWT public/private keys for packeton jwt_authentication';
-
     public function __construct(
         protected Filesystem $filesystem,
         protected array $jwtTokenConfig,

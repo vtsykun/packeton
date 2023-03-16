@@ -503,9 +503,9 @@ class Version
         return $this->dist ? json_decode($this->dist, true) : null;
     }
 
-    public function getReference()
+    public function getReference(): ?string
     {
-        return $this->getDist()['reference'] ?? null;
+        return $this->getDist()['reference'] ?? ($this->getSource()['reference'] ?? null);
     }
 
     /**

@@ -38,11 +38,20 @@ class PackageType extends AbstractType
             ->add('repository', TextType::class, [
                 'label' => 'Repository URL (Git/Svn/Hg)',
                 'attr'  => [
+                    'class' => 'package-repo-info',
                     'placeholder' => 'e.g.: https://github.com/composer/composer',
                 ]
             ]);
 
         $builder->addEventListener(FormEvents::POST_SUBMIT, [$this, 'updateRepository'], 255);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getParent()
+    {
+        return BasePackageType::class;
     }
 
     /**

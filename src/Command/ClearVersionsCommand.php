@@ -16,18 +16,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[AsCommand('packagist:clear:versions', description: 'Clears all versions from the databases')]
 class ClearVersionsCommand extends Command
 {
-    protected static $defaultName = 'packagist:clear:versions';
-
     public function __construct(protected ManagerRegistry $registry) {
         parent::__construct();
     }

@@ -12,6 +12,7 @@
 
 namespace Packeton\Repository;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\DBAL\Connection;
 use Packeton\Entity\Package;
@@ -31,23 +32,34 @@ class VersionRepository extends EntityRepository
         'suggest',
     ];
 
-    public function remove(Version $version)
+    public function remove(Version|array $versions)
     {
+        $versions = !is_array($versions) ? [$versions] : $versions;
+        if (empty($versions)) {
+            return;
+        }
+
+        $param = ['id' => []];
         $em = $this->getEntityManager();
-        $version->getPackage()->getVersions()->removeElement($version);
-        $version->getPackage()->setCrawledAt(new \DateTime);
-        $version->getPackage()->setUpdatedAt(new \DateTime);
+        $conn = $em->getConnection();
+        $package = $versions[0]->getPackage();
 
-        $em->getConnection()->executeQuery('DELETE FROM version_author WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM version_tag WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM link_suggest WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM link_conflict WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM link_replace WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM link_provide WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM link_require_dev WHERE version_id=:id', array('id' => $version->getId()));
-        $em->getConnection()->executeQuery('DELETE FROM link_require WHERE version_id=:id', array('id' => $version->getId()));
+        foreach ($versions as $ver) {
+            $param['id'][] = $ver->getId();
+            $package->getVersions()->removeElement($ver);
+            $em->remove($ver);
+        }
 
-        $em->remove($version);
+        $types = ['id' => ArrayParameterType::INTEGER];
+
+        $conn->executeQuery('DELETE FROM version_author WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM version_tag WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM link_suggest WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM link_conflict WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM link_replace WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM link_provide WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM link_require_dev WHERE version_id IN (:id)', $param, $types);
+        $conn->executeQuery('DELETE FROM link_require WHERE version_id IN (:id)', $param, $types);
     }
 
     public function refreshVersions($versions)

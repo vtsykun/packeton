@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;
 use Packeton\Security\JWTUserManager;
 use Packeton\Security\Provider\UserProvider;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\Input as SymfonyInput;
@@ -22,10 +23,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * Simplify create and update user for docker.
  */
+#[AsCommand('packagist:user:manager', 'CLI user manager - create, get info, or update users')]
 class UserManagerCommand extends Command
 {
-    protected static $defaultName = 'packagist:user:manager';
-
     public function __construct(
         protected UserProvider $userProvider,
         protected UserPasswordHasherInterface $passwordHasher,
@@ -52,8 +52,7 @@ class UserManagerCommand extends Command
             ->addOption('add-role', null, InputOption::VALUE_OPTIONAL, 'Add the user role, example --add-role=ROLE_MAINTAINER')
             ->addOption('remove-role', null, InputOption::VALUE_OPTIONAL, 'Remove the user role, example --remove-role=ROLE_MAINTAINER')
             ->addOption('only-if-not-exists', null, InputOption::VALUE_NONE, 'Only create a new user without update existing (use in docker init)')
-            ->addOption('admin', null, InputOption::VALUE_NONE, 'Add admin user role')
-            ->setDescription('CLI user manager - create, get info, or update users');
+            ->addOption('admin', null, InputOption::VALUE_NONE, 'Add admin user role');
 
         $this->setHelp(
 <<<HELP

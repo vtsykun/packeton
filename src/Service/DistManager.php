@@ -6,8 +6,12 @@ namespace Packeton\Service;
 
 use Composer\IO\NullIO;
 use Composer\Package\CompletePackage;
+use Composer\Package\CompletePackageInterface;
+use Composer\Package\Loader\ArrayLoader;
+use Composer\Repository\RepositoryInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
-use Packeton\Composer\Repository\VcsRepository;
+use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Symfony\Component\Filesystem\Exception\IOException;
@@ -22,27 +26,26 @@ class DistManager
     public function __construct(
         private readonly DistConfig $config,
         private readonly PackagistFactory $packagistFactory,
+        private readonly ManagerRegistry $registry,
     ) {
         $this->fileSystem = new Filesystem();
     }
 
     public function getDistPath(Version $version): ?string
     {
-        $dist = $version->getDist();
-        if (false === isset($dist['reference'])) {
+        if (!$reference = $version->getReference()) {
             return null;
         }
 
-        $path = $this->config->generateDistFileName($version->getName(), $dist['reference'], $version->getVersion());
+        $path = $this->config->generateDistFileName($version->getName(), $reference, $version->getVersion());
         if ($this->fileSystem->exists($path)) {
             try {
                 $this->fileSystem->touch($path);
             } catch (IOException) {}
-
             return $path;
         }
 
-        return $this->download($version);
+        return $this->download($version, $reference);
     }
 
     public function getDistByOrphanedRef(string $reference, Package $package, &$version = null): string
@@ -127,31 +130,58 @@ class DistManager
         return null;
     }
 
-    private function download(Version $version): ?string
+    private function download(Version $version, string $reference): ?string
     {
         $repository = $this->createRepositoryAndIo($version->getPackage());
-
         $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
 
+        $targetDir = $this->config->generateTargetDir($version->getName());
+        $fileName = $this->config->getFileName($reference, $version->getVersion());;
+
+        if ($package = $this->tryFromVersion($version)) {
+            try {
+                return $archiveManager->archive($package, $this->config->getArchiveFormat(), $targetDir, $fileName);
+            } catch (\Exception $e) {
+                // Try from ref
+            }
+        }
+
+        if ($package = $this->tryFromReference($repository, $reference)) {
+            return $archiveManager->archive($package, $this->config->getArchiveFormat(), $targetDir, $fileName);
+        }
+
+        return null;
+    }
+
+    private function tryFromVersion(Version $version): ?CompletePackageInterface
+    {
+        $repo = $this->registry->getRepository(Version::class);
+        $data = $repo->getVersionData([$version->getId()]);
+        $data = $version->toArray($data);
+        unset($data['dist']);
+        $loader = new ArrayLoader();
+
+        try {
+            return $loader->load($data);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    private function tryFromReference(RepositoryInterface $repository, string $reference): ?CompletePackageInterface
+    {
         $versions = $repository->getPackages();
-        $source = $version->getSource();
-        foreach ($versions as $rootVersion) {
-            if ($rootVersion->getSourceReference() === $source['reference']) {
-                $fileName = $this->config->getFileName($source['reference'], $version->getVersion());
-                return $archiveManager->archive(
-                    $rootVersion,
-                    $this->config->getArchiveFormat(),
-                    $this->config->generateTargetDir($version->getName()),
-                    $fileName
-                );
+        foreach ($versions as $version) {
+            if ($version->getSourceReference() === $reference && $version instanceof CompletePackageInterface) {
+                return $version;
             }
         }
 
         return null;
     }
 
-    private function createRepositoryAndIo(Package $package): VcsRepository
+    private function createRepositoryAndIo(Package $package): PacketonRepositoryInterface
     {
         $io = new NullIO();
 
@@ -159,7 +189,8 @@ class DistManager
             $package->getRepository(),
             $io,
             null,
-            $package->getCredentials()
+            $package->getCredentials(),
+            $package->getRepoConfig(),
         );
     }
 }

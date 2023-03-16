@@ -13,7 +13,6 @@
 namespace Packeton\Package;
 
 use cebe\markdown\GithubMarkdown;
-use Composer\Factory;
 use Composer\Package\Archiver\ArchiveManager;
 use Composer\Package\AliasPackage;
 use Composer\Package\CompletePackageInterface;
@@ -27,9 +26,11 @@ use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
 use Composer\Config;
 use Composer\IO\IOInterface;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
+use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Author;
 use Packeton\Entity\Package;
 use Packeton\Entity\Tag;
@@ -38,21 +39,17 @@ use Packeton\Entity\SuggestLink;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
-use Doctrine\DBAL\Connection;
+use Packeton\Util\PacketonUtils;
+use Seld\Signal\SignalHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
-class Updater
+class Updater implements UpdaterInterface
 {
     const UPDATE_EQUAL_REFS = 1;
     const DELETE_BEFORE = 2;
-
-    /**
-     * @var ArchiveManager
-     */
-    protected $archiveManager;
 
     /**
      * Supported link types
@@ -92,68 +89,38 @@ class Updater
     }
 
     /**
-     * Update a project
-     *
-     * @param IOInterface $io
-     * @param Config $config
-     * @param \Packeton\Entity\Package $package
-     * @param RepositoryInterface $repository the repository instance used to update from
-     * @param int $flags a few of the constants of this class
-     * @param \DateTime $start
-     *
-     * @return Package
+     * {@inheritdoc}
      */
-    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, \DateTime $start = null): Package
+    public static function supportRepoTypes(): iterable
+    {
+        return ['vcs'];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, SignalHandler $signal = null): Package
     {
         $rfs = new RemoteFilesystem($io, $config);
 
-        if (null === $start) {
-            $start = new \DateTime();
-        }
-
         $stabilityVersionUpdated = 0;
-        $deleteDate = clone $start;
+        $deleteDate = new \DateTime();
         $deleteDate->modify('-1day');
 
         /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
-        $rootIdentifier = null;
+        $rootIdentifier = $archiveManager = null;
 
-        $downloadManager = $this->packagistFactory->createDownloadManager($io, $repository);
-        $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository, $downloadManager);
-        $archiveManager->setOverwriteFiles(false);
+        if ($repository instanceof PacketonRepositoryInterface) {
+            $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository);
+            $archiveManager->setOverwriteFiles(false);
+        }
 
         if ($repository instanceof VcsRepository) {
             $rootIdentifier = $repository->getDriver()->getRootIdentifier();
         }
 
-        $versions = $repository->getPackages();
-        usort($versions, function (PackageInterface $a, PackageInterface $b) {
-            $aVersion = $a->getVersion();
-            $bVersion = $b->getVersion();
-            if ($aVersion === '9999999-dev' || str_starts_with($aVersion, 'dev-')) {
-                $aVersion = 'dev';
-            }
-            if ($bVersion === '9999999-dev' || str_starts_with($bVersion, 'dev-')) {
-                $bVersion = 'dev';
-            }
-            $aIsDev = $aVersion === 'dev' || str_ends_with($aVersion, '-dev');
-            $bIsDev = $bVersion === 'dev' || str_ends_with($bVersion, '-dev');
-
-            // push dev versions to the end
-            if ($aIsDev !== $bIsDev) {
-                return $aIsDev ? 1 : -1;
-            }
-
-            // equal versions are sorted by date
-            if ($aVersion === $bVersion) {
-                return $a->getReleaseDate() > $b->getReleaseDate() ? 1 : -1;
-            }
-
-            // the rest is sorted by version
-            return version_compare($aVersion, $bVersion);
-        });
-
+        $versions = PacketonUtils::sort($repository->getPackages());
         $versionRepository = $this->doctrine->getRepository(Version::class);
 
         if ($flags & self::DELETE_BEFORE) {
@@ -222,7 +189,7 @@ class Updater
         $em->getConnection()->executeStatement(
             'UPDATE package_version SET updatedAt = :now, softDeletedAt = NULL WHERE id IN (:ids)',
             ['now' => date('Y-m-d H:i:s'), 'ids' => $idsToMarkUpdated],
-            ['ids' => Connection::PARAM_INT_ARRAY]
+            ['ids' => ArrayParameterType::INTEGER]
         );
 
         // remove outdated versions
@@ -256,10 +223,14 @@ class Updater
             $versionRepository->remove($version);
         }
 
-        if (preg_match('{^(?:git://|git@|https?://)github.com[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match) && $repository instanceof VcsRepository) {
-            $this->updateGitHubInfo($rfs, $package, $match[1], $match[2], $repository);
-        } else {
-            $this->updateReadme($io, $package, $repository);
+        if ($repository instanceof VcsRepository) {
+            $isUpdated = false;
+            if (preg_match('{^(?:git://|git@|https?://)github.com[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match)) {
+                $isUpdated = $this->updateGitHubInfo($rfs, $package, $match[1], $match[2], $repository);
+            }
+            if (false === $isUpdated) {
+                $this->updateReadme($io, $package, $repository);
+            }
         }
 
         if ($stabilityVersionUpdated !== 0) {
@@ -278,7 +249,7 @@ class Updater
             $this->providerManager->getPackageNames(true);
         }
 
-        if ($repository->hadInvalidBranches()) {
+        if ($repository instanceof VcsRepository && $repository->hadInvalidBranches()) {
             throw new InvalidRepositoryException('Some branches contained invalid data and were discarded, it is advised to review the log and fix any issues present in branches');
         }
 
@@ -286,15 +257,7 @@ class Updater
     }
 
     /**
-     * @param ArchiveManager $archiveManager
-     */
-    public function setArchiveManager(ArchiveManager $archiveManager)
-    {
-        $this->archiveManager = $archiveManager;
-    }
-
-    /**
-     * @param ArchiveManager $archiveManager
+     * @param ArchiveManager|null $archiveManager
      * @param Package $package
      * @param array $existingVersions
      * @param PackageInterface|CompletePackageInterface $data
@@ -308,7 +271,7 @@ class Updater
      *                    - object (Version instance if it was updated)
      */
     private function updateInformation(
-        ArchiveManager $archiveManager,
+        ?ArchiveManager $archiveManager,
         Package $package,
         array $existingVersions,
         PackageInterface $data,
@@ -562,19 +525,19 @@ class Updater
     }
 
     /**
-     * @param ArchiveManager $archiveManager
+     * @param ArchiveManager|null $archiveManager
      * @param PackageInterface|CompletePackageInterface $data
      *
      * @return array|null
      */
-    private function updateArchive(ArchiveManager $archiveManager, PackageInterface $data): ?array
+    private function updateArchive(?ArchiveManager $archiveManager, PackageInterface $data): ?array
     {
         if ($this->distConfig->isEnable() === false) {
             return null;
         }
 
-        if (false === $this->distConfig->isLazy()) {
-            $fileName= $this->distConfig->getFileName(
+        if (false === $this->distConfig->isLazy() && $archiveManager !== null) {
+            $fileName = $this->distConfig->getFileName(
                 $data->getSourceReference(),
                 $data->getVersion()
             );
@@ -645,12 +608,30 @@ class Updater
                     break;
 
                 case '.md':
-                    $source = $driver->getFileContent($readmeFile, $driver->getRootIdentifier());
+                    $source = null;
+                    $tries = array_unique([$readmeFile, strtolower($readmeFile), 'README.md', 'Readme.md']);
+                    try {
+                        foreach ($tries as $readmeFile) {
+                            if ($source = $driver->getFileContent($readmeFile, $driver->getRootIdentifier())) {
+                                break;
+                            }
+                        }
+                    } catch (\Exception $e) {
+                    }
+
+                    if (empty($source)) {
+                        return;
+                    }
+
                     $parser = new GithubMarkdown();
                     $readme = $parser->parse($source);
 
                     if (!empty($readme)) {
-                        $package->setReadme($this->prepareReadme($readme));
+                        if (preg_match('{^(?:git://|git@|https?://)(gitlab.com|github.com|bitbucket.org)[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match)) {
+                            $package->setReadme($this->prepareReadme($readme, $match[1], $match[2], $match[3]));
+                        } else {
+                            $package->setReadme($this->prepareReadme($readme));
+                        }
                     }
                     break;
             }
@@ -664,31 +645,36 @@ class Updater
         }
     }
 
-    private function updateGitHubInfo(RemoteFilesystem $rfs, Package $package, $owner, $repo, VcsRepository $repository)
+    private function updateGitHubInfo(RemoteFilesystem $rfs, Package $package, $owner, $repo, VcsRepository $repository): bool
     {
         $baseApiUrl = 'https://api.github.com/repos/'.$owner.'/'.$repo;
-
-        $driver = $repository->getDriver();
-        if (!$driver instanceof GitHubDriver) {
-            return;
+        if ($package->getSubDirectory()) {
+            $baseApiUrl .= '/' . trim($package->getSubDirectory(), '/');
         }
-
-        $repoData = $driver->getRepoData();
+        if (null !== $package->getParentPackage()) {
+            return false; // Skip to avoid github rate limit.
+        }
 
         try {
             $opts = ['http' => ['header' => ['Accept: application/vnd.github.v3.html']]];
             $readme = $rfs->getContents('github.com', $baseApiUrl.'/readme', false, $opts);
         } catch (\Exception $e) {
             if (!$e instanceof \Composer\Downloader\TransportException || $e->getCode() !== 404) {
-                return;
+                return false;
             }
             // 404s just mean no readme present so we proceed with the rest
         }
 
         if (!empty($readme)) {
-            $package->setReadme($this->prepareReadme($readme, true, $owner, $repo));
+            $package->setReadme($this->prepareReadme($readme, 'github.com', $owner, $repo));
         }
 
+        $driver = $repository->getDriver();
+        if (!$driver instanceof GitHubDriver) {
+            return true;
+        }
+
+        $repoData = $driver->getRepoData();
         if (!empty($repoData['language'])) {
             $package->setLanguage($repoData['language']);
         }
@@ -704,18 +690,11 @@ class Updater
         if (isset($repoData['open_issues_count'])) {
             $package->setGitHubOpenIssues($repoData['open_issues_count']);
         }
+
+        return true;
     }
 
-    /**
-     * Prepare the readme by stripping elements and attributes that are not supported .
-     *
-     * @param string $readme
-     * @param bool $isGithub
-     * @param null $owner
-     * @param null $repo
-     * @return string
-     */
-    private function prepareReadme($readme, $isGithub = false, $owner = null, $repo = null)
+    private function prepareReadme(string $readme, ?string $host = null, ?string $owner = null, ?string $repo = null): string
     {
         $elements = [
             'p',
@@ -734,51 +713,79 @@ class Updater
             'table', 'thead', 'tbody', 'th', 'tr', 'td',
             'a', 'span',
             'img',
+            'details', 'summary',
         ];
 
         $attributes = [
             'img.src', 'img.title', 'img.alt', 'img.width', 'img.height', 'img.style',
             'a.href', 'a.target', 'a.rel', 'a.id',
             'td.colspan', 'td.rowspan', 'th.colspan', 'th.rowspan',
-            '*.class'
+            'th.align', 'td.align', 'p.align',
+            'h1.align', 'h2.align', 'h3.align', 'h4.align', 'h5.align', 'h6.align',
+            '*.class', 'details.open',
         ];
+
+        // detect base path for github readme if file is located in a subfolder like docs/README.md
+        $basePath = '';
+        if ($host === 'github.com' && preg_match('{^<div id="readme" [^>]+?data-path="([^"]+)"}', $readme, $match) && str_contains((string)$match[1], '/')) {
+            $basePath = dirname($match[1]);
+        }
+        if ($basePath) {
+            $basePath .= '/';
+        }
 
         $config = \HTMLPurifier_Config::createDefault();
         $config->set('HTML.AllowedElements', implode(',', $elements));
         $config->set('HTML.AllowedAttributes', implode(',', $attributes));
         $config->set('Attr.EnableID', true);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
+
+        // add custom HTML tag definitions
+        $def = $config->getHTMLDefinition(true);
+        $def->addElement('details', 'Block', 'Flow', 'Common', [
+            'open' => 'Bool#open',
+        ]);
+        $def->addElement('summary', 'Inline', 'Inline', 'Common');
+
         $purifier = new \HTMLPurifier($config);
         $readme = $purifier->purify($readme);
 
+        libxml_use_internal_errors(true);
         $dom = new \DOMDocument();
         $dom->loadHTML('<?xml encoding="UTF-8">' . $readme);
 
         // Links can not be trusted, mark them nofollow and convert relative to absolute links
         $links = $dom->getElementsByTagName('a');
         foreach ($links as $link) {
-            $link->setAttribute('rel', 'nofollow noindex noopener external');
+            $link->setAttribute('rel', 'nofollow noindex noopener external ugc');
             if (str_starts_with($link->getAttribute('href'), '#')) {
                 $link->setAttribute('href', '#user-content-'.substr($link->getAttribute('href'), 1));
             } elseif (str_starts_with($link->getAttribute('href'), 'mailto:')) {
                 // do nothing
-            } elseif ($isGithub && !str_contains($link->getAttribute('href'), '//')) {
+            } elseif ($host === 'github.com' && !str_contains($link->getAttribute('href'), '//')) {
                 $link->setAttribute(
                     'href',
-                    'https://github.com/'.$owner.'/'.$repo.'/blob/HEAD/'.$link->getAttribute('href')
+                    'https://github.com/'.$owner.'/'.$repo.'/blob/HEAD/'.$basePath.$link->getAttribute('href')
+                );
+            } elseif ($host === 'gitlab.com' && !str_contains($link->getAttribute('href'), '//')) {
+                $link->setAttribute(
+                    'href',
+                    'https://gitlab.com/'.$owner.'/'.$repo.'/-/blob/HEAD/'.$basePath.$link->getAttribute('href')
                 );
             }
         }
 
-        if ($isGithub) {
-            // convert relative to absolute images
+        // embed images of selected hosts by converting relative links to accessible URLs
+        if (in_array($host, ['github.com', 'gitlab.com', 'bitbucket.org'], true)) {
             $images = $dom->getElementsByTagName('img');
             foreach ($images as $img) {
                 if (!str_contains($img->getAttribute('src'), '//')) {
-                    $img->setAttribute(
-                        'src',
-                        'https://raw.github.com/'.$owner.'/'.$repo.'/HEAD/'.$img->getAttribute('src')
-                    );
+                    $imgSrc = match ($host) {
+                        'github.com' => 'https://raw.github.com/'.$owner.'/'.$repo.'/HEAD/'.$basePath.$img->getAttribute('src'),
+                        'gitlab.com' => 'https://gitlab.com/'.$owner.'/'.$repo.'/-/raw/HEAD/'.$basePath.$img->getAttribute('src'),
+                        'bitbucket.org' => 'https://bitbucket.org/'.$owner.'/'.$repo.'/raw/HEAD/'.$basePath.$img->getAttribute('src'),
+                    };
+                    $img->setAttribute('src', $imgSrc);
                 }
             }
         }
@@ -791,18 +798,25 @@ class Updater
         }
 
         if ($first && ('h1' === $first->nodeName || 'h2' === $first->nodeName)) {
-            $first->parentNode->removeChild($first);
+            $first->parentNode?->removeChild($first);
         }
 
-        $readme = $dom->saveHTML();
-        $readme = substr($readme, strpos($readme, '<body>')+6);
-        $readme = substr($readme, 0, strrpos($readme, '</body>'));
+        $readme = $dom->saveHTML() ?: '';
+        $readme = substr($readme, strpos($readme, '<body>') + 6);
+        $readme = substr($readme, 0, strrpos($readme, '</body>') ?: PHP_INT_MAX);
+
+        libxml_use_internal_errors(false);
+        libxml_clear_errors();
 
         return str_replace("\r\n", "\n", $readme);
     }
 
-    private function sanitize($str)
+    private function sanitize(string|null $str): string|null
     {
+        if (null === $str) {
+            return null;
+        }
+
         // remove escape chars
         $str = preg_replace("{\x1B(?:\[.)?}u", '', $str);
 

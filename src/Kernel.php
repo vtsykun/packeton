@@ -8,6 +8,7 @@ use Packeton\DBAL\Types\EncryptedTextType;
 use Packeton\DependencyInjection\CompilerPass\ApiFirewallCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\LdapServicesPass;
 use Packeton\DependencyInjection\CompilerPass\MirrorsConfigCompilerPass;
+use Packeton\DependencyInjection\CompilerPass\UpdaterLocatorPass;
 use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packeton\DependencyInjection\PacketonExtension;
 use Packeton\DependencyInjection\Security\ApiHttpBasicFactory;
@@ -78,6 +79,7 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new LdapServicesPass());
         $container->addCompilerPass(new ApiFirewallCompilerPass());
         $container->addCompilerPass(new WorkerLocatorPass());
+        $container->addCompilerPass(new UpdaterLocatorPass());
         $container->addCompilerPass(new MirrorsConfigCompilerPass());
     }
 

@@ -6,15 +6,17 @@ namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\AsWorker;
+use Packeton\Composer\IO\DebugIO;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Event\UpdaterErrorEvent;
 use Packeton\Exception\JobException;
+use Packeton\Model\ConsoleAwareInterface;
 use Packeton\Model\ValidatingArrayLoader;
+use Packeton\Package\UpdaterFactory;
 use Psr\Log\LoggerInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Console\HtmlOutputFormatter;
 use Composer\Repository\InvalidRepositoryException;
-use Composer\IO\BufferIO;
 use Symfony\Component\Console\Output\OutputInterface;
 use Packeton\Entity\Package;
 use Packeton\Package\Updater;
@@ -27,12 +29,14 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Lock\LockFactory;
 
 #[AsWorker('package:updates')]
-class UpdaterWorker
+class UpdaterWorker implements ConsoleAwareInterface
 {
+    private $cmdOutput;
+
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ManagerRegistry $doctrine,
-        private readonly Updater $updater,
+        private readonly UpdaterFactory $updaterFactory,
         private readonly LockFactory $lockFactory,
         private readonly PackageManager $packageManager,
         private readonly PackagistFactory $packagistFactory,
@@ -59,7 +63,8 @@ class UpdaterWorker
         }
 
         $this->logger->info('Updating '.$package->getName());
-        $io = new BufferIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()));
+        $io = new DebugIO('', OutputInterface::VERBOSITY_VERY_VERBOSE, new HtmlOutputFormatter(Factory::createAdditionalStyles()), 200000);
+        $io->setOutput($this->cmdOutput);
 
         try {
             $config = $this->packagistFactory->createConfig($credentials = $package->getCredentials());
@@ -76,15 +81,19 @@ class UpdaterWorker
                 $flags = Updater::DELETE_BEFORE;
             }
 
+            $updater = $this->updaterFactory->createUpdater($package->getRepoType());
+
             // prepare dependencies
             $loader = new ValidatingArrayLoader(new ArrayLoader());
 
             // prepare repository
-            $repository = $this->packagistFactory->createRepository($package->getRepository(), $io, $config);
-            $repository->setLoader($loader);
+            $repository = $this->packagistFactory->createRepository($package->getRepository(), $io, $config, null, $package->getRepoConfig());
+            if (method_exists($repository, 'setLoader')) {
+                $repository->setLoader($loader);
+            }
 
             // perform the actual update (fetch and re-scan the repository's source)
-            $package = $this->updater->update($io, $config, $package, $repository, $flags);
+            $package = $updater->update($io, $config, $package, $repository, $flags, $signal);
         } catch (\Throwable $e) {
             $output = $io->getOutput();
 
@@ -176,7 +185,15 @@ class UpdaterWorker
         return [
             'status' => Job::STATUS_COMPLETED,
             'message' => 'Update of '.$package->getName().' complete',
-            'details' => '<pre>'.$io->getOutput().'</pre>'
+            'details' => '<pre>' . substr($io->getOutput(), 0, 1000000) . '</pre>'
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setOutput(OutputInterface $output = null): void
+    {
+        $this->cmdOutput = $output;
     }
 }
