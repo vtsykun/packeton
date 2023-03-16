@@ -81,7 +81,22 @@ paths:
             example: $Package
             <<: *pkg-param
     
-        
+    '/api/packages/{name}/changelog':
+        get:
+            tags: [ Packages ]
+            summary: 'Get Git changelog for package'
+            parameters:
+                -   name: name
+                    in: path
+                    required: true
+                    type: string
+                -   name: from
+                    description: From version, example v2.8.0
+                    in: query
+                -   name: to
+                    description: To version, example v2.8.1
+                    in: query
+
 examples:
     Package: |
         {

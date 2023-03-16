@@ -427,17 +427,11 @@ class PackageController extends AbstractController
     }
 
 
-    #[Route('/packages/{package}/changelog', name: 'package_changelog', requirements: ['name' => '%package_name_regex%'], methods: ['GET'])]
-    public function changelogAction($package, Request $request): Response
+    #[Route('/packages/{name}/changelog', name: 'package_changelog', requirements: ['name' => '%package_name_regex%'], defaults: ['_format' => 'json'], methods: ['GET'])]
+    public function changelogAction(#[Vars] Package $package, Request $request): Response
     {
         if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
             return new JsonResponse(['error' => 'Access denied'], 403);
-        }
-
-        $package = $this->registry->getRepository(Package::class)
-            ->findOneBy(['name' => $package]);
-        if (null === $package) {
-            return new JsonResponse(['error' => 'Not found'], 404);
         }
 
         $changelogBuilder = $this->container->get(ChangelogUtils::class);
