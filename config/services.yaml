@@ -94,6 +94,10 @@ services:
     Packeton\Resolver\ControllerArgumentResolver:
         tags:
             - { name: controller.argument_value_resolver, priority: 105 }
+    
+    Packeton\Service\AssetHashVersionStrategy:
+        arguments:
+            $publicDir: '%kernel.project_dir%/public'
 
     Packeton\Security\Acl\AnonymousVoter:
         arguments:
