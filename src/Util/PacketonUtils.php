@@ -40,6 +40,16 @@ class PacketonUtils
         return $packages;
     }
 
+    public static function buildPath(string $baseDir, ...$paths): string
+    {
+        $baseDir = rtrim($baseDir, '/') . '/';
+        foreach ($paths as $path) {
+            $baseDir .= ltrim($path, '/') . '/';
+        }
+
+        return rtrim($baseDir, '/');
+    }
+
     public static function matchGlob(array $listOf, ?string $globs, ?string $excluded = null, ?string $included = null, string $suffix = '/composer.json'): array
     {
         $excluded = $excluded ? explode("\n", $excluded) : [];

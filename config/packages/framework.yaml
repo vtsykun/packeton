@@ -6,6 +6,8 @@ framework:
     trusted_proxies: '%env(TRUSTED_PROXIES)%'
     trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
     trusted_hosts: '%env(TRUSTED_HOSTS)%'
+    assets:
+        version_strategy: Packeton\Service\AssetHashVersionStrategy
 
     cache:
         pools:
