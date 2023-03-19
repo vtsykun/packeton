@@ -46,7 +46,16 @@
         };
 
         let success = function (data) {
-            console.log(data);
+            if (data.success) {
+                window.location.reload();
+                return;
+            }
+            let button = model.find('.btn-primary');
+            if (data.html) {
+                button.removeClass('loading');
+                model.find('.modal-content').html(data.html);
+                bindEvents();
+            }
         }
 
         let options = {

@@ -154,7 +154,7 @@
                                     </td>
                                     <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
                                     <td>{{ p['approved'] ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-times" style="color: #8B0000FF"></i>' }}</td>
-                                    <td><a href="{{ path('proxy_package_meta_patch', { 'alias': proxy.alias, 'package': p['name'] }) }}" class="patch-metadata" title="Edit/Patch metadata">Edit <i class="fa fa-bezier-curve" style="color: inherit"></i></a></td>
+                                    <td><a href="{{ path('proxy_package_meta_patch', { 'alias': proxy.alias, 'package': p['name'] }) }}" class="patch-metadata" title="Edit/Patch metadata">Edit <i class="fa fa-bezier-curve" style="color: {{ p['patched'] ? 'red' : 'inherit' }}"></i></a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>

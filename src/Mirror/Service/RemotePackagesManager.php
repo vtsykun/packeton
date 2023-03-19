@@ -55,11 +55,15 @@ class RemotePackagesManager implements ApprovalRepoInterface
         return $package ? ($settings[$package] ?? []) : $settings;
     }
 
-    public function unsetPatchMetadata(string $package = null): void
+    public function unsetPatchMetadata(string $package = null, string $version = null): void
     {
         $settings = $this->getPatchMetadata();
         if ($package) {
-            unset($settings[$package]);
+            if ($version) {
+                unset($settings[$package][$version]);
+            } else {
+                unset($settings[$package]);
+            }
         } else {
             $settings = [];
         }

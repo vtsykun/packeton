@@ -18,14 +18,14 @@ class ApiMetadataUtils
 
     public static function applyMetadataPatchV1(string $package, array $metadata, array $patchData): array
     {
-        @[$strategy, $data] = $patchData;
-        if (empty($data) || !isset($metadata['packages'][$package])) {
+        if (empty($patchData) || !isset($metadata['packages'][$package])) {
             return $metadata;
         }
 
         $data = $metadata['packages'][$package];
         foreach ($data as $i => $item) {
             if ($patch = $patchData[$item['version_normalized'] ?? ''] ?? null) {
+                @[$strategy, $patch] = $patch;
                 $item = match ($strategy) {
                     'merge' => \array_merge($item, $patch),
                     'merge_recursive' => \array_merge_recursive($item, $patch),

@@ -126,12 +126,25 @@ class ProxiesController extends AbstractController
             return new JsonResponse(['error' => 'metadata not found']);
         }
 
-        $meta = $meta->decodeJson()['packages'][$package] ?? [];
-        $example = json_encode(end($meta), 448);
-        $versions = array_column($meta, 'version_normalized');
-        $data = $repo->getPackageManager()->getPatchMetadata($package);
+        $metadata = $meta->decodeJson();
+        $data = $metadata['packages'][$package] ?? [];
+        $example = json_encode(end($data), 448);
+        $versions = array_column($data, 'version_normalized');
+        $data = null;
 
-        $form = $this->createForm(EditMetadataType::class, null, ['versions' => $versions]);
+        if ($patch = $repo->getPackageManager()->getPatchMetadata($package)) {
+            $version = array_key_first($patch);
+            $patch = reset($patch);
+            if (isset($patch[1])) {
+                $data = [
+                    'strategy' => $patch[0],
+                    'version' => $version,
+                    'metadata' => json_encode(reset($patch[1]), 448)
+                ];
+            }
+        }
+
+        $form = $this->createForm(EditMetadataType::class, $data, ['versions' => $versions, 'metadata' => $metadata]);
         if ($request->getMethod() === 'POST') {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
@@ -244,8 +257,9 @@ class ProxiesController extends AbstractController
 
         $rpm = $repo->getPackageManager();
         $privatePackages = $this->providerManager->getPackageNames();
+        $patched = array_keys($rpm->getPatchMetadata());
 
-        $packages = MirrorUIFormatter::getGridPackagesData($rpm->getApproved(), $rpm->getEnabled(), $privatePackages);
+        $packages = MirrorUIFormatter::getGridPackagesData($rpm->getApproved(), $rpm->getEnabled(), $privatePackages, $patched);
 
         return [
             'repoUrl' => $repoUrl,

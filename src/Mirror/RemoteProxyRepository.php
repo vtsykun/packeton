@@ -271,6 +271,12 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function setPatchData(array $data): void
     {
+        if (!empty($data['metadata'])) {
+            $metadata = is_string($data['metadata']) ? json_decode($data['metadata'], true) : $data['metadata'];
+            $this->getPackageManager()->patchMetadata($data['package'], $data['version'], $data['strategy'], $metadata);
+        } else {
+            $this->getPackageManager()->unsetPatchMetadata($data['package'], $data['version']);
+        }
     }
 
     public function hasProvider(string $uri): bool
