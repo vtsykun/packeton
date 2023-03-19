@@ -63,7 +63,16 @@ class PackagistFactory
         $dm ??= $this->createDownloadManager($io, $repository);
         $repoConfig = $repository->getRepoConfig();
 
-        $am = new Archiver\ArchiveManager($dm, new Loop($repository->getHttpDownloader(), $repository->getProcessExecutor()));
+        $am = new Archiver\ArchiveManager(
+            $dm,
+            new Loop($repository->getHttpDownloader(), $repository->getProcessExecutor()),
+            $repository->getConfig(),
+            $repository->getProcessExecutor(),
+            $repoConfig,
+            $io,
+            $repository->getHttpDownloader()
+        );
+
         if (class_exists(\ZipArchive::class)) {
             $am->addArchiver(new CA\ZipArchiver);
         }
