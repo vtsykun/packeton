@@ -41,10 +41,11 @@ class MirrorUIFormatter
         return $grouped;
     }
 
-    public static function getGridPackagesData(array $approved, array $enabled, array $privatePackages): array
+    public static function getGridPackagesData(array $approved, array $enabled, array $privatePackages, array $patched = []): array
     {
         $packages = [];
         $approved = \array_flip($approved);
+        $patched = \array_flip($patched);
         $privatePackages = \array_flip($privatePackages);
 
         foreach ($enabled as $name) {
@@ -52,7 +53,8 @@ class MirrorUIFormatter
                 'name' => $name,
                 'enabled' => true,
                 'approved' => isset($approved[$name]),
-                'private' => isset($privatePackages[$name])
+                'private' => isset($privatePackages[$name]),
+                'patched' => isset($patched[$name]),
             ];
         }
 

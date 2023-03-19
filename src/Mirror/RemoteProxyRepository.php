@@ -11,6 +11,7 @@ use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\Model\RepoCaps;
 use Packeton\Mirror\Service\RemotePackagesManager;
 use Packeton\Mirror\Service\ZipballDownloadManager;
+use Packeton\Mirror\Utils\ApiMetadataUtils;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -100,6 +101,14 @@ class RemoteProxyRepository extends AbstractProxyRepository
         @[$package, $hash] = \explode('$', $name);
 
         $config = $this->getConfig();
+
+        $patch = function (array $metadata) use ($package) {
+            if ($patchData = $this->getPackageManager()->getPatchMetadata($package)) {
+                return ApiMetadataUtils::applyMetadataPatchV1($package, $metadata, $patchData);
+            }
+            return $metadata;
+        };
+
         // Satis API. Check includes without loading big data
         if ($config->matchCaps([RepoCaps::INCLUDES, RepoCaps::PACKAGES])) {
             if ($modifiedSince && $config->lastModifiedUnix() <= $modifiedSince) {
@@ -110,13 +119,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
             if ($packages = $this->lookIncludePackageMetadata($root, $package)) {
                 $content = \json_encode(['packages' => [$package => $packages]], \JSON_UNESCAPED_SLASHES);
                 $unix = $config->lastModifiedUnix();
-                return new JsonMetadata($content, $unix, null, $this->repoConfig);
+                return new JsonMetadata($content, $unix, null, $this->repoConfig, $patch);
             }
         }
 
         $filename = $this->packageDir . $this->packageKey($package, $hash);
         if ($this->filesystem->exists($filename)) {
-            return $this->createMetadataFromFile($filename, $hash, $modifiedSince);
+            return $this->createMetadataFromFile($filename, $hash, $modifiedSince, $patch);
         }
 
         return null;
@@ -157,7 +166,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $packages;
     }
 
-    protected function createMetadataFromFile(string $filename, string $hash = null, int $modifiedSince = null): JsonMetadata
+    protected function createMetadataFromFile(string $filename, string $hash = null, int $modifiedSince = null, mixed $patch  = null): JsonMetadata
     {
         $unix = @\filemtime($filename) ?: null;
         if ($modifiedSince && $unix && $unix <= $modifiedSince) {
@@ -165,7 +174,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         }
 
         $content = \file_get_contents($filename);
-        return new JsonMetadata($content, $unix, $hash, $this->repoConfig);
+        return new JsonMetadata($content, $unix, $hash, $this->repoConfig, $patch);
     }
 
     public function dumpRootMeta(array $root): void
@@ -257,6 +266,16 @@ class RemoteProxyRepository extends AbstractProxyRepository
         if ($hash !== null) {
             $filename = $this->packageDir . $this->packageKey($package);
             $this->filesystem->dumpFile($filename, $content);
+        }
+    }
+
+    public function setPatchData(array $data): void
+    {
+        if (!empty($data['metadata'])) {
+            $metadata = is_string($data['metadata']) ? json_decode($data['metadata'], true) : $data['metadata'];
+            $this->getPackageManager()->patchMetadata($data['package'], $data['version'], $data['strategy'], $metadata);
+        } else {
+            $this->getPackageManager()->unsetPatchMetadata($data['package'], $data['version']);
         }
     }
 

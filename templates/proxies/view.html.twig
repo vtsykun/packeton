@@ -136,6 +136,7 @@
                             <th scope="col">Package name</th>
                             <th scope="col">Enabled</th>
                             <th scope="col">Approved</th>
+                            <th scope="col">Patch</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -153,6 +154,7 @@
                                     </td>
                                     <td>{{ p['enabled'] ? 'YES' : 'NO' }}</td>
                                     <td>{{ p['approved'] ? '<i class="fa fa-check" style="color: green"></i>' : '<i class="fa fa-times" style="color: #8B0000FF"></i>' }}</td>
+                                    <td><a href="{{ path('proxy_package_meta_patch', { 'alias': proxy.alias, 'package': p['name'] }) }}" class="patch-metadata" title="Edit/Patch metadata">Edit <i class="fa fa-bezier-curve" style="color: {{ p['patched'] ? 'red' : 'inherit' }}"></i></a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -173,6 +175,13 @@
             </div>
             <div class="modal-body">
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="patch-model" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
         </div>
     </div>
 </div>

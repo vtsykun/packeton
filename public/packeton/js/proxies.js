@@ -27,6 +27,50 @@
         $.ajax(options);
     });
 
+    $('a.patch-metadata').on('click', (e) => {
+        e.preventDefault();
+        let model = $('#patch-model');
+        let $el = $(e.currentTarget);
+        let url = $el.attr('href');
+
+        model.find('.modal-content').html('');
+
+        let bindEvents = function () {
+            let form = model.find('form');
+            let button = model.find('.btn-primary');
+
+            button.on('click', (e) => {
+                button.addClass('loading');
+                $.post(url, form.serializeArray(), success);
+            });
+        };
+
+        let success = function (data) {
+            if (data.success) {
+                window.location.reload();
+                return;
+            }
+            let button = model.find('.btn-primary');
+            if (data.html) {
+                button.removeClass('loading');
+                model.find('.modal-content').html(data.html);
+                bindEvents();
+            }
+        }
+
+        let options = {
+            type: 'GET',
+            url: url,
+            success: (data) => {
+                model.find('.modal-content').html(data.html);
+                model.modal({show: true});
+                bindEvents();
+            }
+        };
+
+        $.ajax(options);
+    })
+
     let updateBtn = $('.update.action').find('.btn');
     updateBtn.on('click', (e) => {
         e.preventDefault();
