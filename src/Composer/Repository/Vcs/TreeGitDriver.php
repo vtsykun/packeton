@@ -88,4 +88,23 @@ class TreeGitDriver extends GitDriver
 
         return $driver;
     }
+
+    public function makeArchive(string $identifier, string $targetDir, string $format = 'zip'): ?string
+    {
+        if (str_starts_with($identifier, '-')) {
+            throw new \RuntimeException('Invalid git identifier detected. Identifier must not start with a -, given: ' . $identifier);
+        }
+
+        $format = ProcessExecutor::escape($format);
+        $subDirectory = $this->subDirectory ? ':' . trim($this->subDirectory, '/') : '';
+
+        $identifier = ProcessExecutor::escape($identifier . $subDirectory);
+        $this->process->execute(sprintf('git archive %s --format=%s -o %s', $identifier, $format, ProcessExecutor::escape($targetDir)), $content, $this->repoDir);
+
+        if (file_exists($targetDir) && filesize($targetDir) > 0) {
+            return $targetDir;
+        }
+
+        return null;
+    }
 }

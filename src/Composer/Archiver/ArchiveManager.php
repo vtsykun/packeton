@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Packeton\Composer\Archiver;
 
+use Composer\Config;
+use Composer\Downloader\DownloadManager;
+use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Package\Archiver\ArchiveManager as ComposerArchiveManager;
 use Composer\Package\Archiver\PharArchiver;
@@ -11,11 +14,28 @@ use Composer\Package\Archiver\ZipArchiver;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\RootPackageInterface;
 use Composer\Util\Filesystem;
+use Composer\Util\HttpDownloader;
+use Composer\Util\Loop;
+use Composer\Util\ProcessExecutor;
 use Composer\Util\SyncHelper;
+use Packeton\Composer\Repository\Vcs\TreeGitDriver;
+use Packeton\Util\PacketonUtils;
 
 class ArchiveManager extends ComposerArchiveManager
 {
     protected $subDirectory;
+
+    public function __construct(
+        DownloadManager $downloadManager,
+        Loop $loop,
+        protected Config $config,
+        protected ProcessExecutor $processExecutor,
+        protected array $repoConfig,
+        protected IOInterface $io,
+        protected HttpDownloader $httpDownloader
+    ) {
+        parent::__construct($downloadManager, $loop);
+    }
 
     public function setSubDirectory(?string $subDir): void
     {
@@ -29,6 +49,10 @@ class ArchiveManager extends ComposerArchiveManager
     {
         if (empty($format)) {
             throw new \InvalidArgumentException('Format must be specified');
+        }
+
+        if ($path = $this->tryFromGitArchive($package, $format, $targetDir, $fileName)) {
+            return $path;
         }
 
         // Search for the most appropriate archiver
@@ -117,6 +141,64 @@ class ArchiveManager extends ComposerArchiveManager
         $filesystem->remove($tempTarget);
 
         return $target;
+    }
+
+    public function tryFromGitArchive(CompletePackageInterface $package, string $format, string $targetDir, ?string $fileName = null): ?string
+    {
+        if ($package->getSourceType() !== 'git') {
+            return null;
+        }
+
+        $filesystem = new Filesystem();
+        $driver = new TreeGitDriver($this->repoConfig, $this->io, $this->config, $this->httpDownloader, $this->processExecutor);
+        $driver = $driver->withSubDirectory($this->subDirectory);
+
+        PacketonUtils::toggleNetwork(false);
+        try {
+            $driver->initialize();
+        } finally {
+            PacketonUtils::toggleNetwork(true);
+        }
+
+        try {
+            $jsonData = $driver->getComposerInformation($package->getSourceReference());
+            if (empty($jsonData)) {
+                return null;
+            }
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        $packageNameParts = null === $fileName ?
+            $this->getPackageFilenameParts($package)
+            : ['base' => $fileName];
+
+        $packageName = $this->getPackageFilenameFromParts($packageNameParts);
+
+        $filesystem->ensureDirectoryExists($targetDir);
+        $target = realpath($targetDir).'/'.$packageName.'.'.$format;
+        $filesystem->ensureDirectoryExists(dirname($target));
+
+        if (!$this->overwriteFiles && file_exists($target)) {
+            return $target;
+        }
+        // Create the archive
+        $tempTarget = sys_get_temp_dir().'/composer_archive'.uniqid().'.'.$format;
+        $filesystem->ensureDirectoryExists(dirname($tempTarget));
+
+        try {
+            $tempTarget = $driver->makeArchive($package->getSourceReference(), $tempTarget, $format);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        if ($tempTarget) {
+            $filesystem->rename($tempTarget, $target);
+            $filesystem->remove($tempTarget);
+            return $target;
+        }
+
+        return null;
     }
 
     /**
