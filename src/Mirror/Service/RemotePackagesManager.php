@@ -8,15 +8,24 @@ use Packeton\Mirror\Model\ApprovalRepoInterface;
 
 class RemotePackagesManager implements ApprovalRepoInterface
 {
+    private string $patchKey;
+    private string $settingKey;
+    private string $enabledKey;
+    private string $approvedKey;
+
     public function __construct(
         private readonly \Redis $redis,
         private readonly string $repo,
     ) {
+        $this->patchKey = "repo:{$this->repo}:patches";
+        $this->settingKey = "repo:{$this->repo}:settings";
+        $this->enabledKey = "repo:{$this->repo}:enabled";
+        $this->approvedKey = "repo:{$this->repo}:approve";
     }
 
     public function getSettings(): array
     {
-        $settings = $this->redis->get("repo:{$this->repo}:settings");
+        $settings = $this->redis->get($this->settingKey);
         $settings = $settings ? \json_decode($settings, true) : [];
 
         return [
@@ -28,7 +37,34 @@ class RemotePackagesManager implements ApprovalRepoInterface
 
     public function setSettings(array $settings): void
     {
-        $this->redis->set("repo:{$this->repo}:settings", \json_encode($settings));
+        $this->redis->set($this->settingKey, \json_encode($settings));
+    }
+
+    public function patchMetadata(string $package, string $version, string $strategy, array $metadata): void
+    {
+        $settings = $this->getPatchMetadata();
+        $settings[$package][$version] = [$strategy, $metadata];
+        $this->redis->set($this->patchKey, \json_encode($settings));
+    }
+
+    public function getPatchMetadata(string $package = null): array
+    {
+        $settings = $this->redis->get($this->patchKey);
+        $settings = $settings ? \json_decode($settings, true) : [];
+
+        return $package ? ($settings[$package] ?? []) : $settings;
+    }
+
+    public function unsetPatchMetadata(string $package = null): void
+    {
+        $settings = $this->getPatchMetadata();
+        if ($package) {
+            unset($settings[$package]);
+        } else {
+            $settings = [];
+        }
+
+        $this->redis->set($this->patchKey, \json_encode($settings));
     }
 
     /**
@@ -46,12 +82,12 @@ class RemotePackagesManager implements ApprovalRepoInterface
 
     public function markEnable(string $name): void
     {
-        $this->redis->sAdd("repo:{$this->repo}:enabled", $name);
+        $this->redis->sAdd($this->enabledKey, $name);
     }
 
     public function getEnabled(): array
     {
-        return $this->redis->sMembers("repo:{$this->repo}:enabled") ?: [];
+        return $this->redis->sMembers($this->enabledKey) ?: [];
     }
 
     /**
@@ -59,7 +95,7 @@ class RemotePackagesManager implements ApprovalRepoInterface
      */
     public function getApproved(): array
     {
-        return $this->redis->sMembers("repo:{$this->repo}:approve") ?: [];
+        return $this->redis->sMembers($this->approvedKey) ?: [];
     }
 
     /**
@@ -67,13 +103,13 @@ class RemotePackagesManager implements ApprovalRepoInterface
      */
     public function markApprove(string $name): void
     {
-        $this->redis->sAdd("repo:{$this->repo}:approve", $name);
-        $this->redis->sAdd("repo:{$this->repo}:enabled", $name);
+        $this->redis->sAdd($this->approvedKey, $name);
+        $this->redis->sAdd($this->enabledKey, $name);
     }
 
     public function markDisable(string $name): void
     {
-        $this->redis->sRem("repo:{$this->repo}:enabled", $name);
+        $this->redis->sRem($this->enabledKey, $name);
     }
 
     /**
@@ -81,7 +117,7 @@ class RemotePackagesManager implements ApprovalRepoInterface
      */
     public function removeApprove(string $name): void
     {
-        $this->redis->sRem("repo:{$this->repo}:approve", $name);
-        $this->redis->sRem("repo:{$this->repo}:enabled", $name);
+        $this->redis->sRem($this->approvedKey, $name);
+        $this->redis->sRem($this->enabledKey, $name);
     }
 }

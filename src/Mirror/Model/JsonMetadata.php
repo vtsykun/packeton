@@ -15,6 +15,7 @@ class JsonMetadata
         private ?int $unix = null,
         private ?string $hash = null,
         private array $options = [],
+        private mixed $patches = null
     ) {
         if (null === $this->unix) {
             $this->unix = \time();
@@ -33,7 +34,7 @@ class JsonMetadata
 
     public function getContent(): string
     {
-        return $this->decode($this->content);
+        return $this->applyPatch($this->decode($this->content));
     }
 
     public function decodeJson(): array
@@ -62,6 +63,13 @@ class JsonMetadata
         return new MetadataOptions($this->options);
     }
 
+    public function withPatch(callable $patchData = null): self
+    {
+        $clone = clone $this;
+        $this->patches = $patchData;
+        return $clone;
+    }
+
     public function withContent(string|array|callable $content, int $flags = \JSON_UNESCAPED_SLASHES): self
     {
         if (\is_callable($content)) {
@@ -73,6 +81,7 @@ class JsonMetadata
         $clone = clone $this;
         $clone->content = $content;
         $clone->hash = null;
+        $clone->patches = null;
 
         return $clone;
     }
@@ -83,5 +92,15 @@ class JsonMetadata
         $object->notModified = true;
 
         return $object;
+    }
+
+    private function applyPatch(string $meta): string
+    {
+        if (\is_callable($this->patches)) {
+            $meta = \call_user_func($this->patches, \json_decode($meta, true) ?: []);
+            return \is_string($meta) ? $meta : \json_encode($meta, \JSON_UNESCAPED_SLASHES);
+        }
+
+        return $meta;
     }
 }

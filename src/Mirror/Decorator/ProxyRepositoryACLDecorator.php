@@ -9,7 +9,7 @@ use Packeton\Mirror\Model\ApprovalRepoInterface;
 use Packeton\Mirror\Model\JsonMetadata;
 use Packeton\Mirror\Model\StrictProxyRepositoryInterface as RPI;
 use Packeton\Mirror\RemoteProxyRepository;
-use Packeton\Mirror\Utils\IncludeV1ApiMetadata;
+use Packeton\Mirror\Utils\ApiMetadataUtils;
 
 /**
  * Filter by available_packages, available_package_patterns
@@ -40,7 +40,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
 
             if (null !== $this->remote) {
                 $metadata->setOption('includes', function () use ($approved) {
-                    [$includes] = IncludeV1ApiMetadata::buildIncludes($approved, $this->remote);
+                    [$includes] = ApiMetadataUtils::buildIncludesV1($approved, $this->remote);
                     return $includes;
                 });
             }
@@ -62,7 +62,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     {
         if (\str_starts_with($nameOrUri, 'include-packeton/all$') && null !== $this->remote) {
             $approved = $this->approval->getApproved();
-            [$includes, $content] = IncludeV1ApiMetadata::buildIncludes($approved, $this->remote);
+            [$includes, $content] = ApiMetadataUtils::buildIncludesV1($approved, $this->remote);
             if (isset($includes[$nameOrUri])) {
                 return new JsonMetadata($content);
             }

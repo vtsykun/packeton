@@ -6,6 +6,7 @@ namespace Packeton\Controller;
 
 use Composer\Downloader\TransportException;
 use Packeton\Composer\MetadataMinifier;
+use Packeton\Form\Type\EditMetadataType;
 use Packeton\Form\Type\ProxySettingsType;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\ProxyInfoInterface;
@@ -17,7 +18,6 @@ use Packeton\Mirror\Service\RemoteSyncProxiesFacade;
 use Packeton\Mirror\Utils\MirrorPackagesValidate;
 use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Packeton\Mirror\Utils\MirrorUIFormatter;
-use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\JobScheduler;
 use Packeton\Util\HtmlJsonHuman;
@@ -111,6 +111,44 @@ class ProxiesController extends AbstractController
         $metadata = $this->metadataMinifier->minify($json, null)['packages'][$package] ?? [];
 
         return new Response($jsonHuman->buildToHtml($metadata));
+    }
+
+    #[Route(
+        '/{alias}/metadata-patch/{package}',
+        name: 'proxy_package_meta_patch',
+        requirements: ['package' => '.+'],
+        methods: ["POST", "GET"]
+    )]
+    public function patchMetadata(Request $request, string $alias, string $package)
+    {
+        $repo = $this->getRemoteRepository($alias);
+        if (!$meta = $repo->findPackageMetadata($package)?->withPatch()) {
+            return new JsonResponse(['error' => 'metadata not found']);
+        }
+
+        $meta = $meta->decodeJson()['packages'][$package] ?? [];
+        $example = json_encode(end($meta), 448);
+        $versions = array_column($meta, 'version_normalized');
+        $data = $repo->getPackageManager()->getPatchMetadata($package);
+
+        $form = $this->createForm(EditMetadataType::class, null, ['versions' => $versions]);
+        if ($request->getMethod() === 'POST') {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $data = $form->getData();
+                $data['package'] = $package;
+                $repo->setPatchData($data);
+
+                return new JsonResponse(['success' => true]);
+            }
+        }
+
+        $html = $this->render('proxies/widget/patch.html.twig', [
+            'form' => $form->createView(),
+            'example' => $example
+        ]);
+
+        return new JsonResponse(['html' => $html->getContent()]);
     }
 
     #[Route('/{alias}/update', name: 'proxy_update', methods: ["PUT"])]
