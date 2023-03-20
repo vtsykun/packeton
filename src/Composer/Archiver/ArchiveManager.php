@@ -51,8 +51,11 @@ class ArchiveManager extends ComposerArchiveManager
             throw new \InvalidArgumentException('Format must be specified');
         }
 
-        if ($path = $this->tryFromGitArchive($package, $format, $targetDir, $fileName)) {
-            return $path;
+        try {
+            if ($path = $this->tryFromGitArchive($package, $format, $targetDir, $fileName)) {
+                return $path;
+            }
+        } catch (\Exception $e) {
         }
 
         // Search for the most appropriate archiver
