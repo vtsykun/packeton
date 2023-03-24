@@ -50,7 +50,7 @@ Table of content
         - [Gitlab setup auto webhook](/docs/webhook.md#gitlab-auto-webhook)
 - [Ssh key access](#ssh-key-access-and-composer-oauth-token)
 - [Configuration](#configuration)
-- [LPAD Authenticating](/docs/authentication-ldap.md)
+- [LDAP Authenticating](/docs/authentication-ldap.md)
 - [Update Webhooks](#update-webhooks)
     - [Github](#github-webhooks)
     - [GitLab](#gitlab-service)
