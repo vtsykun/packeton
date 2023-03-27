@@ -22,9 +22,8 @@ class PacketonExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('packagist_web.rss_max_items', $config['rss_max_items']);
-        if (true === $config['archive']) {
-            $container->setParameter('packeton_archive_opts', $config['archive_options'] ?? []);
-        }
+        $container->setParameter('packeton_archive_all_opts', $config['archive_options'] ?? []);
+        $container->setParameter('packeton_archive_opts', true === $config['archive'] ? $container->getParameter('packeton_archive_all_opts') : []);
 
         $container->setParameter('packeton_dumper_opts', $config['metadata'] ?? []);
 

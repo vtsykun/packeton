@@ -533,6 +533,14 @@ class Updater implements UpdaterInterface
     private function updateArchive(?ArchiveManager $archiveManager, PackageInterface $data): ?array
     {
         if ($this->distConfig->isEnable() === false) {
+            if ($data->getDistUrl()) {
+                return [
+                    'url' => $data->getDistUrl(),
+                    'type' => $data->getDistType(),
+                    'reference' => $data->getDistReference(),
+                ];
+            }
+
             return null;
         }
 
