@@ -92,7 +92,7 @@
                             {{ version.version }}
                         </a>
                         {%- else -%}
-                        <a href="#">{{ version.version }}</a>
+                            <span>{{ version.version }}</span>
                         {%- endif -%}
                         {%- if not loop.last -%}, {% endif -%}
                 {% endfor %}

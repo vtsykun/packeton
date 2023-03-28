@@ -157,12 +157,11 @@ class ProviderController extends AbstractController
     public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
     {
         $distManager = $this->container->get(DistManager::class);
-        if (!$distManager->isEnabled() || false === \preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])) {
+        if (!$distManager->isEnabled() || !\preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
         }
 
         $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getReference() === $reference);
-
         if ($version instanceof Version) {
             if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) and $path = $distManager->getDistPath($version)) {
                 return new BinaryFileResponse($path);
