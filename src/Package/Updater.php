@@ -289,13 +289,13 @@ class Updater implements UpdaterInterface
         if ($existingVersion) {
             $source = $existingVersion['source'];
             // update if the right flag is set, or the source reference has changed (re-tag or new commit on branch)
-            if ($source['reference'] !== $data->getSourceReference() || ($flags & self::UPDATE_EQUAL_REFS)) {
-                $version = $versionRepo->find($existingVersion['id']);
-            } else {
-                $updated = false;
-                $version = $versionRepo->find($existingVersion['id']);
+            $version = $versionRepo->find($existingVersion['id']);
+            if ($source['reference'] === $data->getSourceReference() && !($flags & self::UPDATE_EQUAL_REFS)) {
                 if ($dist = $this->updateArchive($archiveManager, $data)) {
                     $updated = $this->updateDist($dist, $version);
+                } else {
+                    $updated = $version->getDist() !== null;
+                    $version->setDist(null);
                 }
 
                 return [

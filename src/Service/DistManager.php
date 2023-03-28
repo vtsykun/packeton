@@ -48,6 +48,11 @@ class DistManager
         return $this->download($version, $reference);
     }
 
+    public function isEnabled(): bool
+    {
+        return $this->config->isEnable();
+    }
+
     public function getDistByOrphanedRef(string $reference, Package $package, &$version = null): string
     {
         if ($cacheRef = $this->lookupInCache($reference, $package->getName())) {

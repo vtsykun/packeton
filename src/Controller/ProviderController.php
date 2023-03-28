@@ -154,10 +154,10 @@ class ProviderController extends AbstractController
         requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}\.[a-z]+?'],
         methods: ['GET']
     )]
-    public function zipballAction(#[Vars('name')] Package $package, $hash): Response
+    public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
     {
         $distManager = $this->container->get(DistManager::class);
-        if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match) or !($reference = $match[0])) {
+        if (!$distManager->isEnabled() || false === \preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
         }
 
