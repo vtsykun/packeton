@@ -250,11 +250,35 @@ class UserController extends AbstractController
                 ->findBy(['owner' => $this->getUser()]);
         }
 
+        $deleteForm = $this->createFormBuilder()->getForm();
+
         return $this->render('user/sshkey.html.twig', [
             'form' => $form->createView(),
             'sshKey' => $sshKey,
             'listKeys' => $listKeys,
+            'deleteForm' => $deleteForm->createView(),
         ]);
+    }
+
+    #[Route('/users/sshkey/{id}/delete', name: 'user_delete_sshkey', methods: ['DELETE', 'POST'])]
+    public function deleteSSHKeyAction(Request $request, #[Vars] SshCredentials $key): Response
+    {
+        if (!$this->isGranted('VIEW', $key)) {
+            throw new AccessDeniedException();
+        }
+
+        $form = $this->createFormBuilder()->getForm();
+        $form->submit($request->request->get('form'));
+
+        if ($form->isValid()) {
+            $em = $this->registry->getManager();
+            $em->remove($key);
+            $em->flush();
+
+            return new RedirectResponse('/');
+        }
+
+        return new Response('Invalid csrf form', 400);
     }
 
     #[Route('/users/{name}', name: 'user_profile')]

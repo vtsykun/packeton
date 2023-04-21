@@ -1,7 +1,18 @@
 {% extends "layout.html.twig" %}
 
 {% block content %}
-    <h2 class="title">{{ sshKey.id ? 'Edit' : 'Add' }} composer git/ssh credentials</h2>
+    <h2 class="title">{{ sshKey.id ? 'Edit' : 'Add' }} composer git/ssh credentials
+
+    {% if sshKey.id is not null %}
+        <div class="btn-group btn-group-xs">
+            <form class="delete onsubmit-confirm action" action="{{ path('user_delete_sshkey', {id: sshKey.id}) }}" method="POST" >
+                {{ form_widget(deleteForm._token) }}
+                <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+        </div>
+    {% endif %}
+    </h2>
+
     <section class="row">
         {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
         {{ form_rest(form) }}
