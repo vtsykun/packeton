@@ -8,6 +8,9 @@ x-volumes: &default-volume
 x-restart-policy: &restart_policy
     restart: unless-stopped
 
+x-restart-policy-always: &restart_policy_always
+    restart: always
+
 x-environment: &default-environment
     REDIS_URL: redis://redis
     DATABASE_URL: "postgresql://packeton:pack123@postgres:5432/packeton?serverVersion=14&charset=utf8"
@@ -66,7 +69,7 @@ services:
         hostname: packeton-worker
         command: ['bin/console', 'packagist:run-workers', '-v']
         user: www-data
-        <<: *restart_policy
+        <<: *restart_policy_always
         <<: *default-volume
         environment:
             <<: *default-environment
@@ -79,7 +82,7 @@ services:
         hostname: packeton-cron
         command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
         user: www-data
-        <<: *restart_policy
+        <<: *restart_policy_always
         <<: *default-volume
         environment:
             <<: *default-environment
