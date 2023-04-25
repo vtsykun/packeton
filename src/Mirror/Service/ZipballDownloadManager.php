@@ -82,16 +82,26 @@ class ZipballDownloadManager
             throw new MetadataNotFoundException('Not found reference in metadata');
         }
 
-        $http = $this->service->initHttpDownloader($this->repository->getConfig());
+        $http = $this->service->initHttpDownloader($config);
 
         $loader = new ArrayLoader();
         [$package] = $loader->loadPackages([$candidate + ['name' => $package, 'version' => $version]]);
-        $urls = $package->getDistUrls();
+
+        if ($mirrors = $config->getParentMirrors()) {
+            $distMirrors = [];
+            foreach ($mirrors as $mirror) {
+                if (isset($mirror['dist-url'])) {
+                    $distMirrors[] = ['url' => $config->getUrl($mirror['dist-url']), 'preferred' => $mirror['preferred'] ?? false];
+                }
+            }
+            $package->setDistMirrors($distMirrors);
+        }
 
         $cause = '';
         $hasFile = false;
         $targetDir = \dirname($filename);
         $this->filesystem->mkdir($targetDir);
+        $urls = $package->getDistUrls();
 
         $e = null;
         foreach ($urls as $url) {

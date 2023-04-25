@@ -91,7 +91,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     {
         $meta = $this->repository->{$key}(...$args);
 
-        if (null === $meta && (!$this->config->isLazy() || null === $fn)) {
+        if (null === $meta && ((!$this->config->isLazy() && !$this->config->hasV2Api()) || null === $fn)) {
             throw new MetadataNotFoundException($key === 'rootMetadata' ? 'This is not a lazy proxy, so for fetch metadata need to sync it in background' : 'Metadata not found');
         }
 

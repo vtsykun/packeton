@@ -23,6 +23,11 @@ class ProxyOptions extends MetadataOptions
             return $path;
         }
 
+        $urls = parse_url($url);
+        if (null !== $path && str_starts_with($path, '/') && isset($urls['path'])) {
+            $url = str_replace($urls['path'], '', $url);
+        }
+
         return $path ? $url . '/' . \ltrim($path, '/') : $url;
     }
 
@@ -61,6 +66,15 @@ class ProxyOptions extends MetadataOptions
 
         $url = $this->getUrl($providersUrl);
         return \str_replace(['%package%', '%hash%'], [$package ?? '%package%', $hash ?? '%hash%'], $url);
+    }
+
+    public function getParentMirrors(): ?array
+    {
+        if (!$mirrors = $this->config['root']['mirrors'] ?? null) {
+            return null;
+        }
+
+        return $mirrors;
     }
 
     public function getRootProviders(): array
