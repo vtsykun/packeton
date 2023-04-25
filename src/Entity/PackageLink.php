@@ -14,34 +14,25 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\MappedSuperclass()
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\MappedSuperclass]
 abstract class PackageLink
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
 
-    /**
-     * @ORM\Column(length=191, name="packagename")
-     */
-    private $packageName;
+    #[ORM\Column(name: 'packagename', length: 191)]
+    private ?string $packageName = null;
 
-    /**
-     * @ORM\Column(type="text", name="packageversion")
-     */
+    #[ORM\Column(name: 'packageversion', type: 'text')]
     private $packageVersion;
 
     /**
      * Base property holding the version - this must remain protected since it
      * is redefined with an annotation in the child class
      */
-    protected $version;
+    protected ?Version $version = null;
 
     public function toArray()
     {

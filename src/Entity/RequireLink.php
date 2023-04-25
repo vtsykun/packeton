@@ -14,18 +14,12 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="link_require", indexes={
- *     @ORM\Index(name="link_require_package_name_idx",columns={"version_id", "packageName"}),
- *     @ORM\Index(name="link_require_name_idx",columns={"packageName"})
- * })
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'link_require')]
+#[ORM\Index(columns: ['version_id', 'packageName'], name: 'link_require_package_name_idx')]
+#[ORM\Index(columns: ['packageName'], name: 'link_require_name_idx')]
 class RequireLink extends PackageLink
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Version", inversedBy="require")
-     */
-    protected $version;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Version', inversedBy: 'require')]
+    protected ?Version $version = null;
 }

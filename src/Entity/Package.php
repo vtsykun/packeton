@@ -7,165 +7,98 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\ObjectRepository;
 use Packeton\Repository\VersionRepository;
 
-/**
- * @ORM\Entity(repositoryClass="Packeton\Repository\PackageRepository")
- * @ORM\Table(
- *     name="package",
- *     uniqueConstraints={@ORM\UniqueConstraint(name="package_name_idx", columns={"name"})},
- *     indexes={
- *         @ORM\Index(name="indexed_idx",columns={"indexedAt"}),
- *         @ORM\Index(name="crawled_idx",columns={"crawledAt"}),
- *         @ORM\Index(name="dumped_idx",columns={"dumpedAt"})
- *     }
- * )
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity(repositoryClass: 'Packeton\Repository\PackageRepository')]
+#[ORM\Table(name: 'package')]
+#[ORM\UniqueConstraint(name: 'package_name_idx', columns: ['name'])]
+#[ORM\Index(columns: ['indexedat'], name: 'indexed_idx')]
+#[ORM\Index(columns: ['crawledat'], name: 'crawled_idx')]
+#[ORM\Index(columns: ['dumpedat'], name: 'dumped_idx')]
 class Package
 {
     use PackageSerializedTrait;
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * Unique package name
-     *
-     * @ORM\Column(length=191)
-     */
-    private $name;
+    #[ORM\Column(type: 'string', length: 191)]
+    private ?string $name = null;
 
-    /**
-     * @ORM\Column(nullable=true)
-     */
-    private $type;
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $type = null;
 
-    /**
-     * @ORM\Column(name="repo_type", type="string", length=32, nullable=true)
-     */
-    private $repoType;
+    #[ORM\Column(name: 'repo_type', type: 'string', length: 32, nullable: true)]
+    private ?string $repoType = null;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $description;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $description = null;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
-    private $language;
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $language = null;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $readme;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $readme = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="github_stars")
-     */
+    #[ORM\Column(name: 'github_stars', type: 'integer', nullable: true)]
     private $gitHubStars;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="github_watches")
-     */
+    #[ORM\Column(name: 'github_watches', type: 'integer', nullable: true)]
     private $gitHubWatches;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="github_forks")
-     */
+    #[ORM\Column(name: 'github_forks', type: 'integer', nullable: true)]
     private $gitHubForks;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="github_open_issues")
-     */
+    #[ORM\Column(name: 'github_open_issues', type: 'integer', nullable: true)]
     private $gitHubOpenIssues;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\Version", mappedBy="package")
-     */
+    #[ORM\OneToMany(mappedBy: 'package', targetEntity: Version::class)]
     private $versions;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="User", inversedBy="packages")
-     * @ORM\JoinTable(name="maintainers_packages")
-     */
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'packages')]
+    #[ORM\JoinTable(name: 'maintainers_packages')]
     private $maintainers;
 
-    /**
-     * @ORM\Column()
-     */
+    #[ORM\Column]
     private $repository;
 
-    /**
-     * @ORM\Column(type="datetime", name="createdat")
-     */
+    #[ORM\Column(name: 'createdat', type: 'datetime')]
     private $createdAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="updatedat")
-     */
+    #[ORM\Column(name: 'updatedat', type: 'datetime', nullable: true)]
     private $updatedAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="crawledat")
-     */
+    #[ORM\Column(name: 'crawledat', type: 'datetime', nullable: true)]
     private $crawledAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="indexedat")
-     */
+    #[ORM\Column(name: 'indexedat', type: 'datetime', nullable: true)]
     private $indexedAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="dumpedat")
-     */
+    #[ORM\Column(name: 'dumpedat', type: 'datetime', nullable: true)]
     private $dumpedAt;
 
-    /**
-     * @ORM\Column(type="boolean", name="autoupdated")
-     */
-    private $autoUpdated = false;
+    #[ORM\Column(name: 'autoupdated', type: 'boolean')]
+    private bool $autoUpdated = false;
 
-    /**
-     * @var bool
-     * @ORM\Column(type="boolean")
-     */
-    private $abandoned = false;
+    #[ORM\Column(type: 'boolean')]
+    private bool $abandoned = false;
 
-    /**
-     * @var string
-     * @ORM\Column(type="string", length=255, nullable=true, name="replacementpackage")
-     */
-    private $replacementPackage;
+    #[ORM\Column(name: 'replacementpackage', type: 'string', nullable: true)]
+    private ?string $replacementPackage = null;
 
-    /**
-     * @var Package
-     *
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Package")
-     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE", nullable=true)
-     */
-    private $parentPackage;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Package')]
+    #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    private ?Package $parentPackage = null;
 
-    /**
-     * @ORM\Column(type="boolean", options={"default"=false}, name="updatefailurenotified")
-     */
-    private $updateFailureNotified = false;
+    #[ORM\Column(name: 'updatefailurenotified', type: 'boolean', options: ['default' => false])]
+    private bool $updateFailureNotified = false;
 
-    /**
-     * @var SshCredentials
-     *
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\SshCredentials")
-     * @ORM\JoinColumn(name="credentials_id", referencedColumnName="id", onDelete="SET NULL", nullable=true)
-     */
-    private $credentials;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\SshCredentials')]
+    #[ORM\JoinColumn(name: 'credentials_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?SshCredentials $credentials = null;
 
-    /**
-     * @ORM\Column(name="serialized_data", type="json", nullable=true)
-     */
-    private $serializedData;
+    #[ORM\Column(name: 'serialized_data', type: 'json', nullable: true)]
+    private ?array $serializedData = null;
 
     /**
      * @internal

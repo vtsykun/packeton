@@ -14,15 +14,10 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="link_provide")
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'link_provide')]
 class ProvideLink extends PackageLink
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Version", inversedBy="provide")
-     */
-    protected $version;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Version', inversedBy: 'provide')]
+    protected ?Version $version = null;
 }

@@ -5,21 +5,15 @@ namespace Packeton\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use DateTimeInterface;
 
-/**
- * @ORM\Entity(repositoryClass="Packeton\Repository\JobRepository")
- * @ORM\Table(
- *     name="job",
- *     indexes={
- *         @ORM\Index(name="type_idx",columns={"type"}),
- *         @ORM\Index(name="status_idx",columns={"status"}),
- *         @ORM\Index(name="execute_dt_idx",columns={"executeAfter"}),
- *         @ORM\Index(name="creation_idx",columns={"createdAt"}),
- *         @ORM\Index(name="completion_idx",columns={"completedAt"}),
- *         @ORM\Index(name="started_idx",columns={"startedAt"}),
- *         @ORM\Index(name="package_id_idx",columns={"packageId"})
- *     }
- * )
- */
+#[ORM\Entity(repositoryClass: 'Packeton\Repository\JobRepository')]
+#[ORM\Table(name: 'job')]
+#[ORM\Index(columns: ['type'], name: 'type_idx')]
+#[ORM\Index(columns: ['status'], name: 'status_idx')]
+#[ORM\Index(columns: ['executeAfter'], name: 'execute_dt_idx')]
+#[ORM\Index(columns: ['createdAt'], name: 'creation_idx')]
+#[ORM\Index(columns: ['completedAt'], name: 'completion_idx')]
+#[ORM\Index(columns: ['startedAt'], name: 'started_idx')]
+#[ORM\Index(columns: ['packageId'], name: 'package_id_idx')]
 class Job
 {
     const STATUS_QUEUED = 'queued';
@@ -32,58 +26,36 @@ class Job
     const STATUS_TIMEOUT = 'timeout'; // job was marked timed out
     const STATUS_RESCHEDULE = 'reschedule';
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="string")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\Column(type: 'string')]
+    private ?string $id = null;
 
-    /**
-     * @ORM\Column(type="string")
-     */
-    private $type;
+    #[ORM\Column(type: 'string')]
+    private ?string $type = null;
 
-    /**
-     * @ORM\Column(type="json")
-     */
-    private $payload = [];
+    #[ORM\Column(type: 'json')]
+    private array $payload = [];
 
-    /**
-     * One of queued, started, completed, failed
-     *
-     * @ORM\Column(type="string")
-     */
-    private $status = self::STATUS_QUEUED;
+    #[ORM\Column(type: 'string')]
+    private string $status = self::STATUS_QUEUED;
 
-    /**
-     * @ORM\Column(type="json", nullable=true)
-     */
-    private $result;
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $result = null;
 
-    /**
-     * @ORM\Column(type="datetime", name="createdat")
-     */
-    private $createdAt;
+    #[ORM\Column(name: 'createdat', type: 'datetime')]
+    private \DateTimeInterface|null $createdAt = null;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="startedat")
-     */
-    private $startedAt;
+    #[ORM\Column(name: 'startedat', type: 'datetime', nullable: true)]
+    private \DateTimeInterface|null $startedAt = null;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="completedat")
-     */
-    private $completedAt;
+    #[ORM\Column(name: 'completedat', type: 'datetime', nullable: true)]
+    private \DateTimeInterface|null $completedAt = null;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="executeafter")
-     */
-    private $executeAfter;
+    #[ORM\Column(name: 'executeafter', type: 'datetime', nullable: true)]
+    private \DateTimeInterface|null $executeAfter = null;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="packageid")
-     */
-    private $packageId;
+    #[ORM\Column(name: 'packageid', type: 'integer', nullable: true)]
+    private ?int $packageId = null;
 
     public function start()
     {

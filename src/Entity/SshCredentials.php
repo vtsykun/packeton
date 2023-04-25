@@ -5,64 +5,32 @@ namespace Packeton\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Packeton\Model\CredentialsInterface;
 
-/**
- * SshCredentials
- *
- * @ORM\Table(name="ssh_credentials")
- * @ORM\Entity()
- */
+#[ORM\Entity]
+#[ORM\Table('ssh_credentials')]
 class SshCredentials implements OwnerAwareInterface, CredentialsInterface
 {
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
+    #[ORM\Id]
+    #[ORM\Column(type: 'integer')]
+    #[ORM\GeneratedValue]
     private $id;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="name", type="string", length=255)
-     */
-    private $name;
+    #[ORM\Column(name: 'name', type: 'string', length: 255)]
+    private ?string $name = null;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="ssh_key", type="encrypted_text", nullable=true)
-     */
-    private $key;
+    #[ORM\Column(name: 'ssh_key', type: 'encrypted_text', nullable: true)]
+    private ?string $key = null;
 
-    /**
-     * @var array|null
-     *
-     * @ORM\Column(name="composer_config", type="encrypted_array", nullable=true)
-     */
-    private $composerConfig;
+    #[ORM\Column(name: 'composer_config', type: 'encrypted_array', nullable: true)]
+    private ?array $composerConfig = null;
 
-    /**
-     * @var User|null
-     *
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\User")
-     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL")
-     */
-    private $owner;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\User')]
+    #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    private ?User $owner = null;
 
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="createdat", type="datetime")
-     */
+    #[ORM\Column(name: 'createdat', type: 'datetime')]
     private $createdAt;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="fingerprint", type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(name: 'fingerprint', type: 'string', length: 255, nullable: true)]
     private $fingerprint;
 
     public function __construct()

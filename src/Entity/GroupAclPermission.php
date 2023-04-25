@@ -4,43 +4,25 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * GroupAclPermission
- *
- * @ORM\Table(name="group_acl_permission")
- * @ORM\Entity()
- */
+#[ORM\Entity]
+#[ORM\Table('group_acl_permission')]
 class GroupAclPermission
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private $id = null;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="version", type="string", length=64, nullable=true)
-     */
-    private $version;
+    #[ORM\Column(name: 'version', length: 64, nullable: true)]
+    private ?string $version = null;
 
-    /**
-     * @var Group
-     *
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Group", inversedBy="aclPermissions")
-     * @ORM\JoinColumn(name="group_id", referencedColumnName="id", onDelete="CASCADE")
-     */
-    private $group;
+    #[ORM\ManyToOne(targetEntity: Group::class, inversedBy: 'aclPermissions')]
+    #[ORM\JoinColumn(name: 'group_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private ?Group $group = null;
 
-    /**
-     * @var Package
-     *
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Package")
-     * @ORM\JoinColumn(name="package_id", referencedColumnName="id", onDelete="CASCADE")
-     */
-    private $package;
+    #[ORM\ManyToOne(targetEntity: Package::class)]
+    #[ORM\JoinColumn(name: 'package_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private ?Package $package = null;
 
     /**
      * Get id
@@ -59,7 +41,7 @@ class GroupAclPermission
      *
      * @return GroupAclPermission
      */
-    public function setVersion($version)
+    public function setVersion(?string $version)
     {
         $this->version = $version;
 
@@ -71,7 +53,7 @@ class GroupAclPermission
      *
      * @return string
      */
-    public function getVersion()
+    public function getVersion(): ?string
     {
         return $this->version;
     }

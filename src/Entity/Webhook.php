@@ -4,12 +4,8 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * Webhook
- *
- * @ORM\Table(name="webhook")
- * @ORM\Entity(repositoryClass="Packeton\Repository\WebhookRepository")
- */
+#[ORM\Entity(repositoryClass: 'Packeton\Repository\WebhookRepository')]
+#[ORM\Table('webhook')]
 class Webhook implements OwnerAwareInterface
 {
     public const HOOK_RL_NEW = 'new_release';
@@ -24,106 +20,50 @@ class Webhook implements OwnerAwareInterface
     public const HOOK_REPO_NEW = 'new_repo';
     public const HOOK_REPO_DELETE = 'delete_repo';
 
-    /**
-     * @var int
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\Column(type: 'integer')]
+    #[ORM\GeneratedValue]
+    private $id = null;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="name", type="string", length=255)
-     */
-    private $name;
+    #[ORM\Column(name: 'name', type: 'string', length: 255)]
+    private ?string $name = null;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="url", type="text")
-     */
-    private $url;
+    #[ORM\Column(name: 'url', type: 'text')]
+    private ?string $url = null;
 
-    /**
-     * @var array|null
-     *
-     * @ORM\Column(name="events", type="simple_array", nullable=true)
-     */
-    private $events;
+    #[ORM\Column(name: 'events', type: 'simple_array', nullable: true)]
+    private ?array $events = null;
 
-    /**
-     * @var bool|null
-     *
-     * @ORM\Column(name="active", type="boolean", nullable=true)
-     */
-    private $active = true;
+    #[ORM\Column(name: 'active', type: 'boolean', nullable: true)]
+    private ?bool $active = true;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="package_restriction", type="text", nullable=true)
-     */
-    private $packageRestriction;
+    #[ORM\Column(name: 'package_restriction', type: 'text', nullable: true)]
+    private ?string $packageRestriction = null;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="version_restriction", type="string", length=1024, nullable=true)
-     */
-    private $versionRestriction;
+    #[ORM\Column(name: 'version_restriction', type: 'string', length: 1024, nullable: true)]
+    private ?string $versionRestriction = null;
 
-    /**
-     * @var array|null
-     *
-     * @ORM\Column(name="options", type="json", nullable=true)
-     */
-    private $options;
+    #[ORM\Column(name: 'options', type: 'json', nullable: true)]
+    private ?array $options = null;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="payload", type="text", nullable=true)
-     */
-    private $payload;
+    #[ORM\Column(name: 'payload', type: 'text', nullable: true)]
+    private ?string $payload = null;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="method", type="string", length=8, nullable=true)
-     */
-    private $method;
+    #[ORM\Column(name: 'method', type: 'string', length: 8, nullable: true)]
+    private ?string $method = null;
 
-    /**
-     * @var \DateTime|null
-     *
-     * @ORM\Column(name="created_at", type="datetime", nullable=false)
-     */
-    private $createdAt;
+    #[ORM\Column(name: 'created_at', type: 'datetime', nullable: false)]
+    private \DateTimeInterface $createdAt;
 
-    /**
-     * @var User|null
-     *
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\User")
-     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL")
-     */
-    private $owner;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\User')]
+    #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    private ?User $owner = null;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="visibility", type="string", length=16, nullable=true)
-     */
-    private $visibility;
+    #[ORM\Column(name: 'visibility', type: 'string', length: 16, nullable: true)]
+    private ?string $visibility = null;
 
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="cron", type="string", length=255, nullable=true)
-     */
-    private $cron;
+    #[ORM\Column(name: 'cron', type: 'string', length: 255, nullable: true)]
+    private ?string $cron = null;
 
     public function __construct()
     {

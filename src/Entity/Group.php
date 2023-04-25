@@ -5,43 +5,28 @@ namespace Packeton\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Packeton\Repository\GroupRepository;
 
-/**
- * Group
- *
- * @ORM\Table(name="user_group")
- * @ORM\Entity(repositoryClass="Packeton\Repository\GroupRepository")
- */
+#[ORM\Entity(repositoryClass: GroupRepository::class)]
+#[ORM\Table('user_group')]
 class Group
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private $id = null;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="name", type="string", length=64, unique=true)
-     */
-    private $name;
+    #[ORM\Column(name: 'name', length: 64, unique: true)]
+    private ?string $name = null;
 
-    /**
-     * @var array
-     *
-     * @ORM\Column(name="proxies", type="simple_array", nullable=true)
-     */
-    private $proxies;
+    #[ORM\Column(name: 'proxies', type: 'simple_array', nullable: true)]
+    private ?array $proxies = null;
 
     /**
      * @var GroupAclPermission[]|Collection
-     *
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\GroupAclPermission", mappedBy="group", cascade={"all"}, orphanRemoval=true)
      */
+    #[ORM\OneToMany(mappedBy: "group", targetEntity: GroupAclPermission::class, cascade: ["all"], orphanRemoval: true)]
     private $aclPermissions;
-
 
     public function __construct()
     {
