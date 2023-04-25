@@ -75,6 +75,11 @@ class RemoteSyncProxiesFacade
             return $stats;
         }
 
+        if ($config->hasV2Api()) {
+            $io->info("Sync enabled packages via composer v2 API");
+            $stats += $this->syncLazyV2($repo, $io, $config, $updated);
+        }
+
         if ($repo->isRootFresh($root) && 0 === ($flags & self::UI_RESET)) {
             $io->info('Root is not changes, skip update providers');
             return $stats;
@@ -109,9 +114,9 @@ class RemoteSyncProxiesFacade
         $providerUrl = $config->getMetadataV1Url();
 
         if (empty($providerUrl) || $config->isLazy()) {
-            $io->notice('Skipping sync packages, lazy sync.');
             $repo->dumpRootMeta($root);
             if ($providerUrl) {
+                $io->info("Sync enabled packages via composer v1 api $providerUrl");
                 $stats += $this->syncLazyV1($repo, $io, $config);
             }
 
