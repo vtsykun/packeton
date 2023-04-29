@@ -94,6 +94,7 @@ class MirrorController extends AbstractController
             $this->checkAccess($alias);
             $dm = $this->proxyRegistry->getProxyDownloadManager($alias);
 
+            $ref = str_starts_with($ref, 'ref') ? substr($ref, 3) : $ref;
             $path = $dm->distPath($package, $version, $ref, $type);
         } catch (MetadataNotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);

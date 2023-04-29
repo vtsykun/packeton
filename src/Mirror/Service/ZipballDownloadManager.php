@@ -53,16 +53,18 @@ class ZipballDownloadManager
             $candidate = null;
             [$ref, $propertyPath] = \array_shift($preference);
 
-            foreach ($packages as $package) {
-                try {
-                    $expectedRef = $accessor->getValue($package, $propertyPath);
-                } catch (\Exception) {
-                    continue;
-                }
+            if (!empty($ref)) {
+                foreach ($packages as $package) {
+                    try {
+                        $expectedRef = $accessor->getValue($package, $propertyPath);
+                    } catch (\Throwable) {
+                        continue;
+                    }
 
-                if (!empty($expectedRef) && $expectedRef === $ref) {
-                    $candidate = $package;
-                    break;
+                    if (!empty($expectedRef) && $expectedRef === $ref) {
+                        $candidate = $package;
+                        break;
+                    }
                 }
             }
 

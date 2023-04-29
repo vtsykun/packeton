@@ -87,7 +87,7 @@ class RootMetadataMerger
             );
 
             $rootFile['mirrors'] = [
-                ['dist-url' => \str_replace(['VND/PKG', '__VER', '__REF', '__TP'], ['%package%', '%version%', '%reference%', '%type%'], $zipball), 'preferred' => true]
+                ['dist-url' => \str_replace(['VND/PKG', '__VER', '__REF', '__TP'], ['%package%', '%version%', 'ref%reference%', '%type%'], $zipball), 'preferred' => true]
             ];
         }
 
