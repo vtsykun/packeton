@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror\Exception;
 
-class MetadataNotFoundException extends \RuntimeException
+use Packeton\Exception\DebugHttpExceptionInterface;
+
+class MetadataNotFoundException extends \RuntimeException implements DebugHttpExceptionInterface
 {
 }
