@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Packeton\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ObjectRepository;
 use Packeton\Composer\MetadataFormat;
 use Packeton\Entity\Group;
 use Packeton\Entity\Package;
-use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Model\PacketonUserInterface as PUI;
+use Packeton\Repository\PackageRepository;
+use Packeton\Repository\VersionRepository;
 use Packeton\Security\Acl\PackagesAclChecker;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -54,14 +57,14 @@ class InMemoryDumper
     public function dumpPackage(?UserInterface $user, $package, array $versionData = null): array
     {
         if (is_string($package)) {
-            $package = $this->registry->getRepository(Package::class)->findOneByName($package);
+            $package = $this->getPackageRepo()->findOneByName($package);
         }
 
         if (!$package instanceof Package) {
             return [];
         }
 
-        if ($user !== null && (!$user instanceof User || $this->checker->isGrantedAccessForPackage($user, $package) === false)) {
+        if ($user !== null && (!$user instanceof PUI || $this->checker->isGrantedAccessForPackage($user, $package) === false)) {
             return [];
         }
 
@@ -73,7 +76,7 @@ class InMemoryDumper
             }
         }
 
-        $versionRepo = $this->registry->getRepository(Version::class);
+        $versionRepo = $this->getVersionRepo();
         $versionData = $versionData === null ? $versionRepo->getVersionData(\array_keys($versionIds)) : $versionData;
         foreach ($versionIds as $version) {
             $data = $version->toArray($versionData);
@@ -133,15 +136,14 @@ class InMemoryDumper
             $allowed = $user ? $this->registry->getRepository(Group::class)
                 ->getAllowedPackagesForUser($user, false) : null;
 
-            $availablePackages = $this->registry->getRepository(Package::class)->getPackageNames($allowed);
-
+            $availablePackages = $this->getPackageRepo()->getPackageNames($allowed);
             return [null, [], $availablePackages];
         }
 
         $packages = $user ?
             $this->registry->getRepository(Group::class)
                 ->getAllowedPackagesForUser($user) :
-            $this->registry->getRepository(Package::class)->findAll();
+            $this->getPackageRepo()->findAll();
 
         $providers = $packagesData = [];
         $versionData = $this->getVersionData($packages);
@@ -169,7 +171,7 @@ class InMemoryDumper
     {
         $allPackagesIds = array_map(fn(Package $pkg) => $pkg->getId(), $packages);
 
-        $repo = $this->registry->getRepository(Version::class);
+        $repo = $this->getVersionRepo();
 
         $allVersionsIds = $repo
             ->createQueryBuilder('v')
@@ -181,5 +183,21 @@ class InMemoryDumper
             ->getSingleColumnResult();
 
         return $repo->getVersionData($allVersionsIds);
+    }
+
+    /**
+     * @return PackageRepository|ObjectRepository
+     */
+    private function getPackageRepo() : PackageRepository|ObjectRepository
+    {
+        return $this->registry->getRepository(Package::class);
+    }
+
+    /**
+     * @return VersionRepository|ObjectRepository
+     */
+    private function getVersionRepo() : VersionRepository
+    {
+        return $this->registry->getRepository(Version::class);
     }
 }

@@ -1753,3 +1753,39 @@ pre.github {
         width:1150px
     }
 }
+
+.choice-widget-expanded {
+    display: flex;
+    padding-top: 6px;
+}
+.choice-widget-expanded input[type=checkbox] {
+    margin: 0 6px 0 0;
+}
+.choice-widget-expanded label {
+    margin: 0;
+}
+
+label.required em {
+    color: #a91c00;
+    font-style: normal;
+    position: absolute;
+    margin-left: 4px;
+}
+
+.btn.show-token {
+    padding: 2px 8px;
+    font-size: 12px;
+    border-bottom: 0;
+}
+
+.btn.show-token:hover {
+    background: #2f6cca;
+}
+
+.table-token-tr th {
+    padding: 15px 8px !important;
+}
+.table-token-body .btn {
+    padding: 3px 8px;
+    font-size: 0.9em;
+}

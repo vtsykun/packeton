@@ -1,0 +1,54 @@
+{% extends "layout.html.twig" %}
+
+
+{% block title %}Authentication Tokens{% endblock %}
+
+{% block content %}
+    <section class="row">
+        <h2 class="title">Your Authentication Tokens</h2>
+
+        <b style="font-size: 1.3em">All Tokens</b>
+        <table class="table table-bordered">
+            <thead style="background: #dddddd">
+            <tr class="table-token-tr">
+                <th>Name</th>
+                <th>Scores</th>
+                <th>Last used</th>
+                <th>Expired</th>
+                <th>Total Installs</th>
+            </tr>
+            </thead>
+            <tbody class="table-token-body">
+                {% for token in tokens %}
+                    <tr>
+                        <th scope="row">{{ token.name }}</th>
+                        <td style="font-size: 0.88em">{{ token.scores|join("\n")|nl2br }}</td>
+                        <td>Never</td>
+                        <td>{{ token.expireAt ? token.expireAt|date('Y-m-d') : 'Never' }}</td>
+                        <td>
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>0</div>
+                                <div>
+                                    <div class="btn-group">
+                                        <a data-toggle="collapse" href="#tok{{ token.id }}"  class="btn btn-primary">Show</a>
+                                    </div>
+                                    <div class="btn-group">
+                                        <form class="delete onsubmit-confirm action" action="" method="post" >
+                                            <button class="btn btn-danger" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="tok{{ token.id }}">
+                        <td colspan="5">
+                            The storage can be done either globally in the COMPOSER_HOME/auth.json file
+                            <pre>composer config --global --auth http-basic.{{ app.request.getHttpHost() }} token {{ show_api_token(token.token) }}</pre>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% endblock %}

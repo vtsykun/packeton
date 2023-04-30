@@ -9,6 +9,7 @@
 
     {% set url = app.request.getSchemeAndHttpHost() %}
     {% set apiToken = get_api_token(app.user) %}
+    {% set shortApiToken = get_api_token(app.user, false)|default('<token>') %}
 
     <h2 class="title" id="how-to-update-packages">Setting up this repository in your projects</h2>
     <p>
@@ -26,7 +27,7 @@
         Also you need to authenticate to access their Composer repository, for example to enter credentials run command:
     </p>
     <pre>
-composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ app.user.userIdentifier|default('username') }} {{ get_api_token(app.user, false)|default('<api_token>')  }}
+composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ app.user.userIdentifier|default('username') }} {{ show_api_token(shortApiToken) }}
     </pre>
 
     <h2 class="title" id="how-to-update-packages">How to update packages?</h2>
@@ -40,29 +41,29 @@ composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ ap
                 <li>Click the "Settings" button</li>
                 <li>Click "Webhooks"</li>
                 <li>Add a new hook</li>
-                <li>Enter <code>{{ url }}/api/github?token={{ apiToken }}</code> as URL</li>
+                <li>Enter <code>{{ url }}/api/github?token={{ show_api_token(apiToken) }}</code> as URL</li>
             </ul>
         </section>
 
         <section class="col-md-6">
             <h3>Bitbucket Webhooks</h3>
-            <p>To enable the Bitbucket web hook, go to your BitBucket repository, open the settings and select "Webhooks" in the menu. Add a new hook. You have to enter the Packagist endpoint, containing both your username and API token. Enter <code>{{ url }}/api/bitbucket?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}</code> as URL. Save your changes and you're done.</p>
+            <p>To enable the Bitbucket web hook, go to your BitBucket repository, open the settings and select "Webhooks" in the menu. Add a new hook. You have to enter the Packagist endpoint, containing both your username and API token. Enter <code>{{ url }}/api/bitbucket?token={{ app.user.userIdentifier|default('USERNAME') ~ ':'}}{{- show_api_token(shortApiToken) -}}</code> as URL. Save your changes and you're done.</p>
         </section>
 
         <section class="col-md-6">
             <h3>Gitea Webhooks</h3>
-            <p>To enable the Gitea web hook, go to your Gitea repository, open the settings, select "Webhooks" in the menu and click on 'Add Webhook'. From the dropdown menu select Gitea. You have to enter the Packagist endpoint, containing both your username and API token. Enter <code>{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}</code> as URL. The HTTP method has to be POST and content type is application/json. Save your changes and you're done.</p>
+            <p>To enable the Gitea web hook, go to your Gitea repository, open the settings, select "Webhooks" in the menu and click on 'Add Webhook'. From the dropdown menu select Gitea. You have to enter the Packagist endpoint, containing both your username and API token. Enter <code>{{ url }}/api/update-package?token={{ app.user.userIdentifier|default('USERNAME') ~ ':'}}{{- show_api_token(shortApiToken) -}}</code> as URL. The HTTP method has to be POST and content type is application/json. Save your changes and you're done.</p>
         </section>
 
         <div class="clearfix"></div>
         <section class="col-md-6">
             <h3>Manual hook setup</h3>
-            <p>If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually from a git post-receive hook or similar. You have to do a <code>POST</code> request to <code>{{ url }}/api/update-package?token={{ app.user.username|default('USERNAME') ~ ':' ~ app.user.apiToken|default('token') }}</code> with a request body looking like this: <code>{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}</code></p>
+            <p>If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually from a git post-receive hook or similar. You have to do a <code>POST</code> request to <code>{{ url }}/api/update-package?token={{ app.user.userIdentifier|default('USERNAME') ~ ':'}}{{- show_api_token(shortApiToken) -}}</code> with a request body looking like this: <code>{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}</code></p>
             <p>You can do this using curl for example:</p>
-            <pre>curl -XPOST -H'content-type:application/json' '{{ url }}/api/update-package?token={{ apiToken }}' -d'{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'</pre>
+            <pre>curl -XPOST -H'content-type:application/json' '{{ url }}/api/update-package?token={{ show_api_token(apiToken) }}' -d'{"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'</pre>
             <br>
             <p>You can also send a GET request with query parameter <code>composer_package_name</code></p>
-            <pre>curl '{{ url }}/api/update-package?token={{ apiToken }}&composer_package_name=vender/name'</pre>
+            <pre>curl '{{ url }}/api/update-package?token={{ show_api_token(apiToken) }}&composer_package_name=vender/name'</pre>
         </section>
 
         <section class="col-md-6">
@@ -81,7 +82,7 @@ composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ ap
                 Group webhooks will apply to all projects in a group and allow to sync all projects.
                 To enable the Group GitLab webhook you must have "Bronze" plan.
                 Go to your GitLab Group > Settings > Webhooks. <br>
-                Enter <code>{{ url }}/api/update-package?token={{ apiToken }}</code> as URL.
+                Enter <code>{{ url }}/api/update-package?token={{ show_api_token(apiToken) }}</code> as URL.
             </p>
         </section>
 

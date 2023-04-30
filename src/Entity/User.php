@@ -15,6 +15,7 @@ namespace Packeton\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Packeton\Model\BaseUser;
+use Packeton\Model\PacketonUserInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: 'Packeton\Repository\UserRepository')]
@@ -23,7 +24,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[ORM\UniqueConstraint(columns: ['username_canonical'])]
 #[UniqueEntity(fields: ['username'], message: 'There is already an account with this username', errorPath: 'username')]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email', errorPath: 'email')]
-class User extends BaseUser
+class User extends BaseUser implements PacketonUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -105,7 +106,7 @@ class User extends BaseUser
     /**
      * Get packages
      *
-     * @return Package[]
+     * @return Package[]|ArrayCollection
      */
     public function getPackages()
     {
@@ -125,7 +126,7 @@ class User extends BaseUser
     /**
      * Get authors
      *
-     * @return Author[]
+     * @return Author[]|ArrayCollection
      */
     public function getAuthors()
     {
@@ -270,6 +271,14 @@ class User extends BaseUser
         return $this->groups;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getAclGroups(): array
+    {
+        return $this->groups->map(fn(Group $g) => $g->getId())->toArray();
+    }
+
     public function addGroup($group)
     {
         if (!$this->groups->contains($group)) {
@@ -350,9 +359,9 @@ class User extends BaseUser
     }
 
     /**
-     * @return \DateTime|null
+     * {@inheritdoc}
      */
-    public function getExpiredUpdatesAt()
+    public function getExpiredUpdatesAt(): ?\DateTimeInterface
     {
         return $this->expiredUpdatesAt;
     }

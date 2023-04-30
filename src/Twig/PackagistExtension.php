@@ -42,6 +42,7 @@ class PackagistExtension extends AbstractExtension
             new TwigFunction('get_group_data', [$this, 'getGroupData']),
             new TwigFunction('get_group_acl_form_data', [$this, 'getGroupAclForm']),
             new TwigFunction('get_api_token', [$this, 'getApiToken']),
+            new TwigFunction('show_api_token', [$this, 'showApiTokenButton'], ['is_safe' => ['html']]),
         ];
     }
 
@@ -105,6 +106,15 @@ class PackagistExtension extends AbstractExtension
         }
 
         return null;
+    }
+
+    public function showApiTokenButton(UserInterface|string $token = null, bool $short = false)
+    {
+        if ($token instanceof User) {
+            $token = ($short ? ($token->getUserIdentifier() . ':') : '') . $token->getApiToken();
+        }
+
+        return $token ? '<span class="token" style="display: none" data-type="token">' . $token . '</span><button class="btn btn-primary show-token">Show token</button>' : '';
     }
 
     public function getLatestJobResult($package, $type = 'package:updates'): ?Job

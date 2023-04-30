@@ -94,12 +94,23 @@ class RemotePackagesManager implements ApprovalRepoInterface
         return $this->redis->sMembers($this->enabledKey) ?: [];
     }
 
+    public function isEnabled(string $name): bool
+    {
+        return (bool) $this->redis->sIsMember($this->enabledKey, strtolower($name));
+    }
+
     /**
      * {@inheritdoc}
      */
     public function getApproved(): array
     {
         return $this->redis->sMembers($this->approvedKey) ?: [];
+    }
+
+
+    public function isApproved(string $name): bool
+    {
+        return (bool) $this->redis->sIsMember($this->approvedKey, strtolower($name));
     }
 
     /**

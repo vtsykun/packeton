@@ -11,6 +11,8 @@ use Packeton\Repository\ApiTokenRepository;
 #[ORM\Table('user_api_token')]
 class ApiToken
 {
+    public const PREFIX = 'pat_';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -19,7 +21,7 @@ class ApiToken
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 64, unique: true)]
     private ?string $apiToken = null;
 
     #[ORM\Column(type: 'datetime')]
@@ -37,6 +39,13 @@ class ApiToken
 
     #[ORM\Column(name: 'scores', type: 'json', nullable: true)]
     private ?array $scores = null;
+
+    protected $attributes = [];
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
 
     public function getId()
     {
@@ -58,6 +67,11 @@ class ApiToken
     public function getApiToken(): string
     {
         return $this->apiToken;
+    }
+
+    public function getToken(): string
+    {
+        return self::PREFIX . $this->apiToken;
     }
 
     public function setApiToken(string $apiToken): self
@@ -125,5 +139,20 @@ class ApiToken
         $this->scores = $scores;
 
         return $this;
+    }
+
+    public function setAttributes(array $attr): void
+    {
+        $this->attributes = $attr;
+    }
+
+    public function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+
+    public function getAttr(string $name): mixed
+    {
+        return $this->attributes[$name] ?? null;
     }
 }

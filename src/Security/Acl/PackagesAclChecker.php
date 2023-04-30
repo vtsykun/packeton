@@ -7,8 +7,8 @@ use Composer\Semver\Constraint\Constraint;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Group;
 use Packeton\Entity\Package;
-use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Model\PacketonUserInterface as PUI;
 
 class PackagesAclChecker
 {
@@ -39,18 +39,18 @@ class PackagesAclChecker
     /**
      * Check that customer/user can see and download this package
      *
-     * @param User $user
+     * @param PUI $user
      * @param Package $package
      *
      * @return bool
      */
-    public function isGrantedAccessForPackage(User $user, Package $package)
+    public function isGrantedAccessForPackage(PUI $user, Package $package)
     {
         $version = $this->getVersions($user, $package);
         return \count($version) > 0;
     }
 
-    public function isGrantedAccessForAllVersions(User $user, Package $package)
+    public function isGrantedAccessForAllVersions(PUI $user, Package $package)
     {
         $versionConstraints = $this->getVersions($user, $package);
         foreach ($versionConstraints as $constraint) {
@@ -65,12 +65,12 @@ class PackagesAclChecker
     /**
      * Check that customer/user can download this version
      *
-     * @param User $user
+     * @param PUI $user
      * @param Version $version
      *
      * @return bool
      */
-    public function isGrantedAccessForVersion(User $user, Version $version)
+    public function isGrantedAccessForVersion(PUI $user, Version $version)
     {
         if ($user->getExpiredUpdatesAt() && $user->getExpiredUpdatesAt() < $version->getReleasedAt()) {
             return false;
@@ -91,9 +91,9 @@ class PackagesAclChecker
         return false;
     }
 
-    private function getVersions(User $user, Package $package)
+    private function getVersions(PUI $user, Package $package)
     {
-        $hash = $user->getId() . '$' . $package->getId();
+        $hash = $user->getUserIdentifier() . '$' . $package->getId();
         if (isset($this->versionCache[$hash])) {
             return $this->versionCache[$hash];
         }

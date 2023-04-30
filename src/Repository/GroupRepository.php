@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Packeton\Repository;
 
 use Packeton\Entity\Group;
+use Packeton\Entity\GroupAclPermission;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Model\PacketonUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use function Symfony\Component\String\b;
 
 /**
  * GruopRepository
@@ -19,25 +20,38 @@ use function Symfony\Component\String\b;
 class GroupRepository extends \Doctrine\ORM\EntityRepository
 {
     /**
-     * @param User $user
+     * @param UserInterface $user
      * @param Package $package
      *
      * @return array
      */
-    public function getAllowedVersionByPackage(User $user, Package $package)
+    public function getAllowedVersionByPackage(?UserInterface $user, Package $package)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb
-            ->select('acl.version')
-            ->distinct()
-            ->from(User::class, 'u')
-            ->innerJoin('u.groups', 'g')
-            ->innerJoin('g.aclPermissions', 'acl')
-            ->innerJoin('acl.package', 'p')
-            ->where('u.id = :uid')
-            ->andWhere('p.id = :pid')
-            ->setParameter('pid', $package->getId())
-            ->setParameter('uid', $user->getId());
+
+        if ($user instanceof User) {
+            $qb
+                ->select('acl.version')
+                ->distinct()
+                ->from(User::class, 'u')
+                ->innerJoin('u.groups', 'g')
+                ->innerJoin('g.aclPermissions', 'acl')
+                ->innerJoin('acl.package', 'p')
+                ->where('u.id = :uid')
+                ->andWhere('p.id = :pid')
+                ->setParameter('pid', $package->getId())
+                ->setParameter('uid', $user->getId());
+        } else if ($user instanceof PacketonUserInterface) {
+            $qb->select('acl.version')
+                ->distinct()
+                ->from(GroupAclPermission::class, 'acl')
+                ->where('IDENTITY(acl.package) = :pid')
+                ->andWhere('IDENTITY(acl.group) IN (:gid)')
+                ->setParameter('pid', $package->getId())
+                ->setParameter('gid', $user->getAclGroups() ? : [-1]);
+        } else {
+            return [];
+        }
 
         $result = $qb->getQuery()->getResult();
         if ($result) {
@@ -48,27 +62,36 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
     }
 
     /**
-     * @param User|UserInterface $user
+     * @param UserInterface $user
      * @param bool $hydration flags
      *
      * @return Package[]
      */
     public function getAllowedPackagesForUser(?UserInterface $user, bool|int $hydration = true)
     {
-        if (!$user instanceof User) {
+        if (!$user instanceof PacketonUserInterface) {
             return [];
         }
 
         $qb = $this->getEntityManager()->createQueryBuilder();
-        $qb
-            ->select('p.id')
-            ->distinct()
-            ->from(User::class, 'u')
-            ->innerJoin('u.groups', 'g')
-            ->innerJoin('g.aclPermissions', 'acl')
-            ->innerJoin('acl.package', 'p')
-            ->where('u.id = :uid')
-            ->setParameter('uid', $user->getId());
+        $qb->distinct();
+
+        if ($user instanceof User) {
+            $qb
+                ->select('p.id')
+                ->from(User::class, 'u')
+                ->innerJoin('u.groups', 'g')
+                ->innerJoin('g.aclPermissions', 'acl')
+                ->innerJoin('acl.package', 'p')
+                ->where('u.id = :uid')
+                ->setParameter('uid', $user->getId());
+        } else {
+            $qb
+                ->select('IDENTITY(acl.package) as id')
+                ->from(GroupAclPermission::class, 'acl')
+                ->andWhere('IDENTITY(acl.group) IN (:gid)')
+                ->setParameter('gid', $user->getAclGroups() ? : [-1]);
+        }
 
         $result = $qb->getQuery()->getResult();
         if (empty($result)) {

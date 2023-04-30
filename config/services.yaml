@@ -200,3 +200,12 @@ services:
     
     Packeton\Security\CheckLdapCredentialsListener:
         autoconfigure: false
+
+    Packeton\Security\Token\TokenCheckerRegistry:
+        autoconfigure: false
+        lazy: true
+        arguments:
+            - '@Packeton\Security\Token\DefaultTokenChecker'
+        calls:
+            - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]
+            - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]

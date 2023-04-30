@@ -61,7 +61,9 @@ class MenuBuilder
 
         if ($user instanceof User) {
             $menu->addChild($this->translator->trans('menu.settings'), ['label' => '<span class="fas fa-cogs"></span>' . $this->translator->trans('menu.settings'), 'route' => 'profile_edit', 'extras' => ['safe_label' => true]]);
-            $menu->addChild($this->translator->trans('menu.change_password'), ['label' => '<span class="fas fa-key"></span>' . $this->translator->trans('menu.change_password'), 'route' => 'change_password', 'extras' => ['safe_label' => true]]);
+            $menu->addChild($this->translator->trans('menu.change_password'), ['label' => '<span class="fas fa-lock"></span>' . $this->translator->trans('menu.change_password'), 'route' => 'change_password', 'extras' => ['safe_label' => true]]);
+
+            $menu->addChild($this->translator->trans('menu.my_tokens'), ['label' => '<span class="fas fa-key"></span>' . $this->translator->trans('menu.my_tokens'), 'route' => 'profile_list_tokens', 'extras' => ['safe_label' => true]]);
 
             if ($this->checker->isGranted('ROLE_MAINTAINER')) {
                 $menu->addChild($this->translator->trans('menu.my_packages'), ['label' => '<span class="fas fa-box-open"></span>' . $this->translator->trans('menu.my_packages'), 'route' => 'user_packages', 'routeParameters' => ['name' => $this->getUsername()], 'extras' => ['safe_label' => true]]);
