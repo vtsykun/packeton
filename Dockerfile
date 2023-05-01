@@ -11,7 +11,7 @@ RUN set -eux; \
 		postgresql-dev \
 		icu-dev \
 		coreutils \
-        linux-headers \
+		linux-headers \
 		libxml2-dev openldap-dev \
 		bzip2-dev libzip-dev \
 		libxslt-dev \
