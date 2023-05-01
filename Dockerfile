@@ -1,4 +1,4 @@
-FROM php:8.1-fpm-alpine
+FROM php:8.2-fpm-alpine
 
 RUN apk --no-cache add nginx supervisor curl subversion mercurial \
     git bash openssh-client zip unzip redis shadow && \
@@ -11,6 +11,7 @@ RUN set -eux; \
 		postgresql-dev \
 		icu-dev \
 		coreutils \
+        linux-headers \
 		libxml2-dev openldap-dev \
 		bzip2-dev libzip-dev \
 		libxslt-dev \
@@ -21,9 +22,9 @@ RUN set -eux; \
 		CPPFLAGS="$PHP_CPPFLAGS" \
 		LDFLAGS="$PHP_LDFLAGS"; \
 	\
-	pecl install -o -f redis apcu; \
-	docker-php-ext-enable redis apcu; \
-    docker-php-ext-install ldap xsl zip sockets pdo pdo_pgsql pdo_mysql intl sysvsem opcache \
+	pecl install -o -f redis; \
+	docker-php-ext-enable redis; \
+    docker-php-ext-install sockets ldap xsl zip pdo pdo_pgsql pdo_mysql intl sysvsem opcache \
         bz2 mbstring pcntl; \
     runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
