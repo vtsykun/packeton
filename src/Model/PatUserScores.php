@@ -31,7 +31,7 @@ class PatUserScores
 
         foreach ($routes as $route) {
             if (str_starts_with($route, '@')) {
-                $routes = array_merge($routes, self::getAllowedRoutes(substr($routes, 1)));
+                $routes = array_merge($routes, self::getAllowedRoutes(substr($route, 1)));
             }
         }
 

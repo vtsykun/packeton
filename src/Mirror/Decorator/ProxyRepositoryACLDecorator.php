@@ -10,6 +10,7 @@ use Packeton\Mirror\Model\StrictProxyRepositoryInterface as RPI;
 use Packeton\Mirror\RemoteProxyRepository;
 use Packeton\Mirror\Service\RemotePackagesManager;
 use Packeton\Mirror\Utils\ApiMetadataUtils;
+use Packeton\Model\PatTokenUser;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
@@ -78,9 +79,16 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
      */
     public function findPackageMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
     {
+        [$package, ] = \explode('$', $nameOrUri);
+        $user = $this->tokenStorage->getToken()?->getUser();
+        if ($user instanceof PatTokenUser && !$user->hasScore("mirror:all")) {
+            if (!$this->rpm->isEnabled($package)) {
+                throw new ApproveRestrictException("This is CI read-only token, the package $package is not enabled.");
+            }
+        }
+
         $metadata = $this->repository->findPackageMetadata($nameOrUri, $modifiedSince);
 
-        [$package, ] = \explode('$', $nameOrUri);
         if ($this->rpm->requireApprove()) {
             if (!$this->rpm->isApproved($package)) {
                 throw new ApproveRestrictException("This package $package has not yet been approved by an administrator.");

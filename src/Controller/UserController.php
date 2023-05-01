@@ -30,6 +30,7 @@ use Packeton\Form\Type\SshKeyCredentialType;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Model\RedisAdapter;
+use Packeton\Security\Token\PatTokenManager;
 use Packeton\Util\SshKeyHelper;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -200,12 +201,31 @@ class UserController extends AbstractController
     }
 
     #[Route('/profile/tokens', name: 'profile_list_tokens')]
-    public function tokenList()
+    public function tokenList(PatTokenManager $manager)
     {
         $user = $this->getUser();
         $tokens = $this->registry->getRepository(ApiToken::class)->findAllTokens($user);
+        foreach ($tokens as $token) {
+            $token->setAttributes($manager->getStats($token->getId()));
+        }
 
         return $this->render('user/token_list.html.twig', ['tokens' => $tokens]);
+    }
+
+    #[Route('/profile/tokens/{id}/delete', name: 'profile_remove_tokens', methods: ['POST'])]
+    public function tokenDelete(#[Vars] ApiToken $token)
+    {
+        $user = $this->getUser();
+        $identifier = $token->getOwner() ? $token->getOwner()->getUserIdentifier() : $token->getUserIdentifier();
+        if ($identifier === $user->getUserIdentifier()) {
+            $this->getEM()->remove($token);
+            $this->getEM()->flush();
+
+            $this->addFlash('success', 'Token was removed');
+            return new RedirectResponse($this->generateUrl('profile_list_tokens'));
+        }
+
+        throw $this->createNotFoundException('Token not found');
     }
 
     #[Route('/profile/tokens/new', name: 'profile_add_tokens')]

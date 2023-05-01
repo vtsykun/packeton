@@ -47,7 +47,7 @@ class ApiToken
         $this->createdAt = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -151,8 +151,8 @@ class ApiToken
         return $this->attributes;
     }
 
-    public function getAttr(string $name): mixed
+    public function getAttr(string $name, mixed $default = null): mixed
     {
-        return $this->attributes[$name] ?? null;
+        return $this->attributes[$name] ?? $default;
     }
 }

@@ -75,10 +75,10 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
                 $user = $this->userProvider->loadUserByIdentifier($username);
                 $this->userChecker->checkPreAuth($user);
                 return $user;
-            });
+            }, $request);
 
             if ($checker instanceof PatTokenCheckerInterface) {
-                $checker->checkAccess($request, $user, $token);
+                $checker->checkAccess($request, $user);
             }
         } catch (UserNotFoundException $e) {
             throw new BadCredentialsException('Bad credentials.', 0, $e);

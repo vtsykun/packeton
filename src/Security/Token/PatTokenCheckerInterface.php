@@ -15,5 +15,5 @@ interface PatTokenCheckerInterface
      *
      * @throws AuthenticationException
      */
-    public function checkAccess(Request $request, UserInterface $user, string $token): void;
+    public function checkAccess(Request $request, UserInterface $user): void;
 }

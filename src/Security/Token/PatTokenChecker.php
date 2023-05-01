@@ -20,6 +20,7 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
     public function __construct(
         private readonly FastTokenCache $cache,
         private readonly ManagerRegistry $registry,
+        private readonly PatTokenManager $patTokenManager,
     ) {
     }
 
@@ -34,7 +35,7 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
     /**
      * {@inheritdoc}
      */
-    public function loadUserByToken(string $username, string $token, callable $userLoader): UserInterface
+    public function loadUserByToken(string $username, string $token, callable $userLoader, Request $request = null): UserInterface
     {
         $token = substr($token, strlen(ApiToken::PREFIX));
         if ($user = $this->cache->hit($username, $token)) {
@@ -71,13 +72,14 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
         );
 
         $this->cache->save($user, $username, $token);
+        $this->patTokenManager->setLastUsage($apiToken->getId(), $request ? $this->getRequestInfo($request) : []);
         return $user;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function checkAccess(Request $request, UserInterface $user, string $token): void
+    public function checkAccess(Request $request, UserInterface $user): void
     {
         $route = $request->attributes->get('_route');
         if (!$user instanceof PatTokenUser) {
@@ -88,5 +90,13 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
         if (!in_array($route, $allowed, true)) {
             throw new CustomUserMessageAccountStatusException('This access token does not grant access for this route');
         }
+    }
+
+    private function getRequestInfo(Request $request)
+    {
+        return [
+            'ip' => $request->getClientIp(),
+            'ua' => $request->headers->get('user-agent'),
+        ];
     }
 }
