@@ -2,11 +2,11 @@
 
 {% import "macros.html.twig" as macros %}
 
-{% set isActualUser = app.user and app.user.username is same as(user.username) %}
+{% set isActualUser = app.user and app.user.userIdentifier is same as(user.userIdentifier) %}
 
 {% block content %}
 <h2 class="title">
-    {{ user.username }}
+    {{ user.userIdentifier }}
     <small>
         {{ 'user.member_since'|trans }}: {{ user.createdAt|date('M d, Y') }}
         {%- if is_granted('ROLE_MAINTAINER') %}
@@ -39,7 +39,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "{{ app.request.getScheme() }}://{{ user.userIdentifier }}:{{ user.apiToken }}@{{ app.request.getHttpHost() }}"
+            "url": "{{ app.request.getScheme() }}://{{ user.userIdentifier }}:{{ show_api_token(user) }}@{{ app.request.getHttpHost() }}"
         }
     ]
 }
@@ -51,7 +51,13 @@
                 to enter the username and password.
             </p>
             <pre>
-composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ user.apiToken }}
+composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ show_api_token(user) }}
+            </pre>
+            <p>
+                For continuous integration or deployment environments, you may use COMPOSER_AUTH environment variable
+            </p>
+            <pre>
+COMPOSER_AUTH='{"http-basic": {"{{ app.request.getHttpHost() }}": {"username": "{{ user.userIdentifier }}", "password": "{{ show_api_token(user) }}"}}}'
             </pre>
         </section>
     {% endif %}

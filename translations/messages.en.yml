@@ -22,6 +22,7 @@ menu:
     change_password: Change password
     my_packages: My packages
     my_favorites: My favorites
+    my_tokens: Personal access tokens
     my_users: My users
     my_groups: My groups
     ssh_keys: Credentials

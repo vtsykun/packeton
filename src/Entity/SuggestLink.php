@@ -14,18 +14,12 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="link_suggest", indexes={
- *     @ORM\Index(name="link_suggest_package_name_idx",columns={"version_id", "packageName"}),
- *     @ORM\Index(name="link_suggest_name_idx",columns={"packageName"})
- * })
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'link_suggest')]
+#[ORM\Index(columns: ['version_id', 'packageName'], name: 'link_suggest_package_name_idx')]
+#[ORM\Index(columns: ['packageName'], name: 'link_suggest_name_idx')]
 class SuggestLink extends PackageLink
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Version", inversedBy="suggest")
-     */
-    protected $version;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Version', inversedBy: 'suggest')]
+    protected ?Version $version = null;
 }

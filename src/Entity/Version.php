@@ -18,144 +18,91 @@ use Doctrine\ORM\Mapping as ORM;
 use Packeton\Composer\MetadataMinifier;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity(repositoryClass="Packeton\Repository\VersionRepository")
- * @ORM\Table(
- *     name="package_version",
- *     uniqueConstraints={@ORM\UniqueConstraint(name="pkg_ver_idx",columns={"package_id","normalizedVersion"})},
- *     indexes={
- *         @ORM\Index(name="release_idx",columns={"releasedAt"}),
- *         @ORM\Index(name="is_devel_idx",columns={"development"})
- *     }
- * )
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity(repositoryClass: 'Packeton\Repository\VersionRepository')]
+#[ORM\Table(name: 'package_version')]
+#[ORM\UniqueConstraint(name: 'pkg_ver_idx', columns: ['package_id', 'normalizedVersion'])]
+#[ORM\Index(columns: ['releasedAt'], name: 'release_idx')]
+#[ORM\Index(columns: ['development'], name: 'is_devel_idx')]
 class Version
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private $id = null;
 
-    /**
-     * @ORM\Column
-     * @Assert\NotBlank()
-     */
+    #[ORM\Column]
+    #[Assert\NotBlank]
     private $name;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $description;
 
-    /**
-     * @ORM\Column(nullable=true)
-     */
+    #[ORM\Column(nullable: true)]
     private $type;
 
-    /**
-     * @ORM\Column(nullable=true, name="targetdir")
-     */
+    #[ORM\Column(name: 'targetdir', nullable: true)]
     private $targetDir;
 
-    /**
-     * @ORM\Column(type="array", nullable=true)
-     */
-    private $extra = [];
+    #[ORM\Column(type: 'array', nullable: true)]
+    private ?array $extra = [];
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Tag", inversedBy="versions")
-     * @ORM\JoinTable(name="version_tag",
-     *     joinColumns={@ORM\JoinColumn(name="version_id", referencedColumnName="id")},
-     *     inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id")}
-     * )
-     */
+    #[ORM\ManyToMany(targetEntity: 'Packeton\Entity\Tag', inversedBy: 'versions')]
+    #[ORM\JoinTable(name: 'version_tag')]
+    #[ORM\JoinColumn(name: 'version_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'tag_id', referencedColumnName: 'id')]
     private $tags;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Package", fetch="EAGER", inversedBy="versions")
-     * @Assert\Type(type="Packeton\Entity\Package")
-     */
-    private $package;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Package', fetch: 'EAGER', inversedBy: 'versions')]
+    #[Assert\Type(type: Package::class)]
+    private ?Package $package = null;
 
-    /**
-     * @ORM\Column(nullable=true)
-     * @Assert\Url()
-     */
+    #[ORM\Column(nullable: true)]
+    #[Assert\Url]
     private $homepage;
 
-    /**
-     * @ORM\Column
-     * @Assert\NotBlank()
-     */
+    #[ORM\Column]
+    #[Assert\NotBlank]
     private $version;
 
-    /**
-     * @ORM\Column(length=191, name="normalizedversion")
-     * @Assert\NotBlank()
-     */
+    #[ORM\Column(name: 'normalizedversion', length: 191)]
+    #[Assert\NotBlank]
     private $normalizedVersion;
 
-    /**
-     * @ORM\Column(type="boolean")
-     * @Assert\NotBlank()
-     */
+    #[ORM\Column(type: 'boolean')]
+    #[Assert\NotBlank]
     private $development;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $license;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Author", inversedBy="versions")
-     * @ORM\JoinTable(name="version_author",
-     *     joinColumns={@ORM\JoinColumn(name="version_id", referencedColumnName="id")},
-     *     inverseJoinColumns={@ORM\JoinColumn(name="author_id", referencedColumnName="id")}
-     * )
-     */
+    #[ORM\ManyToMany(targetEntity: 'Packeton\Entity\Author', inversedBy: 'versions')]
+    #[ORM\JoinTable(name: 'version_author')]
+    #[ORM\JoinColumn(name: 'version_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'author_id', referencedColumnName: 'id')]
     private $authors;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\RequireLink", mappedBy="version")
-     */
+    #[ORM\OneToMany(mappedBy: 'version', targetEntity: 'Packeton\Entity\RequireLink')]
     private $require;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\ReplaceLink", mappedBy="version")
-     */
+    #[ORM\OneToMany(mappedBy: 'version', targetEntity: 'Packeton\Entity\ReplaceLink')]
     private $replace;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\ConflictLink", mappedBy="version")
-     */
+    #[ORM\OneToMany(mappedBy: 'version', targetEntity: 'Packeton\Entity\ConflictLink')]
     private $conflict;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\ProvideLink", mappedBy="version")
-     */
+    #[ORM\OneToMany(mappedBy: 'version', targetEntity: 'Packeton\Entity\ProvideLink')]
     private $provide;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\DevRequireLink", mappedBy="version")
-     */
+    #[ORM\OneToMany(mappedBy: 'version', targetEntity: 'Packeton\Entity\DevRequireLink')]
     private $devRequire;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\SuggestLink", mappedBy="version")
-     */
+    #[ORM\OneToMany(mappedBy: 'version', targetEntity: 'Packeton\Entity\SuggestLink')]
     private $suggest;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $source;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $dist;
 
     /**
@@ -163,44 +110,28 @@ class Version
      */
     public $distNormalized;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $autoload;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $binaries;
 
-    /**
-     * @ORM\Column(type="text", nullable=true, name="includepaths")
-     */
+    #[ORM\Column(name: 'includepaths', type: 'text', nullable: true)]
     private $includePaths;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $support;
 
-    /**
-     * @ORM\Column(type="datetime", name="createdat")
-     */
+    #[ORM\Column(name: 'createdat', type: 'datetime')]
     private $createdAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="softdeletedat")
-     */
+    #[ORM\Column(name: 'softdeletedat', type: 'datetime', nullable: true)]
     private $softDeletedAt;
 
-    /**
-     * @ORM\Column(type="datetime", name="updatedat")
-     */
+    #[ORM\Column(name: 'updatedat', type: 'datetime')]
     private $updatedAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="releasedat")
-     */
+    #[ORM\Column(name: 'releasedat', type: 'datetime', nullable: true)]
     private $releasedAt;
 
     public function __construct()

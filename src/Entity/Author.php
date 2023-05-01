@@ -15,61 +15,38 @@ namespace Packeton\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass="Packeton\Repository\AuthorRepository")
- * @ORM\Table(name="author")
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity(repositoryClass: 'Packeton\Repository\AuthorRepository')]
+#[ORM\Table('author')]
 class Author
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private $id = null;
 
-    /**
-     * Unique package name
-     *
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $name;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $name = null;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $email;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $email = null;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $homepage;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $homepage = null;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $role;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $role = null;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Version", mappedBy="authors")
-     */
+    #[ORM\ManyToMany(targetEntity: 'Packeton\Entity\Version', mappedBy: 'authors')]
     private $versions;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\User", inversedBy="authors")
-     * @ORM\JoinColumn(name="owner_id", referencedColumnName="id", onDelete="SET NULL", nullable=true)
-     */
-    private $owner;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\User', inversedBy: 'authors')]
+    #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $owner = null;
 
-    /**
-     * @ORM\Column(type="datetime", name="createdat")
-     */
+    #[ORM\Column(name: 'createdat', type: 'datetime')]
     private $createdAt;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true, name="updatedat")
-     */
+    #[ORM\Column(name: 'updatedat', type: 'datetime', nullable: true)]
     private $updatedAt;
 
     public function __construct()

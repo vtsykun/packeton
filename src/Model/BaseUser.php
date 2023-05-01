@@ -46,26 +46,14 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
      */
     protected $emailCanonical;
 
-    /**
-     * @var bool
-     * @ORM\Column(name="enabled", type="boolean")
-     */
-    protected $enabled;
+    #[ORM\Column(name: 'enabled', type: 'boolean')]
+    protected bool $enabled = false;
 
-    /**
-     * The salt to use for hashing.
-     *
-     * @var string
-     * @ORM\Column(name="salt", type="string", length=255, nullable=true)
-     */
+
+    #[ORM\Column(name: 'salt', type: 'string', nullable: true)]
     protected $salt;
 
-    /**
-     * Encrypted password. Must be persisted.
-     *
-     * @var string
-     * @ORM\Column(name="password", type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(name: 'password', type: 'string', nullable: true)]
     protected $password;
 
     /**
@@ -75,31 +63,17 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
      */
     protected $plainPassword;
 
-    /**
-     * @var \DateTime|null
-     * @ORM\Column(name="last_login", type="datetime", nullable=true)
-     */
+    #[ORM\Column(name: 'last_login', type: 'datetime', nullable: true)]
     protected $lastLogin;
 
-    /**
-     * Random string sent to the user email address in order to verify it.
-     *
-     * @var string|null
-     * @ORM\Column(name="confirmation_token", type="string", length=180, nullable=true)
-     */
+    #[ORM\Column(name: 'confirmation_token', type: 'string', length: 180, nullable: true)]
     protected $confirmationToken;
 
-    /**
-     * @var \DateTime|null
-     * @ORM\Column(name="password_requested_at", type="datetime", nullable=true)
-     */
+    #[ORM\Column(name: 'password_requested_at', type: 'datetime', nullable: true)]
     protected $passwordRequestedAt;
 
-    /**
-     * @var array
-     * @ORM\Column(name="roles", type="array")
-     */
-    protected $roles;
+    #[ORM\Column(name: 'roles', type: 'array')]
+    protected array $roles = [];
 
     /**
      * User constructor.
@@ -115,7 +89,15 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
      */
     public function __toString()
     {
-        return (string) $this->getUsername();
+        return (string)$this->username;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUserIdentifier(): string
+    {
+        return $this->username;
     }
 
     /**

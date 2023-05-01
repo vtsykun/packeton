@@ -3,12 +3,12 @@
 namespace Packeton\Security\Acl;
 
 use Packeton\Entity\Package;
-use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Model\PacketonUserInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\CacheableVoterInterface;
 
-class PackagesAclVoter implements VoterInterface
+class PackagesAclVoter implements CacheableVoterInterface
 {
     /**
      * @var PackagesAclChecker
@@ -23,14 +23,14 @@ class PackagesAclVoter implements VoterInterface
     /**
      * {@inheritdoc}
      */
-    public function vote(TokenInterface $token, $object, array $attributes)
+    public function vote(TokenInterface $token, $object, array $attributes): int
     {
         if (!$object instanceof Package && !$object instanceof Version) {
             return self::ACCESS_ABSTAIN;
         }
 
         $user = $token->getUser();
-        if (!$user instanceof User) {
+        if (!$user instanceof PacketonUserInterface) {
             return self::ACCESS_ABSTAIN;
         }
 
@@ -47,5 +47,21 @@ class PackagesAclVoter implements VoterInterface
         }
 
         return self::ACCESS_GRANTED;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function supportsAttribute(string $attribute): bool
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function supportsType(string $subjectType): bool
+    {
+        return $subjectType === Package::class || $subjectType === Version::class;
     }
 }

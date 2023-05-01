@@ -144,6 +144,8 @@ class Configuration implements ConfigurationInterface
             'satis.oroinc.com' => '/packeton/img/logo/orocrm.png',
             'packagist.oroinc.com' => '/packeton/img/logo/orocrm.png',
             'packages.firegento.com' => '/packeton/img/logo/magento.png',
+            'packagist.com' => '/packeton/img/logo/logo-packagist.svg',
+            'repo.packagist.com' => '/packeton/img/logo/logo-packagist.svg',
         ];
 
         $mirrorNodeBuilder

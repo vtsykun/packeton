@@ -16,7 +16,7 @@
 <section class="row">
     <ul class="packages user-grid list-unstyled">
         {% for user in users %}
-        {% set userUrl = path('user_profile', { 'name' : user.username }) %}
+        {% set userUrl = path('user_profile', { 'name' : user.userIdentifier }) %}
         <li data-url="{{ userUrl }}" class="row">
             <div class="col-xs-12 package-item">
                 <div class="row" style="margin: 6px 12px;">
@@ -24,7 +24,7 @@
                     <div class="s-flex">
                         <a href="{{ userUrl }}" class="s-flex no-underline link-gray-dark">
                             <img width="40" height="40" title="{{ user.email }}" alt="{{ user.email }}" src="https://www.gravatar.com/avatar/{{ user.email|gravatar_hash }}?s=48&amp;d=identicon">
-                            <h4 class="tab-cell">{{ user.username }}</h4>
+                            <h4 class="tab-cell">{{ user.userIdentifier }}</h4>
                             {% if user.roles|length > 0 %}
                                 <div class="role-container">
                                     <span class="role-name">{{ user.roles|join(', ') }}</span>
@@ -33,7 +33,7 @@
                         </a>
 
                         <div style="width: 90%; margin-top: 10px">
-                            <a href="{{ path('users_update', {name: user.username}) }}" style="float: right; padding: 5px 14px;" class="btn btn-primary">Edit</a>
+                            <a href="{{ path('users_update', {name: user.userIdentifier}) }}" style="float: right; padding: 5px 14px;" class="btn btn-primary">Edit</a>
                         </div>
                     </div>
                     <p class="link-gray" style="font-size: 12px">

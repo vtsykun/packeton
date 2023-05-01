@@ -80,4 +80,9 @@
     });
 
     $('[data-toggle="popover"]').popover();
+
+    $('.show-token').click(function() {
+        $(this).parent().find('[data-type="token"]').show();
+        $(this).remove();
+    });
 })(jQuery, humane);

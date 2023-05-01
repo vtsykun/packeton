@@ -14,15 +14,10 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="link_conflict")
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'link_conflict')]
 class ConflictLink extends PackageLink
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Version", inversedBy="conflict")
-     */
-    protected $version;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Version', inversedBy: 'conflict')]
+    protected ?Version $version = null;
 }

@@ -16,32 +16,21 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity
- * @ORM\Table(
- *     name="tag",
- *     uniqueConstraints={@ORM\UniqueConstraint(name="tag_name_idx", columns={"name"})}
- * )
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'tag')]
+#[ORM\UniqueConstraint(name: 'tag_name_idx', columns: ['name'])]
 class Tag
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
+    #[ORM\Id]
+    #[ORM\Column(type: 'integer')]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private $id;
 
-    /**
-     * @ORM\Column(length=191)
-     * @Assert\NotBlank()
-     */
+    #[ORM\Column(length: 191)]
+    #[Assert\NotBlank]
     private $name;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Version", mappedBy="tags")
-     */
+    #[ORM\ManyToMany(targetEntity: Version::class, mappedBy: 'tags')]
     private $versions;
 
     public function __construct($name = null)

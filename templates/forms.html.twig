@@ -83,6 +83,15 @@
                 {% set label = name|humanize %}
             {%- endif -%}
         {%- endif -%}
+
+        {%- set labelValue -%}
+            {%- if translation_domain is same as(false) -%}
+                {{- label -}}
+            {%- else -%}
+                {{- label|trans({}, translation_domain) -}}
+            {%- endif -%}
+        {%- endset -%}
+
         <{{ element|default('label') }}{% if label_attr %}{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}>
             {%- if tooltip is defined and tooltip -%}
                 <i class="fa fa-info-circle"
@@ -93,11 +102,13 @@
                    data-toggle="popover"></i>
             {%- endif -%}
 
-            {%- if translation_domain is same as(false) -%}
-                {{- label -}}
+            {%- if with_value is defined and with_value -%}
+                {{-  value -}}&nbsp;<span style="color: #7b7b7d; font-size: 0.85em">{{- labelValue -}}</span>
             {%- else -%}
-                {{- label|trans({}, translation_domain) -}}
+                {{- labelValue -}}
             {%- endif -%}
+
+            {%- if required -%}<em>*</em>{%- endif -%}
         </{{ element|default('label') }}>
     {%- endif -%}
 {%- endblock form_label -%}
@@ -105,9 +116,9 @@
 {%- block choice_widget_expanded -%}
     <div {{ block('widget_container_attributes') }}>
         {%- for child in form %}
-            <div style="display: flex; padding-top: 6px">
-                {{- form_widget(child, {attr: {style: 'margin-right: 6px'}}) -}}
-                {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
+            <div class="choice-widget-expanded">
+                {{- form_widget(child) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain, with_value: true}) -}}
             </div>
         {% endfor -%}
     </div>

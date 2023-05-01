@@ -13,6 +13,7 @@ use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Packeton\Mirror\RemoteProxyRepository;
 use Packeton\Model\ProviderManager;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ComposeProxyRegistry
 {
@@ -21,6 +22,7 @@ class ComposeProxyRegistry
         protected SyncProviderService $syncService,
         protected MetadataMinifier $metadataMinifier,
         protected ProviderManager $providerManager,
+        protected TokenStorageInterface $tokenStorage,
     ) {
     }
 
@@ -43,6 +45,7 @@ class ComposeProxyRegistry
         return new ProxyRepositoryACLDecorator(
             $this->createRepository($name),
             $repo->getPackageManager(),
+            $this->tokenStorage,
             $repo,
             $repo->getConfig()->getAvailablePackages(),
             $repo->getConfig()->getAvailablePatterns(),

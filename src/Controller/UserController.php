@@ -17,10 +17,12 @@ namespace Packeton\Controller;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
+use Packeton\Entity\ApiToken;
 use Packeton\Entity\Package;
 use Packeton\Entity\SshCredentials;
 use Packeton\Entity\User;
 use Packeton\Form\Handler\UserFormHandler;
+use Packeton\Form\Type\ApiTokenType;
 use Packeton\Form\Type\ChangePasswordFormType;
 use Packeton\Form\Type\CustomerUserType;
 use Packeton\Form\Type\ProfileFormType;
@@ -28,6 +30,7 @@ use Packeton\Form\Type\SshKeyCredentialType;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Model\RedisAdapter;
+use Packeton\Security\Token\PatTokenManager;
 use Packeton\Util\SshKeyHelper;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -194,6 +197,66 @@ class UserController extends AbstractController
         return $this->render('user/update.html.twig', [
             'form' => $form->createView(),
             'entity' => $user
+        ]);
+    }
+
+    #[Route('/profile/tokens', name: 'profile_list_tokens')]
+    public function tokenList(PatTokenManager $manager)
+    {
+        $user = $this->getUser();
+        $tokens = $this->registry->getRepository(ApiToken::class)->findAllTokens($user);
+        foreach ($tokens as $token) {
+            $token->setAttributes($manager->getStats($token->getId()));
+        }
+
+        return $this->render('user/token_list.html.twig', ['tokens' => $tokens]);
+    }
+
+    #[Route('/profile/tokens/{id}/delete', name: 'profile_remove_tokens', methods: ['POST'])]
+    public function tokenDelete(#[Vars] ApiToken $token)
+    {
+        $user = $this->getUser();
+        $identifier = $token->getOwner() ? $token->getOwner()->getUserIdentifier() : $token->getUserIdentifier();
+        if ($identifier === $user->getUserIdentifier()) {
+            $this->getEM()->remove($token);
+            $this->getEM()->flush();
+
+            $this->addFlash('success', 'Token was removed');
+            return new RedirectResponse($this->generateUrl('profile_list_tokens'));
+        }
+
+        throw $this->createNotFoundException('Token not found');
+    }
+
+    #[Route('/profile/tokens/new', name: 'profile_add_tokens')]
+    public function tokenAdd(Request $request)
+    {
+        $token = new ApiToken();
+        $form = $this->createForm(ApiTokenType::class, $token);
+
+        if ($request->getMethod() === 'POST') {
+            $em = $this->registry->getManager();
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $user = $this->getUser();
+
+                if ($user instanceof User) {
+                    $token->setOwner($user);
+                } else {
+                    $token->setUserIdentifier($user->getUserIdentifier());
+                }
+                $token->setApiToken(hash('sha256', random_bytes(32)));
+
+                $em->persist($token);
+                $em->flush();
+                $this->addFlash('success', 'Token was generated');
+                return new RedirectResponse($this->generateUrl('profile_list_tokens'));
+            }
+        }
+
+        return $this->render('user/token_add.html.twig', [
+            'form' => $form->createView(),
+            'entity' => $token
         ]);
     }
 

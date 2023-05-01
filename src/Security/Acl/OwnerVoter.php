@@ -5,14 +5,14 @@ namespace Packeton\Security\Acl;
 use Packeton\Entity\OwnerAwareInterface;
 use Packeton\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\CacheableVoterInterface;
 
-class OwnerVoter implements VoterInterface
+class OwnerVoter implements CacheableVoterInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function vote(TokenInterface $token, $object, array $attributes)
+    public function vote(TokenInterface $token, $object, array $attributes): int
     {
         if (!$object instanceof OwnerAwareInterface || !in_array('VIEW', $attributes)) {
             return self::ACCESS_ABSTAIN;
@@ -32,5 +32,21 @@ class OwnerVoter implements VoterInterface
         }
 
         return self::ACCESS_GRANTED;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function supportsAttribute(string $attribute): bool
+    {
+        return $attribute === 'VIEW';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function supportsType(string $subjectType): bool
+    {
+        return true;
     }
 }

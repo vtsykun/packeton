@@ -2,7 +2,7 @@
 {% block stylesheets %}
     <link href="{{ asset('libs/datepicker/bootstrap-datepicker.css') }}" rel="stylesheet">
 {% endblock %}
-{% set title  = entity.id ? 'Update user ' ~ entity.username : 'Create a new user' %}
+{% set title  = entity.id ? 'Update user ' ~ entity.userIdentifier : 'Create a new user' %}
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}

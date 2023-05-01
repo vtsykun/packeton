@@ -13,121 +13,67 @@
 namespace Packeton\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Packeton\Model\BaseUser;
+use Packeton\Model\PacketonUserInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
-/**
- * @ORM\Entity(repositoryClass="Packeton\Repository\UserRepository")
- * @ORM\Table(
- *     name="fos_user",
- *     uniqueConstraints={
- *         @ORM\UniqueConstraint(columns={"email_canonical"}),
- *         @ORM\UniqueConstraint(columns={"username_canonical"}),
- *         @ORM\UniqueConstraint(columns={"confirmation_token"})
- *      }
- * )
- * @UniqueEntity(fields={"username"})
- * @UniqueEntity(fields={"email"})
- */
-class User extends BaseUser
+#[ORM\Entity(repositoryClass: 'Packeton\Repository\UserRepository')]
+#[ORM\Table(name: 'fos_user')]
+#[ORM\UniqueConstraint(columns: ['email_canonical'])]
+#[ORM\UniqueConstraint(columns: ['username_canonical'])]
+#[UniqueEntity(fields: ['username'], message: 'There is already an account with this username', errorPath: 'username')]
+#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email', errorPath: 'email')]
+class User extends BaseUser implements PacketonUserInterface
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     protected $id;
 
-    /**
-     * @var string
-     * @ORM\Column(name="username", type="string", length=191)
-     */
+    #[ORM\Column(name: 'username', type: 'string', length: 191)]
     protected $username;
 
-    /**
-     * @var string
-     * @ORM\Column(name="username_canonical", type="string", length=191)
-     */
+    #[ORM\Column(name: 'username_canonical', type: 'string', length: 191)]
     protected $usernameCanonical;
 
-    /**
-     * @ORM\Column(name="email", type="string", length=191)
-     */
+    #[ORM\Column(name: 'email', type: 'string', length: 191)]
     protected $email;
 
-    /**
-     * @ORM\Column(name="email_canonical", type="string", length=191)
-     */
+    #[ORM\Column(name: 'email_canonical', type: 'string', length: 191)]
     protected $emailCanonical;
 
-    /**
-     * @var Group[]|Collection
-     *
-     * @ORM\ManyToMany(targetEntity="Packeton\Entity\Group")
-     * @ORM\JoinTable(name="fos_user_access_group",
-     *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id", onDelete="CASCADE")}
-     * )
-     */
+    #[ORM\ManyToMany(targetEntity: 'Packeton\Entity\Group')]
+    #[ORM\JoinTable(name: 'fos_user_access_group')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'group_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private $groups;
 
-    /**
-     * @var Package[]
-     *
-     * @ORM\ManyToMany(targetEntity="Package", mappedBy="maintainers")
-     */
+    #[ORM\ManyToMany(targetEntity: 'Packeton\Entity\Package', mappedBy: 'maintainers')]
     private $packages;
 
-    /**
-     * @var Author[]
-     *
-     * @ORM\OneToMany(targetEntity="Packeton\Entity\Author", mappedBy="owner")
-     */
+    #[ORM\OneToMany(mappedBy: 'owner', targetEntity: 'Packeton\Entity\Author')]
     private $authors;
 
-    /**
-     * @ORM\Column(type="datetime", name="createdat")
-     */
+    #[ORM\Column(name: 'createdat', type: 'datetime')]
     private $createdAt;
 
-    /**
-     * @ORM\Column(type="string", length=20, nullable=true, name="apitoken")
-     * @var string
-     */
-    private $apiToken;
+    #[ORM\Column(name: 'apitoken', type: 'string', length: 20, nullable: true)]
+    private ?string $apiToken = null;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true, name="githubid")
-     * @var string
-     */
+    #[ORM\Column(name: 'githubid', type: 'string', length: 255, nullable: true)]
     private $githubId;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true, name="githubtoken")
-     * @var string
-     */
-    private $githubToken;
+    #[ORM\Column(name: 'githubtoken', type: 'string', length: 255, nullable: true)]
+    private ?string $githubToken = null;
 
-    /**
-     * @ORM\Column(type="boolean", options={"default"=true}, name="failurenotifications")
-     * @var string
-     */
+    #[ORM\Column(name: 'failurenotifications', type: 'boolean', options: ['default' => true])]
     private $failureNotifications = true;
 
-    /**
-     * @ORM\Column(name="expires_at", type="date", nullable=true)
-     * @var \DateTime
-     */
+    #[ORM\Column(name: 'expires_at', type: 'date', nullable: true)]
     private $expiresAt;
 
-    /**
-     * Disable to updates a new release after this date expired
-     *
-     * @ORM\Column(name="expired_updates_at", type="date", nullable=true)
-     * @var \DateTime
-     */
+    #[ORM\Column(name: 'expired_updates_at', type: 'date', nullable: true)]
     private $expiredUpdatesAt;
 
     public function __construct()
@@ -137,14 +83,6 @@ class User extends BaseUser
         $this->groups = new ArrayCollection();
         $this->createdAt = new \DateTime();
         parent::__construct();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getUserIdentifier(): string
-    {
-        return $this->username;
     }
 
     public function toArray()
@@ -168,7 +106,7 @@ class User extends BaseUser
     /**
      * Get packages
      *
-     * @return Package[]
+     * @return Package[]|ArrayCollection
      */
     public function getPackages()
     {
@@ -188,7 +126,7 @@ class User extends BaseUser
     /**
      * Get authors
      *
-     * @return Author[]
+     * @return Author[]|ArrayCollection
      */
     public function getAuthors()
     {
@@ -333,6 +271,14 @@ class User extends BaseUser
         return $this->groups;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getAclGroups(): array
+    {
+        return $this->groups->map(fn(Group $g) => $g->getId())->toArray();
+    }
+
     public function addGroup($group)
     {
         if (!$this->groups->contains($group)) {
@@ -413,9 +359,9 @@ class User extends BaseUser
     }
 
     /**
-     * @return \DateTime|null
+     * {@inheritdoc}
      */
-    public function getExpiredUpdatesAt()
+    public function getExpiredUpdatesAt(): ?\DateTimeInterface
     {
         return $this->expiredUpdatesAt;
     }

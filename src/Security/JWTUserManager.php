@@ -22,7 +22,7 @@ class JWTUserManager
         return 'pk_jwt_' . $this->tokenProvider->create($payload);
     }
 
-    public function convertToJwtUser(UserInterface $user): UserInterface
+    public function convertToJwtUser(UserInterface $user): JWTUser
     {
         return new JWTUser($user->getUserIdentifier(), $user->getRoles());
     }

@@ -14,15 +14,10 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="link_replace")
- * @author Jordi Boggiano <j.boggiano@seld.be>
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'link_replace')]
 class ReplaceLink extends PackageLink
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="Packeton\Entity\Version", inversedBy="replace")
-     */
-    protected $version;
+    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Version', inversedBy: 'replace')]
+    protected ?Version $version = null;
 }
