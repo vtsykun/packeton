@@ -51,20 +51,27 @@ class ZipballDownloadManager
 
         $search = static function ($packages, $preference) use (&$search, $accessor) {
             $candidate = null;
-            [$ref, $propertyPath] = \array_shift($preference);
+            [$refs, $propertyPaths] = \array_shift($preference);
+            $refs = !is_array($refs) ? [$refs] : $refs;
+            $propertyPaths = !is_array($propertyPaths) ? [$propertyPaths] : $propertyPaths;
 
-            if (!empty($ref)) {
-                foreach ($packages as $package) {
+            foreach ($packages as $package) {
+                $match = 0;
+                foreach ($propertyPaths as $i => $propertyPath) {
+                    $ref = $refs[$i];
                     try {
                         $expectedRef = $accessor->getValue($package, $propertyPath);
                     } catch (\Throwable) {
                         continue;
                     }
-
                     if (!empty($expectedRef) && $expectedRef === $ref) {
-                        $candidate = $package;
-                        break;
+                        $match++;
                     }
+                }
+
+                if ($match === count($propertyPaths)) {
+                    $candidate = $package;
+                    break;
                 }
             }
 
@@ -75,6 +82,8 @@ class ZipballDownloadManager
         };
 
         $preference = [
+            [[$ref, $version], ['[dist][reference]', '[version_normalized]']],
+            [[$ref, $version], ['[source][reference]', '[version_normalized]']],
             [$ref, '[dist][reference]'],
             [$ref, '[source][reference]'],
             [$version, '[version_normalized]'],

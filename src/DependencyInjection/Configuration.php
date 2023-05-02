@@ -146,6 +146,7 @@ class Configuration implements ConfigurationInterface
             'packages.firegento.com' => '/packeton/img/logo/magento.png',
             'packagist.com' => '/packeton/img/logo/logo-packagist.svg',
             'repo.packagist.com' => '/packeton/img/logo/logo-packagist.svg',
+            'nova.laravel.com' => '/packeton/img/logo/nova-laravel.png',
         ];
 
         $mirrorNodeBuilder
