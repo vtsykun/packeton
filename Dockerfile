@@ -6,36 +6,36 @@ RUN apk --no-cache add nginx supervisor curl subversion mercurial \
     printf "Host *\n    StrictHostKeyChecking no" > /etc/ssh/ssh_config
 
 RUN set -eux; \
-	apk add --no-cache --virtual .build-deps \
-		$PHPIZE_DEPS \
-		postgresql-dev \
-		icu-dev \
-		coreutils \
-		linux-headers \
-		libxml2-dev openldap-dev \
-		bzip2-dev libzip-dev \
-		libxslt-dev \
+    apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        postgresql-dev \
+        icu-dev \
+        coreutils \
+        linux-headers \
+        libxml2-dev openldap-dev \
+        bzip2-dev libzip-dev \
+        libxslt-dev \
         oniguruma-dev \
-	; \
-	\
-	export CFLAGS="$PHP_CFLAGS" \
-		CPPFLAGS="$PHP_CPPFLAGS" \
-		LDFLAGS="$PHP_LDFLAGS"; \
-	\
-	pecl install -o -f redis; \
-	docker-php-ext-enable redis; \
+    ; \
+    \
+    export CFLAGS="$PHP_CFLAGS" \
+        CPPFLAGS="$PHP_CPPFLAGS" \
+        LDFLAGS="$PHP_LDFLAGS"; \
+    \
+    pecl install -o -f redis; \
+    docker-php-ext-enable redis; \
     docker-php-ext-install sockets ldap xsl zip pdo pdo_pgsql pdo_mysql intl sysvsem opcache \
         bz2 mbstring pcntl; \
     runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	echo $runDeps; \
-	apk add --no-cache $runDeps; \
-	\
-	apk del --no-network .build-deps;
+        scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
+            | tr ',' '\n' \
+            | sort -u \
+            | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+    )"; \
+    echo $runDeps; \
+    apk add --no-cache $runDeps; \
+    \
+    apk del --no-network .build-deps;
 
 WORKDIR /var/www/packagist
 
