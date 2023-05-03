@@ -80,7 +80,7 @@ trait HttpMetadataTrait
         }
     }
 
-    private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, iterable $providersGenerator = []): void
+    private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, iterable $providers = []): void
     {
         $resolvedPackages = $promise = [];
         $loop = new SignalLoop($downloader, $this->signal);
@@ -96,11 +96,13 @@ trait HttpMetadataTrait
         $refParameter = $reflect->getParameters()[1] ?? null;
         $asArray = $refParameter && $refParameter->getType()?->getName() === 'array';
 
-        foreach ($providersGenerator as $providers) {
+        foreach ($providers as $provider) {
             foreach ($packages as $package) {
-                if (isset($providers[$package])) {
-                    $packUrl = \str_replace(['%package%', '%hash%'], [$package, $hash ?? ''], $url);
-                    $resolvedPackages[$package] = [\str_replace('$', '', $packUrl), $providers[$package]['sha256'] ?? null];
+                if (isset($provider[$package])) {
+                    $hash = $provider[$package]['sha256'] ?? null;
+                    $packUrl = \str_replace(['%package%', '%hash%'], [$package, $hash ?: ''], $url);
+                    $packUrl = empty($hash) ? \str_replace('$', '', $packUrl) : $packUrl;
+                    $resolvedPackages[$package] = [$packUrl, $hash];
                 }
             }
         }

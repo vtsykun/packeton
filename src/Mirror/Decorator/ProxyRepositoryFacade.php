@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Mirror\Decorator;
 
 use Composer\Downloader\TransportException;
+use Composer\Util\Http\Response;
 use Packeton\Composer\MetadataMinifier;
 use Packeton\Mirror\Exception\MetadataNotFoundException;
 use Packeton\Mirror\Model\HttpMetadataTrait;
@@ -38,11 +39,11 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
         [$package, ] = \explode('$', $nameOrUri);
 
         $metadata = $this->fetch(__FUNCTION__, func_get_args(), function () use ($package) {
-            $metadata = $this->lazyFetchPackageMetadata($package);
+            $metadata = $this->lazyFetchPackageMetadata($package, $hash);
 
             $this->repository->touchRoot();
-            $this->repository->dumpPackage($package, $metadata);
-            return new JsonMetadata(\json_encode($metadata, \JSON_UNESCAPED_SLASHES));
+            $this->repository->dumpPackage($package, $metadata, $hash);
+            return new JsonMetadata(\is_array($metadata) ? \json_encode($metadata, \JSON_UNESCAPED_SLASHES) : $metadata);
         });
 
         $this->rmp->markEnable($package);
@@ -98,7 +99,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
         return $meta ? : $fn($args);
     }
 
-    protected function lazyFetchPackageMetadata(string $package): string|array
+    protected function lazyFetchPackageMetadata(string $package, string &$hash = null): string|array
     {
         $http = $this->syncService->initHttpDownloader($this->config);
 
@@ -116,7 +117,12 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
             $this->requestMetadataVia2($http, [$package], $apiUrl, fn ($name, array $meta) => $queue->enqueue($meta), $reject);
 
         } elseif ($apiUrl = $this->config->getMetadataV1Url($package)) {
-            $this->requestMetadataVia1($http, [$package], $apiUrl, fn ($name, array $meta) => $queue->enqueue($meta), $reject, $this->repository->lookupAllProviders());
+            $fulfilled = static function ($name, Response $meta, string $currentHash = null) use ($queue, &$hash) {
+                $hash = $currentHash;
+                $queue->enqueue($meta->getBody());
+            };
+
+            $this->requestMetadataVia1($http, [$package], $apiUrl, $fulfilled, $reject, $this->repository->lookupAllProviders());
         }
 
         if (!$queue->isEmpty() && !empty($meta = $queue->dequeue())) {
