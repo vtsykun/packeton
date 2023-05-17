@@ -17,10 +17,15 @@
         </div>
 
         <p>You need to authenticate to access their Composer repository, for example to enter credentials run command:</p>
+        <pre>composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ show_api_token(apiToken) }}</pre>
+        <p>The storage can be done either globally in the <code>COMPOSER_HOME/auth.json </code> file</p>
+
+        <p>For continuous integration or deployment environments, you may use <code>COMPOSER_AUTH</code> environment variable</p>
+
         <pre>
-composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ apiToken }}
-        </pre>
-        <p>The storage can be done either globally in the <code>COMPOSER_HOME/auth.json </code> file</p> <hr>
+COMPOSER_AUTH='{"http-basic": {"{{ app.request.getHttpHost() }}": {"username": "{{ user.userIdentifier }}", "password": "{{ show_api_token(user) }}"}}}'</pre>
+        <hr>
+
     {%- endif %}
 
     {% if isMaintainer %}

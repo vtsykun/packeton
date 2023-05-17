@@ -118,7 +118,7 @@
         {%- for child in form %}
             <div class="choice-widget-expanded">
                 {{- form_widget(child) -}}
-                {{- form_label(child, null, {translation_domain: choice_translation_domain, with_value: true}) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain, with_value: attr['with_value'] is defined and attr['with_value']}) -}}
             </div>
         {% endfor -%}
     </div>

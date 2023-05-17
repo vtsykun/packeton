@@ -44,6 +44,7 @@ class ApiTokenType extends AbstractType
             ->add('scores', ChoiceType::class, [
                 'multiple' => true,
                 'expanded' => true,
+                'attr' => ['with_value' => true],
                 'choices' => array_flip($this->getScores())
             ]);
 
