@@ -746,7 +746,7 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     background: #0c71d0;
 }
 
-.nav-user-menu .nav-tabs.nav-stacked .fas, .nav-tabs.nav-stacked .fas {
+.nav-user-menu .nav-tabs.nav-stacked .fa, .nav-tabs.nav-stacked .fa {
     float: right;
     font-size: 20px;
     margin-top: -2px;
@@ -800,6 +800,28 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
 .btn:hover {
     background: #bbbfc4;
     color: #fff;
+}
+
+.bootstrap-select .btn {
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    vertical-align: middle;
+    touch-action: manipulation;
+    cursor: pointer;
+    user-select: none;
+    background-image: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    box-shadow: inherit;
+    text-shadow: inherit;
+    color: #555;
+}
+.bootstrap-select .btn-default {
+    background-color: #fff !important;
 }
 
 .btn.disabled:hover {
