@@ -60,6 +60,8 @@ services:
             $mirrorDistDir: '%mirror_repos_dist_dir%'
             $packageRegexp: '%package_name_regex%'
             $swaggerDocsDir: '%kernel.project_dir%/swagger'
+            $artifactPaths: '%packeton_artifact_paths%'
+            $artifactStorage: '%packeton_artifact_storage%'
             'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:
@@ -98,6 +100,7 @@ services:
     Packeton\Service\AssetHashVersionStrategy:
         arguments:
             $publicDir: '%kernel.project_dir%/public'
+            $debug: '%kernel.debug%'
 
     Packeton\Security\Acl\AnonymousVoter:
         arguments:

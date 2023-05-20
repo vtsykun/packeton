@@ -12,6 +12,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class PackageType extends AbstractType
 {
@@ -40,7 +41,8 @@ class PackageType extends AbstractType
                 'attr'  => [
                     'class' => 'package-repo-info',
                     'placeholder' => 'e.g.: https://github.com/composer/composer',
-                ]
+                ],
+                'constraints' => [new NotBlank()],
             ]);
 
         $builder->addEventListener(FormEvents::POST_SUBMIT, [$this, 'updateRepository'], 255);

@@ -5,6 +5,7 @@ namespace Packeton\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\ObjectRepository;
+use Packeton\Package\RepTypes;
 use Packeton\Repository\VersionRepository;
 
 #[ORM\Entity(repositoryClass: 'Packeton\Repository\PackageRepository')]
@@ -60,7 +61,7 @@ class Package
     private $maintainers;
 
     #[ORM\Column]
-    private $repository;
+    private ?string $repository = null;
 
     #[ORM\Column(name: 'createdat', type: 'datetime')]
     private $createdAt;
@@ -108,13 +109,19 @@ class Package
 
     /**
      * @internal
+     * @var \Packeton\Composer\Repository\ArtifactRepository
      */
-    public $vcsDriverError;
+    public $artifactDriver = true;
 
     /**
      * @internal
      */
-    public $vcsDebugInfo;
+    public $driverError;
+
+    /**
+     * @internal
+     */
+    public $driverDebugInfo;
 
     /**
      * @var array lookup table for versions
@@ -364,6 +371,20 @@ class Package
         return $this->createdAt;
     }
 
+    public function setRepositoryPath(?string $path): void
+    {
+        $path ??= '_unset';
+        if ($this->getRepoType() === RepTypes::ARTIFACT && $this->repository !== $path) {
+            $this->artifactDriver = $this->driverError = null;
+            $this->repository = $path;
+        }
+    }
+
+    public function getRepositoryPath(): ?string
+    {
+        return $this->repository === '_unset' ? null : $this->repository;
+    }
+
     /**
      * Set repository
      *
@@ -380,7 +401,7 @@ class Package
         $repoUrl = preg_replace_callback('{^(https?|git|svn)://}i', fn ($match) => strtolower($match[1]) . '://', $repoUrl);
         if ($this->repository !== $repoUrl) {
             $this->repository = $repoUrl;
-            $this->vcsDriver = $this->vcsDriverError = null;
+            $this->vcsDriver = $this->driverError = null;
         }
     }
 
@@ -423,6 +444,7 @@ class Package
         $repoConfig = [
             'repoType' => $this->repoType ?: 'vcs',
             'subDirectory' => $this->getSubDirectory(),
+            'archives' => $this->getArchives()
         ];
 
         return array_filter($repoConfig);

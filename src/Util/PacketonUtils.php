@@ -40,6 +40,65 @@ class PacketonUtils
         return $packages;
     }
 
+    public static function formatSize(int $size): string
+    {
+        return match (true) {
+            $size > 1048576 => round($size/1048576, 1) . ' MB',
+            $size > 1024 => round($size/1024, 1) . ' KB',
+            default => $size . ' KB',
+        };
+    }
+
+    public static function filterAllowedPaths(string $path, array $allowedPaths): ?string
+    {
+        try {
+            $path = PacketonUtils::normalizePath($path);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        foreach ($allowedPaths as $allowed) {
+            if (str_starts_with($path, $allowed)) {
+                return $allowed;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    public static function normalizePath(string $path): string
+    {
+        $path = str_replace('\\', '/', $path);
+        if (preg_match('#\p{C}+#u', $path)) {
+            throw new \InvalidArgumentException("Invalid pathname: $path");
+        }
+
+        $parts = [];
+        foreach (explode('/', $path) as $part) {
+            switch ($part) {
+                case '':
+                case '.':
+                    break;
+                case '..':
+                    if (empty($parts)) {
+                        throw new \LogicException('Path is outside of the defined root, path: [' . $path . ']');
+                    }
+                    array_pop($parts);
+                    break;
+
+                default:
+                    $parts[] = $part;
+                    break;
+            }
+        }
+
+        return implode('/', $parts);
+    }
+
     public static function buildPath(string $baseDir, ...$paths): string
     {
         $baseDir = rtrim($baseDir, '/') . '/';

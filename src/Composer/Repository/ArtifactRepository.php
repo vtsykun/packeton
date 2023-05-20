@@ -16,6 +16,8 @@ use Composer\Util\ProcessExecutor;
 use Composer\Util\Tar;
 use Composer\Util\Zip;
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Zipball;
+use Packeton\Model\UploadZipballStorage;
 
 /**
  * Artifact repository where attachment's information stored in database
@@ -28,8 +30,18 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     /** @var string */
     protected $lookup;
 
-    public function __construct(protected array $repoConfig, protected ManagerRegistry $registry, protected IOInterface $io, protected Config $config, protected HttpDownloader $httpDownloader, protected ?ProcessExecutor $process = null)
-    {
+    /** @var array */
+    protected $archives;
+
+    public function __construct(
+        protected array $repoConfig,
+        protected UploadZipballStorage $storage,
+        protected ManagerRegistry $registry,
+        protected IOInterface $io,
+        protected Config $config,
+        protected HttpDownloader $httpDownloader,
+        protected ?ProcessExecutor $process = null
+    ) {
         parent::__construct();
         if (!extension_loaded('zip')) {
             throw new \RuntimeException('The artifact repository requires PHP\'s zip extension');
@@ -37,6 +49,8 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
 
         $this->loader = new ArrayLoader();
         $this->lookup = $repoConfig['url'] ?? null;
+        $this->lookup = $this->lookup === '_unset' ? null : $this->lookup;
+        $this->archives = $this->repoConfig['archives'] ?? [];
 
         $this->process ??= new ProcessExecutor($this->io);
     }
@@ -49,19 +63,20 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     /**
      * {@inheritdoc}
      */
-    public function getRepoName()
+    public function getRepoName(): string
     {
-        return 'artifact repo ('.$this->lookup.')';
+        $name = $this->lookup ? "({$this->lookup})" : json_encode($this->archives);
+        return "artifact repo $name";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function initialize()
+    protected function initialize(): void
     {
         parent::initialize();
 
-        $this->scanDirectory($this->lookup);
+        $this->doInitialize();
     }
 
     /**
@@ -105,12 +120,60 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     }
 
     /**
-     * {@inheritdoc}
+     * @return iterable|\SplFileInfo[]
      */
-    private function scanDirectory(string $path): void
+    public function allArtifacts(): iterable
     {
-        $io = $this->io;
+        if ($this->lookup) {
+            yield from $this->scanDirectory($this->lookup);
+        }
 
+        if ($this->archives) {
+            yield from $this->scanArchives($this->archives);
+        }
+    }
+
+    private function doInitialize(): void
+    {
+        foreach ($this->allArtifacts() as $file) {
+            $package = $this->getComposerInformation($file);
+            if (!$package) {
+                $this->io->writeError("File <comment>{$file->getBasename()}</comment> doesn't seem to hold a package", true, IOInterface::VERBOSE);
+                continue;
+            }
+
+            $template = 'Found package <info>%s</info> (<comment>%s</comment>) in file <info>%s</info>';
+            $this->io->writeError(sprintf($template, $package->getName(), $package->getPrettyVersion(), $file->getBasename()), true, IOInterface::VERBOSE);
+
+            $this->addPackage($package);
+        }
+    }
+
+    private function scanArchives(array $archives): iterable
+    {
+        foreach ($archives as $archive) {
+            $zip = $this->registry->getRepository(Zipball::class)->find($archive);
+            if (null === $zip) {
+                $this->io->writeError("Archive #$archive was removed from database");
+                continue;
+            }
+
+            $path = $this->storage->getPath($zip);
+            if (!file_exists($path)) {
+                $this->io->writeError("Archive #$archive was removed from storage '$path'");
+                continue;
+            }
+
+            yield new \SplFileInfo($path);
+        }
+    }
+
+    /**
+     * @param string $path
+     * @return iterable|\SplFileInfo[]
+     */
+    private function scanDirectory(string $path): iterable
+    {
         $directory = new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::FOLLOW_SYMLINKS);
         $iterator = new \RecursiveIteratorIterator($directory);
         $regex = new \RegexIterator($iterator, '/^.+\.(zip|tar|gz|tgz)$/i');
@@ -120,26 +183,16 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
                 continue;
             }
 
-            $package = $this->getComposerInformation($file);
-            if (!$package) {
-                $io->writeError("File <comment>{$file->getBasename()}</comment> doesn't seem to hold a package", true, IOInterface::VERBOSE);
-                continue;
-            }
-
-            $template = 'Found package <info>%s</info> (<comment>%s</comment>) in file <info>%s</info>';
-            $io->writeError(sprintf($template, $package->getName(), $package->getPrettyVersion(), $file->getBasename()), true, IOInterface::VERBOSE);
-
-            $this->addPackage($package);
+            yield $file;
         }
     }
 
     /**
      * {@inheritdoc}
      */
-    private function getComposerInformation(\SplFileInfo $file): ?BasePackage
+    public function getComposerInformation(\SplFileInfo $file): ?BasePackage
     {
         $json = null;
-        $fileType = null;
         $fileExtension = pathinfo($file->getPathname(), PATHINFO_EXTENSION);
         if (in_array($fileExtension, ['gz', 'tar', 'tgz'], true)) {
             $fileType = 'tar';
