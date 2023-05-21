@@ -99,16 +99,22 @@ class DistConfig
      *
      * @param string $name
      * @param string $reference
+     * @param string $format
      *
      * @return string
      */
-    public function generateRoute(string $name, string $reference): string
+    public function generateRoute(string $name, string $reference, string $format = null): string
     {
         $hostName = !isset($this->config['endpoint']) ? self::HOSTNAME_PLACEHOLDER : rtrim($this->config['endpoint'], '/');
 
+        $format ??= '.' . $this->getArchiveFormat();
+        if ($format && !str_starts_with($format, '.')) {
+            $format = '.' . $format;
+        }
+
         $uri = $this->router->generate(
             'download_dist_package',
-            ['package' => $name, 'hash' => $reference . '.' . $this->getArchiveFormat()]
+            ['package' => $name, 'hash' => $reference . $format]
         );
 
         return $hostName . $uri;

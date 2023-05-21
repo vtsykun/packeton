@@ -2,6 +2,3 @@ Packeton\Entity\Package:
     constraints:
         - Packeton\Validator\Constraint\PackageUnique: { groups: [Create] }
         - Packeton\Validator\Constraint\PackageRepository: { groups: [Update, Create] }
-    properties:
-        repository:
-            - NotBlank: ~

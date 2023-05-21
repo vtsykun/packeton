@@ -85,4 +85,9 @@
         $(this).parent().find('[data-type="token"]').show();
         $(this).remove();
     });
+
+    let select2 = $('.jselect2');
+    if (typeof select2.select2 === 'function') {
+        select2.select2();
+    }
 })(jQuery, humane);

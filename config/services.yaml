@@ -60,6 +60,7 @@ services:
             $mirrorDistDir: '%mirror_repos_dist_dir%'
             $packageRegexp: '%package_name_regex%'
             $swaggerDocsDir: '%kernel.project_dir%/swagger'
+            $artifactPaths: '%packeton_artifact_paths%'
             'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:
@@ -98,12 +99,18 @@ services:
     Packeton\Service\AssetHashVersionStrategy:
         arguments:
             $publicDir: '%kernel.project_dir%/public'
+            $debug: '%kernel.debug%'
 
     Packeton\Security\Acl\AnonymousVoter:
         arguments:
             $isAnonymousAccess: '%anonymous_access%'
             $isAnonymousArchiveAccess: '%anonymous_archive_access%'
             $isAnonymousMirror: '%anonymous_mirror_access%'
+    
+    Packeton\Model\UploadZipballStorage:
+        arguments:
+            $artifactStorage: '%packeton_artifact_storage%'
+            $supportTypes: '%packeton_artifact_types%'
 
     Packeton\Service\DistConfig:
         arguments:

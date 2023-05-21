@@ -68,10 +68,6 @@ class PackageManager
         if (!$package->getRepository() || $package->vcsDriver === true) {
             return;
         }
-        // avoid user@host URLs
-        if (preg_match('{https?://.+@}', $package->getRepository())) {
-            return;
-        }
 
         try {
             $repository = $this->packagistFactory->createRepository(
@@ -94,7 +90,7 @@ class PackageManager
                 $package->setName($information['name']);
             }
         } catch (\Exception $e) {
-            $package->vcsDriverError = '['.get_class($e).'] '.$e->getMessage();
+            $package->driverError = '['.get_class($e).'] '.$e->getMessage();
         }
     }
 

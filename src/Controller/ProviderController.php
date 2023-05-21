@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packeton\Attribute\Vars;
 use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
-use Packeton\Entity\Version;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistManager;
 use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -146,43 +143,6 @@ class ProviderController extends AbstractController
         $response->setData($package);
 
         return $response;
-    }
-
-    #[Route(
-        '/zipball/{package}/{hash}',
-        name: 'download_dist_package',
-        requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}\.[a-z]+?'],
-        methods: ['GET']
-    )]
-    public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
-    {
-        $distManager = $this->container->get(DistManager::class);
-        if (!$distManager->isEnabled() || !\preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
-        }
-
-        $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getReference() === $reference);
-        if ($version instanceof Version) {
-            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) and $path = $distManager->getDistPath($version)) {
-                return new BinaryFileResponse($path);
-            }
-
-            return $this->createNotFound();
-        }
-
-        try {
-            $path = $distManager->getDistByOrphanedRef($reference, $package, $version);
-            $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getVersion() === $version);
-
-            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) || $this->isGranted('VIEW_ALL_VERSION', $package)) {
-                return new BinaryFileResponse($path);
-            }
-        } catch (\Exception $e) {
-            $msg = $this->isGranted('ROLE_MAINTAINER') ? $e->getMessage() : null;
-            return $this->createNotFound($msg);
-        }
-
-        return $this->createNotFound();
     }
 
     protected function createNotFound(?string $msg = null): Response

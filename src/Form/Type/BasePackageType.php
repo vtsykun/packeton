@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Form\Type;
 
+use Packeton\Entity\Package;
 use Packeton\Package\RepTypes;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -19,7 +20,7 @@ class BasePackageType extends AbstractType
                 'choices' => [
                     'VCS (auto)' => RepTypes::VCS,
                     'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
-                   // 'Artifacts (zip archives)' => RepTypes::ARTIFACT,
+                    'Artifacts' => RepTypes::ARTIFACT,
                 ],
                 'attr' => ['class' => 'repo-type']
             ]);
@@ -32,6 +33,6 @@ class BasePackageType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefault('is_created', false);
-        $resolver->setDefault('data_class', PackageType::class);
+        $resolver->setDefault('data_class', Package::class);
     }
 }

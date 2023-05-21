@@ -8,12 +8,16 @@ use Composer\IO\NullIO;
 use Composer\Package\CompletePackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
+use Composer\Package\PackageInterface;
 use Composer\Repository\RepositoryInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
+use Packeton\Model\UploadZipballStorage;
+use Packeton\Package\RepTypes;
+use Packeton\Util\PacketonUtils;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
@@ -21,14 +25,13 @@ use Symfony\Component\Finder\Finder;
 
 class DistManager
 {
-    private $fileSystem;
-
     public function __construct(
         private readonly DistConfig $config,
         private readonly PackagistFactory $packagistFactory,
         private readonly ManagerRegistry $registry,
+        private readonly UploadZipballStorage $storage,
+        private readonly Filesystem $fs
     ) {
-        $this->fileSystem = new Filesystem();
     }
 
     public function getDistPath(Version $version): ?string
@@ -37,15 +40,18 @@ class DistManager
             return null;
         }
 
+        $package = $version->getPackage();
         $path = $this->config->generateDistFileName($version->getName(), $reference, $version->getVersion());
-        if ($this->fileSystem->exists($path)) {
+        if ($this->fs->exists($path)) {
             try {
-                $this->fileSystem->touch($path);
+                $this->fs->touch($path);
             } catch (IOException) {}
             return $path;
         }
 
-        return $this->download($version, $reference);
+        return RepTypes::isBuildInDist($package->getRepoType()) ?
+            $this->downloadArtifact($version, $reference, $path)
+            : $this->downloadVCS($version, $reference);
     }
 
     public function isEnabled(): bool
@@ -55,6 +61,10 @@ class DistManager
 
     public function getDistByOrphanedRef(string $reference, Package $package, &$version = null): string
     {
+        if (RepTypes::isBuildInDist($package->getRepoType())) {
+            throw new \InvalidArgumentException('Unable to found reference for the artifact package');
+        }
+
         if ($cacheRef = $this->lookupInCache($reference, $package->getName())) {
             [$path, $version] = $cacheRef;
             return $path;
@@ -125,7 +135,7 @@ class DistManager
             $fileName = $file->getFilename();
             if ($version = $this->config->guessesVersion($fileName)) {
                 try {
-                    $this->fileSystem->touch($file->getRealPath());
+                    $this->fs->touch($file->getRealPath());
                 } catch (IOException) {}
 
                 return [$file->getRealPath(), $version];
@@ -135,14 +145,35 @@ class DistManager
         return null;
     }
 
-    private function download(Version $version, string $reference): ?string
+    private function downloadArtifact(Version $version, string $reference, string $cachePath): ?string
+    {
+        if ($path = $this->storage->getPath($reference)) {
+            return $path;
+        }
+
+        $repository = $this->createRepositoryAndIo($version->getPackage());
+        $packages = $repository->getPackages();
+        $found = array_filter($packages, fn($p) => $reference === $p->getDistReference());
+        /** @var PackageInterface $package */
+        if ($package = reset($found)) {
+            $distUrl = $package->getDistUrl();
+            if (is_string($distUrl) && str_starts_with($distUrl, '/')) {
+                $this->fs->copy($distUrl, $cachePath);
+                return $cachePath;
+            }
+        }
+
+        return null;
+    }
+
+    private function downloadVCS(Version $version, string $reference): ?string
     {
         $repository = $this->createRepositoryAndIo($version->getPackage());
         $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
 
         $targetDir = $this->config->generateTargetDir($version->getName());
-        $fileName = $this->config->getFileName($reference, $version->getVersion());;
+        $fileName = $this->config->getFileName($reference, $version->getVersion());
 
         if ($package = $this->tryFromVersion($version)) {
             try {

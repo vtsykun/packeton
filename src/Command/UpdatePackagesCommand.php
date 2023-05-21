@@ -15,6 +15,7 @@ namespace Packeton\Command;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
+use Packeton\Repository\PackageRepository;
 use Packeton\Service\Scheduler;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -65,24 +66,21 @@ class UpdatePackagesCommand extends Command
 
         /** @var EntityManagerInterface $em */
         $em = $this->registry->getManager();
+        /** @var PackageRepository $repo */
+        $repo = $this->registry->getRepository(Package::class);
         $interval = $input->getOption('update-crawl-interval') ?: 14400; // 4 hour
 
         if ($package) {
-            $packages = [['id' => $this->registry->getRepository(Package::class)->findOneByName($package)->getId()]];
+            $packages = [$repo->findOneByName($package)->getId()];
             if ($force) {
                 $updateEqualRefs = true;
             }
             $randomTimes = false;
         } elseif ($force) {
-            $packages = $em->getConnection()->fetchAllAssociative('SELECT p.id FROM package p WHERE p.parent_id IS NULL ORDER BY p.id ASC');
+            $packages = $em->getConnection()->fetchFirstColumn('SELECT p.id FROM package p WHERE p.parent_id IS NULL ORDER BY p.id ASC');
             $updateEqualRefs = true;
         } else {
-            $packages = $this->registry->getRepository(Package::class)->getStalePackages($interval);
-        }
-
-        $ids = [];
-        foreach ($packages as $package) {
-            $ids[] = (int) $package['id'];
+            $packages = $repo->getStalePackages($interval);
         }
 
         if ($input->getOption('delete-before')) {
@@ -93,8 +91,8 @@ class UpdatePackagesCommand extends Command
         }
 
 
-        while ($ids) {
-            $idsGroup = array_splice($ids, 0, 100);
+        while ($packages) {
+            $idsGroup = array_splice($packages, 0, 100);
 
             foreach ($idsGroup as $id) {
                 $job = $this->scheduler->scheduleUpdate($id, $updateEqualRefs, $deleteBefore, $randomTimes ? new \DateTime('+'.rand(1, (int) ($interval/1.5)).'seconds') : null, true);

@@ -27,12 +27,15 @@ class CustomerUserType extends AbstractType
     {
         $builder
             ->add('email', EmailType::class, ['required' => false])
-            ->add('username', null, ['constraints' => [new NotBlank(), new Regex('/^[a-zA-Z0-9\-_]+$/')]])
+            ->add('username', null, [
+                'disabled' => !$options['is_created'],
+                'constraints' => [new NotBlank(), new Regex('/^[a-zA-Z0-9\-_]+$/')]
+            ])
             ->add('enabled', CheckboxType::class, ['required' => false])
             ->add('plainPassword', RepeatedType::class, [
                 'required' => false,
                 'type' => PasswordType::class,
-                'first_options' => ['label' => 'Password'],
+                'first_options' => ['label' => 'Password (Keep empty for only API access)'],
                 'second_options' => ['label' => 'Repeat Password'],
                 'invalid_message' => 'The entered passwords do not match.',
             ])
@@ -49,7 +52,7 @@ class CustomerUserType extends AbstractType
             ])
             ->add('fullAccess', CheckboxType::class, [
                 'required' => false,
-                'label' => 'Full read access',
+                'label' => 'Full read access (ROLE_FULL_CUSTOMER)',
                 'mapped' => false,
                 'tooltip' => 'Read access to all packages without ACL Group restriction'
             ])
@@ -83,6 +86,7 @@ class CustomerUserType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => User::class,
+            'is_created' => false,
         ]);
     }
 }

@@ -46,6 +46,25 @@ trait PackageSerializedTrait
         $this->setSerializedField('skip_empty_tag', $value);
     }
 
+    public function getArchives(): ?array
+    {
+        return $this->serializedData['archives'] ?? null;
+    }
+
+    public function setArchives(?array $archives): void
+    {
+        $prev = $this->getArchives() ?: [];
+        $new = $archives ?: [];
+        sort($new);
+        sort($prev);
+
+        if ($new !== $prev) {
+            $this->artifactDriver = $this->driverError = null;
+        }
+
+        $this->setSerializedField('archives', $archives);
+    }
+
     protected function setSerializedField(string $field, mixed $value): void
     {
         if (null === $value) {

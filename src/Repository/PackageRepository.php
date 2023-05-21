@@ -176,10 +176,11 @@ class PackageRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()->getConnection();
 
-        return $conn->fetchAllAssociative(
+        return $conn->fetchFirstColumn(
             "SELECT p.id FROM package p
             WHERE p.abandoned = false
             AND p.parent_id is NULL
+            AND p.repo_type NOT IN ('artifact', 'custom')
             AND (
                 p.crawledAt IS NULL
                 OR (p.autoUpdated = false AND p.crawledAt < :crawled)

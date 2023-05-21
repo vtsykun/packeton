@@ -7,9 +7,11 @@ use Packeton\Entity\Group;
 use Packeton\Entity\Job;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Entity\Zipball;
 use Packeton\Form\Model\PackagePermission;
 use Packeton\Model\ProviderManager;
 use Packeton\Security\JWTUserManager;
+use Packeton\Util\PacketonUtils;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Twig\Extension\AbstractExtension;
@@ -42,6 +44,7 @@ class PackagistExtension extends AbstractExtension
             new TwigFunction('get_group_data', [$this, 'getGroupData']),
             new TwigFunction('get_group_acl_form_data', [$this, 'getGroupAclForm']),
             new TwigFunction('get_api_token', [$this, 'getApiToken']),
+            new TwigFunction('get_free_zipballs', [$this, 'getZipballs']),
             new TwigFunction('show_api_token', [$this, 'showApiTokenButton'], ['is_safe' => ['html']]),
         ];
     }
@@ -161,6 +164,17 @@ class PackagistExtension extends AbstractExtension
         }
 
         return $sourceReference;
+    }
+
+    public function getZipballs()
+    {
+        $data = $this->registry->getRepository(Zipball::class)->freeZipballData();
+        return array_map(static function($zip) {
+            return [
+                'id' => $zip['id'],
+                'filename' => $zip['filename'] . ' (' . PacketonUtils::formatSize($zip['size']) . ')'
+            ];
+        }, $data);
     }
 
     public function generateGravatarHash($email)

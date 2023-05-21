@@ -17,9 +17,9 @@
         {% block default_styles %}
             <link rel="stylesheet" href="{{ asset('libs/bootstrap-3.3.5/css/bootstrap.min.css') }}" />
             <link rel="stylesheet" href="{{ asset('libs/bootstrap-3.3.5/css/bootstrap-theme.min.css') }}" />
-            <link rel="stylesheet" href="{{ asset('libs/fontawesome/css/all.css') }}" />
             <link rel="stylesheet" href="{{ asset('packeton/css/main.css') }}" />
             <link rel="stylesheet" href="{{ asset('css/humane/jackedup.css') }}" />
+            <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
         {% endblock %}
         {% block docker_head %}{% endblock %}
 
@@ -76,7 +76,7 @@
                         {%- if app.user %}
                             <li class="nav-user">
                                 <section>
-                                    <a href="{{ path('profile_show') }}">{{ app.user.username }}</a>
+                                    <a href="{{ path('profile_show') }}">{{ app.user.userIdentifier }}</a>
 
                                     <section class="nav-user-menu">
                                         {{ knp_menu_render('user_menu', {'allow_safe_labels': true}) }}
@@ -201,7 +201,7 @@
                 <div class="row">
                     <ul class="social col-xs-7 col-sm-4 col-md-2 pull-right">
                         {% block footer_contact %}
-                            <li><a href="https://github.com/vtsykun/packeton" title="{{ 'menu.github'|trans }}"><span class="fab fa-github"></span></a></li>
+                            <li><a href="https://github.com/vtsykun/packeton" title="{{ 'menu.github'|trans }}"><span class="fa fa-github"></span></a></li>
                         {% endblock %}
                     </ul>
 
@@ -242,10 +242,11 @@
     <script src="{{ asset('libs/jquery-2.1.4.min.js') }}"></script>
     <script src="{{ asset('libs/humane-3.2.2.min.js') }}"></script>
     <script src="{{ asset('libs/bootstrap-3.3.5/js/bootstrap.min.js')}}"></script>
-    <script src="{{ asset('packeton/js/layout.js') }}"></script>
 
     {% block scripts %}{% endblock %}
     {% block docker_scripts %}{% endblock %}
+
+    <script src="{{ asset('packeton/js/layout.js') }}"></script>
 
     <script nonce="{{ csp_nonce('script') }}">
         if (window._deferExec !== undefined) {

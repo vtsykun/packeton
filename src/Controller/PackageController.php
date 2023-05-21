@@ -144,9 +144,12 @@ class PackageController extends AbstractController
             }
         }
 
+        $paths = $this->getParameter('packeton_artifact_paths');
+        $template = RepTypes::getUITemplate($type, 'submit');
+
         return $this->render(
-            'package/submitPackage.html.twig',
-            ['form' => $form->createView(), 'page' => 'submit', 'type' => $type]
+            $template === null ? 'package/submitPackage.html.twig' : $template,
+            ['form' => $form->createView(), 'page' => 'submit', 'type' => $type, 'paths' => $paths]
         );
     }
 
@@ -195,7 +198,7 @@ class PackageController extends AbstractController
                 ];
             }
 
-            $details = $package->vcsDebugInfo ? strip_tags($package->vcsDebugInfo) : null;
+            $details = $package->driverDebugInfo ? strip_tags($package->driverDebugInfo) : null;
             return new JsonResponse(['status' => 'success', 'name' => $package->getName(), 'similar' => $similar, 'details' => $details]);
         }
 
@@ -781,9 +784,12 @@ class PackageController extends AbstractController
             );
         }
 
+        $template = RepTypes::getUITemplate($package->getRepoType(), 'edit');
+
         return $this->render(
-            'package/edit.html.twig',
+            $template === null ? 'package/edit.html.twig' : $template,
             [
+                'edit' => true,
                 "package" => $package,
                 "form" => $form->createView()
             ]

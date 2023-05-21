@@ -1,0 +1,18 @@
+{% extends "package/edit.html.twig" %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="{{ asset('packeton/js/uploadZipball.js')}}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
+{% endblock %}
+
+{% block submit_form_guide %}
+    <div class="col-md-6">
+        {% include 'package/zipball.html.twig' %}
+    </div>
+{% endblock %}

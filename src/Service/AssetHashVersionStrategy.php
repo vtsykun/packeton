@@ -10,8 +10,11 @@ use Symfony\Contracts\Cache\CacheInterface;
 
 class AssetHashVersionStrategy implements VersionStrategyInterface
 {
-    public function __construct(protected string $publicDir, protected CacheInterface $cache)
-    {
+    public function __construct(
+        protected string $publicDir,
+        protected CacheInterface $cache,
+        protected bool $debug = false,
+    ) {
     }
 
     /**
@@ -20,10 +23,18 @@ class AssetHashVersionStrategy implements VersionStrategyInterface
     public function getVersion(string $path): string
     {
         if (str_starts_with($path, 'packeton/') && in_array(pathinfo($path)['extension'] ?? '', ['js', 'css'], true)) {
-            return $this->cache->get(sha1($path), fn() => substr(@hash_file('sha256', PacketonUtils::buildPath($this->publicDir, $path)) ?: '', 0, 6));
+            if (true === $this->debug) {
+                return $this->getHash($path);
+            }
+            return $this->cache->get(sha1($path), fn() => $this->getHash($path));
         }
 
         return '';
+    }
+
+    protected function getHash(string $path): string
+    {
+        return substr(@hash_file('sha256', PacketonUtils::buildPath($this->publicDir, $path)) ?: '', 0, 6);
     }
 
     /**
