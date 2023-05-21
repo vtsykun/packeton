@@ -135,8 +135,8 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
 
     private function doInitialize(): void
     {
-        foreach ($this->allArtifacts() as $file) {
-            $package = $this->getComposerInformation($file);
+        foreach ($this->allArtifacts() as $ref => $file) {
+            $package = $this->getComposerInformation($file, $ref);
             if (!$package) {
                 $this->io->writeError("File <comment>{$file->getBasename()}</comment> doesn't seem to hold a package", true, IOInterface::VERBOSE);
                 continue;
@@ -164,7 +164,7 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
                 continue;
             }
 
-            yield new \SplFileInfo($path);
+            yield $zip->getReference() => new \SplFileInfo($path);
         }
     }
 
@@ -190,7 +190,7 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     /**
      * {@inheritdoc}
      */
-    public function getComposerInformation(\SplFileInfo $file): ?BasePackage
+    public function getComposerInformation(\SplFileInfo $file, $ref = null): ?BasePackage
     {
         $json = null;
         $fileExtension = pathinfo($file->getPathname(), PATHINFO_EXTENSION);
@@ -220,13 +220,20 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
         $package['dist'] = [
             'type' => $fileType,
             'url' => strtr($file->getPathname(), '\\', '/'),
-            'shasum' => sha1_file($file->getRealPath()),
+            'shasum' => $sha1 = sha1_file($file->getRealPath()),
         ];
+        if (is_string($ref) && strlen($ref) >= 40) {
+            $package['dist']['reference'] = $ref;
+        }
 
         try {
             $package = $this->loader->load($package);
         } catch (\UnexpectedValueException $e) {
             throw new \UnexpectedValueException('Failed loading package in '.$file.': '.$e->getMessage(), 0, $e);
+        }
+
+        if (null === $package->getDistReference()) {
+            $package->setDistReference(sha1($sha1 . $package->getVersion()));
         }
 
         return $package;

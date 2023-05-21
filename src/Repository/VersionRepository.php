@@ -109,20 +109,20 @@ class VersionRepository extends EntityRepository
         }
 
         foreach ($links as $link => $table) {
-            $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
+            $rows = $this->getConn()->fetchAllAssociative(
                 'SELECT version_id, packageName as name, packageVersion as version FROM '.$table.' WHERE version_id IN (:ids)',
                 ['ids' => $versionIds],
-                ['ids' => Connection::PARAM_INT_ARRAY]
+                ['ids' => ArrayParameterType::INTEGER]
             );
             foreach ($rows as $row) {
                 $result[$row['version_id']][$link][] = $row;
             }
         }
 
-        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
+        $rows = $this->getConn()->fetchAllAssociative(
             'SELECT va.version_id, name, email, homepage, role FROM author a JOIN version_author va ON va.author_id = a.id WHERE va.version_id IN (:ids)',
             ['ids' => $versionIds],
-            ['ids' => Connection::PARAM_INT_ARRAY]
+            ['ids' => ArrayParameterType::INTEGER]
         );
         foreach ($rows as $row) {
             $versionId = $row['version_id'];
@@ -146,16 +146,15 @@ class VersionRepository extends EntityRepository
 
     public function getVersionMetadataForUpdate(Package $package)
     {
-        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
-            'SELECT id, normalizedVersion as normalized_version, source, softDeletedAt as soft_deleted_at FROM package_version v WHERE v.package_id = :id',
+        $rows = $this->getConn()->fetchAllAssociative(
+            'SELECT id, normalizedVersion as normalized_version, source, dist, softDeletedAt as soft_deleted_at FROM package_version v WHERE v.package_id = :id',
             ['id' => $package->getId()]
         );
 
         $versions = [];
         foreach ($rows as $row) {
-            if ($row['source']) {
-                $row['source'] = json_decode($row['source'], true);
-            }
+            $row['source'] = $row['source'] ? json_decode($row['source'], true) : null;
+            $row['dist'] = $row['dist'] ? json_decode($row['dist'], true) : null;
             $versions[strtolower($row['normalized_version'])] = $row;
         }
 
@@ -166,7 +165,7 @@ class VersionRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v', 't', 'a')
-            ->from('Packeton\Entity\Version', 'v')
+            ->from(Version::class, 'v')
             ->leftJoin('v.tags', 't')
             ->leftJoin('v.authors', 'a')
             ->where('v.id = :id')
@@ -186,7 +185,7 @@ class VersionRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v')
-            ->from('Packeton\Entity\Version', 'v')
+            ->from(Version::class, 'v')
             ->where('v.development = false')
             ->andWhere('v.releasedAt <= ?0')
             ->orderBy('v.releasedAt', 'DESC');
@@ -212,7 +211,7 @@ class VersionRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v.name, v.version, v.description')
-            ->from('Packeton\Entity\Version', 'v')
+            ->from(Version::class, 'v')
             ->where('v.development = false')
             ->andWhere('v.releasedAt < :now')
             ->orderBy('v.releasedAt', 'DESC')
@@ -230,7 +229,7 @@ class VersionRepository extends EntityRepository
      */
     public function getPreviousRelease(string $package, string $version)
     {
-        $versions = $qb = $this->createQueryBuilder('v')
+        $versions = $this->createQueryBuilder('v')
             ->resetDQLPart('select')
             ->select('v.version')
             ->where('v.development = false')
@@ -267,5 +266,13 @@ class VersionRepository extends EntityRepository
             ->groupBy('year, month');
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return Connection
+     */
+    protected function getConn(): Connection
+    {
+        return $this->getEntityManager()->getConnection();
     }
 }

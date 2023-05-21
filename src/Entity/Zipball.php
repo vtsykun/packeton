@@ -8,6 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Packeton\Repository\ZipballRepository;
 
 #[ORM\Entity(repositoryClass: ZipballRepository::class)]
+#[ORM\Table('zipball_archives')]
+#[ORM\Index(columns: ['reference'], name: 'reference_idx')]
 class Zipball
 {
     #[ORM\Id]
@@ -17,6 +19,9 @@ class Zipball
 
     #[ORM\Column(name: 'filename', length: 255)]
     private ?string $filename = null;
+
+    #[ORM\Column(name: 'reference', length: 255)]
+    private ?string $reference = null;
 
     #[ORM\Column(name: 'extension', length: 32, nullable: true)]
     private ?string $extension = null;
@@ -54,6 +59,21 @@ class Zipball
     public function setFilename(string $filename): self
     {
         $this->filename = $filename;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }

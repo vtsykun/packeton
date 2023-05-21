@@ -70,7 +70,7 @@ security:
         # Maintainers
         - { path: (^(/users/(.+)/packages))+, roles: ROLE_MAINTAINER }
         - { path: (^(/users/(.+)/favorites))+, roles: ROLE_MAINTAINER }
-        - { path: (^(/metadata/changes.json$|/explore|/jobs/))+, roles: ROLE_MAINTAINER }
+        - { path: (^(/metadata/changes.json$|/explore|/jobs/|/archive/))+, roles: ROLE_MAINTAINER }
 
         # Secured part of the site
         # This config requires being logged for the whole site and having the admin role for the admin part.

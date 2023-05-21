@@ -145,7 +145,7 @@ class PackageController extends AbstractController
         }
 
         $paths = $this->getParameter('packeton_artifact_paths');
-        $template = RepTypes::getUITemplate($type);
+        $template = RepTypes::getUITemplate($type, 'submit');
 
         return $this->render(
             $template === null ? 'package/submitPackage.html.twig' : $template,
@@ -784,9 +784,12 @@ class PackageController extends AbstractController
             );
         }
 
+        $template = RepTypes::getUITemplate($package->getRepoType(), 'edit');
+
         return $this->render(
-            'package/edit.html.twig',
+            $template === null ? 'package/edit.html.twig' : $template,
             [
+                'edit' => true,
                 "package" => $package,
                 "form" => $form->createView()
             ]

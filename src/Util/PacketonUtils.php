@@ -96,7 +96,7 @@ class PacketonUtils
             }
         }
 
-        return implode('/', $parts);
+        return (str_starts_with($path, '/') ? '/' : '') . implode('/', $parts);
     }
 
     public static function buildPath(string $baseDir, ...$paths): string

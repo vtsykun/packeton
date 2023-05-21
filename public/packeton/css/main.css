@@ -1811,3 +1811,22 @@ label.required em {
     padding: 3px 8px;
     font-size: 0.9em;
 }
+
+.well-card {
+    margin-bottom: 1.5rem;
+    box-shadow: rgba(53,64,82,.04) 0 2px 4px 0;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(53,64,82,.16);
+    min-height: 20px;
+    padding: 19px;
+    border-radius: 4px;
+}
+.well-card .input-group-addon {
+    background: #f1f1f1;
+}
+.well-card .title {
+    font-size: 26px !important;
+}

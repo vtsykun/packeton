@@ -12,11 +12,10 @@ use Symfony\Component\Mime\MimeTypes;
 
 class UploadZipballStorage
 {
-    protected static $supportTypes = ['gz', 'tar', 'tgz', 'zip'];
-
     public function __construct(
         protected ManagerRegistry $registry,
         protected ?string $artifactStorage,
+        protected array $supportTypes
     ) {
     }
 
@@ -29,9 +28,19 @@ class UploadZipballStorage
         @unlink($this->getPath($zip));
     }
 
-    public function getPath(Zipball|string $zip): string
+    public function getPath(Zipball|string $zipOrReference): ?string
     {
-        return PacketonUtils::buildPath($this->artifactStorage, $zip instanceof Zipball ? $zip->getFilename() : $zip);
+        if (is_string($zipOrReference)) {
+            $zip = $this->registry->getRepository(Zipball::class)->findOneBy(['reference' => $zipOrReference]);
+        } else {
+            $zip = $zipOrReference;
+        }
+
+        if (empty($zip)) {
+            return null;
+        }
+
+        return PacketonUtils::buildPath($this->artifactStorage, $zip->getFilename());
     }
 
     public function save(UploadedFile $file): array
@@ -40,9 +49,10 @@ class UploadZipballStorage
         $extension = $this->guessExtension($file, $mime);
         $size = $file->getSize();
 
-        // Limited by ArtifactRepository, mimetype will check later, not necessary a strict validation
-        if (!in_array($extension, self::$supportTypes, true)) {
-            return ['code' => 400, 'error' => "Allowed only *.tgz *.zip archives, but given .$extension"];
+        // Limited by ArtifactRepository, mimetype will check later, not necessary a strict validation.
+        if (!in_array($extension, $this->supportTypes, true)) {
+            $supportTypes = json_encode($this->supportTypes);
+            return ['code' => 400, 'error' => "Allowed only $supportTypes archives, but given *.$extension"];
         }
 
         $hash = sha1(random_bytes(30));
@@ -59,6 +69,7 @@ class UploadZipballStorage
             ->setExtension($extension)
             ->setFileSize($size)
             ->setMimeType($mime)
+            ->setReference($hash)
             ->setFilename($filename);
 
         $manager = $this->registry->getManager();

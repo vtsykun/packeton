@@ -22,10 +22,11 @@ class Scheduler
     {
         if ($packageOrId instanceof Package) {
             $packageOrId = $packageOrId->getId();
-        } elseif (!is_int($packageOrId)) {
+        } elseif (!is_numeric($packageOrId)) {
             throw new \UnexpectedValueException('Expected Package instance or int package id');
         }
 
+        $packageOrId = (int) $packageOrId;
         $pendingJobId = $this->getPendingUpdateJob($packageOrId, $updateEqualRefs, $deleteBefore);
         if ($pendingJobId) {
             $pendingJob = $this->doctrine->getRepository(Job::class)->findOneBy(['id' => $pendingJobId]);

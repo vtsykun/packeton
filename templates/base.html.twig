@@ -76,7 +76,7 @@
                         {%- if app.user %}
                             <li class="nav-user">
                                 <section>
-                                    <a href="{{ path('profile_show') }}">{{ app.user.username }}</a>
+                                    <a href="{{ path('profile_show') }}">{{ app.user.userIdentifier }}</a>
 
                                     <section class="nav-user-menu">
                                         {{ knp_menu_render('user_menu', {'allow_safe_labels': true}) }}

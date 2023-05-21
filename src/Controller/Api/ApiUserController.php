@@ -9,6 +9,7 @@ use Packeton\Attribute\Vars;
 use Packeton\Entity\User;
 use Packeton\Form\Handler\UserFormHandler;
 use Packeton\Form\Type\CustomerUserType;
+use Packeton\Repository\UserRepository;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,12 +26,13 @@ class ApiUserController extends AbstractController
 
     public function __construct(
         protected ManagerRegistry $registry,
-    ){
+    ) {
     }
 
     #[Route('/users', name: 'users_lists', methods: ['GET'])]
     public function lists(Request $request): Response
     {
+        /** @var UserRepository $repo */
         $repo = $this->registry->getRepository(User::class);
         $page = (int)$request->query->get('page', 1);
 
@@ -54,6 +56,7 @@ class ApiUserController extends AbstractController
             throw new AccessDeniedHttpException('You can not see yourself or admin user');
         }
 
+        /** @var UserRepository $repo */
         $repo = $this->registry->getRepository(User::class);
 
         return $this->json($repo->getApiData($user));
@@ -63,7 +66,7 @@ class ApiUserController extends AbstractController
     public function create(Request $request, UserFormHandler $handler): Response
     {
         $user = new User();
-        $form = $this->createForm(CustomerUserType::class, $user, ['csrf_protection' => false,]);
+        $form = $this->createForm(CustomerUserType::class, $user, ['csrf_protection' => false, 'is_created' => true]);
 
         $data = $this->getJsonPayload($request);
         if ($handler->handle($data, $form)) {

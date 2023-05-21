@@ -31,7 +31,6 @@
 
         request.upload.addEventListener('progress', (e) => {
             progressBar.find('.progress-bar').css('width', Math.round(100 * e.loaded/e.total) + '%');
-            console.log('progress', e);
         });
 
         // File received / failed
@@ -82,6 +81,11 @@
     fileDrag.addEventListener('dragover', dragHandler);
     fileDrag.addEventListener('dragleave', dragHandler);
 
+    $('.files-container').find('.fa-times').on('click', (e) => {
+        let el = $(e.target).closest('.attachment-item');
+        deleteFile(el);
+    });
+
     function deleteFile(el, id = null) {
         if (id === null) {
             id = el.attr('data-id');
@@ -106,7 +110,17 @@
                 for (let item of data) {
                     result.push({'id': item.id, 'text': formatFilename(item)});
                 }
-                select2.select2({'data': result});
+
+                let options = result.map((item) => '<option value="' + item.id + '">' + item.text + '</option>');
+                for (let i = 0; i < select2.length; i++) {
+                    let wrap = $(select2[i]);
+                    let prev = wrap.val();
+
+                    wrap.select2({'data': result});
+                    wrap.html(options.join('')).change();
+                    wrap.val(prev);
+
+                }
             }
         });
     }

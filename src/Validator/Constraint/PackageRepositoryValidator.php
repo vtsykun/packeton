@@ -72,7 +72,7 @@ class PackageRepositoryValidator extends ConstraintValidator
                 $packages = $value->artifactDriver->getPackages();
                 $packages = array_unique(array_map(fn($p) => $p->getName(), $packages));
                 if (count($packages) > 1) {
-                    $this->context->addViolation('Different archives contains multiply packages: ' . json_encode($packages));
+                    $this->context->addViolation('Different archives contains multiply packages: ' . json_encode(array_values($packages), 64));
                 }
 
                 $this->validatePackageName(reset($packages));

@@ -36,7 +36,7 @@ abstract class PackageLink
 
     public function toArray()
     {
-        return array($this->getPackageName() => $this->getPackageVersion());
+        return [$this->getPackageName() => $this->getPackageVersion()];
     }
 
     public function setId($id)

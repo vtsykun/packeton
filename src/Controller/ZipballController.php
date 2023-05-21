@@ -11,6 +11,7 @@ use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Entity\Zipball;
 use Packeton\Model\UploadZipballStorage;
+use Packeton\Package\RepTypes;
 use Packeton\Service\DistManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -30,6 +31,7 @@ class ZipballController extends AbstractController
     #[Route('/archive/upload', name: 'archive_upload', methods: ["POST"])]
     public function upload(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_MAINTAINER');
         if (!$this->isCsrfTokenValid('archive_upload', $request->get('token'))) {
             return new JsonResponse(['error' => 'Csrf token is not a valid'], 400);
         }
@@ -45,6 +47,7 @@ class ZipballController extends AbstractController
     #[Route('/archive/remove/{id}', name: 'archive_remove', methods: ["DELETE"])]
     public function remove(#[Vars] Zipball $zip, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_MAINTAINER');
         if (!$this->isCsrfTokenValid('archive_upload', $request->get('token'))) {
             return new JsonResponse(['error' => 'Csrf token is not a valid'], 400);
         }
@@ -60,6 +63,7 @@ class ZipballController extends AbstractController
     #[Route('/archive/list', name: 'archive_list')]
     public function zipballList(): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_MAINTAINER');
         $data = $this->registry->getRepository(Zipball::class)->ajaxSelect();
 
         return new JsonResponse($data);
@@ -73,7 +77,9 @@ class ZipballController extends AbstractController
     )]
     public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
     {
-        if (!$this->dm->isEnabled() || !\preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])) {
+        if ((false === $this->dm->isEnabled() && false === RepTypes::isBuildInDist($package->getRepoType()))
+            || !\preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])
+        ) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
         }
 

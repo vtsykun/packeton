@@ -13,6 +13,7 @@ class RepTypes
     public const VCS = 'vcs';
     public const MONO_REPO = 'mono-repo';
     public const ARTIFACT = 'artifact';
+    public const CUSTOM = 'artifact';
 
     private static $types = [
         self::ARTIFACT,
@@ -29,10 +30,18 @@ class RepTypes
         };
     }
 
-    public static function getUITemplate(?string $type): ?string
+    public static function isBuildInDist(?string $type): bool
     {
         return match ($type) {
-            self::ARTIFACT => 'package/submitArtifact.html.twig',
+            self::ARTIFACT, self::CUSTOM => true,
+            default => false,
+        };
+    }
+
+    public static function getUITemplate(?string $type, string $action): ?string
+    {
+        return match ($type) {
+            self::ARTIFACT => "package/{$action}Artifact.html.twig",
             default => null,
         };
     }

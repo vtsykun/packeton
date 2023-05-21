@@ -38,6 +38,7 @@ use Packeton\Entity\Version;
 use Packeton\Entity\SuggestLink;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Model\ProviderManager;
+use Packeton\Repository\VersionRepository;
 use Packeton\Service\DistConfig;
 use Packeton\Util\PacketonUtils;
 use Seld\Signal\SignalHandler;
@@ -93,7 +94,7 @@ class Updater implements UpdaterInterface
      */
     public static function supportRepoTypes(): iterable
     {
-        return ['vcs'];
+        return [RepTypes::VCS, RepTypes::ARTIFACT];
     }
 
     /**
@@ -121,7 +122,11 @@ class Updater implements UpdaterInterface
         }
 
         $versions = PacketonUtils::sort($repository->getPackages());
+        /** @var VersionRepository $versionRepository */
         $versionRepository = $this->doctrine->getRepository(Version::class);
+        if (null === $rootIdentifier && ($probe = end($versions))) {
+            $rootIdentifier = preg_replace('{dev-|-dev}', '', $probe->getVersion());
+        }
 
         if ($flags & self::DELETE_BEFORE) {
             foreach ($package->getVersions() as $version) {
@@ -284,13 +289,14 @@ class Updater implements UpdaterInterface
         $version = new Version();
 
         $normVersion = $data->getVersion();
+        $newRef = $data->getSourceReference() ?: $data->getDistReference();
 
         $existingVersion = $existingVersions[strtolower($normVersion)] ?? null;
         if ($existingVersion) {
-            $source = $existingVersion['source'];
+            $prevRef = $existingVersion['source']['reference'] ?? ($existingVersion['dist']['reference'] ?? '_null_');
             // update if the right flag is set, or the source reference has changed (re-tag or new commit on branch)
             $version = $versionRepo->find($existingVersion['id']);
-            if ($source['reference'] === $data->getSourceReference() && !($flags & self::UPDATE_EQUAL_REFS)) {
+            if ($prevRef === $newRef && !($flags & self::UPDATE_EQUAL_REFS)) {
                 if ($dist = $this->updateArchive($archiveManager, $data)) {
                     $updated = $this->updateDist($dist, $version);
                 } else {
@@ -532,6 +538,16 @@ class Updater implements UpdaterInterface
      */
     private function updateArchive(?ArchiveManager $archiveManager, PackageInterface $data): ?array
     {
+        // Process local path repos
+        if (is_string($distUrl = $data->getDistUrl()) && str_starts_with($distUrl, '/') && empty($data->getSourceUrl())) {
+            return [
+                'url' => $this->distConfig->generateRoute($data->getName(), $data->getDistReference(), $data->getDistType()),
+                'type' => $data->getDistType(),
+                'reference' => $data->getDistReference(),
+                'shasum' => $data->getDistSha1Checksum(),
+            ];
+        }
+
         if ($this->distConfig->isEnable() === false) {
             if ($data->getDistUrl()) {
                 return [

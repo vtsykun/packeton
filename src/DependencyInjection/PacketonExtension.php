@@ -39,8 +39,9 @@ class PacketonExtension extends Extension
         $container->setParameter('packeton_jws_algo', $config['jwt_authentication']['algo'] ?? 'EdDSA');
 
         $container->setParameter('.packeton_repositories', $config['mirrors'] ?? []);
-        $container->setParameter('packeton_artifact_paths', $config['allowed_artifact_paths'] ?? []);
-        $container->setParameter('packeton_artifact_storage', $config['artifact_storage'] ?? null);
+        $container->setParameter('packeton_artifact_paths', $config['artifacts']['allowed_paths'] ?? []);
+        $container->setParameter('packeton_artifact_storage', $config['artifacts']['artifact_storage'] ?? null);
+        $container->setParameter('packeton_artifact_types', $config['artifacts']['support_types'] ?? []);
 
         $container->registerAttributeForAutoconfiguration(AsWorker::class, static function (ChildDefinition $definition, AsWorker $attribute) {
             $attributes = get_object_vars($attribute);

@@ -168,7 +168,7 @@ class UserController extends AbstractController
     {
         $currentUser = $this->getUser();
         if ($currentUser->getUserIdentifier() !== $user->getUserIdentifier() && !$user->isAdmin()) {
-            return  $this->handleUpdate($request, $user, 'User has been saved.');
+            return $this->handleUpdate($request, $user, 'User has been saved.');
         }
 
         throw new AccessDeniedHttpException('You can not update yourself or admin user');
@@ -185,7 +185,7 @@ class UserController extends AbstractController
 
     protected function handleUpdate(Request $request, User $user, $flashMessage)
     {
-        $form = $this->createForm(CustomerUserType::class, $user);
+        $form = $this->createForm(CustomerUserType::class, $user, ['is_created' => null === $user->getId()]);
 
         if ($request->getMethod() === 'POST') {
             if ($this->formHandler->handle($request, $form)) {
