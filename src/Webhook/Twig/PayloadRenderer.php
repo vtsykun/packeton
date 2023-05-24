@@ -34,7 +34,7 @@ class PayloadRenderer extends Environment implements LoggerAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         foreach ($this->extensions as $extension) {
             if ($extension instanceof LoggerAwareInterface) {

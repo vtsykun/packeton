@@ -38,6 +38,7 @@ use Composer\Package\Version\VersionParser;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class PackageController extends AbstractController
 {
@@ -67,7 +68,7 @@ class PackageController extends AbstractController
 
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
-        $fields = (array) $req->query->get('fields', []);
+        $fields = $req->query->all('fields');
 
         if ($fields) {
             $baseFields = array_intersect($fields, ['repository', 'type']);
@@ -414,15 +415,17 @@ class PackageController extends AbstractController
         if ($removeMaintainerForm = $this->createRemoveMaintainerForm($package)) {
             $data['removeMaintainerForm'] = $removeMaintainerForm->createView();
         }
-        if ($deleteForm = $this->createDeletePackageForm($package)) {
-            $data['deleteForm'] = $deleteForm->createView();
-        }
+
+        $data['canDelete'] = $this->canDeletePackage($package);
 
         if ($this->getUser() && (
                 $this->isGranted('ROLE_DELETE_PACKAGES')
                 || $package->getMaintainers()->contains($this->getUser())
             )) {
+            $data['canEdit'] = true;
             $data['deleteVersionCsrfToken'] = $csrfTokenManager->getToken('delete_version');
+        } else {
+            $data['canEdit'] = false;
         }
 
         return $this->render('package/viewPackage.html.twig', $data);
@@ -606,36 +609,28 @@ class PackageController extends AbstractController
 
 
     #[Route('/packages/{name}', name: 'delete_package', requirements: ['name' => '%package_name_regex%', '_format' => 'json'], methods: ['DELETE'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function deletePackageAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
+        if (!$this->isCsrfTokenValid('delete', $req->request->get('_token'))) {
+            throw new BadRequestHttpException('Csrf token is not valid');
         }
-
-        $doctrine = $this->registry;
 
         try {
             /** @var Package $package */
-            $package = $doctrine
+            $package = $this->registry
                 ->getRepository(Package::class)
                 ->getPartialPackageByNameWithVersions($name);
         } catch (NoResultException $e) {
             throw new NotFoundHttpException('The requested package, '.$name.', was not found.');
         }
 
-        if (!$form = $this->createDeletePackageForm($package)) {
+        if (false === $this->canDeletePackage($package)) {
             throw new AccessDeniedException;
         }
-        $form->submit($req->request->get('form'));
-        if ($form->isValid()) {
-            $req->getSession()->save();
 
-            $this->container->get(PackageManager::class)->deletePackage($package);
-
-            return new Response('', 204);
-        }
-
-        return new Response('Invalid form input', 400);
+        $this->container->get(PackageManager::class)->deletePackage($package);
+        return new Response('', 204);
     }
 
     #[Route('/packages/{name}/maintainers', name: 'add_maintainer', requirements: ['name' => '%package_name_regex%'])]
@@ -1074,28 +1069,27 @@ class PackageController extends AbstractController
         return null;
     }
 
-    private function createDeletePackageForm(Package $package)
+    private function canDeletePackage(Package $package): bool
     {
         if (!$user = $this->getUser()) {
-            return null;
+            return false;
         }
 
         // super admins bypass additional checks
         if (!$this->isGranted('ROLE_DELETE_PACKAGES')) {
             // non maintainers can not delete
             if (!$package->getMaintainers()->contains($user)) {
-                return null;
+                return false;
             }
 
             $downloads = $this->downloadManager->getTotalDownloads($package);
-
             // more than 100 downloads = established package, do not allow deletion by maintainers
-            if ($downloads > 100) {
-                return null;
+            if ($downloads > 100 && (!$user instanceof User || false === $user->isAdmin())) {
+                return false;
             }
         }
 
-        return $this->createFormBuilder([])->getForm();
+        return true;
     }
 
     private function createDatePoints(\DateTimeImmutable $from, \DateTimeImmutable $to, $average, Package $package, Version $version = null)

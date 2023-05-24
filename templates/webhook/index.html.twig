@@ -24,21 +24,20 @@
 
     <div style="padding-top: 10px; clear: both"></div>
 
+    {% set deleteCsrfToken = csrf_token('webhook_delete') %}
     {% for webhook in webhooks %}
         <div class="panel panel-default">
             {% set viewUrl = path('webhook_update', {id: webhook.id}) %}
-
             <div class="panel-heading" title="Update hook {{ webhook.name }}">
                 <a href="{{ viewUrl }}" class="link" style="font-size: 1.2em">{{ webhook.name }}</a>
             </div>
+
             <div class="panel-body">
                 <div style="float: right">
-                    {% if deleteCsrfToken is defined and deleteCsrfToken is not empty %}
-                        <form class="delete-hook" action="{{ path("webhook_delete", {"id": webhook.id}) }}" method="DELETE">
-                            <input type="hidden" name="_token" value="{{ deleteCsrfToken }}" />
-                            <button style="padding: 5px 14px;" class="btn submit btn-danger" type="submit">Delete</button>
-                        </form>
-                    {% endif %}
+                    <form class="delete-hook" action="{{ path("webhook_delete", {"id": webhook.id}) }}" method="DELETE">
+                        <input type="hidden" name="_token" value="{{ deleteCsrfToken }}" />
+                        <button style="padding: 5px 14px;" class="btn submit btn-danger" type="submit">Delete</button>
+                    </form>
                 </div>
                 <p>{% if webhook.active == true %}
                         <i class="fa fa-check" style="color: #28a745" title="Active"></i>

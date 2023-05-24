@@ -16,13 +16,13 @@
 </h2>
 
 <section class="row">
-    {% if deleteForm is defined and is_granted('ROLE_ADMIN') and user.admin == false %}
+    {% if is_granted('ROLE_ADMIN') and user.admin == false %}
         <div class="btn-group btn-group-xs">
             <a href="{{ path('users_update', {name: user.userIdentifier}) }}" class="btn btn-primary">Edit</a>
         </div>
         <div class="btn-group btn-group-xs">
             <form class="delete onsubmit-confirm action" action="{{ path('user_delete', {name: user.userIdentifier}) }}" method="post" >
-                {{ form_widget(deleteForm._token) }}
+                {{ csrf_token_input('delete') }}
                 <button class="btn btn-danger" type="submit">Delete</button>
             </form>
         </div>

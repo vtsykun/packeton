@@ -210,7 +210,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
     /**
      * {@inheritdoc}
      */
-    public function getRoles()
+    public function getRoles(): array
     {
         $roles = $this->roles;
 

@@ -5,7 +5,7 @@
     <form name="search_user" method="get" action="{{ path('users_list') }}" id="search--user-form" autocomplete="off">
         <div class="sortable row">
             <div class="col-xs-12 js-search-field-wrapper col-md-9">
-                <input type="search" id="search_user_user" name="search_user[user]" autocomplete="off" placeholder="Search user by username..." tabindex="1" class=" form-control" value="{{ searchUser }}">
+                <input type="search" id="search_user_user" name="user_query" autocomplete="off" placeholder="Search user by username..." tabindex="1" class=" form-control" value="{{ searchUser }}">
             </div>
         </div>
     </form>

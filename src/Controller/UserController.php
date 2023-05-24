@@ -135,16 +135,13 @@ class UserController extends AbstractController
     public function listAction(Request $request): Response
     {
         $page = $request->query->get('page', 1);
-        $searchUser = $request->query->get('search_user');
 
         $qb = $this->registry->getRepository(User::class)
             ->createQueryBuilder('u');
         $qb->where("u.roles NOT LIKE '%ADMIN%'")
             ->orderBy('u.id', 'DESC');
 
-        if ($searchUser && isset($searchUser['user'])) {
-            $searchUser = $searchUser['user'];
-
+        if ($searchUser = $request->query->get('user_query')) {
             $qb->andWhere('u.username LIKE :searchUser')
                 ->setParameter('searchUser', "%{$searchUser}%");
         }
@@ -152,13 +149,11 @@ class UserController extends AbstractController
         $paginator = new Pagerfanta(new QueryAdapter($qb, false));
         $paginator->setMaxPerPage(10);
 
-        $csrfForm = $this->createFormBuilder([])->getForm();
         $paginator->setCurrentPage((int)$page);
 
         /** @var User[] $paginator */
         return $this->render('user/list.html.twig', [
             'users' => $paginator,
-            'csrfForm' => $csrfForm,
             'searchUser' => $searchUser
         ]);
     }
@@ -326,52 +321,44 @@ class UserController extends AbstractController
     #[Route('/users/sshkey/{id}/delete', name: 'user_delete_sshkey', methods: ['DELETE', 'POST'])]
     public function deleteSSHKeyAction(Request $request, #[Vars] SshCredentials $key): Response
     {
+        if (!$this->isCsrfTokenValid('delete', $request->request->get('_token'))) {
+            return new Response('Invalid csrf form', 400);
+        }
+
         if (!$this->isGranted('VIEW', $key)) {
             throw new AccessDeniedException();
         }
 
-        $form = $this->createFormBuilder()->getForm();
-        $form->submit($request->request->get('form'));
-
-        if ($form->isValid()) {
-            $em = $this->registry->getManager();
-            $em->remove($key);
-            $em->flush();
-
-            return new RedirectResponse('/');
-        }
-
-        return new Response('Invalid csrf form', 400);
+        $em = $this->registry->getManager();
+        $em->remove($key);
+        $em->flush();
+        return new RedirectResponse('/');
     }
 
     #[Route('/users/{name}', name: 'user_profile')]
     public function profileAction(Request $req, #[Vars(['name' => 'username'])] User $user): Response
     {
-        $deleteForm = $this->createFormBuilder()->getForm();
         $packages = $this->getUserPackages($req, $user);
 
         return $this->render('user/profile.html.twig', [
             'packages' => $packages,
-            'meta' => $this->getPackagesMetadata($packages),
             'user' => $user,
-            'deleteForm' => $deleteForm->createView()
         ]);
     }
 
     #[Route('/users/{name}/delete', name: 'user_delete', methods: ['POST'])]
     public function deleteAction(Request $request, #[Vars(['name' => 'username'])] User $user): Response
     {
-        $form = $this->createFormBuilder()->getForm();
-        $form->submit($request->request->get('form'));
-        if ($form->isValid()) {
-            $em = $this->registry->getManager();
-            $em->remove($user);
-            $em->flush();
-
-            return new RedirectResponse('/');
+        if (!$this->isCsrfTokenValid('delete', $request->request->get('_token'))) {
+            return new Response('Invalid csrf token', 400);
         }
 
-        return new Response('Invalid form input', 400);
+        $em = $this->registry->getManager();
+        $em->remove($user);
+        $em->flush();
+        $this->addFlash('success', 'User was deleted');
+
+        return new RedirectResponse($this->generateUrl('users_list'));
     }
 
     #[Route('/users/{name}/favorites', name: 'user_favorites', methods: ['GET'])]

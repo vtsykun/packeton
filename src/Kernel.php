@@ -68,7 +68,7 @@ class Kernel extends BaseKernel
         }
     }
 
-    protected function build(ContainerBuilder $container)
+    protected function build(ContainerBuilder $container): void
     {
         /** @var SecurityExtension $extension */
         $extension = $container->getExtension('security');
@@ -86,7 +86,7 @@ class Kernel extends BaseKernel
     /**
      * {@inheritdoc}
      */
-    public function boot()
+    public function boot(): void
     {
         parent::boot();
 

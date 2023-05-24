@@ -296,7 +296,7 @@ class User extends BaseUser implements PacketonUserInterface
      *
      * @return array The roles
      */
-    public function getRoles()
+    public function getRoles(): array
     {
         $roles = $this->roles;
         // we need to make sure to have at least one role

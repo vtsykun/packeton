@@ -26,8 +26,6 @@ class ApiUsernamePasswordToken extends AbstractToken
 
         $this->setUser($user);
         $this->providerKey = $providerKey;
-
-        parent::setAuthenticated(count($roles) > 0, false);
     }
 
     /**
