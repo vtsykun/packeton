@@ -28,6 +28,20 @@ menu:
     ssh_keys: Credentials
     webhooks: Webhooks
     proxies: Composer Proxies
+    
+    profile_icon: '<span class="fa fa-id-card"></span>Profile'
+    logout_icon: '<span class="fa fa-power-off"></span>Logout'
+    change_password_icon: '<span class="fa fa-lock"></span>Change password'
+    my_packages_icon: '<span class="fa fa-archive"></span>My packages'
+    my_favorites_icon: '<span class="fa fa-leaf"></span>My favorites'
+    my_tokens_icon: '<span class="fa fa-key"></span>Personal access tokens'
+    my_users_icon: '<span class="fa fa-user"></span>My users'
+    my_groups_icon: '<span class="fa fa-users"></span>My groups'
+    ssh_keys_icon: '<span class="fa fa-key"></span>Credentials'
+    webhooks_icon: '<span class="fa fa-bell"></span>Webhooks'
+    break_line_icon: '<hr>'
+    proxies_icon: '<span class="fa fa-random"></span>Composer Proxies'
+    settings_icon: '<span class="fa fa-cogs"></span>Settings'
 
 security:
     login:

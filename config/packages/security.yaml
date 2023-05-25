@@ -49,12 +49,12 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         # The WDT has to be allowed to anonymous users to avoid requiring the login with the AJAX request
-        - { path: ^/_wdt/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/_profiler/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/_wdt/, roles: PUBLIC_ACCESS }
+        - { path: ^/_profiler/, roles: PUBLIC_ACCESS }
 
-        - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/login/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/reset-password, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/login/, roles: PUBLIC_ACCESS }
+        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
 
         # Packagist
         - { path: (^(/change-password|/profile|/logout))+, roles: ROLE_USER }
