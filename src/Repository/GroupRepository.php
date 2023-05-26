@@ -151,19 +151,27 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
 
     public function getAllowedProxies(?UserInterface $user)
     {
-        if (!$user instanceof User) {
+        if (!$user instanceof PacketonUserInterface) {
             return [];
         }
 
-        $proxies = $this->getEntityManager()->createQueryBuilder()
-            ->select('g.proxies')
-            ->from(User::class, 'u')
-            ->innerJoin('u.groups', 'g')
-            ->where('u.id = :uid')
-            ->setParameter('uid', $user->getId())
-            ->getQuery()
-            ->getArrayResult();
+        if ($user instanceof User) {
+            $qb = $this->getEntityManager()->createQueryBuilder()
+                ->select('g.proxies')
+                ->from(User::class, 'u')
+                ->innerJoin('u.groups', 'g')
+                ->where('u.id = :uid')
+                ->setParameter('uid', $user->getId());
+        } else {
+            $qb = $this->getEntityManager()->createQueryBuilder()
+                ->select('g.proxies')
+                ->from(Group::class, 'g')
+                ->andWhere('g.id IN (:gid)')
+                ->setParameter('gid', $user->getAclGroups() ? : [-1]);
+        }
 
+        $proxies = $qb->getQuery()
+            ->getArrayResult();
         $proxies = array_column($proxies, 'proxies');
 
         return $proxies ? \array_unique(\array_merge(...$proxies)) : [];

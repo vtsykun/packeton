@@ -73,10 +73,6 @@ services:
             - '../src/Repository/'
             - '../src/Mirror/Decorator/'
             - '../src/Webhook/Twig/'
-    
-    Packeton\Security\Api\ApiContextListener:
-        autowire: false
-        autoconfigure: false
 
     packeton.menu.profile:
         class: Knp\Menu\MenuItem

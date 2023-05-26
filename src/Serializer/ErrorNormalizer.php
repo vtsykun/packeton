@@ -11,7 +11,7 @@ use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\CacheableSupportsMethodInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-class ErrorNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+class ErrorNormalizer implements NormalizerInterface
 {
     private $defaultContext = [
         'type' => 'https://tools.ietf.org/html/rfc2616#section-10',
@@ -27,7 +27,7 @@ class ErrorNormalizer implements NormalizerInterface, CacheableSupportsMethodInt
      *
      * @return array
      */
-    public function normalize($object, string $format = null, array $context = [])
+    public function normalize($object, string $format = null, array $context = []): array
     {
         if (!$object instanceof FlattenException) {
             throw new InvalidArgumentException(sprintf('The object must implement "%s".', FlattenException::class));
@@ -60,7 +60,7 @@ class ErrorNormalizer implements NormalizerInterface, CacheableSupportsMethodInt
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization($data, string $format = null): bool
+    public function supportsNormalization($data, string $format = null, array $context = []): bool
     {
         return $data instanceof FlattenException;
     }
@@ -68,8 +68,10 @@ class ErrorNormalizer implements NormalizerInterface, CacheableSupportsMethodInt
     /**
      * {@inheritdoc}
      */
-    public function hasCacheableSupportsMethod(): bool
+    public function getSupportedTypes(?string $format): array
     {
-        return true;
+        return [
+            FlattenException::class => true,
+        ];
     }
 }

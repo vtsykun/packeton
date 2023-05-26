@@ -12,7 +12,7 @@ class JsonDataTransformer implements DataTransformerInterface
     /**
      * {@inheritdoc}
      */
-    public function transform($data)
+    public function transform($data): ?string
     {
         if (empty($data)) {
             return null;
@@ -28,7 +28,7 @@ class JsonDataTransformer implements DataTransformerInterface
     /**
      * {@inheritdoc}
      */
-    public function reverseTransform($data)
+    public function reverseTransform(mixed $data): ?array
     {
         if (empty($data) || !is_string($data)) {
             return null;

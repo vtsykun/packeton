@@ -16,6 +16,9 @@ class ObjectIdentityVoter implements CacheableVoterInterface
     {
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function vote(TokenInterface $token, $subject, array $attributes): int
     {
         if (!$subject instanceof ObjectIdentity) {

@@ -29,7 +29,7 @@ class PackageUniqueValidator extends ConstraintValidator
      * {@inheritdoc}
      * @param PackageUnique $constraint
      */
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (null === $value || '' === $value) {
             return;

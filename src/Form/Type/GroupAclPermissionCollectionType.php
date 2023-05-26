@@ -32,7 +32,7 @@ class GroupAclPermissionCollectionType extends AbstractType
      * @param FormBuilderInterface $builder
      * @param array $options
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(FormEvents::PRE_SET_DATA, [$this, 'preSetData'], 255)
             ->addModelTransformer(new GroupAclPermissionsTransformer($this->registry));
@@ -41,7 +41,7 @@ class GroupAclPermissionCollectionType extends AbstractType
     /**
      * @param FormEvent $event
      */
-    public function preSetData(FormEvent $event)
+    public function preSetData(FormEvent $event): void
     {
         $data = $event->getData();
         if (null === $data) {
@@ -83,7 +83,7 @@ class GroupAclPermissionCollectionType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getParent()
+    public function getParent(): string
     {
         return CollectionType::class;
     }
@@ -91,7 +91,7 @@ class GroupAclPermissionCollectionType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(
             [

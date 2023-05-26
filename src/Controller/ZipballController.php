@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ZipballController extends AbstractController
 {
@@ -29,9 +30,9 @@ class ZipballController extends AbstractController
     }
 
     #[Route('/archive/upload', name: 'archive_upload', methods: ["POST"])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function upload(Request $request): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_MAINTAINER');
         if (!$this->isCsrfTokenValid('archive_upload', $request->get('token'))) {
             return new JsonResponse(['error' => 'Csrf token is not a valid'], 400);
         }
@@ -61,9 +62,9 @@ class ZipballController extends AbstractController
     }
 
     #[Route('/archive/list', name: 'archive_list')]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function zipballList(): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_MAINTAINER');
         $data = $this->registry->getRepository(Zipball::class)->ajaxSelect();
 
         return new JsonResponse($data);

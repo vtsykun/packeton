@@ -15,7 +15,7 @@ class PrivateKeyType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('constraints', [new Callback([__CLASS__, 'validatePrivateKey'])]);
     }
@@ -23,7 +23,7 @@ class PrivateKeyType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getParent()
+    public function getParent(): string
     {
         return TextareaType::class;
     }
