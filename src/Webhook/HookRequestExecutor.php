@@ -53,13 +53,15 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
             unset($options['secrets']);
 
             if ($body = $request->getBody()) {
-                $options['body'] = $request->getBody();
-                try {
+                if (is_string($body)) {
                     if (is_array($json = @json_decode($body, true))) {
                         $options['json'] = $json;
-                        unset($options['body']);
+                    } else {
+                        $options['body'] = $body;
                     }
-                } catch (\Throwable) {}
+                } else {
+                    $options['json'] = $body;
+                }
             }
 
             try {

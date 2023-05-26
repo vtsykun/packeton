@@ -173,8 +173,7 @@ class WebhookType extends AbstractType
         }
 
         try {
-            $this->renderer->init();
-            $this->renderer->createTemplate($value);
+            $this->renderer->validateScript($value);
         } catch (\Throwable $exception) {
             $context->addViolation('This value is not a valid twig. ' . $exception->getMessage());
         }

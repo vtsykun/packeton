@@ -107,10 +107,10 @@ class HookTestAction
         $client = null;
         if (($data['sendReal'] ?? false) !== true) {
             $callback = function () {
-                $responseTime = rand(0, 900000);
+                $responseTime = rand(50000, 250000);
                 usleep($responseTime);
                 return new MockResponse('true', [
-                    'total_time' => $responseTime/1000.0,
+                    'total_time' => $responseTime/1000000.0,
                     'response_headers' => [
                         'Content-type' => 'application/json',
                         'Pragma' => 'no-cache',

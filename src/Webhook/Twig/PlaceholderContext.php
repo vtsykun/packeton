@@ -9,7 +9,7 @@ class PlaceholderContext
     /**
      * @var array
      */
-    private $context = [];
+    private $placeholders = [];
 
     /**
      * @param string $name
@@ -17,57 +17,56 @@ class PlaceholderContext
      */
     public function setPlaceholder(string $name, array $variables): void
     {
-        $this->context[$name] = array_values($variables);
+        $this->placeholders[$name] = array_values($variables);
     }
 
     /**
      * @return array
      */
-    public function getContext()
+    public function getPlaceholders()
     {
-        return $this->context;
+        return $this->placeholders;
     }
 
-    public function walkContent(string $content)
+    public function walkContent(array $content): iterable
     {
-        $replacements = [];
-        if (empty($this->context)) {
+        if (empty($this->placeholders)) {
             return [$content];
         }
 
-        $content = preg_replace_callback(
-            '/{{\s([\w\.\_\-]*?)\s}}/u',
-            function ($match) use (&$replacements) {
-                list($result, $path) = $match;
-                if (isset($this->context[$path])) {
-                    if (count($this->context[$path]) === 1) {
-                        return $this->context[$path][0];
+        $stack = [];
+        $indexes = max(array_map(fn($p) => count($p), $this->placeholders));
+        for ($idx = 0; $idx < $indexes; $idx++) {
+            $copy = $content;
+
+            $walker = function(&$value) use ($idx) {
+                if (!is_string($value)) {
+                    return $value;
+                }
+                foreach ($this->placeholders as $name => $placeholders) {
+                    $replacement = $placeholders[$idx] ?? $placeholders[0];
+                    $var = "{{ $name }}";
+                    if ($value === $var) {
+                        return $replacement;
                     }
 
-                    $hash = sha1($path);
-                    $replacements[$hash] = $this->context[$path];
-                    return $hash;
+
+                    $value = preg_replace('/{{\s*' . preg_quote($name) . '\s*}}/u', $replacement, $value);
                 }
 
-                return $result;
-            },
-            $content
-        );
+                return $value;
+            };
 
-        // Generate all possible combination if used > 1 parameters for variable
-        $stack = [$content];
-        foreach ($replacements as $hash => $variables) {
-            $baseContent = $stack[0];
-            foreach ($variables as $i => $var) {
-                if (isset($stack[$i])) {
-                    $stack[$i] = str_replace($hash, $var, $stack[$i]);
-                } else {
-                    $stack[$i] = str_replace($hash, $var, $baseContent);
-                }
-            }
+            array_walk_recursive($copy, $walker);
+            $stack[] = $copy;
         }
 
-        $stack = array_values(array_unique($stack));
-        return $stack;
+        $unique = [];
+        foreach ($stack as $item) {
+            $hash = md5(serialize($item));
+            $unique[$hash] = $item;
+        }
+
+        return array_values($unique);
     }
 }
