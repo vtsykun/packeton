@@ -61,7 +61,7 @@ final class JWTUser implements UserInterface, EquatableInterface
     /**
      * {@inheritdoc}
      */
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
     }
 

@@ -206,7 +206,7 @@ class WebhookType extends AbstractType
      * @param string|null $value
      * @param ExecutionContextInterface $context
      */
-    public function checkCron($value, ExecutionContextInterface $context)
+    public function checkCron($value, ExecutionContextInterface $context): void
     {
         if (empty($value)) {
             return;

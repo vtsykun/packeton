@@ -26,7 +26,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  */
 class ProfileFormType extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('username', TextType::class, ['label' => 'Username', 'required' => true, 'disabled' => true])
@@ -46,7 +46,7 @@ class ProfileFormType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'packagist_user_profile';
     }

@@ -32,7 +32,7 @@ class PackageType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('credentials', CredentialType::class)
@@ -51,7 +51,7 @@ class PackageType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getParent()
+    public function getParent(): string
     {
         return BasePackageType::class;
     }
@@ -59,7 +59,7 @@ class PackageType extends AbstractType
     /**
      * @param FormEvent $event
      */
-    public function updateRepository(FormEvent $event)
+    public function updateRepository(FormEvent $event): void
     {
         $package = $event->getData();
         if ($package instanceof Package) {
@@ -70,7 +70,7 @@ class PackageType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Package::class,
@@ -80,7 +80,7 @@ class PackageType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'package';
     }

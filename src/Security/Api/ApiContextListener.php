@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Security\Api;
 
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\Security\Http\Firewall\ContextListener;
@@ -15,6 +16,7 @@ use Symfony\Component\Security\Http\Firewall\ContextListener;
  *
  * This is simplified user access to debug metadata and reuse API
  */
+#[Exclude]
 class ApiContextListener extends ContextListener
 {
     /**

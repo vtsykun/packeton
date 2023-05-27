@@ -20,7 +20,7 @@ class GroupType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $proxyChoice = $this->registry->getAllNames();
         $proxyChoice = \array_combine($proxyChoice, $proxyChoice);
@@ -45,7 +45,7 @@ class GroupType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(
             [

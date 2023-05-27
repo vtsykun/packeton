@@ -10,12 +10,12 @@ trait EncryptedTypeTrait
     /** @var OpensslCrypter */
     protected static $crypter;
 
-    public static function setCrypter(OpensslCrypter $crypter)
+    public static function setCrypter(OpensslCrypter $crypter): void
     {
         static::$crypter = $crypter;
     }
 
-    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    public function convertToDatabaseValue($value, AbstractPlatform $platform): ?string
     {
         return $value ? static::$crypter->encryptData($value) : null;
     }
@@ -23,7 +23,7 @@ trait EncryptedTypeTrait
     /**
      * {@inheritdoc}
      */
-    public function convertToPHPValue($value, AbstractPlatform $platform)
+    public function convertToPHPValue($value, AbstractPlatform $platform): mixed
     {
         if (!$value = parent::convertToPHPValue($value, $platform)) {
             return null;

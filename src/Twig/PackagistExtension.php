@@ -30,16 +30,16 @@ class PackagistExtension extends AbstractExtension
     ) {
     }
 
-    public function getTests()
+    public function getTests(): array
     {
-        return array(
+        return [
             new TwigTest('existing_package', [$this, 'packageExistsTest']),
             new TwigTest('existing_provider', [$this, 'providerExistsTest']),
             new TwigTest('numeric', [$this, 'numericTest']),
-        );
+        ];
     }
 
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
             new TwigFunction('package_job_result', [$this, 'getLatestJobResult']),
@@ -52,7 +52,7 @@ class PackagistExtension extends AbstractExtension
         ];
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('prettify_source_reference', [$this, 'prettifySourceReference']),
@@ -118,6 +118,9 @@ class PackagistExtension extends AbstractExtension
     {
         if ($token instanceof User) {
             $token = ($short ? ($token->getUserIdentifier() . ':') : '') . $token->getApiToken();
+        }
+        if ($token instanceof UserInterface) {
+            $token = '';
         }
 
         return $token ? '<span class="token" style="display: none" data-type="token">' . $token . '</span><button class="btn btn-primary show-token">Show token</button>' : '';

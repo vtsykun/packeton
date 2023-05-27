@@ -38,7 +38,7 @@ class UserManagerCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->addArgument('username', InputArgument::REQUIRED, 'The username')

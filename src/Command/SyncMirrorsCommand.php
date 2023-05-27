@@ -31,7 +31,7 @@ class SyncMirrorsCommand extends Command
     /**
      * {@inheritdoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this->addArgument('mirror', InputArgument::OPTIONAL, 'Mirror name in config file.')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Remote all data and sync again');

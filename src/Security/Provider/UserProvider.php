@@ -37,15 +37,7 @@ class UserProvider implements UserProviderInterface, PasswordUpgraderInterface
     /**
      * {@inheritDoc}
      */
-    public function loadUserByUsername($usernameOrEmail)
-    {
-        return $this->loadUserByIdentifier($usernameOrEmail);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function refreshUser(UserInterface $user)
+    public function refreshUser(UserInterface $user): UserInterface
     {
         if (!$user instanceof User) {
             throw new UnsupportedUserException('Expected '.User::class.', got '.get_class($user));
