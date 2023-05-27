@@ -43,7 +43,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
     /**
      * {@inheritdoc}
      */
-    public function getFunctions()
+    public function getFunctions(): array
     {
         $functions = [];
         $reflect = new \ReflectionClass(__CLASS__);

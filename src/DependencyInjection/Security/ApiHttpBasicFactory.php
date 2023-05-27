@@ -22,7 +22,7 @@ class ApiHttpBasicFactory implements AuthenticatorFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function addConfiguration(NodeDefinition $node)
+    public function addConfiguration(NodeDefinition $node): void
     {
         $node
             ->children()

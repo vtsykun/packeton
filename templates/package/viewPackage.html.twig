@@ -91,30 +91,35 @@
                     <p class="description">{{ package.description }}</p>
 
                     {% if hasActions %}
+
                         <div class="btn-group btn-group-xs">
-                            {% if (is_granted('ROLE_EDIT_PACKAGES') or package.maintainers.contains(app.user)) and not package.abandoned %}
+                            {% if canEdit and not package.abandoned %}
                                 <form class="action abandon" action="{{ path('abandon_package', {name: package.name}) }}">
                                     <input class="btn btn-warning" type="submit" value="Abandon" />
                                 </form>
                             {% endif %}
-                            {% if (is_granted('ROLE_EDIT_PACKAGES') or package.maintainers.contains(app.user)) and package.abandoned %}
+
+                            {% if canEdit and package.abandoned %}
                                 <form class="action un-abandon" action="{{ path('unabandon_package', {name: package.name}) }}">
                                     <input class="btn btn-default" type="submit" value="Un-abandon" />
                                 </form>
                             {% endif %}
-                            {% if deleteForm is defined %}
+
+                            {% if canDelete %}
                                 <form class="delete action" action="{{ path('delete_package', {name: package.name}) }}" method="DELETE">
-                                    {{ form_widget(deleteForm._token) }}
+                                    {{ csrf_token_input('delete') }}
                                     <input class="btn btn-danger" type="submit" value="Delete" />
                                 </form>
                             {% endif %}
+
                             {% if package.updatable and (is_granted('ROLE_UPDATE_PACKAGES') or package.maintainers.contains(app.user)) %}
                                 <form class="force-update action" action="{{ path('update_package', {name: package.name}) }}" method="PUT">
                                     <input type="hidden" name="update" value="1" />
                                     <input class="btn btn-success" type="submit" value="Update" />
                                 </form>
                             {% endif %}
-                            {% if package.updatable and (is_granted('ROLE_EDIT_PACKAGES') or package.maintainers.contains(app.user)) %}
+
+                            {% if package.updatable and canEdit %}
                                 <form class="action" action="{{ path("edit_package", {name: package.name}) }}">
                                     <input class="btn btn-primary" type="submit" value="Edit" />
                                 </form>

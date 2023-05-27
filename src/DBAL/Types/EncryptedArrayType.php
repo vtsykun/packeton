@@ -17,7 +17,7 @@ class EncryptedArrayType extends TextType
     /**
      * {@inheritdoc}
      */
-    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    public function convertToDatabaseValue($value, AbstractPlatform $platform): ?string
     {
         return $value ? $this->traitConvertToDatabaseValue(json_encode($value), $platform) : null;
     }
@@ -25,7 +25,7 @@ class EncryptedArrayType extends TextType
     /**
      * {@inheritdoc}
      */
-    public function convertToPHPValue($value, AbstractPlatform $platform)
+    public function convertToPHPValue($value, AbstractPlatform $platform): mixed
     {
         if ($value = $this->traitConvertToPHPValue($value, $platform)) {
             return json_decode($value, true) ?: null;

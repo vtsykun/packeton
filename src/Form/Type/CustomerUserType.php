@@ -23,7 +23,7 @@ class CustomerUserType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('email', EmailType::class, ['required' => false])
@@ -67,7 +67,7 @@ class CustomerUserType extends AbstractType
         $builder->addEventListener(FormEvents::POST_SET_DATA, $this->postSetData(...));
     }
 
-    public function postSetData(FormEvent $event)
+    public function postSetData(FormEvent $event): void
     {
         $user = $event->getData();
         if (!$user instanceof User) {
@@ -82,7 +82,7 @@ class CustomerUserType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => User::class,

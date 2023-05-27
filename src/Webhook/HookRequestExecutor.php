@@ -236,7 +236,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
     /**
      * @inheritDoc
      */
-    public function setLogger(LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
         $this->requestResolver->setLogger($logger);

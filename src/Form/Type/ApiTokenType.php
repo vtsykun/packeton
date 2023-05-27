@@ -24,7 +24,7 @@ class ApiTokenType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('name', TextType::class, [
@@ -51,7 +51,7 @@ class ApiTokenType extends AbstractType
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->postSubmit(...));
     }
 
-    public function postSubmit(FormEvent $event)
+    public function postSubmit(FormEvent $event): void
     {
         $form = $event->getForm();
         $data = $event->getData();
@@ -66,7 +66,7 @@ class ApiTokenType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', ApiToken::class);
     }

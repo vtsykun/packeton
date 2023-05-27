@@ -89,42 +89,42 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
         return $output;
     }
 
-    public function getProgressBar(int $max = 0)
+    public function getProgressBar(int $max = 0): ProgressBar
     {
         return new ProgressBar(new NullOutput(), $max);
     }
 
-    public function overwrite($messages, bool $newline = true, ?int $size = null, int $verbosity = self::NORMAL)
+    public function overwrite($messages, bool $newline = true, ?int $size = null, int $verbosity = self::NORMAL): void
     {
         $messages = $this->logAndStrip($messages, $verbosity);
         parent::overwriteError($messages, $newline, $size, $this->dynamicVerbosity($verbosity));
     }
 
-    public function overwriteError($messages, bool $newline = true, ?int $size = null, int $verbosity = self::NORMAL)
+    public function overwriteError($messages, bool $newline = true, ?int $size = null, int $verbosity = self::NORMAL): void
     {
         $messages = $this->logAndStrip($messages, $verbosity);
         parent::overwriteError($messages, $newline, $size, $this->dynamicVerbosity($verbosity));
     }
 
-    public function write($messages, bool $newline = true, int $verbosity = self::NORMAL)
+    public function write($messages, bool $newline = true, int $verbosity = self::NORMAL): void
     {
         $messages = $this->logAndStrip($messages, $verbosity);
         parent::write($messages, $newline, $this->dynamicVerbosity($verbosity));
     }
 
-    public function writeError($messages, bool $newline = true, int $verbosity = self::NORMAL)
+    public function writeError($messages, bool $newline = true, int $verbosity = self::NORMAL): void
     {
         $messages = $this->logAndStrip($messages, $verbosity);;
         parent::writeError($messages, $newline, $this->dynamicVerbosity($verbosity));
     }
 
-    public function writeRaw($messages, bool $newline = true, int $verbosity = self::NORMAL)
+    public function writeRaw($messages, bool $newline = true, int $verbosity = self::NORMAL): void
     {
         $messages = $this->logAndStrip($messages, $verbosity);
         parent::writeRaw($messages, $newline, $this->dynamicVerbosity($verbosity));
     }
 
-    public function writeErrorRaw($messages, bool $newline = true, int $verbosity = self::NORMAL)
+    public function writeErrorRaw($messages, bool $newline = true, int $verbosity = self::NORMAL): void
     {
         $messages = $this->logAndStrip($messages, $verbosity);
         parent::writeErrorRaw($messages, $newline, $this->dynamicVerbosity($verbosity));
@@ -146,7 +146,7 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
         parent::log($level, strip_tags((string) $message), $context);
     }
 
-    protected function dynamicVerbosity($verbosity)
+    protected function dynamicVerbosity(int $verbosity): int
     {
         if ($verbosity === self::NORMAL && $this->verbosityMatrixCapacity > 0) {
             foreach ($this->verbosityMatrix as $verb => $value) {

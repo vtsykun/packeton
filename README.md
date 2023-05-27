@@ -12,14 +12,10 @@ The Open Source alternative of [Private Packagist for vendors](https://packagist
 
 **Full documentation** [docs.packeton.org](https://docs.packeton.org/)
 
-### Legacy Symfony 3.4 version
-
-Update to 2.0. [UPGRADE.md](./UPGRADE.md)
-
 Features
 --------
 
-- Compatible with Composer API v2, bases on Symfony 5.4.
+- Compatible with Composer API v2, bases on Symfony 6.
 - Support update webhook for GitHub, Gitea, Bitbucket and GitLab or custom format.
 - Customers user and ACL groups and limit access by vendor and versions.
 - Composer Proxies and Mirroring.
@@ -305,6 +301,15 @@ packeton:
     metadata:
         format: auto # Default, see about metadata.
         info_cmd_message: ~ # Bash logo, example - \u001b[37;44m#StandWith\u001b[30;43mUkraine\u001b[0m
+    
+    artifacts:
+        # Allow uploading archives
+        support_types: ['gz', 'tar', 'tgz', 'zip']
+        #Allowed paths for artifact composer repo type
+        allowed_paths:
+            - '/data/hdd1/composer'
+        # Default path to storage of uploaded artifacts
+        artifact_storage: '%composer_home_dir%/artifact_storage'
 ```
 
 ### Metadata format.

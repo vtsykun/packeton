@@ -54,28 +54,22 @@ class JobRepository extends EntityRepository
     public function findJobsByType(string $type, $packageId = null, $limit = 25)
     {
         $qb = $this->createQueryBuilder('j')
-            ->resetDQLPart('select')
-            ->select('j.id')
             ->where('j.type = :type')
             ->andWhere('j.completedAt IS NOT NULL')
             ->setMaxResults($limit)
-            ->setParameter('type', $type)
-            ->orderBy('j.completedAt', 'DESC');
+            ->setParameter('type', $type);
 
         if ($packageId) {
             $qb->andWhere('j.packageId = :packageId')
                 ->setParameter('packageId', $packageId);
         }
 
-        // Memory limit in MySql
-        if ($jobsIds = $qb->getQuery()->getSingleColumnResult()) {
-            return $this->createQueryBuilder('j')
-                ->where('j.id IN (:ids)')
-                ->setParameter('ids', $jobsIds)
-                ->getQuery()->getResult();
-        }
+        $jobs = $qb->getQuery()->getResult();
 
-        return [];
+        // Memory limit sort error in MySql
+        usort($jobs, fn(Job $j1, Job $j2) => $j2->getCreatedAt() <=> $j1->getCreatedAt());
+
+        return $jobs;
     }
 
     public function findLastJobByType(string $type, $packageId = null): ?Job

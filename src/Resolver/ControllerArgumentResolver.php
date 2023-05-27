@@ -7,11 +7,11 @@ namespace Packeton\Resolver;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Controller\ArgumentValueResolverInterface;
+use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class ControllerArgumentResolver implements ArgumentValueResolverInterface
+class ControllerArgumentResolver implements ValueResolverInterface
 {
     public function __construct(
         private readonly ManagerRegistry $registry
@@ -32,6 +32,10 @@ class ControllerArgumentResolver implements ArgumentValueResolverInterface
      */
     public function resolve(Request $request, ArgumentMetadata $argument): iterable
     {
+        if (false === $this->supports($request, $argument)) {
+            return [];
+        }
+
         /** @var Vars $attr */
         $attr = $argument->getAttributes(Vars::class, ArgumentMetadata::IS_INSTANCEOF)[0];
 

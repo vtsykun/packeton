@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Monolog\LogRecord;
 use Packeton\Exception\JobException;
 use Packeton\Model\ConsoleAwareInterface;
 use Packeton\Repository\JobRepository;
@@ -122,9 +123,8 @@ class QueueWorker implements ConsoleAwareInterface
         /** @var Job $job */
         $job = $repo->findOneById($jobId);
 
-        $this->logger->pushProcessor(function ($record) use ($job) {
-            $record['extra']['job-id'] = $job->getId();
-
+        $this->logger->pushProcessor(function (LogRecord $record) use ($job) {
+            $record->extra['job-id'] = $job->getId();
             return $record;
         });
 

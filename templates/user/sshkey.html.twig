@@ -6,7 +6,7 @@
     {% if sshKey.id is not null %}
         <div class="btn-group btn-group-xs">
             <form class="delete onsubmit-confirm action" action="{{ path('user_delete_sshkey', {id: sshKey.id}) }}" method="POST" >
-                {{ form_widget(deleteForm._token) }}
+                {{ csrf_token_input('delete') }}
                 <button class="btn btn-danger" type="submit">Delete</button>
             </form>
         </div>

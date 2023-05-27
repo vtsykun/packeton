@@ -120,7 +120,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
     /**
      * {@inheritdoc}
      */
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         $this->plainPassword = null;
     }
@@ -210,7 +210,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
     /**
      * {@inheritdoc}
      */
-    public function getRoles()
+    public function getRoles(): array
     {
         $roles = $this->roles;
 

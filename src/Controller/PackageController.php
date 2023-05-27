@@ -38,6 +38,7 @@ use Composer\Package\Version\VersionParser;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class PackageController extends AbstractController
 {
@@ -59,15 +60,12 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/list.json', name: 'list', defaults: ['_format' => 'json'], methods: ['GET'])]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function listAction(Request $req): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
-        $fields = (array) $req->query->get('fields', []);
+        $fields = $req->query->all('fields');
 
         if ($fields) {
             $baseFields = array_intersect($fields, ['repository', 'type']);
@@ -107,12 +105,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/submit/{type}', name: 'submit', defaults: ['type' => 'vcs'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function submitPackageAction(Request $req, string $type = null): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException();
-        }
-
         $package = new Package();
         $package->setRepoType(RepTypes::normalizeType($type));
 
@@ -154,12 +149,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/fetch-info/{type}', name: 'submit.fetch_info', defaults: ['_format' => 'json', 'type' => 'vcs'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function fetchInfoAction(Request $req, string $type = null): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         $package = new Package();
         $package->setRepoType(RepTypes::normalizeType($type));
         $form = $this->createForm(
@@ -224,12 +216,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/fetch-monorepo-info', name: 'fetch_monorepo_info', defaults: ['_format' => 'json'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function fetchMonoRepoInfo(Request $req): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         $package = new Package();
         $package->setRepoType(RepTypes::MONO_REPO);
         $form = $this->createForm(
@@ -260,12 +249,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/{vendor}/', name: 'view_vendor', requirements: ['vendor' => '[A-Za-z0-9_.-]+'])]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function viewVendorAction($vendor)
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         $packages = $this->registry
             ->getRepository(Package::class)
             ->getFilteredQueryBuilder(['vendor' => $vendor.'/%'], true)
@@ -286,12 +272,9 @@ class PackageController extends AbstractController
 
 
     #[Route('/providers/{name}/', name: 'view_providers', requirements: ['name' => '[A-Za-z0-9/_.-]+?'], defaults: ['_format' => 'html'], methods: ['GET'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function viewProvidersAction($name, \Redis $redis): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
         $providers = $repo->findProviders($name);
@@ -414,15 +397,17 @@ class PackageController extends AbstractController
         if ($removeMaintainerForm = $this->createRemoveMaintainerForm($package)) {
             $data['removeMaintainerForm'] = $removeMaintainerForm->createView();
         }
-        if ($deleteForm = $this->createDeletePackageForm($package)) {
-            $data['deleteForm'] = $deleteForm->createView();
-        }
+
+        $data['canDelete'] = $this->canDeletePackage($package);
 
         if ($this->getUser() && (
                 $this->isGranted('ROLE_DELETE_PACKAGES')
                 || $package->getMaintainers()->contains($this->getUser())
             )) {
+            $data['canEdit'] = true;
             $data['deleteVersionCsrfToken'] = $csrfTokenManager->getToken('delete_version');
+        } else {
+            $data['canEdit'] = false;
         }
 
         return $this->render('package/viewPackage.html.twig', $data);
@@ -468,12 +453,9 @@ class PackageController extends AbstractController
 
 
     #[Route('/packages/{name}/downloads.{_format}', name: 'package_downloads_full', requirements: ['name' => '%package_name_regex%', '_format' => '(json)'], methods: ['GET'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function viewPackageDownloadsAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedHttpException();
-        }
-
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
 
@@ -530,12 +512,9 @@ class PackageController extends AbstractController
 
 
     #[Route('/versions/{versionId}/delete', name: 'delete_version', requirements: ['name' => '%package_name_regex%', 'versionId' => '[0-9]+', '_format' => '(json)'], methods: ['DELETE'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function deletePackageVersionAction(Request $req, $versionId): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         /** @var VersionRepository $repo  */
         $repo = $this->registry->getRepository(Version::class);
 
@@ -606,45 +585,34 @@ class PackageController extends AbstractController
 
 
     #[Route('/packages/{name}', name: 'delete_package', requirements: ['name' => '%package_name_regex%', '_format' => 'json'], methods: ['DELETE'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function deletePackageAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
+        if (!$this->isCsrfTokenValid('delete', $req->request->get('_token'))) {
+            throw new BadRequestHttpException('Csrf token is not valid');
         }
-
-        $doctrine = $this->registry;
 
         try {
             /** @var Package $package */
-            $package = $doctrine
+            $package = $this->registry
                 ->getRepository(Package::class)
                 ->getPartialPackageByNameWithVersions($name);
         } catch (NoResultException $e) {
             throw new NotFoundHttpException('The requested package, '.$name.', was not found.');
         }
 
-        if (!$form = $this->createDeletePackageForm($package)) {
+        if (false === $this->canDeletePackage($package)) {
             throw new AccessDeniedException;
         }
-        $form->submit($req->request->get('form'));
-        if ($form->isValid()) {
-            $req->getSession()->save();
 
-            $this->container->get(PackageManager::class)->deletePackage($package);
-
-            return new Response('', 204);
-        }
-
-        return new Response('Invalid form input', 400);
+        $this->container->get(PackageManager::class)->deletePackage($package);
+        return new Response('', 204);
     }
 
     #[Route('/packages/{name}/maintainers', name: 'add_maintainer', requirements: ['name' => '%package_name_regex%'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function createMaintainerAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         /** @var $package Package */
         $package = $this->registry
             ->getRepository(Package::class)
@@ -697,12 +665,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/{name}/maintainers/delete', name: 'remove_maintainer', requirements: ['name' => '%package_name_regex%'])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function removeMaintainerAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
-            throw new AccessDeniedException;
-        }
-
         /** @var $package Package */
         $package = $this->registry
             ->getRepository(Package::class)
@@ -844,12 +809,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/{name}/stats.{_format}', name: 'view_package_stats', requirements: ['name' => '%package_name_regex%', '_format' => '(json)'], defaults: ['_format' => 'html'])]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function statsAction(Request $req, #[Vars] Package $package): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         $versions = $package->getVersions()->toArray();
         usort($versions, Package::class.'::sortVersions');
         $date = $this->guessStatsStartDate($package);
@@ -889,12 +851,9 @@ class PackageController extends AbstractController
         name: 'view_package_dependents',
         requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'],
     )]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function dependentsAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -920,12 +879,9 @@ class PackageController extends AbstractController
         name: 'view_package_suggesters',
         requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'],
     )]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function suggestersAction(Request $req, $name): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -947,12 +903,9 @@ class PackageController extends AbstractController
     }
 
     #[Route('/packages/{name}/stats/all.json', name: 'package_stats', requirements: ['name' => '%package_name_regex%'])]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function overallStatsAction(Request $req, \Redis $redis, #[Vars] Package $package, Version $version = null): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         if ($from = $req->query->get('from')) {
             $from = new \DateTimeImmutable($from);
         } else {
@@ -1023,12 +976,9 @@ class PackageController extends AbstractController
         name: 'version_stats',
         requirements: ['name' => '%package_name_regex%', 'version' => '.+?'])
     ]
+    #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function versionStatsAction(\Redis $redis, Request $req, #[Vars('name')] Package $package, $version): Response
     {
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            throw new AccessDeniedException;
-        }
-
         $normalizer = new VersionParser;
         $normVersion = $normalizer->normalize($version);
 
@@ -1074,28 +1024,27 @@ class PackageController extends AbstractController
         return null;
     }
 
-    private function createDeletePackageForm(Package $package)
+    private function canDeletePackage(Package $package): bool
     {
         if (!$user = $this->getUser()) {
-            return null;
+            return false;
         }
 
         // super admins bypass additional checks
         if (!$this->isGranted('ROLE_DELETE_PACKAGES')) {
             // non maintainers can not delete
             if (!$package->getMaintainers()->contains($user)) {
-                return null;
+                return false;
             }
 
             $downloads = $this->downloadManager->getTotalDownloads($package);
-
             // more than 100 downloads = established package, do not allow deletion by maintainers
-            if ($downloads > 100) {
-                return null;
+            if ($downloads > 100 && (!$user instanceof User || false === $user->isAdmin())) {
+                return false;
             }
         }
 
-        return $this->createFormBuilder([])->getForm();
+        return true;
     }
 
     private function createDatePoints(\DateTimeImmutable $from, \DateTimeImmutable $to, $average, Package $package, Version $version = null)

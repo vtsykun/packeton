@@ -208,7 +208,7 @@ class ValidatingArrayLoader implements LoaderInterface
                             ($this->flags & self::CHECK_UNBOUND_CONSTRAINTS)
                             && 'require' === $linkType
                             && $linkConstraint->matches($unboundConstraint)
-                            && !preg_match(PlatformRepository::PLATFORM_PACKAGE_REGEX, $package)
+                            && !PlatformRepository::isPlatformPackage($package)
                         ) {
                             $this->warnings[] = $linkType.'.'.$package.' : unbound version constraints ('.$constraint.') should be avoided';
                         } elseif (
@@ -329,17 +329,17 @@ class ValidatingArrayLoader implements LoaderInterface
         return $this->errors;
     }
 
-    public static function hasPackageNamingError($name, $isLink = false)
+    public static function hasPackageNamingError($name, $isLink = false): ?string
     {
-        if (preg_match(PlatformRepository::PLATFORM_PACKAGE_REGEX, $name)) {
-            return;
+        if (PlatformRepository::isPlatformPackage($name)) {
+            return null;
         }
 
         if (!preg_match('{^[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9]([_.-]?[a-z0-9]+)*$}iD', $name)) {
             return $name.' is invalid, it should have a vendor name, a forward slash, and a package name. The vendor and package name can be words separated by -, . or _. The complete name should match "[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9]([_.-]?[a-z0-9]+)*".';
         }
 
-        $reservedNames = array('nul', 'con', 'prn', 'aux', 'com1', 'com2', 'com3', 'com4', 'com5', 'com6', 'com7', 'com8', 'com9', 'lpt1', 'lpt2', 'lpt3', 'lpt4', 'lpt5', 'lpt6', 'lpt7', 'lpt8', 'lpt9');
+        $reservedNames = ['nul', 'con', 'prn', 'aux', 'com1', 'com2', 'com3', 'com4', 'com5', 'com6', 'com7', 'com8', 'com9', 'lpt1', 'lpt2', 'lpt3', 'lpt4', 'lpt5', 'lpt6', 'lpt7', 'lpt8', 'lpt9'];
         $bits = explode('/', strtolower($name));
         if (in_array($bits[0], $reservedNames, true) || in_array($bits[1], $reservedNames, true)) {
             return $name.' is reserved, package and vendor names can not match any of: '.implode(', ', $reservedNames).'.';
@@ -348,6 +348,8 @@ class ValidatingArrayLoader implements LoaderInterface
         if (preg_match('{\.json$}', $name)) {
             return $name.' is invalid, package names can not end in .json, consider renaming it or perhaps using a -json suffix instead.';
         }
+
+        return null;
     }
 
     private function validateRegex($property, $regex, $mandatory = false)

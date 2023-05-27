@@ -14,7 +14,7 @@ class PlaceholderExtension extends AbstractExtension
     /**
      * {@inheritdoc}
      */
-    public function getTokenParsers()
+    public function getTokenParsers(): array
     {
         return [
             new PlaceholderTokenParser()
@@ -24,7 +24,7 @@ class PlaceholderExtension extends AbstractExtension
     /**
      * {@inheritdoc}
      */
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
             new TwigFunction(

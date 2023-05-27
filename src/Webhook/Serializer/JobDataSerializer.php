@@ -22,7 +22,7 @@ class JobDataSerializer implements NormalizerInterface, DenormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function denormalize($data, $type, $format = null, array $context = [])
+    public function denormalize($data, $type, $format = null, array $context = []): mixed
     {
         if (!is_array($data)) {
             return $data;
@@ -44,7 +44,7 @@ class JobDataSerializer implements NormalizerInterface, DenormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function supportsDenormalization($data, $type, $format = null)
+    public function supportsDenormalization($data, $type, $format = null, array $context = []): bool
     {
         return $format === 'packagist_job' && is_array($data);
     }
@@ -52,7 +52,18 @@ class JobDataSerializer implements NormalizerInterface, DenormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function normalize($object, $format = null, array $context = [])
+    public function getSupportedTypes(?string $format): array
+    {
+        return [
+            '*' => true,
+            'object' => true,
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function normalize($object, $format = null, array $context = []): array
     {
         $className = ClassUtils::getClass($object);
         /** @var EntityManagerInterface $em */
@@ -67,7 +78,7 @@ class JobDataSerializer implements NormalizerInterface, DenormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization($data, $format = null)
+    public function supportsNormalization($data, $format = null, array $context = []): bool
     {
         return $format === 'packagist_job'
             && is_object($data)

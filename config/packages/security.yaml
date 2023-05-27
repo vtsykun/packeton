@@ -1,5 +1,4 @@
 security:
-    enable_authenticator_manager: true
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
@@ -50,12 +49,12 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         # The WDT has to be allowed to anonymous users to avoid requiring the login with the AJAX request
-        - { path: ^/_wdt/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/_profiler/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/_wdt/, roles: PUBLIC_ACCESS }
+        - { path: ^/_profiler/, roles: PUBLIC_ACCESS }
 
-        - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/login/, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/reset-password, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/login/, roles: PUBLIC_ACCESS }
+        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
 
         # Packagist
         - { path: (^(/change-password|/profile|/logout))+, roles: ROLE_USER }
@@ -83,6 +82,6 @@ security:
         ROLE_EDIT_PACKAGES: ~
     
         ROLE_FULL_CUSTOMER: [ ROLE_USER ] # Access to all packages without ACL group restriction
-        ROLE_MAINTAINER:  [ ROLE_FULL_CUSTOMER, ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
-        ROLE_ADMIN:       [ ROLE_MAINTAINER ]
+        ROLE_MAINTAINER:  [ ROLE_FULL_CUSTOMER, ROLE_USER, ROLE_UPDATE_PACKAGES ]
+        ROLE_ADMIN:       [ ROLE_MAINTAINER, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
         ROLE_SUPERADMIN:  [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]

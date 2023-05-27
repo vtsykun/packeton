@@ -24,7 +24,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 #[Route('/webhooks')]
 class WebhookController extends AbstractController
@@ -32,7 +31,6 @@ class WebhookController extends AbstractController
     public function __construct(
         protected ManagerRegistry $registry,
         protected HookTestAction $testAction,
-        protected CsrfTokenManagerInterface $csrfTokenManager,
     ){
     }
 
@@ -52,11 +50,9 @@ class WebhookController extends AbstractController
 
         /** @var Webhook[] $webhooks */
         $webhooks = $qb->getQuery()->getResult();
-        $deleteCsrfToken = $this->csrfTokenManager->getToken('webhook_delete');
 
         return $this->render('webhook/index.html.twig', [
             'webhooks' => $webhooks,
-            'deleteCsrfToken' => $deleteCsrfToken,
         ]);
     }
 

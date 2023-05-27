@@ -66,7 +66,7 @@ class WebController extends AbstractController
         $form->handleRequest($req);
 
         return $this->render('web/searchForm.html.twig', [
-            'searchQuery' => $req->query->get('search_query')['query'] ?? '',
+            'query' => $req->query->get('query'),
         ]);
     }
 
@@ -196,9 +196,9 @@ class WebController extends AbstractController
      */
     protected function getFilteredOrderedBys(Request $req)
     {
-        $orderBys = $req->query->get('orderBys') ?: [];
+        $orderBys = $req->query->all('orderBys') ?: [];
         if (!$orderBys) {
-            $orderBys = $req->query->get('search_query');
+            $orderBys = $req->query->all('search_query');
             $orderBys = $orderBys['orderBys'] ?? [];
         }
 

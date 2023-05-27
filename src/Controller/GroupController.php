@@ -30,7 +30,7 @@ class GroupController extends AbstractController
         $qb = $this->registry->getRepository(Group::class)
             ->createQueryBuilder('g');
 
-        if ($searchGroup = $request->query->get('search')['group'] ?? null) {
+        if ($searchGroup = $request->query->get('search_group')) {
             $searchGroup = \mb_strtolower($searchGroup);
             $qb->andWhere('LOWER(g.name) LIKE :search')
                 ->setParameter('search', "%{$searchGroup}%");
@@ -40,13 +40,11 @@ class GroupController extends AbstractController
 
         $paginator = new Pagerfanta(new QueryAdapter($qb, false));
         $paginator->setMaxPerPage(10);
-        $csrfForm = $this->createFormBuilder([])->getForm();
 
         $paginator->setCurrentPage((int)$page);
 
         return $this->render('group/index.html.twig', [
             'groups' => $paginator,
-            'csrfForm' => $csrfForm,
             'searchGroup' => $searchGroup,
         ]);
     }
@@ -71,20 +69,16 @@ class GroupController extends AbstractController
     #[Route('/groups/{id}/delete', name: 'groups_delete')]
     public function deleteAction(Request $request, #[Vars] Group $group): Response
     {
-        $form = $this->createFormBuilder()->getForm();
-        $form->submit($request->get('form'));
-        if ($form->isSubmitted() && $form->isValid()) {
+        if (!$this->isCsrfTokenValid('delete', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Csrf token is not valid');
+        } else {
             $em = $this->registry->getManager();
             $em->remove($group);
             $em->flush();
             $this->addFlash('success', 'Group ' . $group->getName() . ' has been deleted successfully');
-        } else {
-            $this->addFlash('error', (string) $form->getErrors(true));
         }
 
-        return $this->redirect(
-            $this->generateUrl("groups_index")
-        );
+        return $this->redirect($this->generateUrl("groups_index"));
     }
 
     protected function handleUpdate(Request $request, Group $group, $flashMessage)
