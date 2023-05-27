@@ -7,6 +7,7 @@ use Knp\Menu\ItemInterface;
 use Packeton\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MenuBuilder
@@ -68,6 +69,8 @@ class MenuBuilder
                 $menu->addChild($this->translator->trans('menu.my_packages'), ['label' => 'menu.my_packages_icon', 'route' => 'user_packages', 'routeParameters' => ['name' => $this->getUsername()], 'extras' => ['safe_label' => true]]);
                 $menu->addChild($this->translator->trans('menu.my_favorites'), ['label' => 'menu.my_favorites_icon', 'route' => 'user_favorites', 'routeParameters' => ['name' => $this->getUsername()], 'extras' => ['safe_label' => true]]);
             }
+        } else if ($user instanceof UserInterface) {
+            $menu->addChild($this->translator->trans('menu.my_tokens'), ['label' => 'menu.my_tokens_icon', 'route' => 'profile_list_tokens', 'extras' => ['safe_label' => true]]);
         }
     }
 

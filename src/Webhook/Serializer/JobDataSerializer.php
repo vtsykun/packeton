@@ -55,6 +55,7 @@ class JobDataSerializer implements NormalizerInterface, DenormalizerInterface
     public function getSupportedTypes(?string $format): array
     {
         return [
+            '*' => true,
             'object' => true,
         ];
     }
