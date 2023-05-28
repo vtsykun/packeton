@@ -46,9 +46,9 @@ class ZipballController extends AbstractController
     }
 
     #[Route('/archive/remove/{id}', name: 'archive_remove', methods: ["DELETE"])]
+    #[IsGranted('ROLE_MAINTAINER')]
     public function remove(#[Vars] Zipball $zip, Request $request): Response
     {
-        $this->denyAccessUnlessGranted('ROLE_MAINTAINER');
         if (!$this->isCsrfTokenValid('archive_upload', $request->get('token'))) {
             return new JsonResponse(['error' => 'Csrf token is not a valid'], 400);
         }
