@@ -57,7 +57,7 @@ class SecurityController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->processSendingPasswordResetEmail($form->get('email')->getData(), $mailer);
-
+            return $this->redirect($this->generateUrl('request_pwd_check_email'));
         }
 
         return $this->render('reset_password/request.html.twig', [
