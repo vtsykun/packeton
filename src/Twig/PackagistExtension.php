@@ -113,6 +113,9 @@ class PackagistExtension extends AbstractExtension
         if ($token instanceof User) {
             $token = ($short ? ($token->getUserIdentifier() . ':') : '') . $token->getApiToken();
         }
+        if ($token instanceof UserInterface) {
+            $token = '';
+        }
 
         return $token ? '<span class="token" style="display: none" data-type="token">' . $token . '</span><button class="btn btn-primary show-token">Show token</button>' : '';
     }
