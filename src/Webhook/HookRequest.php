@@ -6,17 +6,12 @@ namespace Packeton\Webhook;
 
 class HookRequest implements \JsonSerializable
 {
-    private $method;
-    private $options;
-    private $url;
-    private $body;
-
-    public function __construct(string $url, string $method, array $options = [], $body = null)
-    {
-        $this->url =  $url;
-        $this->method = $method;
-        $this->options = $options;
-        $this->body = $body;
+    public function __construct(
+        protected string $url,
+        protected string $method,
+        protected array $options = [],
+        protected mixed $body = null
+    ) {
     }
 
     /**
@@ -52,7 +47,7 @@ class HookRequest implements \JsonSerializable
     /**
      * @return null|mixed
      */
-    public function getBody()
+    public function getBody(): mixed
     {
         return $this->body;
     }

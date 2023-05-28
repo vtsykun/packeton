@@ -16,17 +16,9 @@ use Psr\Log\LoggerInterface;
 class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
 {
     private $logger;
-    private $renderer;
-    private $storedPrefix;
 
-    /**
-     * @param PayloadRenderer $renderer
-     * @param string $rootDir
-     */
-    public function __construct(PayloadRenderer $renderer, string $rootDir = null)
+    public function __construct(private readonly PayloadRenderer $renderer)
     {
-        $this->renderer = $renderer;
-        $this->storedPrefix = $rootDir ? rtrim($rootDir, '/') . '/var/webhooks/' : null;
     }
 
     /**
@@ -35,7 +27,7 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
      *
      * @return HookRequest[]
      */
-    public function resolveHook(Webhook $webhook, array $context = [])
+    public function resolveHook(Webhook $webhook, array $context = []): array
     {
         return iterator_to_array($this->doResolveHook($webhook, $context));
     }
@@ -43,34 +35,39 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
     /**
      * @param Webhook $webhook
      * @param array $context
+     *
      * @return \Generator|void
      */
-    private function doResolveHook(Webhook $webhook, array $context = [])
+    private function doResolveHook(Webhook $webhook, array $context = []): iterable
     {
-        $separator = '-------------' . sha1(random_bytes(10)) . '---------------';
         $context[PlaceholderExtension::VARIABLE_NAME] = $placeholder = new PlaceholderContext();
+        $this->renderer->setLogger($this->logger);
 
-        $this->renderer->init();
-        if (null !== $this->logger) {
-            $this->renderer->setLogger($this->logger);
-        }
-
+        $content = null;
         if ($payload = $webhook->getPayload()) {
-            if (preg_match('/^@\w+$/', trim($payload)) && null !== $this->storedPrefix) {
-                $filename = $this->storedPrefix . substr(trim($payload), 1) . '.twig';
-                if (@file_exists($filename)) {
-                    $payload = file_get_contents($filename);
+            $legacy = '';
+            $this->renderer->setLogHandler(static function ($result) use (&$legacy) {
+                if (is_string($result)) {
+                    $legacy .= $result;
                 }
-            }
-            $payload = (string) $this->renderer->createTemplate($payload)->render($context);
-            $content = $webhook->getUrl() . $separator . trim($payload);
-        } else {
-            $content = $webhook->getUrl() . $separator;
+            });
+
+            $result = $this->renderer->execute(trim($payload), $context);
+            $result = is_string($result) ? trim($result) : $result;
+
+            $content = $result === null ? trim($legacy) : $result;
         }
+
+        $content = [$webhook->getUrl(), $webhook->getOptions()['headers'] ?? null, $content === '' ? null : $content];
 
         foreach ($placeholder->walkContent($content) as $content) {
-            list($url, $content) = explode($separator, $content);
-            yield new HookRequest($url, $webhook->getMethod(), $webhook->getOptions() ?: [], $content ? trim($content) : null);
+            [$url, $headers, $content] = $content;
+            $options = $webhook->getOptions() ?: [];
+            if ($headers) {
+                $options['headers'] = $headers;
+            }
+
+            yield new HookRequest($url, $webhook->getMethod(), $options, $content);
         }
     }
 

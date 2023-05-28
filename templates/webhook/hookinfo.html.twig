@@ -31,7 +31,7 @@
 {% endfor -%}
         </pre>
 
-        <b>Payload</b><pre class="github">{% apply spaceless %}{{ hook.request.body }}{% endapply %}</pre>
+        <b>Payload</b><pre class="github">{% apply spaceless %}{{ hook.request.body is iterable ? hook.request.body|json_encode(320) : hook.request.body }}{% endapply %}</pre>
         {% if hook.logs|length > 0 %}
             <b>Logs</b>
             <pre class="github">

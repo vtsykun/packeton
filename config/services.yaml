@@ -14,12 +14,13 @@ parameters:
     env(PUBLIC_ACCESS): false
 
     # twig sandbox
-    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim']
+    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim', 'return']
     security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range', 'constant']
     security_policy_methods: []
     security_policy_forbidden_classes:
         - 'Packeton\Entity\Job'
         - 'Packeton\Entity\SshCredentials'
+        - 'Packeton\Entity\ApiToken'
     security_policy_forbidden_properties:
         'Packeton\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
         'Packeton\Entity\Package': ['credentials']
@@ -199,12 +200,13 @@ services:
 
     Packeton\Webhook\Twig\PayloadRenderer:
         arguments:
-            - !tagged trusted_extension
-            -
-                autoescape: false
+            $extensions: !tagged trusted_extension
+            $options:
+                cache: '%kernel.cache_dir%/webhook'
+                clear_text_tokens: false
         calls:
             - [addExtension, ['@packeton.twig.webhook_sandbox']]
-    
+
     Packeton\Security\CheckLdapCredentialsListener:
         autoconfigure: false
 
