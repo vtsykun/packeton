@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -56,6 +57,23 @@ class CustomerUserType extends AbstractType
                 'mapped' => false,
                 'tooltip' => 'Read access to all packages without ACL Group restriction'
             ])
+            ->add('isMaintainer', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Maintainer (ROLE_MAINTAINER)',
+                'mapped' => false,
+                'tooltip' => 'Can submit and read all packages. (ACL Group is ignored)'
+            ]);
+
+        if ($options['is_created']) {
+            $builder
+                ->add('invitation', CheckboxType::class, [
+                    'required' => false,
+                    'label' => 'Send an invitation to the user\'s email',
+                    'mapped' => false,
+                ]);
+        }
+
+        $builder
             ->add('groups', EntityType::class, [
                 'choice_label' => 'name',
                 'class' => Group::class,
@@ -65,6 +83,7 @@ class CustomerUserType extends AbstractType
             ]);
 
         $builder->addEventListener(FormEvents::POST_SET_DATA, $this->postSetData(...));
+        $builder->addEventListener(FormEvents::POST_SUBMIT, $this->postSubmit(...));
     }
 
     public function postSetData(FormEvent $event): void
@@ -76,6 +95,34 @@ class CustomerUserType extends AbstractType
 
         if ($user->hasRole('ROLE_FULL_CUSTOMER')) {
             $event->getForm()->get('fullAccess')->setData(true);
+        }
+        if ($user->hasRole('ROLE_MAINTAINER')) {
+            $event->getForm()->get('isMaintainer')->setData(true);
+        }
+    }
+
+    public function postSubmit(FormEvent $event)
+    {
+        $user = $event->getData();
+        $form = $event->getForm();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        if ($form->has('fullAccess')) {
+            $form->get('fullAccess')->getData()
+                ? $user->addRole('ROLE_FULL_CUSTOMER') :
+                $user->removeRole('ROLE_FULL_CUSTOMER');
+        }
+
+        if ($form->has('isMaintainer')) {
+            $form->get('isMaintainer')->getData()
+                ? $user->addRole('ROLE_MAINTAINER') :
+                $user->removeRole('ROLE_MAINTAINER');
+        }
+
+        if ($form->has('invitation') && $form->get('invitation')->getData() && empty($user->getEmail())) {
+            $form->get('email')->addError(new FormError('You must set a valid email to send invitation.'));
         }
     }
 

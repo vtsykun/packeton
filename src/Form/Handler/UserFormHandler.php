@@ -7,8 +7,10 @@ namespace Packeton\Form\Handler;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;
 use Packeton\Event\FormHandlerEvent;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -17,7 +19,8 @@ class UserFormHandler
     public function __construct(
         protected UserPasswordHasherInterface $passwordHasher,
         protected ManagerRegistry $registry,
-        protected EventDispatcherInterface $dispatcher
+        protected EventDispatcherInterface $dispatcher,
+        protected MailerInterface $mailer
     ){
     }
 
@@ -33,6 +36,7 @@ class UserFormHandler
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var User $user */
             $user = $form->getData();
+
             if ($user->getEmail() === null) {
                 $user->setEmail($user->getUsernameCanonical() . '@example.com');
             }
@@ -44,12 +48,10 @@ class UserFormHandler
                 $user->setPassword($this->passwordHasher->hashPassword($user, $planPassword));
             }
 
-            $form->get('fullAccess')->getData()
-                ? $user->addRole('ROLE_FULL_CUSTOMER') :
-                $user->removeRole('ROLE_FULL_CUSTOMER');
-
             $em->persist($user);
             $em->flush();
+
+            $this->sendInvitation($form, $user);
 
             $this->dispatcher->dispatch(new FormHandlerEvent($form, User::class), FormHandlerEvent::NAME);
 
@@ -57,5 +59,24 @@ class UserFormHandler
         }
 
         return false;
+    }
+
+    protected function sendInvitation(FormInterface $form, User $user): void
+    {
+        if (!$form->has('invitation') || !$form->get('invitation')->getData()) {
+            return;
+        }
+
+        $user->setPassword(null);
+        $user->setConfirmationToken($token = 'invite_' . sha1(random_bytes(40)));
+        $this->registry->getManager()->flush();
+
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('[Packeton] Invitation confirmation')
+            ->textTemplate('user/invite.txt.twig')
+            ->context(['token' => $token]);
+
+        $this->mailer->send($email);
     }
 }

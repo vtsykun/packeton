@@ -387,7 +387,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
     /**
      * {@inheritdoc}
      */
-    public function setConfirmationToken($confirmationToken)
+    public function setConfirmationToken($confirmationToken = null)
     {
         $this->confirmationToken = $confirmationToken;
 
