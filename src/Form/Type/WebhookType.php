@@ -30,7 +30,8 @@ class WebhookType extends AbstractType
         private readonly TokenStorageInterface $tokenStorage,
         private readonly PayloadRenderer $renderer,
         private readonly HmacOpensslCrypter $crypter,
-    ) {}
+    ) {
+    }
 
     /**
      * {@inheritdoc}

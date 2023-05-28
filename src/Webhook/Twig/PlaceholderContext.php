@@ -35,8 +35,8 @@ class PlaceholderContext
         }
 
         $stack = [];
-        $indexes = max(array_map(fn($p) => count($p), $this->placeholders));
-        for ($idx = 0; $idx < $indexes; $idx++) {
+        $count = max(array_map(fn($p) => count($p), $this->placeholders));
+        for ($idx = 0; $idx < $count; $idx++) {
             $copy = $content;
 
             $walker = function(&$value) use ($idx) {
@@ -49,11 +49,8 @@ class PlaceholderContext
                     if ($value === $var) {
                         return $replacement;
                     }
-
-
                     $value = preg_replace('/{{\s*' . preg_quote($name) . '\s*}}/u', $replacement, $value);
                 }
-
                 return $value;
             };
 

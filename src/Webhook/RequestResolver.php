@@ -16,17 +16,9 @@ use Psr\Log\LoggerInterface;
 class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
 {
     private $logger;
-    private $renderer;
-    private $storedPrefix;
 
-    /**
-     * @param PayloadRenderer $renderer
-     * @param string $rootDir
-     */
-    public function __construct(PayloadRenderer $renderer, string $rootDir = null)
+    public function __construct(private readonly PayloadRenderer $renderer)
     {
-        $this->renderer = $renderer;
-        $this->storedPrefix = $rootDir ? rtrim($rootDir, '/') . '/var/webhooks/' : null;
     }
 
     /**
@@ -43,6 +35,7 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
     /**
      * @param Webhook $webhook
      * @param array $context
+     *
      * @return \Generator|void
      */
     private function doResolveHook(Webhook $webhook, array $context = []): iterable
@@ -52,28 +45,20 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
 
         $content = null;
         if ($payload = $webhook->getPayload()) {
-            $payload = trim($payload);
-            if (preg_match('/^@\w+$/', $payload) && null !== $this->storedPrefix) {
-                $filename = $this->storedPrefix . substr(trim($payload), 1) . '.twig';
-                if (@file_exists($filename)) {
-                    $payload = file_get_contents($filename);
-                }
-            }
-
-            $legacy = null;
+            $legacy = '';
             $this->renderer->setLogHandler(static function ($result) use (&$legacy) {
-                $result = is_string($result) ? trim($result) : $result;
-                $result = null === $result ? '' : $result;
-                $legacy = ($result || null === $legacy) ? $result : $legacy;
+                if (is_string($result)) {
+                    $legacy .= $result;
+                }
             });
 
-            $result = $this->renderer->execute($payload, $context);
+            $result = $this->renderer->execute(trim($payload), $context);
             $result = is_string($result) ? trim($result) : $result;
 
-            $content = $result === null ? ($legacy === null ? trim($payload) : $legacy) : $result;
+            $content = $result === null ? trim($legacy) : $result;
         }
 
-        $content = [$webhook->getUrl(), $webhook->getOptions()['headers'] ?? null, $content];
+        $content = [$webhook->getUrl(), $webhook->getOptions()['headers'] ?? null, $content === '' ? null : $content];
 
         foreach ($placeholder->walkContent($content) as $content) {
             [$url, $headers, $content] = $content;

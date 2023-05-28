@@ -7,7 +7,6 @@ namespace Packeton\Webhook\Twig;
 use Okvpn\Expression\TwigLanguage;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
-use Twig\Cache\NullCache;
 
 class PayloadRenderer extends TwigLanguage
 {
@@ -26,18 +25,6 @@ class PayloadRenderer extends TwigLanguage
             if (null !== $logger && $extension instanceof LoggerAwareInterface) {
                 $extension->setLogger($logger);
             }
-        }
-    }
-
-    public function validateScript(string $script): void
-    {
-        $backup = $this->cache;
-        $this->cache = new NullCache();
-
-        try {
-            $this->loadTemplate($this->getTemplateClass($script), $script, null, true);
-        } finally {
-            $this->cache = $backup;
         }
     }
 }

@@ -203,7 +203,7 @@ services:
             $extensions: !tagged trusted_extension
             $options:
                 cache: '%kernel.cache_dir%/webhook'
-
+                clear_text_tokens: false
         calls:
             - [addExtension, ['@packeton.twig.webhook_sandbox']]
 
