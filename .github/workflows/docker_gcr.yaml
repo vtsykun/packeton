@@ -30,9 +30,9 @@ jobs:
                     password: ${{ secrets.GITHUB_TOKEN }}
 
             -   name: Push Docker image to GitHub Container Registry
-                uses: docker/build-push-action@v3
+                uses: docker/build-push-action@v4
                 with:
-                    file: Dockerfile
+                    context: .
                     push: true
                     tags: ghcr.io/${{ github.repository }}:latest
                     platforms: linux/amd64
