@@ -1,0 +1,13 @@
+{% extends "user/unauthorized.html.twig" %}
+
+{% block title %}Invitation confirmation - {{ parent() }}{% endblock %}
+
+
+{% block content_cetral_form %}
+    <h2>Set a new password</h2>
+
+    {{ form_start(resetForm) }}
+    {{ form_row(resetForm.plainPassword) }}
+    <button class="btn btn-primary">Accept Invitation</button>
+    {{ form_end(resetForm) }}
+{% endblock %}
