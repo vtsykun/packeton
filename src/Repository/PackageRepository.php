@@ -180,7 +180,7 @@ class PackageRepository extends EntityRepository
             "SELECT p.id FROM package p
             WHERE p.abandoned = false
             AND p.parent_id is NULL
-            AND p.repo_type NOT IN ('artifact', 'custom')
+            AND (p.repo_type NOT IN ('artifact', 'custom') OR p.repo_type IS NULL)
             AND (
                 p.crawledAt IS NULL
                 OR (p.autoUpdated = false AND p.crawledAt < :crawled)
