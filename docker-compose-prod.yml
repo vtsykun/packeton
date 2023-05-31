@@ -8,6 +8,9 @@ x-volumes: &default-volume
 x-restart-policy: &restart_policy
     restart: unless-stopped
 
+x-restart-policy-always: &restart_policy_always
+    restart: always
+
 x-environment: &default-environment
     REDIS_URL: redis://redis
     DATABASE_URL: "postgresql://packeton:pack123@postgres:5432/packeton?serverVersion=14&charset=utf8"
@@ -17,14 +20,14 @@ services:
     redis:
         image: redis:7-alpine
         hostname: redis
-        <<: *restart_policy
+        <<: [*restart_policy]
         volumes:
             - redis-data:/data
  
     postgres:
         image: postgres:14-alpine
         hostname: postgres
-        <<: *restart_policy
+        <<: [*restart_policy]
         volumes:
             - postgres-data:/var/lib/postgresql/data
         environment:
@@ -36,10 +39,9 @@ services:
         image: packeton/packeton:latest
         hostname: php-fpm
         command: ['php-fpm', '-F']
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy, *default-volume]
         environment:
-            <<: *default-environment
+            <<: [*default-environment]
             SKIP_INIT: 0
             WAIT_FOR_HOST: 'postgres:5432'
         depends_on:
@@ -51,8 +53,7 @@ services:
         hostname: nginx
         ports:
             - '127.0.0.1:8088:80'
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy, *default-volume]
         command: >
             bash -c 'sed s/_PHP_FPM_HOST_/php-fpm:9000/g < docker/nginx/nginx-tpl.conf > /etc/nginx/nginx.conf && nginx'
         environment:
@@ -66,8 +67,7 @@ services:
         hostname: packeton-worker
         command: ['bin/console', 'packagist:run-workers', '-v']
         user: www-data
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy_always, *default-volume]
         environment:
             <<: *default-environment
             WAIT_FOR_HOST: 'php-fpm:9000'
@@ -79,8 +79,7 @@ services:
         hostname: packeton-cron
         command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
         user: www-data
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy_always, *default-volume]
         environment:
             <<: *default-environment
             WAIT_FOR_HOST: 'php-fpm:9000'
