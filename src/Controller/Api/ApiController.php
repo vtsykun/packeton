@@ -7,6 +7,7 @@ namespace Packeton\Controller\Api;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Controller\ControllerTrait;
+use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
@@ -72,6 +73,13 @@ class ApiController extends AbstractController
         $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
 
         return new JsonResponse(['status' => 'success', 'job' => $job->getId()], 202);
+    }
+
+    #[Route('/api/hooks/{alias}/{id}', name: 'api_integration_postreceive')]
+    public function integrationHook(Request $request, string $alias, #[Vars] OAuthIntegration $oauth): Response
+    {
+        // parse the payload
+        $payload = $this->getJsonPayload($request);
     }
 
     #[Route('/api/github', name: 'github_postreceive')]

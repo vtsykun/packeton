@@ -14,6 +14,8 @@ use Composer\Package\Archiver as CA;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Composer\Util\ProcessExecutor;
+use Packeton\Entity\OAuthIntegration;
+use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Model\CredentialsInterface;
 use Packeton\Package\RepTypes;
 
@@ -24,6 +26,7 @@ class PackagistFactory
 
     public function __construct(
         protected PacketonRepositoryFactory $repositoryFactory,
+        protected IntegrationRegistry $integrations,
         protected bool $githubNoApi = true,
         string $composerHome = null
     ) {
@@ -56,7 +59,7 @@ class PackagistFactory
      * @param PacketonRepositoryInterface $repository
      * @param DownloadManager|null $dm
      *
-     * @return \Composer\Package\Archiver\ArchiveManager
+     * @return \Composer\Package\Archiver\ArchiveManager|Archiver\ArchiveManager
      */
     public function createArchiveManager(IOInterface $io, PacketonRepositoryInterface $repository, DownloadManager $dm = null): ArchiveManager
     {
@@ -105,7 +108,8 @@ class PackagistFactory
 
             if ($credentials->getKey()) {
                 $uid = @getmyuid();
-                $credentialsFile = rtrim($this->tmpDir, '/') . '/packeton_priv_key_' . $credentials->getId() . '_' . $uid;
+                $keyId = method_exists($credentials, 'getId') ? $credentials->getId() : sha1((string)$credentials->getKey());
+                $credentialsFile = rtrim($this->tmpDir, '/') . '/packeton_priv_key_' . $keyId . '_' . $uid;
                 if (!file_exists($credentialsFile)) {
                     file_put_contents($credentialsFile, $credentials->getKey());
                     chmod($credentialsFile, 0600);
@@ -139,6 +143,11 @@ class PackagistFactory
             $config = $this->createConfig($credentials);
             $io->loadConfiguration($config);
         }
+        $oauth2 = $repoConfig['oauth2'] ?? null;
+        if ($oauth2 instanceof OAuthIntegration && $this->integrations->has($oauth2->getAlias())) {
+            $app = $this->integrations->get($oauth2->getAlias());
+            $app->authenticateIO($oauth2, $io, $config, $url);
+        }
 
         $repoConfig['url'] = $url;
         if (isset($repoConfig['subDirectory']) || ($repoConfig['repoType'] ?? null) === RepTypes::MONO_REPO) {
@@ -150,6 +159,13 @@ class PackagistFactory
             if (null === $credentials?->getComposerConfigOption('use-github-api') || !empty($credentials?->getKey())) {
                 $repoConfig['no-api'] = true;
             }
+        }
+
+        if ($config->has('_no_api')) {
+            $repoConfig['no-api'] = $config->get('_no_api');
+        }
+        if ($config->has('_driver')) {
+            $repoConfig['driver'] = $config->get('_driver');
         }
 
         return $this->repositoryFactory->create($repoConfig, $io, $config, $repoConfig['repoType'] ?? null);

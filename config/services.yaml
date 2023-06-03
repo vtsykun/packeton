@@ -21,6 +21,7 @@ parameters:
         - 'Packeton\Entity\Job'
         - 'Packeton\Entity\SshCredentials'
         - 'Packeton\Entity\ApiToken'
+        - 'Packeton\Entity\OAuthIntegration'
     security_policy_forbidden_properties:
         'Packeton\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
         'Packeton\Entity\Package': ['credentials']
@@ -62,6 +63,7 @@ services:
             $packageRegexp: '%package_name_regex%'
             $swaggerDocsDir: '%kernel.project_dir%/swagger'
             $artifactPaths: '%packeton_artifact_paths%'
+            $noPrivateHttpClient: '@Symfony\Component\HttpClient\NoPrivateNetworkHttpClient'
             'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
 
     Packeton\:
@@ -218,3 +220,5 @@ services:
         calls:
             - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]
             - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]
+
+    Symfony\Component\HttpClient\NoPrivateNetworkHttpClient: ~

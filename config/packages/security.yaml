@@ -34,6 +34,9 @@ security:
             lazy: true
             pattern:      .*
             user_checker: Packeton\Security\UserChecker
+            provider: all_users
+            custom_authenticators:
+                - Packeton\Integrations\Security\OAuth2Authenticator
             '%default_login_provider%': '%default_login_options%'
 
             remember_me:
@@ -53,7 +56,7 @@ security:
         - { path: ^/_profiler/, roles: PUBLIC_ACCESS }
 
         - { path: ^/login$, roles: PUBLIC_ACCESS }
-        - { path: ^/login/, roles: PUBLIC_ACCESS }
+        - { path: (^(/login/|/oauth2/))+, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
 
         # Packagist

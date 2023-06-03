@@ -1,0 +1,9 @@
+{% extends "user/unauthorized.html.twig" %}
+
+{% block user_content %}
+    <p>Processing redirect <a href="{{ route }}" id="route">{{ route }}</a></p>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ asset('packeton/js/redirect.js') }}"></script>
+{% endblock %}

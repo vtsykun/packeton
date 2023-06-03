@@ -16,9 +16,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Packeton\Model\BaseUser;
 use Packeton\Model\PacketonUserInterface;
+use Packeton\Repository\UserRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
-#[ORM\Entity(repositoryClass: 'Packeton\Repository\UserRepository')]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'fos_user')]
 #[ORM\UniqueConstraint(columns: ['email_canonical'])]
 #[ORM\UniqueConstraint(columns: ['username_canonical'])]
@@ -187,10 +188,13 @@ class User extends BaseUser implements PacketonUserInterface
      * Set githubId.
      *
      * @param string $githubId
+     * @return $this
      */
     public function setGithubId($githubId)
     {
         $this->githubId = $githubId;
+
+        return $this;
     }
 
     /**
@@ -356,6 +360,11 @@ class User extends BaseUser implements PacketonUserInterface
     public function isMaintainer()
     {
         return $this->hasRole('ROLE_MAINTAINER') || $this->isAdmin() || $this->isSuperAdmin();
+    }
+
+    public function isExternal(): bool
+    {
+        return $this->hasRole('ROLE_OAUTH') || $this->githubId !== null;
     }
 
     /**

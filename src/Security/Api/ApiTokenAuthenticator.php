@@ -33,7 +33,8 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         private readonly UserCheckerInterface $userChecker,
         private readonly TokenCheckerRegistry $tokenCheckerRegistry,
         private readonly LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     /**
      * @param ApiUsernamePasswordToken $token
@@ -71,7 +72,11 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         $checker = $this->tokenCheckerRegistry->getTokenChecker($username, $token);
 
         try {
-            $user = $checker->loadUserByToken($username, $token, function (string $username) {
+            $user = $checker->loadUserByToken($username, $token, function (string|null $username) {
+                if (empty($username)) {
+                    return null;
+                }
+
                 $user = $this->userProvider->loadUserByIdentifier($username);
                 $this->userChecker->checkPreAuth($user);
                 return $user;
@@ -121,12 +126,13 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
             $credentials = $request->query->get('apiToken');
             $username = $request->query->get('username');
         } elseif ($username = $request->query->get('token')) {
-            $username = \explode(':', $username);
-            if (2 !== \count($username)) {
-                return null;
+            $token = \explode(':', $username);
+            if (2 === \count($token)) {
+                [$username, $credentials] = $token;
+            } else {
+                [$username, $credentials] = ['token', $username];
             }
 
-            list($username, $credentials) = $username;
             $this->logger->info('Api authorization header found for user.', ['username' => $username]);
         } else {
             return null;

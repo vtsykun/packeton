@@ -98,6 +98,9 @@ browse:
     join_and: ' and '
     join_or: ' or '
 
+integration:
+    self_help: 'All repositories to which this user has access outside the organization will be available'
+
 submit:
     title: Submit package
     submit: Submit

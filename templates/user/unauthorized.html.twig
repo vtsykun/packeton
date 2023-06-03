@@ -3,6 +3,9 @@
 {% block search_main %}
 {% endblock %}
 
+{% block flashMessages %}
+{% endblock %}
+
 {% block user_content %}
     <style>
         body {
@@ -20,6 +23,26 @@
         {% block content_cetral %}
             <div class="center-block well-card" style="max-width: 45rem">
                 {% block content_cetral_title %}
+                {% endblock %}
+
+                {% block flash_messages_cetral %}
+                    {%- if app.session.flashbag.peekAll()|length > 0 %}
+                        <div class="flash-container">
+                            {%- for type, flashMessages in app.session.flashbag.all() %}
+                                {%- for flashMessage in flashMessages %}
+                                    {%- if 'fos_user_' in type %}
+                                        <div class="alert alert-{{ type|replace({'fos_user_': ''}) }}">
+                                            <p>{{ flashMessage|trans }}</p>
+                                        </div>
+                                    {%- else %}
+                                        <div class="alert alert-{{ type }}">
+                                            <p>{{ flashMessage|trans }}</p>
+                                        </div>
+                                    {%- endif %}
+                                {%- endfor %}
+                            {%- endfor %}
+                        </div>
+                    {%- endif %}
                 {% endblock %}
 
                 {% if error is defined and error is not empty %}

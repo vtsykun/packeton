@@ -571,6 +571,7 @@ button {
     padding: 7px 11px 6px 9px;
     border-radius: 2px;
     box-shadow: none;
+    border-color: inherit;
 }
 
 .form-control[data-api-token] {
@@ -1829,4 +1830,15 @@ label.required em {
 }
 .well-card .title {
     font-size: 26px !important;
+}
+
+.select2-selection {
+    min-height: 33px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 33px!important;
+}
+.select2-selection__rendered {
+    padding-top: 2px;
 }
