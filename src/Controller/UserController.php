@@ -81,7 +81,7 @@ class UserController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        $form = $this->createForm(ProfileFormType::class, $user);
+        $form = $this->createForm(ProfileFormType::class, $user, ['allow_edit' => !$user->isExternal()]);
 
         $form->handleRequest($request);
 

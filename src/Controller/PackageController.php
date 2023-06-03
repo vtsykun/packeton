@@ -114,7 +114,7 @@ class PackageController extends AbstractController
         $formType = RepTypes::getFormType($type);
         $form = $this->createForm($formType, $package, [
             'action' => $this->generateUrl('submit', ['type' => $type]),
-            'validation_groups' => ['Create'],
+            'validation_groups' => ['Create', 'Default'],
             'is_created' => true,
         ]);
 
