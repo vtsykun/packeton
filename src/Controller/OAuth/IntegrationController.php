@@ -52,6 +52,7 @@ class IntegrationController extends AbstractController
         try {
             $orgs = $client->organizations($oauth);
         } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage(), ['e' => $e]);
             $errorMsg = $e->getMessage();
         }
 

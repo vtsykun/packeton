@@ -32,6 +32,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
 {
     use BaseIntegrationTrait;
     use AppIntegrationTrait;
+    protected const GITLAB_HOST = 'https://gitlab.com';
 
     protected $pathAuthorize = '/oauth/authorize';
     protected $pathToken = '/oauth/token';
@@ -168,12 +169,13 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
      */
     public function organizations(App $app): array
     {
+        $isGitLab = $this->baseUrl === self::GITLAB_HOST;
         $organizations = $this->getCached($app, 'orgs', callback: function () use ($app) {
             $accessToken = $this->refreshToken($app);
-            return $this->makeCGetRequest($accessToken, '/groups', ['query' => 30]);
+            return $this->makeCGetRequest($accessToken, '/groups', ['query' => ['min_access_level' => 30]]);
         });
 
-        $orgs = array_map(fn ($org) => $org + ['identifier' => $org['id'], 'logo' => $org['avatar_url'] ?? null, 'name' => $org['name'] ?? $org['id']], $organizations);
+        $orgs = array_map(fn ($org) => $org + ['identifier' => $org['id'], 'logo' => $isGitLab ? null : $org['avatar_url'] ?? null, 'name' => $org['name'] ?? $org['id']], $organizations);
         return array_merge([$this->ownOrg], $orgs);
     }
 
