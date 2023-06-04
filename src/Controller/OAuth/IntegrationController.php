@@ -12,6 +12,8 @@ use Packeton\Form\Type\IntegrationSettingsType;
 use Packeton\Integrations\Exception\NotFoundAppException;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\AppInterface;
+use Packeton\Integrations\Model\IntegrationUtils;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,13 +25,22 @@ class IntegrationController extends AbstractController
     public function __construct(
         protected IntegrationRegistry $integrations,
         protected ManagerRegistry $registry,
+        protected LoggerInterface $logger
     ) {
     }
 
     #[Route('', name: 'integration_list')]
     public function listAction(): Response
     {
+        $integrations = $this->integrations->findAllApps();
+        return $this->render('integration/list.html.twig', ['integrations'  => $integrations]);
+    }
 
+    #[Route('/connect', name: 'integration_connect')]
+    public function connect(): Response
+    {
+        $integrations = $this->integrations->findAllApps();
+        return $this->render('integration/connect.html.twig', ['integrations'  => $integrations]);
     }
 
     #[Route('/{alias}/{id}', name: 'integration_index')]
@@ -100,16 +111,22 @@ class IntegrationController extends AbstractController
 
         $client = $this->getClient($alias, $oauth);
         $oauth->setConnected($org, $connected = !$oauth->isConnected($org));
-        $this->registry->getManager()->flush();
+
 
         $response = ['connected' => $connected];
         try {
-            $connected ? $client->addOrgHook($oauth, $org) : $client->removeOrgHook($oauth, $org);
+            $status = $connected ? $client->addOrgHook($oauth, $org) : $client->removeOrgHook($oauth, $org);
+            if (is_array($status)) {
+                $oauth->setWebhookInfo($org, $status);
+                $response += $status;
+            }
         } catch (\Throwable $e) {
-            return new JsonResponse(['error' => $e->getMessage()] + $response, 400);
+            $this->logger->error($e->getMessage(), ['e' => $e]);
+            $response += ['error' => IntegrationUtils::castError($e), 'code' => 409];
         }
 
-        return new JsonResponse($response, 200);
+        $this->registry->getManager()->flush();
+        return new JsonResponse($response, $response['code'] ?? 200);
     }
 
     protected function getClient($alias, OAuthIntegration $oauth = null): AppInterface

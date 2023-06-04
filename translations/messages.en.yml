@@ -28,6 +28,7 @@ menu:
     ssh_keys: Credentials
     webhooks: Webhooks
     proxies: Composer Proxies
+    integrations: Integrations
     
     profile_icon: '<span class="fa fa-id-card"></span>Profile'
     logout_icon: '<span class="fa fa-power-off"></span>Logout'
@@ -42,6 +43,7 @@ menu:
     break_line_icon: '<hr>'
     proxies_icon: '<span class="fa fa-random"></span>Composer Proxies'
     settings_icon: '<span class="fa fa-cogs"></span>Settings'
+    integrations_icon: '<span class="fa fa-github"></span>Integrations'
 
 security:
     login:

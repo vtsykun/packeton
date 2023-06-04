@@ -7,6 +7,7 @@ namespace Packeton\Security\Token;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Model\AutoHookUser;
+use Packeton\Model\PatUserScores;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
@@ -42,7 +43,7 @@ class IntegrationTokenChecker implements TokenCheckerInterface, PatTokenCheckerI
 
         $apiToken = $token ? $this->registry->getRepository(OAuthIntegration::class)->findOneBy(['hookSecret' => $token]) : null;
         if ($apiToken instanceof OAuthIntegration) {
-            return new AutoHookUser();
+            return new AutoHookUser($apiToken->getId());
         }
 
         throw new BadCredentialsException('Bad credentials');
@@ -54,7 +55,7 @@ class IntegrationTokenChecker implements TokenCheckerInterface, PatTokenCheckerI
     public function checkAccess(Request $request, UserInterface $user = null): void
     {
         $route = $request->attributes->get('_route');
-        if ($route !== 'api_integration_postreceive') {
+        if ($route !== 'api_integration_postreceive' && !PatUserScores::isAllowed('webhooks', $route)) {
             throw new CustomUserMessageAccountStatusException('Integration access token allowed only for web hooks route "api_integration_postreceive"');
         }
     }

@@ -5,16 +5,21 @@ services:
         build:
             context: .
         image: packeton/packeton:latest
+        restart: unless-stopped
         container_name: packagist
         hostname: packagist
         environment:
-            ADMIN_USER: admin
-            ADMIN_PASSWORD: 123456
-            ADMIN_EMAIL: admin@example.com
+#            ADMIN_USER: admin
+#            ADMIN_PASSWORD: 123456
+#            ADMIN_EMAIL: admin@example.com
             TRUSTED_PROXIES: 172.16.0.0/12
             # Default SQLite
-            # DATABASE_URL: "mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&charset=utf8mb4"
+            DATABASE_URL: "mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8&charset=utf8mb4"
+
+#            MAILER_DSN: smtp://user:pass@smtp.mailgun.org:587
+#            MAILER_FROM: Packeton <packeton@example.com>
         ports:
+#            setup nginx reverse proxy for ssl
             - '127.0.0.1:8088:80'
         volumes:
             - .docker:/data

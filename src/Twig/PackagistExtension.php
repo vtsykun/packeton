@@ -188,8 +188,8 @@ class PackagistExtension extends AbstractExtension
         }, $data);
     }
 
-    public function generateGravatarHash($email)
+    public function generateGravatarHash($email): string
     {
-        return md5(strtolower($email));
+        return md5(strtolower((string)$email));
     }
 }

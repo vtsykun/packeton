@@ -13,6 +13,8 @@ use Symfony\Component\Lock\LockFactory;
 
 trait AppIntegrationTrait
 {
+    protected $ownOrg = ['name' => 'Own profile', 'identifier' => '@self'];
+
     protected \Redis $redis;
     protected LockFactory $lock;
     protected ManagerRegistry $registry;
@@ -79,13 +81,9 @@ trait AppIntegrationTrait
         return [];
     }
 
-    public function addHook(array|OAuthIntegration $accessToken, int|string $repositoryId): void
+    public function receiveHooks(Request $request, ?array $payload, OAuthIntegration $accessToken): ?array
     {
-    }
-
-    public function receiveHooks(Request $request, array $payload): bool
-    {
-        return false;
+        return null;
     }
 
     public function findApps(): array
@@ -93,16 +91,24 @@ trait AppIntegrationTrait
         return $this->registry->getRepository(OAuthIntegration::class)->findBy(['alias' => $this->name]);
     }
 
-    public function removeHook(OAuthIntegration $accessToken, int|string $repositoryId): void
+    public function addHook(array|OAuthIntegration $accessToken, int|string $repositoryId): ?array
     {
+        return null;
     }
 
-    public function addOrgHook(OAuthIntegration $accessToken, int|string $orgId): void
+    public function removeHook(OAuthIntegration $accessToken, int|string $repositoryId): ?array
     {
+        return null;
     }
 
-    public function removeOrgHook(OAuthIntegration $accessToken, int|string $orgId): void
+    public function addOrgHook(OAuthIntegration $accessToken, int|string $orgId): ?array
     {
+        return null;
+    }
+
+    public function removeOrgHook(OAuthIntegration $accessToken, int|string $orgId): ?array
+    {
+        return null;
     }
 
     public function zipballDownload(OAuthIntegration $accessToken, string $reference): string
@@ -114,8 +120,9 @@ trait AppIntegrationTrait
     {
     }
 
-    protected function getCached(string|int $appId, string $key, bool $withCache = true, callable $callback = null): mixed
+    protected function getCached(string|int|OAuthIntegration $appId, string $key, bool $withCache = true, callable $callback = null): mixed
     {
+        $appId = $appId instanceof OAuthIntegration ? $appId->getId() : $appId;
         if (true === $withCache) {
             try {
                 $result = $this->redis->hGet("oauthapp:{$this->name}:$appId", $key);
@@ -131,8 +138,9 @@ trait AppIntegrationTrait
         return $result;
     }
 
-    protected function setCached(string|int $appId, string $key, mixed $value): void
+    protected function setCached(string|int|OAuthIntegration $appId, string $key, mixed $value): void
     {
+        $appId = $appId instanceof OAuthIntegration ? $appId->getId() : $appId;
         $this->redis->hSet("oauthapp:{$this->name}:$appId", $key, json_encode($value));
     }
 }

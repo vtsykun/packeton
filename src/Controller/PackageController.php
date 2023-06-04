@@ -129,7 +129,7 @@ class PackageController extends AbstractController
                 $em->persist($package);
                 $em->flush();
 
-                $this->providerManager->insertPackage($package);
+                $this->container->get(PackageManager::class)->insetPackage($package);
                 $this->addFlash('success', $package->getName().' has been added to the package list, the repository will now be crawled.');
 
                 return new RedirectResponse($this->generateUrl('view_package', ['name' => $package->getName()]));

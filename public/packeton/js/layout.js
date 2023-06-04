@@ -90,4 +90,9 @@
     if (typeof select2.select2 === 'function') {
         select2.select2();
     }
+
+    let tooltip = $('[data-toggle="tooltip"]');
+    if (typeof tooltip.tooltip === 'function') {
+        tooltip.tooltip();
+    }
 })(jQuery, humane);

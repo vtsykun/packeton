@@ -219,6 +219,7 @@ services:
             - '@Packeton\Security\Token\DefaultTokenChecker'
         calls:
             - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]
-            - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]
+            - [addTokenChecker, ['@Packeton\Security\Token\JwtTokenChecker']]
+            - [addTokenChecker, ['@Packeton\Security\Token\IntegrationTokenChecker']]
 
     Symfony\Component\HttpClient\NoPrivateNetworkHttpClient: ~

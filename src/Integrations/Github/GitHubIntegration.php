@@ -109,7 +109,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         $callback = function() use ($app, &$accessToken, &$url) {
             $accessToken ??= $this->refreshToken($app);
             $param = $this->getApiHeaders($accessToken);
-            $pager = new GithubResultPager($this->httpClient, 'GET', $this->getApiUrl($url), $param);
+            $pager = new GithubResultPager($this->httpClient, $this->getApiUrl($url), $param);
             return $pager->all();
         };
 

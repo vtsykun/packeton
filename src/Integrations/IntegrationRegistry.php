@@ -74,6 +74,9 @@ class IntegrationRegistry
         return $app;
     }
 
+    /**
+     * @return AppInterface[]
+     */
     public function findAllApps(): array
     {
         $apps = [];

@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Gitlab;
 
+use Composer\Config;
+use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\OAuthIntegration;
+use Packeton\Entity\OAuthIntegration as App;
 use Packeton\Entity\User;
 use Packeton\Integrations\AppInterface;
 use Packeton\Integrations\Base\AppIntegrationTrait;
 use Packeton\Integrations\Base\BaseIntegrationTrait;
+use Packeton\Integrations\Github\GithubResultPager;
 use Packeton\Integrations\IntegrationInterface;
 use Packeton\Integrations\LoginInterface;
+use Packeton\Integrations\Model\IntegrationUtils;
 use Packeton\Integrations\Model\OAuth2State;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +25,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface as UG;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInterface
@@ -132,9 +139,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
     {
         $accessToken ??= $request instanceof Request ? $this->getAccessToken($request) : $request;
 
-        $params = $this->getApiHeaders($accessToken);
-        $response = $this->httpClient->request('GET', $this->getApiUrl('/user'), $params);
-        $response = $response->toArray();
+        $response = $this->makeApiRequest($accessToken, 'GET', '/user');
 
         $response['user_identifier'] = $response['email'];
         $response['external_id'] = isset($response['id']) ? "{$this->name}:{$response['id']}" : null;
@@ -158,9 +163,256 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         return $user;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function organizations(App $app): array
+    {
+        $organizations = $this->getCached($app, 'orgs', callback: function () use ($app) {
+            $accessToken = $this->refreshToken($app);
+            return $this->makeCGetRequest($accessToken, '/groups', ['query' => 30]);
+        });
+
+        $orgs = array_map(fn ($org) => $org + ['identifier' => $org['id'], 'logo' => $org['avatar_url'] ?? null, 'name' => $org['name'] ?? $org['id']], $organizations);
+        return array_merge([$this->ownOrg], $orgs);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function repositories(App $app): array
+    {
+        $organizations = $app->getEnabledOrganizations();
+        $organizations = array_diff($organizations, ['@self']);
+
+        $allRepos = [];
+        if ($app->isConnected('@self')) {
+            $ownRepos = $this->getCached($app, 'repos:self', callback: function () use ($app) {
+                $accessToken = $this->refreshToken($app);
+                return $this->makeCGetRequest($accessToken, '/projects', ['query' => ['membership' => true, 'owned' => true]]);
+            });
+
+            $allRepos = array_merge($allRepos, $ownRepos);
+        }
+
+        foreach ($organizations as $organization) {
+            $orgRepos = $this->getCached($app, "repos:$organization", callback: function () use ($app, $organization) {
+                $accessToken = $this->refreshToken($app);
+
+                try {
+                    return $this->makeCGetRequest($accessToken, "/groups/{$organization}/projects", ['query' => ['membership' => true, 'owned' => true]]);
+                } catch (\Exception $e) {
+                    $this->logger->error($e->getMessage(), ['e' => $e]);
+                    return [];
+                }
+            });
+
+            $allRepos = array_merge($allRepos, $orgRepos);
+        }
+
+        return $this->formatRepos($allRepos);
+    }
+
+    protected function formatRepos(array $repos): array
+    {
+        $repos = array_map(function ($repo) {
+            $required = [
+                'name' => $repo['path_with_namespace'],
+                'label' => $repo['path_with_namespace'],
+                'ext_ref' => $this->name.':'.$repo['id'],
+                'url' => $repo['http_url_to_repo'] ?? $repo['web_url'],
+                'ssh_url' => $repo['ssh_url_to_repo'] ?? null,
+            ];
+
+            return $required + $repo;
+        }, $repos);
+
+        $unique = [];
+        foreach ($repos as $repo) {
+            $unique[$repo['name']] = $repo;
+        }
+
+        return array_values($unique);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRedirectUrls(): array
+    {
+        return [
+            $this->router->generate('oauth_install', ['alias' => $this->name], UG::ABSOLUTE_URL),
+            $this->router->generate('oauth_check', ['alias' => $this->name], UG::ABSOLUTE_URL),
+        ];
+    }
+
+    public function findHooks(App|array $accessToken, int|string $orgId, ?bool $isRepo = null, ?string $url = null): ?array
+    {
+        $orgId = str_replace($this->name.':', '', (string)$orgId, $count);
+        $isRepo ??= $count > 0;
+
+        $accessToken = $this->refreshToken($accessToken);
+        try {
+            $list = $this->makeCGetRequest($accessToken, $isRepo ? "/projects/$orgId/hooks" : "/groups/$orgId/hooks");
+        } catch (\Exception $e) {
+            return $url ? null : [];
+        }
+
+        if (null !== $url) {
+            $list = array_filter($list, fn ($u) => $u['url'] === $url);
+            return reset($list) ?: null;
+        }
+
+        return $list;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addOrgHook(App $app, int|string $orgId): ?array
+    {
+        return $this->doAddHook($app, $orgId, false);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeOrgHook(App $app, int|string $orgId): ?array
+    {
+        return $this->doRemoveHook($app, $orgId, false);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addHook(App $app, int|string $orgId): ?array
+    {
+        return $this->doAddHook($app, $orgId, true);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeHook(App $app, int|string $orgId): ?array
+    {
+        return $this->doRemoveHook($app, $orgId, true);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function authenticateIO(OAuthIntegration $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
+    {
+        $token = $this->refreshToken($oauth2);
+        $urls = parse_url($this->baseUrl);
+
+        $params = [
+            '_driver' => 'gitlab',
+            '_no_api' => !($useApi = IntegrationUtils::useApiPref($this->getConfig(), $oauth2)),
+            'gitlab-domains' => ['gitlab.com', $urls['host']],
+            'gitlab-oauth' => [$urls['host'] => $token['access_token']],
+        ];
+
+        if (false === $useApi) {
+            $params['_driver'] = 'git';
+        }
+
+        $params += $this->config['composer_config'] ?? [];
+        $config->merge(['config' => $params]);
+        $io->loadConfiguration($config);
+    }
+
+    protected function doAddHook(App $app, int|string $orgId, bool $isRepo): ?array
+    {
+        if ('@self' === $orgId) {
+            return null;
+        }
+
+        $orgId = str_replace($this->name.':', '', (string)$orgId);
+        $accessToken = $this->refreshToken($app);
+        $url = $this->getConfig($app)->getHookUrl();
+        if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
+            return ['status' => true, 'id' => $hook['id']];
+        }
+
+        try {
+            $body = ['url' => $url, 'push_events' => true, 'tag_push_events' => true, 'merge_requests_events' => true];
+            $response = $this->makeApiRequest($accessToken, 'POST', $isRepo ? "/projects/$orgId/hooks" : "/groups/$orgId/hooks", ['json' => $body]);
+            if (isset($response['id'])) {
+                return ['status' => true, 'id' => $response['id']];
+            }
+        } catch (\Exception $e) {
+            if ($e instanceof HttpExceptionInterface && $e->getResponse()->getStatusCode() === 404 && false === $isRepo) {
+                $statusMessage = 'Notice. GitLab allow Groups webhooks only for EE paid plan. But you may manually setup '
+                    . "Packagist integration with target on packeton host (without path), username \"token\" and token \"{$app->getHookToken()}\". "
+                    . "See documentation for details";
+            }
+
+            return ['status' => false, 'error' => IntegrationUtils::castError($e), 'status_message' => $statusMessage ?? null];
+        }
+
+        if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
+            return ['status' => true, 'id' => $hook['id']];
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function doRemoveHook(App $app, int|string $orgId, bool $isRepo): ?array
+    {
+        if ('@self' === $orgId) {
+            return null;
+        }
+
+        $accessToken = $this->refreshToken($app);
+        $url = $this->getConfig($app)->getHookUrl();
+
+        $id = false === $isRepo ? ($app->getWebhookInfo($orgId)['id'] ?? null) : null;
+        if ($id !== null) {
+            try {
+                $this->makeApiRequest($accessToken, 'DELETE', $isRepo ? "/projects/$orgId/hooks/$id" : "/groups/$orgId/hooks/$id");
+                return [];
+            } catch (\Exception $e) {
+            }
+        }
+
+        if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
+            $id = $hook['id'];
+            try {
+                $this->makeApiRequest($accessToken, 'DELETE', $isRepo ? "/projects/$orgId/hooks/$id" : "/groups/$orgId/hooks/$id");
+                return [];
+            } catch (\Exception $e) {
+                return ['status' => false, 'error' => IntegrationUtils::castError($e), 'id' => $id];
+            }
+        }
+
+        return [];
+    }
+
     protected function getApiUrl(string $path): string
     {
-        return $this->baseUrl . '/api/v4' . $path;
+        $apiVer = $this->config['api_version'] ?? 'v4';
+        return $this->baseUrl . '/api/' . $apiVer . $path;
+    }
+
+    protected function makeApiRequest(array $token, string $method, string $path, array $params = []): array
+    {
+        $params = array_merge_recursive($this->getApiHeaders($token), $params);
+        $response = $this->httpClient->request($method, $this->getApiUrl($path), $params);
+        $content = $response->getContent();
+        $content = $content ? json_decode($content, true) : [];
+
+        return is_array($content) ? $content : [];
+    }
+
+    protected function makeCGetRequest(array $token, string $path, array $params = []): array
+    {
+        $params = array_merge_recursive($this->getApiHeaders($token), $params);
+        $paginator = new GithubResultPager($this->httpClient, $this->getApiUrl($path), $params);
+        return $paginator->all();
     }
 
     protected function getApiHeaders(array $token, array $default = []): array

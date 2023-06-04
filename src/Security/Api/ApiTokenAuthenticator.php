@@ -108,10 +108,8 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         }
 
         if ($username = $request->query->get('token')) {
-            $username = \explode(':', $username);
-            if (2 === \count($username)) {
-                return true;
-            }
+            $token = \explode(':', $username);
+            return 2 === \count($token) || strlen($username) > 32;
         }
 
         return false;

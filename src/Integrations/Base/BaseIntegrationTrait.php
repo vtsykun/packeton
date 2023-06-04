@@ -16,27 +16,43 @@ trait BaseIntegrationTrait
     /**
      * {@inheritdoc}
      */
-    public function getConfig(OAuthIntegration $app = null): AppConfig
+    public function getConfig(OAuthIntegration $app = null, bool $details = false): AppConfig
     {
-        return new AppConfig($this->config + $this->getConfigApp($app));
+        return new AppConfig($this->config + $this->getConfigApp($app, $details));
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function getConfigApp(OAuthIntegration $app = null): array
+    protected function getConfigApp(OAuthIntegration $app = null, bool $details = false): array
     {
-        if (null === $app) {
-            return [];
+        $config = [];
+        if ($app instanceof OAuthIntegration) {
+            $params = ['alias' => $this->name, 'id' => $app->getId(), 'token' => $app->getHookToken()];
+            if (($baseUrl = $this->config['webhook_url'] ?? null)) {
+                $baseUrl = rtrim($baseUrl, '/');
+                $components = parse_url($baseUrl);
+                if (isset($components['path'])) {
+                    $config['hook_url'] = $baseUrl . "?token={$app->getHookToken()}";
+                } else {
+                    $config['hook_url'] = $baseUrl . $this->router->generate('api_integration_postreceive', $params);
+                }
+            } else {
+                $config['hook_url'] = $this->router->generate('api_integration_postreceive', $params, 0);
+            }
         }
 
-        $base = $this->router->generate('home', referenceType: UrlGeneratorInterface::ABSOLUTE_URL);
-        $hookUrl = $this->router->generate('api_integration_postreceive', ['alias' => $this->name, 'id' => $app->getId(), 'token' => $app->getHookToken()], 0);
+        if ($app || $details) {
+            $config['redirect_urls'] = $this->getRedirectUrls();
+        }
 
-        return [
-            'redirect_urls' => [$base],
-            'hook_url' => $hookUrl
-        ];
+        return $config;
+    }
+
+    public function getRedirectUrls(): array
+    {
+        $base = $this->router->generate('home', referenceType: UrlGeneratorInterface::ABSOLUTE_URL);
+        return [$base];
     }
 
     protected function getAuthorizationResponse(string $baseUrl, array $options, string $route = 'oauth_check'): RedirectResponse

@@ -61,19 +61,44 @@
                     </p>
                     <br>
                     {% for org in orgs %}
-                        <div style="padding-bottom: 25px; max-width: 420px; display: flex; justify-content: space-between">
+                        {% set isConn = oauth.isConnected(org['identifier']) %}
+                        {% set webhookInfo = oauth.getWebhookInfo(org['identifier']) %}
+                        <div style="padding-bottom: 25px; max-width: 440px; display: flex; justify-content: space-between">
                             <div>
                                 {% if org['logo'] is defined and org['logo'] %}
-                                    <img src="{{ org['logo'] }}" height="40">
+                                    <img src="{{ org['logo'] }}" height="40" alt="logo">
+                                {% else %}
+                                    <img src="https://www.gravatar.com/avatar/{{ org['name']|gravatar_hash }}?s=48&amp;d=identicon" height="40" alt="logo">
                                 {% endif %}
                                 <b>{{ org['name'] }}</b>
-                                {% if org['identifier'] == '@self' %}<p class="link-gray" style="font-size: 0.8em; margin: 0">{{ 'integration.self_help'|trans }}</p>{% endif %}
+
+                                {% if isConn and webhookInfo %}
+                                    {% if webhookInfo['status'] ?? true %}
+                                        <span class="badge" style="background-color: #30831b" data-toggle="tooltip" title="{{ webhookInfo['error'] ?? 'Webhooks enabled' }}">Hook enabled</span>
+                                    {% else %}
+                                        <span class="badge" style="background-color: #9f0404" data-toggle="tooltip" title="{{ webhookInfo['error'] ?? '' }}">Hook error</span>
+                                    {% endif %}
+                                {% endif %}
+
+                                <p class="link-gray" style="font-size: 0.8em; margin: 0">
+                                    {% if org['identifier'] == '@self' %}
+                                        {{ 'integration.self_help'|trans }}
+                                    {% endif %}
+
+                                    {% if org['description'] is defined %}
+                                        {{ org['description'] }}
+                                    {% endif %}
+
+                                    {% if webhookInfo['status_message'] ?? null %}
+                                        <br>{{ webhookInfo['status_message'] }}
+                                    {% endif %}
+                                </p>
                             </div>
 
                             <a class="settings action connect" href="{{ path('integration_connect_org', {'alias': alias, 'id': oauth.id}) }}"
                                data-token="{{ token }}" data-org="{{ org['identifier'] }}"
                             >
-                                {% if oauth.connected(org['identifier']) %}
+                                {% if isConn %}
                                     <button type="button" class="btn btn-danger" style="padding: 5px 12px">Disconnect</button>
                                 {% else %}
                                     <button type="button" class="btn btn-primary" style="padding: 5px 12px">Connect</button>

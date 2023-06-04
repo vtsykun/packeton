@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Form\Type;
 
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Util\PacketonUtils;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -16,7 +17,7 @@ class IntegrationSettingsType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $repos = $options['repos'];
-        $repos = array_combine(array_column($repos, 'label'), array_column($repos, 'name'));
+        $repos = PacketonUtils::buildChoices($repos, 'label', 'name');
 
         $builder
             ->add('globFilter', TextareaType::class, [

@@ -217,6 +217,7 @@ class Configuration implements ConfigurationInterface
         $nodeBuilder->children()
             ->booleanNode('enabled')->defaultTrue()->end()
             ->scalarNode('base_url')->end()
+            ->scalarNode('webhook_url')->info('Static current host')->end()
             ->scalarNode('svg_logo')->end()
             ->scalarNode('logo')->end()
             ->scalarNode('login_title')->end()
@@ -267,15 +268,25 @@ class Configuration implements ConfigurationInterface
     {
         return [
             'github' => [
-                'logo' => null,
+                'logo' => '/packeton/img/logo/github.png',
                 'svg_logo' => 'svg/github.html.twig',
                 'login_title' => 'Login with GitHub',
             ],
             'gitlab' => [
-                'logo' => null,
+                'logo' => '/packeton/img/logo/gitlab.png',
                 'svg_logo' => 'svg/gitlab.html.twig',
                 'login_title' => 'Login with GitLab',
             ],
+            'gitea' => [
+                'logo' => '/packeton/img/logo/gitea.png',
+                'svg_logo' => 'svg/gitea.html.twig',
+                'login_title' => 'Login with Gitea',
+            ],
+            'bitbucket' => [
+                'logo' => '/packeton/img/logo/bitbucket.png',
+                'svg_logo' => 'svg/gitea.html.twig',
+                'login_title' => 'Login with Bitbucket',
+            ]
         ];
     }
 }

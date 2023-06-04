@@ -56,6 +56,16 @@ class AppConfig
         return $this->defaultRoles;
     }
 
+    public function getLogo(): ?string
+    {
+        return $this->config['logo'] ?? null;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->config['title'] ?? null;
+    }
+
     public function getName(): string
     {
         return $this->config['name'];

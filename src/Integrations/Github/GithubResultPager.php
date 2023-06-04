@@ -11,20 +11,20 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 #[Exclude]
 class GithubResultPager
 {
-    public static $perPage = 100;
+    public $perPage = 100;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
-        private readonly string $method,
         private readonly string $url,
-        private readonly array $params
+        private readonly array $params,
+        private readonly string $method = 'GET'
     ) {
     }
 
     public function all(): array
     {
         $params = $this->params;
-        $params['query']['per_page'] = self::$perPage;
+        $params['query']['per_page'] ??= $this->perPage;
 
         $processed = [];
         $url = $this->url;

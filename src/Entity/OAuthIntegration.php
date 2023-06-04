@@ -127,6 +127,18 @@ class OAuthIntegration
         return $this->getSerialized('enabled_org', 'array', []);
     }
 
+    public function setWebhookInfo(string|int $orgs, array $info): self
+    {
+        $info += ['status' => true, 'error' => null, 'id' => null];
+        return $this->setSerialized("web_hook_$orgs", $info);
+    }
+
+    public function getWebhookInfo(string|int $orgs): ?array
+    {
+        $info = $this->getSerialized("web_hook_$orgs", 'array');
+        return is_array($info) ? $info + ['status' => null, 'error' => null, 'id' => null] : null;
+    }
+
     public function isConnected(string|int $name): bool
     {
         return in_array((string)$name, $this->getEnabledOrganizations());

@@ -6,8 +6,17 @@ namespace Packeton\Model;
 
 use Symfony\Component\Security\Core\User\UserInterface;
 
-final class AutoHookUser implements UserInterface
+class AutoHookUser implements UserInterface
 {
+    public function __construct(protected string|int $hookIdentifier)
+    {
+    }
+
+    public function getHookIdentifier(): string|int
+    {
+        return $this->hookIdentifier;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -28,6 +37,6 @@ final class AutoHookUser implements UserInterface
      */
     public function getUserIdentifier(): string
     {
-        return 'token_hooks';
+        return 'token_hooks'.$this->hookIdentifier;
     }
 }

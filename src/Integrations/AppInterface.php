@@ -38,15 +38,15 @@ interface AppInterface extends IntegrationInterface
 
     public function cacheClear(string|int $appId): void;
 
-    public function addHook(App $accessToken, int|string $repoId): void;
+    public function addHook(App $accessToken, int|string $repoId): ?array;
 
-    public function removeHook(App $accessToken, int|string $repoId): void;
+    public function removeHook(App $accessToken, int|string $repoId): ?array;
 
-    public function addOrgHook(App $accessToken, int|string $orgId): void;
+    public function addOrgHook(App $accessToken, int|string $orgId): ?array;
 
-    public function removeOrgHook(App $accessToken, int|string $orgId): void;
+    public function removeOrgHook(App $accessToken, int|string $orgId): ?array;
 
-    public function receiveHooks(Request $request, array $payload): bool;
+    public function receiveHooks(Request $request, ?array $payload, App $app): ?array;
 
     public function findApps(): array;
 
