@@ -43,7 +43,6 @@ security:
                 secret: '%env(APP_SECRET)%'
                 user_providers: all_users
                 name: pauth
-                always_remember_me: true
                 samesite: 'lax'
                 lifetime: 31104000 # 1y
             logout:       true

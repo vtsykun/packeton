@@ -52,7 +52,9 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];
-        $this->config['oauth2_registration']['default_roles'] ??= ['ROLE_MAINTAINER', 'ROLE_GITLAB'];
+        if (empty($this->config['oauth2_registration']['default_roles'])) {
+            $this->config['oauth2_registration']['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_USER'];
+        }
         $this->config['oauth2_registration']['default_roles'][] = 'ROLE_GITLAB';
 
         if ($config['base_url'] ?? false) {
@@ -103,6 +105,9 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         return $response->toArray() + ['redirect_uri' => $redirectUrl];
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function doRefreshToken(array $token): array
     {
         if (!isset($token['refresh_token'])) {
@@ -123,6 +128,9 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         return array_merge($token, $newToken);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function isTokenExpired(array $token): bool
     {
         if (!isset($token['expires_in'], $token['refresh_token'], $token['created_at'])) {

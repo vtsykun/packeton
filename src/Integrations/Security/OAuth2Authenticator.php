@@ -10,19 +10,19 @@ use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\LoginInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpClient\Exception\ClientException;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
-use Symfony\Component\Security\Http\Authenticator\AuthenticatorInterface;
+use Symfony\Component\Security\Http\Authenticator\InteractiveAuthenticatorInterface;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
-class OAuth2Authenticator implements AuthenticatorInterface
+class OAuth2Authenticator implements InteractiveAuthenticatorInterface
 {
     public function __construct(
         protected IntegrationRegistry $integrations,
@@ -70,7 +70,13 @@ class OAuth2Authenticator implements AuthenticatorInterface
             throw new CustomUserMessageAuthenticationException('Unable to fetch oauth data');
         }
 
-        return new SelfValidatingPassport(new UserBadge($data['user_identifier'], fn () => $this->loadOrCreateUser($client, $data)));
+        $badges = [];
+        if (filter_var($request->cookies->get('_remember_me_flag'), FILTER_VALIDATE_BOOL)) {
+            $badges[] = new RememberMeBadge();
+            $request->request->set('_remember_me', 'on');
+        }
+
+        return new SelfValidatingPassport(new UserBadge($data['user_identifier'], fn () => $this->loadOrCreateUser($client, $data)), $badges);
     }
 
     protected function loadOrCreateUser(LoginInterface $client, array $data): User
@@ -118,6 +124,14 @@ class OAuth2Authenticator implements AuthenticatorInterface
         }
 
         return new Response($this->getJSRedirectTemplate('/login'));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isInteractive(): bool
+    {
+        return true;
     }
 
     // Workaround when session is strict

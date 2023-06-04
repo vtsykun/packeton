@@ -63,7 +63,7 @@ class User extends BaseUser implements PacketonUserInterface
     private ?string $apiToken = null;
 
     #[ORM\Column(name: 'githubid', type: 'string', length: 255, nullable: true)]
-    private $githubId;
+    private ?string $githubId = null;
 
     #[ORM\Column(name: 'githubtoken', type: 'string', length: 255, nullable: true)]
     private ?string $githubToken = null;

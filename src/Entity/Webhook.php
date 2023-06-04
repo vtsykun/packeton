@@ -3,8 +3,9 @@
 namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Packeton\Repository\WebhookRepository;
 
-#[ORM\Entity(repositoryClass: 'Packeton\Repository\WebhookRepository')]
+#[ORM\Entity(repositoryClass: WebhookRepository::class)]
 #[ORM\Table('webhook')]
 class Webhook implements OwnerAwareInterface
 {
