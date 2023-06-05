@@ -3,6 +3,7 @@
 {% block title %}{{ alias|capitalize }} integration - {{ parent() }}{% endblock %}
 
 {% block content %}
+    {% set token = csrf_token('token') %}
     <div class="row">
         <div class="col-xs-12 package">
             <div class="row">
@@ -41,10 +42,39 @@
                             <button type="button" class="btn btn-default">Settings</button>
                         </a>
                     </div>
+
+                    <div class="btn-group btn-group-xs">
+                        <a class="settings action ajax-url"
+                           data-url="{{ path('integration_flush_cache', {'id': oauth.id}) }}"
+                           href="#"
+                        >
+                            <button type="button" class="btn btn-warning">Clear Cache</button>
+                        </a>
+                    </div>
+
+                    {% if canEdit %}
+                    <div class="btn-group btn-group-xs">
+                        <a class="settings action onclick-confirm" data-msg="Please make sure you are using the same account.
+If a different account is used, you may lose access to the current organization and the webhooks will not be removed."
+                           href="{{ path('integration_regenerate', {'alias': alias, 'id': oauth.id, '_token': token}) }}">
+                            <button type="button" class="btn btn-danger">Regenerate Token</button>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if canDelete %}
+                    <div class="btn-group btn-group-xs">
+                        <form class="delete onsubmit-confirm action" action="{{ path('integration_delete', {'alias': alias, 'id': oauth.id}) }}" method="POST" >
+                            {{ csrf_token_input('delete') }}
+                            <button class="btn btn-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
 
-            {% set token = csrf_token('token') %}
+
             {% if orgs|length > 0 %}
             <div class="row">
                 <div class="col-md-12">
@@ -98,10 +128,11 @@
                             <a class="settings action connect" href="{{ path('integration_connect_org', {'alias': alias, 'id': oauth.id}) }}"
                                data-token="{{ token }}" data-org="{{ org['identifier'] }}"
                             >
+                                {% set bAttr = canEdit ? '' : ' disabled title="Only owner can connect to Account" ' %}
                                 {% if isConn %}
-                                    <button type="button" class="btn btn-danger" style="padding: 5px 12px">Disconnect</button>
+                                    <button type="button" {{ bAttr|raw }} class="btn btn-danger" style="padding: 5px 12px">Disconnect</button>
                                 {% else %}
-                                    <button type="button" class="btn btn-primary" style="padding: 5px 12px">Connect</button>
+                                    <button type="button" {{ bAttr|raw }} class="btn btn-primary" style="padding: 5px 12px">Connect</button>
                                 {% endif %}
                             </a>
                         </div>

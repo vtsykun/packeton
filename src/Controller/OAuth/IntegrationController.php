@@ -8,13 +8,16 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Composer\JsonResponse;
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Entity\Package;
 use Packeton\Form\Type\IntegrationSettingsType;
 use Packeton\Integrations\Exception\NotFoundAppException;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\AppInterface;
-use Packeton\Integrations\Model\IntegrationUtils;
+use Packeton\Integrations\Model\AppUtils;
+use Packeton\Integrations\Model\OAuth2State;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -33,14 +36,14 @@ class IntegrationController extends AbstractController
     public function listAction(): Response
     {
         $integrations = $this->integrations->findAllApps();
-        return $this->render('integration/list.html.twig', ['integrations'  => $integrations]);
+        return $this->render('integration/list.html.twig', ['integrations' => $integrations]);
     }
 
     #[Route('/connect', name: 'integration_connect')]
     public function connect(): Response
     {
         $integrations = $this->integrations->findAllApps();
-        return $this->render('integration/connect.html.twig', ['integrations'  => $integrations]);
+        return $this->render('integration/connect.html.twig', ['integrations' => $integrations]);
     }
 
     #[Route('/{alias}/{id}', name: 'integration_index')]
@@ -59,6 +62,8 @@ class IntegrationController extends AbstractController
         $config = $client->getConfig($oauth);
 
         return $this->render('integration/index.html.twig', [
+            'canEdit' => $this->canEdit($oauth),
+            'canDelete' => $this->canDelete($oauth),
             'orgs' => $orgs,
             'client' => $client,
             'alias' => $alias,
@@ -94,7 +99,7 @@ class IntegrationController extends AbstractController
         }
 
         return $this->render('integration/settings.html.twig', [
-            'form'    => $form->createView(),
+            'form' => $form->createView(),
             'client' => $client,
             'alias' => $alias,
             'config' => $config,
@@ -106,7 +111,7 @@ class IntegrationController extends AbstractController
     public function connectOrg(Request $request, string $alias, #[Vars] OAuthIntegration $oauth)
     {
         $org = $request->request->get('org');
-        if (!$this->isCsrfTokenValid('token', $request->request->get('token'))) {
+        if (!$this->isCsrfTokenValid('token', $request->request->get('token')) || false === $this->canEdit($oauth)) {
             throw $this->createAccessDeniedException();
         }
 
@@ -123,15 +128,75 @@ class IntegrationController extends AbstractController
             }
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage(), ['e' => $e]);
-            $response += ['error' => IntegrationUtils::castError($e), 'code' => 409];
+            $response += ['error' => AppUtils::castError($e), 'code' => 409];
         }
 
         $this->registry->getManager()->flush();
         return new JsonResponse($response, $response['code'] ?? 200);
     }
 
+    #[Route('/all/{id}/flush', name: 'integration_flush_cache', methods: ['POST'], format: 'json')]
+    public function flushCache(#[Vars] OAuthIntegration $oauth)
+    {
+        $client = $this->getClient($oauth);
+        $client->cacheClear($oauth->getId());
+
+        return new JsonResponse([], 204);
+    }
+
+    #[Route('/{alias}/{id}/regenerate', name: 'integration_regenerate')]
+    public function regenerateAction(Request $request, string $alias, #[Vars] OAuthIntegration $oauth, OAuth2State $state): Response
+    {
+        if (!$this->isCsrfTokenValid('token', $request->query->get('_token')) || !$this->canEdit($oauth)) {
+            return new Response('Invalid Csrf Params', 400);
+        }
+
+        $this->getClient($alias, $oauth)->cacheClear($oauth->getId());
+        $response = new RedirectResponse($this->generateUrl('oauth_integration', ['alias' => $alias]));
+        $state->set('_regenerate_id', $oauth->getId());
+        $state->save($response);
+
+        return $response;
+    }
+
+    #[Route('/{alias}/{id}/delete', name: 'integration_delete', methods: ['DELETE', 'POST'])]
+    public function deleteAction(Request $request, string $alias, #[Vars] OAuthIntegration $oauth): Response
+    {
+        if (!$this->isCsrfTokenValid('delete', $request->request->get('_token')) || !$this->canDelete($oauth)) {
+            return new Response('Invalid Csrf Form', 400);
+        }
+
+        $client = $this->getClient($alias, $oauth);
+        foreach ($oauth->getEnabledOrganizations() as $organization) {
+            try {
+                $client->removeOrgHook($oauth, $organization);
+            } catch (\Throwable $e) {}
+        }
+
+        $em = $this->registry->getManager();
+        $em->remove($oauth);
+        $em->flush();
+
+        return new RedirectResponse($this->generateUrl('integration_list'));
+    }
+
+    protected function canDelete(OAuthIntegration $oauth): bool
+    {
+        return !$this->registry->getRepository(Package::class)->findOneBy(['integration' => $oauth]);
+    }
+
+    protected function canEdit(OAuthIntegration $oauth): bool
+    {
+        return $oauth->getOwner() === null || $oauth->getOwner() === $this->getUser()?->getUserIdentifier();
+    }
+
     protected function getClient($alias, OAuthIntegration $oauth = null): AppInterface
     {
+        if ($alias instanceof OAuthIntegration) {
+            $oauth = $alias;
+            $alias = $oauth->getAlias();
+        }
+
         if (null !== $oauth && $oauth->getAlias() !== $alias) {
             throw $this->createNotFoundException();
         }

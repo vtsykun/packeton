@@ -35,6 +35,9 @@ class OAuthIntegration
     #[ORM\Column(name: 'hook_secret', length: 255)]
     private ?string $hookSecret = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $label = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -122,6 +125,18 @@ class OAuthIntegration
         return $this;
     }
 
+    public function getLabel(): ?string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(?string $label): self
+    {
+        $this->label = $label;
+
+        return $this;
+    }
+
     public function getEnabledOrganizations(): array
     {
         return $this->getSerialized('enabled_org', 'array', []);
@@ -194,7 +209,7 @@ class OAuthIntegration
 
     public function isEnableSynchronization(): ?bool
     {
-        return $this->getSerialized('enable_synchronization', 'bool');
+        return $this->getSerialized('enable_synchronization', 'boolean');
     }
 
     public function setPullRequestReview(?bool $flag): self
@@ -204,7 +219,7 @@ class OAuthIntegration
 
     public function isPullRequestReview(): ?bool
     {
-        return $this->getSerialized('pull_request_review', 'bool');
+        return $this->getSerialized('pull_request_review', 'boolean');
     }
 
     public function getClonePreference(): ?string
@@ -255,7 +270,7 @@ class OAuthIntegration
 
     public function __toString(): string
     {
-        $label = trim($this->owner . ' ' . $this->createdAt->format('Y-m-d'));
+        $label = $this->label ?? trim($this->owner . ' ' . $this->createdAt->format('Y-m-d'));
         return ucfirst($this->alias) . " ($label)";
     }
 }

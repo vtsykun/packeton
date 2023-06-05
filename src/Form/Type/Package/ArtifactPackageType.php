@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Form\Type;
+namespace Packeton\Form\Type\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;

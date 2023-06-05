@@ -14,7 +14,7 @@ use Packeton\Integrations\Base\AppIntegrationTrait;
 use Packeton\Integrations\Base\BaseIntegrationTrait;
 use Packeton\Integrations\IntegrationInterface;
 use Packeton\Integrations\LoginInterface;
-use Packeton\Integrations\Model\IntegrationUtils;
+use Packeton\Integrations\Model\AppUtils;
 use Packeton\Integrations\Model\OAuth2State;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -195,6 +195,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         $response = $this->httpClient->request('GET', $this->getApiUrl('/user'), $params);
         $response = $response->toArray();
 
+        $response['user_name'] = $response['login'] ?? null;
         $response['user_identifier'] = $response['email'];
         $response['external_id'] = isset($response['id']) ? $this->getConfig()->getName() . ':' . $response['id'] : null;
 
@@ -211,7 +212,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
 
         $params = [
             '_driver' => 'github',
-            '_no_api' => !IntegrationUtils::useApiPref($this->getConfig(), $oauth2),
+            '_no_api' => !AppUtils::useApiPref($this->getConfig(), $oauth2),
             'github-domains' => ['github.com', $urls['host']],
             'github-oauth' => [$urls['host'] => $token['access_token']],
         ];

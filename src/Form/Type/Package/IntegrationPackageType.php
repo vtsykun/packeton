@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Form\Type;
+namespace Packeton\Form\Type\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
 use Packeton\Integrations\IntegrationRegistry;
-use Packeton\Integrations\Model\IntegrationUtils;
+use Packeton\Integrations\Model\AppUtils;
 use Packeton\Model\PackageManager;
 use Packeton\Util\PacketonUtils;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -84,7 +84,7 @@ class IntegrationPackageType extends AbstractType
         if ($package->getIntegration() !== null && $package->getRepository() === null && $package->getExternalRef()) {
             $oauth = $package->getIntegration();
             $app = $this->integrations->findApp($oauth->getAlias(), false);
-            $url = IntegrationUtils::findUrl($package->getExternalRef(), $oauth, $app);
+            $url = AppUtils::findUrl($package->getExternalRef(), $oauth, $app);
             $package->setRepository($url);
         }
 

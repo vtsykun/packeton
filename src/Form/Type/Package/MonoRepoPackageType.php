@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Form\Type;
+namespace Packeton\Form\Type\Package;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;

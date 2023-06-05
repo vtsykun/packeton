@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Packeton\Package;
 
-use Packeton\Form\Type\ArtifactPackageType;
-use Packeton\Form\Type\IntegrationPackageType;
-use Packeton\Form\Type\MonoRepoPackageType;
-use Packeton\Form\Type\PackageType;
+use Packeton\Form\Type\Package\ArtifactPackageType;
+use Packeton\Form\Type\Package\IntegrationPackageType;
+use Packeton\Form\Type\Package\MonoRepoPackageType;
+use Packeton\Form\Type\Package\PackageType;
 
 class RepTypes
 {

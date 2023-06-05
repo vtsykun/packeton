@@ -5,6 +5,7 @@ namespace Packeton\DependencyInjection;
 use Firebase\JWT\JWT;
 use Packeton\Composer\MetadataFormat;
 use Packeton\Integrations\Factory\OAuth2FactoryInterface;
+use Packeton\Integrations\Model\AppUtils;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -217,6 +218,8 @@ class Configuration implements ConfigurationInterface
         $nodeBuilder->children()
             ->booleanNode('enabled')->defaultTrue()->end()
             ->scalarNode('base_url')->end()
+            ->enumNode('clone_preference')->values(AppUtils::$clonePref)->end()
+            ->booleanNode('repos_synchronization')->end()
             ->scalarNode('webhook_url')->info('Static current host')->end()
             ->scalarNode('svg_logo')->end()
             ->scalarNode('logo')->end()

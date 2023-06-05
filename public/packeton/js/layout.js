@@ -29,6 +29,37 @@
         }
     });
 
+    $('.onclick-confirm').on('click', (e) => {
+        let message = $(e.currentTarget).attr('data-msg') || $(e.target).attr('data-msg');
+        if (!confirm(message ? message : 'Are you sure?')) {
+            e.preventDefault();
+        }
+    });
+
+    $('.ajax-url').on('click', (e) => {
+        e.preventDefault();
+        let message = $(e.currentTarget).attr('data-msg') || $(e.target).attr('data-msg');
+        let btn = $(e.currentTarget || e.target);
+        let url = $(e.currentTarget).attr('data-url') || $(e.target).attr('data-url');
+        let method = $(e.currentTarget).attr('data-method') || $(e.target).attr('data-method') || 'POST';
+
+        if (message && !confirm(message)) {
+            return;
+        }
+        btn.addClass('loading');
+
+        $.ajax({
+            url: url,
+            type: method,
+            success: () => {
+                btn.removeClass('loading');
+            },
+            error: () => {
+                btn.removeClass('loading');
+            }
+        });
+    });
+
     /**
      * Ajax error handler
      */

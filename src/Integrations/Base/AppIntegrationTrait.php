@@ -8,6 +8,7 @@ use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Integrations\Model\CustomCacheItem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Lock\LockFactory;
 
@@ -81,7 +82,7 @@ trait AppIntegrationTrait
         return [];
     }
 
-    public function receiveHooks(Request $request, ?array $payload, OAuthIntegration $accessToken): ?array
+    public function receiveHooks(OAuthIntegration $app, Request $request = null, ?array $payload = null): ?array
     {
         return null;
     }
@@ -127,20 +128,37 @@ trait AppIntegrationTrait
             try {
                 $result = $this->redis->hGet("oauthapp:{$this->name}:$appId", $key);
                 if (is_string($result)) {
-                    return json_decode($result, true);
+                    $result = json_decode($result, true);
+                    if (isset($result['__flag_'])) {
+                        if (!isset($result['exp_at']) || $result['exp_at'] > time()) {
+                            return $result['__item'] ?? null;
+                        }
+                    } else {
+                        return $result;
+                    }
                 }
             } catch (\Exception $e) {
             }
         }
 
-        $result = call_user_func($callback);
-        $this->setCached($appId, $key, $result);
-        return $result;
+        $item = new CustomCacheItem($key);
+        if (null !== $callback) {
+            $result = call_user_func($callback, $item);
+            $item->set($result);
+
+            $this->setCached($appId, $key, $result);
+            return $result;
+        }
+        return null;
     }
 
     protected function setCached(string|int|OAuthIntegration $appId, string $key, mixed $value): void
     {
         $appId = $appId instanceof OAuthIntegration ? $appId->getId() : $appId;
-        $this->redis->hSet("oauthapp:{$this->name}:$appId", $key, json_encode($value));
+        if ($value instanceof CustomCacheItem) {
+            $value = ['__flag_' => 1, 'exp_at' => $value->getExpiry(), '__item' => $value->get()];
+        }
+
+        $this->redis->hSet("oauthapp:{$this->name}:$appId", $key, json_encode($value, JSON_UNESCAPED_SLASHES));
     }
 }

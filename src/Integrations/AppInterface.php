@@ -46,7 +46,7 @@ interface AppInterface extends IntegrationInterface
 
     public function removeOrgHook(App $accessToken, int|string $orgId): ?array;
 
-    public function receiveHooks(Request $request, ?array $payload, App $app): ?array;
+    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array;
 
     public function findApps(): array;
 

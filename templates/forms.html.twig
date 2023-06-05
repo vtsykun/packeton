@@ -160,6 +160,10 @@
     {{ form.externalRef is defined ? form_row(form.externalRef) }}
 
     {{ form_rest(form) }}
+    <p>You must select an iteration to add a package.
+        If you do not see the package in the list of integration packages,
+        then you need to update the cache on the integration page
+    </p>
     <script nonce="{{ csp_nonce('script') }}">
         window.defer(function () {
             let select = $('.integration');

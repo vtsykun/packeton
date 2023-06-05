@@ -9,6 +9,7 @@ use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\OAuthIntegration as App;
+use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Integrations\AppInterface;
 use Packeton\Integrations\Base\AppIntegrationTrait;
@@ -16,8 +17,10 @@ use Packeton\Integrations\Base\BaseIntegrationTrait;
 use Packeton\Integrations\Github\GithubResultPager;
 use Packeton\Integrations\IntegrationInterface;
 use Packeton\Integrations\LoginInterface;
-use Packeton\Integrations\Model\IntegrationUtils;
+use Packeton\Integrations\Model\AppUtils;
 use Packeton\Integrations\Model\OAuth2State;
+use Packeton\Service\Scheduler;
+use Psr\Cache\CacheItemInterface as CacheItem;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,6 +49,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected HttpClientInterface $httpClient,
         protected RouterInterface $router,
         protected OAuth2State $state,
+        protected Scheduler $scheduler,
         protected LockFactory $lock,
         protected ManagerRegistry $registry,
         protected \Redis $redis,
@@ -150,6 +154,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
 
         $response = $this->makeApiRequest($accessToken, 'GET', '/user');
 
+        $response['user_name'] = $response['username'] ?? null;
         $response['user_identifier'] = $response['email'];
         $response['external_id'] = isset($response['id']) ? "{$this->name}:{$response['id']}" : null;
 
@@ -318,7 +323,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
 
         $params = [
             '_driver' => 'gitlab',
-            '_no_api' => !($useApi = IntegrationUtils::useApiPref($this->getConfig(), $oauth2)),
+            '_no_api' => !($useApi = AppUtils::useApiPref($this->getConfig(), $oauth2)),
             'gitlab-domains' => ['gitlab.com', $urls['host']],
             'gitlab-oauth' => [$urls['host'] => $token['access_token']],
         ];
@@ -358,7 +363,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
                     . "See documentation for details";
             }
 
-            return ['status' => false, 'error' => IntegrationUtils::castError($e), 'status_message' => $statusMessage ?? null];
+            return ['status' => false, 'error' => AppUtils::castError($e), 'status_message' => $statusMessage ?? null];
         }
 
         if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
@@ -395,11 +400,88 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
                 $this->makeApiRequest($accessToken, 'DELETE', $isRepo ? "/projects/$orgId/hooks/$id" : "/groups/$orgId/hooks/$id");
                 return [];
             } catch (\Exception $e) {
-                return ['status' => false, 'error' => IntegrationUtils::castError($e), 'id' => $id];
+                return ['status' => false, 'error' => AppUtils::castError($e), 'id' => $id];
             }
         }
 
         return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array
+    {
+        if (null === $payload || !($id = $payload['project']['id'] ?? null)) {
+            return null;
+        }
+
+        $kind = $payload['object_kind'] ?? 'push';
+        if (in_array($kind, ['push', 'tag_push'])) {
+            return $this->processPushEvent($accessToken, $payload, $id);
+        }
+
+        return null;
+    }
+
+    protected function processPushEvent(App $app, array $payload, $id): ?array
+    {
+        $repo = $this->registry->getRepository(Package::class);
+        $pkg = $repo->findOneBy(['externalRef' => $externalId = "{$this->name}:$id"]);
+        if (null !== $pkg) {
+            $pkg->setAutoUpdated(true);
+            $job = $this->scheduler->scheduleUpdate($pkg);
+            return ['status' => 'success', 'job' => $job->getId(), 'code' => 202];
+        }
+
+        $config = $this->getConfig();
+        if (!AppUtils::enableSync($config, $app)
+            || !($path = $payload['project']['path_with_namespace'] ?? null)
+            || AppUtils::isRepoExcluded($app, $path, $this->organizations($app), 'full_path')
+        ) {
+            return null;
+        }
+
+        $hasNewComposer = $this->getCached($app, "hasComposer:$path", callback: function (CacheItem $item) use ($app, $id, $payload, $repo) {
+            $item->expiresAfter(7*86400);
+            $token = $this->refreshToken($app);
+            try {
+                $ref = $payload['project']['default_branch'];
+                $data = $this->makeApiRequest($token, 'GET', "/projects/$id/repository/files/composer.json?ref=$ref");
+                $content = base64_decode($data['content'] ?? '');
+                $content = $content ? json_decode($content, true) : $content;
+            } catch (\Throwable $e) {
+                $this->logger->error($e->getMessage(), ['e' => $e]);
+                return false;
+            }
+
+            if (!is_string($name = ($content['name'] ?? null))) {
+                return false;
+            }
+
+            $pkg = $repo->findOneByName($name);
+            return $pkg === null;
+        });
+
+        $newAdded = false;
+        $commits = $payload['commits'] ?? [];
+        foreach ($commits as $commit) {
+            $files = array_merge((array)($commit['added'] ?? []), (array)($commit['modified'] ?? []));
+            if (in_array('composer.json', $files)) {
+                $newAdded = true;
+                break;
+            }
+        }
+
+        if (false === $newAdded && false === $hasNewComposer) {
+            return null;
+        }
+
+        return $this->getCached($app, "sync:$path", false === $newAdded, function (CacheItem $item) use ($externalId, $app) {
+            $item->expiresAfter(86400);
+            $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $externalId, 'app' => $app->getId()], $app->getId());
+            return ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
+        });
     }
 
     protected function getApiUrl(string $path): string

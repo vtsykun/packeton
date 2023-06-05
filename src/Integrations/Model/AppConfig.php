@@ -24,6 +24,11 @@ class AppConfig
         return $this->config['clone_preference'] ?? 'api';
     }
 
+    public function enableSync(): bool
+    {
+        return $this->config['repos_synchronization'] ?? false;
+    }
+
     public function isLogin(): bool
     {
         return $this->config['oauth2_login'] ?? false;

@@ -7,7 +7,7 @@ namespace Packeton\EventListener;
 use Packeton\Event\PackageEvent;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Integrations\IntegrationRegistry;
-use Packeton\Integrations\Model\IntegrationUtils;
+use Packeton\Integrations\Model\AppUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
@@ -34,7 +34,7 @@ class IntegrationListener
                 $package->setAutoUpdated(true);
             }
         } catch (\Throwable $e) {
-            $info = ['status' => false, 'error' => IntegrationUtils::castError($e, $app ?? null)];
+            $info = ['status' => false, 'error' => AppUtils::castError($e, $app ?? null)];
         }
 
         $package->setWebhookInfo($info);

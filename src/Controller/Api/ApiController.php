@@ -364,7 +364,7 @@ class ApiController extends AbstractController
 
         try {
             $app = $this->integrations->findApp($oauth->getAlias());
-            return $app->receiveHooks($request, $this->getJsonPayload($request), $oauth);
+            return $app->receiveHooks($oauth, $request, $this->getJsonPayload($request));
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage(), ['e' => $e]);
         }

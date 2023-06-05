@@ -55,24 +55,41 @@ class OAuthController extends AbstractController
     #[Route('/oauth2/{alias}/install', name: 'oauth_install')]
     public function install(string $alias, Request $request): Response
     {
-        $integration = $this->findApp($alias);
-        $accessToken = $integration->getAccessToken($request, ['app' => true]);
+        $app = $this->findApp($alias);
+        $accessToken = $app->getAccessToken($request, ['app' => true]);
 
         $owner = $this->getUser()?->getUserIdentifier() ?: $this->state->get('username');
 
-        $oauth = new OAuthIntegration();
-        $oauth->setOwner($owner)
-            ->setAccessToken($accessToken)
-            ->setHookSecret(sha1(random_bytes(20)))
-            ->setAlias($alias);
+        $oauth = ($id = $this->state->get('_regenerate_id')) ?
+            $this->registry->getRepository(OAuthIntegration::class)->find((int) $id) : null;
+
+        if (null === $oauth) {
+            $oauth = new OAuthIntegration();
+            $oauth->setOwner($owner)
+                ->setHookSecret(sha1(random_bytes(20)))
+                ->setAlias($alias);
+        }
+
+        $oauth->setAccessToken($accessToken);
+
+        try {
+            if ($app instanceof LoginInterface) {
+                $user = $app->fetchUser($accessToken);
+                $oauth->setLabel($user['user_name'] ?? null);
+            }
+        } catch (\Throwable $e) {
+        }
 
         $em = $this->registry->getManager();
         $em->persist($oauth);
         $em->flush();
 
+        $this->state->set('_regenerate_id', null);
+        $this->state->save();
+
         $route = $this->generateUrl('integration_index', ['id' => $oauth->getId(), 'alias' => $alias]);
         if (null === $this->getUser()) {
-            // Save redirect without session
+            // safe redirect without usage session when same site = strict
             $session = $request->getSession();
             $request->cookies->set($session->getName(), $session->getId());
             return $this->render('user/redirect.html.twig', ['route' => $route]);
