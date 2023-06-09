@@ -86,8 +86,7 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
             throw new BadCredentialsException('Bad credentials.');
         }
 
-        $allowed = PatUserScores::getAllowedRoutes($user->getScores());
-        if (!in_array($route, $allowed, true)) {
+        if (!PatUserScores::isAllowed($user->getScores(), $route)) {
             throw new CustomUserMessageAccountStatusException('This access token does not grant access for this route');
         }
     }

@@ -119,7 +119,6 @@
                     wrap.select2({'data': result});
                     wrap.html(options.join('')).change();
                     wrap.val(prev);
-
                 }
             }
         });

@@ -6,9 +6,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\ObjectRepository;
 use Packeton\Package\RepTypes;
+use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 
-#[ORM\Entity(repositoryClass: 'Packeton\Repository\PackageRepository')]
+#[ORM\Entity(repositoryClass: PackageRepository::class)]
 #[ORM\Table(name: 'package')]
 #[ORM\UniqueConstraint(name: 'package_name_idx', columns: ['name'])]
 #[ORM\Index(columns: ['indexedat'], name: 'indexed_idx')]
@@ -87,19 +88,26 @@ class Package
     #[ORM\Column(name: 'replacementpackage', type: 'string', nullable: true)]
     private ?string $replacementPackage = null;
 
-    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\Package')]
+    #[ORM\ManyToOne(targetEntity: Package::class)]
     #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Package $parentPackage = null;
 
     #[ORM\Column(name: 'updatefailurenotified', type: 'boolean', options: ['default' => false])]
     private bool $updateFailureNotified = false;
 
-    #[ORM\ManyToOne(targetEntity: 'Packeton\Entity\SshCredentials')]
+    #[ORM\ManyToOne(targetEntity: SshCredentials::class)]
     #[ORM\JoinColumn(name: 'credentials_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?SshCredentials $credentials = null;
 
+    #[ORM\ManyToOne(targetEntity: OAuthIntegration::class)]
+    #[ORM\JoinColumn(name: 'integration_id', referencedColumnName: 'id', nullable: true)]
+    private ?OAuthIntegration $integration = null;
+
     #[ORM\Column(name: 'serialized_data', type: 'json', nullable: true)]
     private ?array $serializedData = null;
+
+    #[ORM\Column(name: 'external_ref', length: 255, nullable: true)]
+    private ?string $externalRef = null;
 
     /**
      * @internal
@@ -444,7 +452,9 @@ class Package
         $repoConfig = [
             'repoType' => $this->repoType ?: 'vcs',
             'subDirectory' => $this->getSubDirectory(),
-            'archives' => $this->getArchives()
+            'archives' => $this->getArchives(),
+            'oauth2' => $this->integration,
+            'externalRef' => $this->externalRef,
         ];
 
         return array_filter($repoConfig);
@@ -768,6 +778,30 @@ class Package
     public function setCredentials(SshCredentials $credentials = null)
     {
         $this->credentials = $credentials;
+        return $this;
+    }
+
+    public function getIntegration(): ?OAuthIntegration
+    {
+        return $this->integration;
+    }
+
+    public function setIntegration(?OAuthIntegration $integration): self
+    {
+        $this->integration = $integration;
+
+        return $this;
+    }
+
+    public function getExternalRef(): ?string
+    {
+        return $this->externalRef;
+    }
+
+    public function setExternalRef(?string $externalRef): self
+    {
+        $this->externalRef = $externalRef;
+
         return $this;
     }
 

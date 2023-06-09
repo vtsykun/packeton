@@ -109,10 +109,53 @@ class PacketonUtils
         return rtrim($baseDir, '/');
     }
 
-    public static function matchGlob(array $listOf, ?string $globs, ?string $excluded = null, ?string $included = null, string $suffix = '/composer.json'): array
+    public static function buildChoices(array $listOf, string $key, string $value = null): array
     {
-        $excluded = $excluded ? explode("\n", $excluded) : [];
-        $globs = $globs ? explode("\n", $globs) : [];
+        return array_combine(array_column($listOf, $key), $value ? array_column($listOf, $value) : $listOf);
+    }
+
+    public static function matchGlobAll(array $listOf, null|string|array $globs, string|array $excluded = null): array
+    {
+        $excluded = is_string($excluded) ? explode("\n", $excluded) : ($excluded ?: []);
+        $globs = is_string($globs) ? explode("\n", $globs) : ($globs ?: []);
+
+        $globs = array_map('trim', $globs);
+        $excluded = array_map('trim', $excluded);
+
+        $listOfPackages = [];
+        if ($globs) {
+            foreach ($globs as $glob) {
+                $filterRegex = Glob::toRegex($glob);
+                $listOfPackages = array_merge(
+                    $listOfPackages,
+                    array_filter($listOf, fn($name) => preg_match($filterRegex, $name))
+                );
+            }
+        } else {
+            $listOfPackages = $listOf;
+        }
+
+        $listOfPackages = array_unique($listOfPackages);
+        $listOfPackages = array_map(fn($f) => trim($f, '/'), $listOfPackages);
+
+        $listOfPackages = array_combine($listOfPackages, $listOfPackages);
+        foreach ($excluded as $exclude) {
+            $exclude = trim($exclude, '/');
+            if (isset($listOfPackages[$exclude])) {
+                unset($listOfPackages[$exclude]);
+            }
+        }
+
+        $listOfPackages = array_values($listOfPackages);
+        sort($listOfPackages);
+
+        return $listOfPackages;
+    }
+
+    public static function matchGlob(array $listOf, null|string|array $globs, string|array $excluded = null, ?string $suffix = '/composer.json'): array
+    {
+        $excluded = is_string($excluded) ? explode("\n", $excluded) : ($excluded ?: []);
+        $globs = is_string($globs) ? explode("\n", $globs) : ($globs ?: []);
         if (empty($globs)) {
             return [];
         }
@@ -125,7 +168,7 @@ class PacketonUtils
             $filterRegex = Glob::toRegex($glob);
             $listOfPackages = array_merge(
                 $listOfPackages,
-                array_filter($listOf, fn($name) => preg_match($filterRegex, $name) && str_ends_with($name, $suffix))
+                array_filter($listOf, fn($name) => preg_match($filterRegex, $name) && (null === $suffix || str_ends_with($name, $suffix)))
             );
         }
 
@@ -135,7 +178,7 @@ class PacketonUtils
         $listOfPackages = array_combine($listOfPackages, $listOfPackages);
         foreach ($excluded as $exclude) {
             $exclude = trim($exclude, '/');
-            $exclude1 = $exclude . '/' . trim($suffix, '/');
+            $exclude1 = $exclude . '/' . ($suffix ? trim($suffix, '/') : '');
             if (isset($listOfPackages[$exclude]) || isset($listOfPackages[$exclude1])) {
                 unset($listOfPackages[$exclude], $listOfPackages[$exclude1]);
             }

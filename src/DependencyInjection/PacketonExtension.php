@@ -5,20 +5,43 @@ declare(strict_types=1);
 namespace Packeton\DependencyInjection;
 
 use Packeton\Attribute\AsWorker;
-use Packeton\Package\InMemoryDumper;
+use Packeton\Integrations\Factory\OAuth2FactoryInterface;
+use Packeton\Integrations\Github\GithubOAuth2Factory;
+use Packeton\Integrations\Gitlab\GitLabOAuth2Factory;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 class PacketonExtension extends Extension
 {
+    /** @var OAuth2FactoryInterface[]  */
+    protected $factories = [];
+
+    public function __construct()
+    {
+        $this->addFactories(new GithubOAuth2Factory());
+        $this->addFactories(new GitLabOAuth2Factory());
+    }
+
+    public function addFactories(OAuth2FactoryInterface $factory): void
+    {
+        $this->factories[] = $factory;
+    }
+
+    /**
+     * @return OAuth2FactoryInterface[]
+     */
+    public function getFactories(): array
+    {
+        return $this->factories;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $configuration = new Configuration();
+        $configuration = new Configuration($this->factories);
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('packagist_web.rss_max_items', $config['rss_max_items']);
@@ -39,6 +62,8 @@ class PacketonExtension extends Extension
         $container->setParameter('packeton_jws_algo', $config['jwt_authentication']['algo'] ?? 'EdDSA');
 
         $container->setParameter('.packeton_repositories', $config['mirrors'] ?? []);
+        $container->setParameter('.packeton_integrations', $config['integrations'] ?? []);
+
         $container->setParameter('packeton_artifact_paths', $config['artifacts']['allowed_paths'] ?? []);
         $container->setParameter('packeton_artifact_storage', $config['artifacts']['artifact_storage'] ?? null);
         $container->setParameter('packeton_artifact_types', $config['artifacts']['support_types'] ?? []);

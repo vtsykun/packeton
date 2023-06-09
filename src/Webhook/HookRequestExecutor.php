@@ -10,8 +10,6 @@ use Packeton\Webhook\Twig\InterruptException;
 use Packeton\Webhook\Twig\WebhookContext;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpClient\CurlHttpClient;
-use Symfony\Component\HttpClient\NoPrivateNetworkHttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
@@ -21,7 +19,9 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
     public function __construct(
         private readonly RequestResolver $requestResolver,
         private readonly HmacOpensslCrypter $crypter,
-    ) {}
+        private readonly HttpClientInterface $noPrivateHttpClient,
+    ) {
+    }
 
     /**
      * @param Webhook $webhook
@@ -32,9 +32,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
     public function executeWebhook(Webhook $webhook, array $variables = [], HttpClientInterface $client = null)
     {
         $variables['webhook'] = $webhook;
-        if (null === $client) {
-            $client = new NoPrivateNetworkHttpClient(new CurlHttpClient(['max_duration' => 60]));
-        }
+        $client ??= $this->noPrivateHttpClient;
 
         $maxAttempt = 3;
         try {

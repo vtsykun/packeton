@@ -11,6 +11,7 @@ use Packeton\Composer\MetadataMinifier;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Event\PackageEvent;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Package\InMemoryDumper;
 use Packeton\Repository\VersionRepository;
@@ -39,6 +40,14 @@ class PackageManager
         protected MetadataMinifier $metadataMinifier,
         protected \Redis $redis,
     ) {
+    }
+
+    public function insetPackage(Package $package): void
+    {
+        $this->providerManager->insertPackage($package);
+        $this->dispatcher->dispatch(new PackageEvent($package), PackageEvent::PACKAGE_CREATE);
+        $em = $this->doctrine->getManager();
+        $em->flush();
     }
 
     public function deletePackage(Package $package)

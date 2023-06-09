@@ -2,41 +2,41 @@
 
 namespace Packeton\Controller;
 
+use Composer\Package\Version\VersionParser;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Composer\Repository\Vcs\TreeGitDriver;
+use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Entity\Version;
+use Packeton\Form\Model\MaintainerRequest;
+use Packeton\Form\Type\Package\AbandonedType;
+use Packeton\Form\Type\Package\AddMaintainerRequestType;
+use Packeton\Form\Type\RemoveMaintainerRequestType;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
 use Packeton\Package\RepTypes;
-use Packeton\Service\Scheduler;
-use Packeton\Util\ChangelogUtils;
-use Doctrine\ORM\NoResultException;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
-use Packeton\Form\Model\MaintainerRequest;
-use Packeton\Form\Type\AbandonedType;
-use Packeton\Entity\Package;
-use Packeton\Entity\Version;
-use Packeton\Form\Type\AddMaintainerRequestType;
-use Packeton\Form\Type\RemoveMaintainerRequestType;
+use Packeton\Service\Scheduler;
+use Packeton\Util\ChangelogUtils;
 use Packeton\Util\PacketonUtils;
+use Pagerfanta\Adapter\FixedAdapter;
+use Pagerfanta\Pagerfanta;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Routing\Annotation\Route;
-use Composer\Package\Version\VersionParser;
-use Pagerfanta\Adapter\FixedAdapter;
-use Pagerfanta\Pagerfanta;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -114,7 +114,7 @@ class PackageController extends AbstractController
         $formType = RepTypes::getFormType($type);
         $form = $this->createForm($formType, $package, [
             'action' => $this->generateUrl('submit', ['type' => $type]),
-            'validation_groups' => ['Create'],
+            'validation_groups' => ['Create', 'Default'],
             'is_created' => true,
         ]);
 
@@ -129,7 +129,7 @@ class PackageController extends AbstractController
                 $em->persist($package);
                 $em->flush();
 
-                $this->providerManager->insertPackage($package);
+                $this->container->get(PackageManager::class)->insetPackage($package);
                 $this->addFlash('success', $package->getName().' has been added to the package list, the repository will now be crawled.');
 
                 return new RedirectResponse($this->generateUrl('view_package', ['name' => $package->getName()]));

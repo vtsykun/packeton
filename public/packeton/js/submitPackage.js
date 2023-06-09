@@ -14,7 +14,7 @@
                 });
                 $('#submit-package-form').prepend('<ul class="list-unstyled package-errors">'+html+'</ul>');
             } else {
-                if (data.similar.length) {
+                if (data.similar && data.similar.length) {
                     let $similar = $('<ul class="list-unstyled similar-packages">');
                     let limit = data.similar.length > showSimilarMax ? showSimilarMax : data.similar.length;
                     for ( let i = 0; i < limit; i++ ) {

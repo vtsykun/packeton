@@ -4,6 +4,8 @@ namespace Packeton\DependencyInjection;
 
 use Firebase\JWT\JWT;
 use Packeton\Composer\MetadataFormat;
+use Packeton\Integrations\Factory\OAuth2FactoryInterface;
+use Packeton\Integrations\Model\AppUtils;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -16,6 +18,10 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
+    public function __construct(protected $factories)
+    {
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -89,6 +95,7 @@ class Configuration implements ConfigurationInterface
             })->end();
 
         $this->addMirrorsRepositoriesConfiguration($rootNode);
+        $this->addIntegrationSection($rootNode, $this->factories);
 
         return $treeBuilder;
     }
@@ -100,7 +107,7 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('mirrors')
                     ->useAttributeAsKey('name')
-                    ->prototype('array');
+                    ->arrayPrototype();
 
         $jsonNormalizer = static function ($json) {
             if (\is_string($json) && \is_array($opt = @json_decode($json, true))) {
@@ -193,5 +200,93 @@ class Configuration implements ConfigurationInterface
                     return $provider;
                 })
             ->end();
+    }
+
+    /**
+     * @param ArrayNodeDefinition $rootNode
+     * @param array|\Packeton\Integrations\Factory\OAuth2FactoryInterface[] $factories
+     */
+    private function addIntegrationSection(ArrayNodeDefinition $rootNode, array $factories)
+    {
+        $nodeBuilder = $rootNode
+            ->children()
+                ->arrayNode('integrations')
+                    ->disallowNewKeysInSubsequentConfigs()
+                    ->useAttributeAsKey('name')
+                    ->arrayPrototype();
+
+        $nodeBuilder->children()
+            ->booleanNode('enabled')->defaultTrue()->end()
+            ->scalarNode('base_url')->end()
+            ->enumNode('clone_preference')->values(AppUtils::$clonePref)->end()
+            ->booleanNode('repos_synchronization')->end()
+            ->scalarNode('webhook_url')->info('Static current host')->end()
+            ->scalarNode('svg_logo')->end()
+            ->scalarNode('logo')->end()
+            ->scalarNode('login_title')->end()
+            ->booleanNode('allow_login')
+                ->defaultFalse()
+            ->end()
+            ->booleanNode('allow_register')
+                ->defaultFalse()
+            ->end()
+            ->arrayNode('default_roles')
+                ->scalarPrototype()->end()
+            ->end()
+            ->scalarNode('icon')->end()
+            ->scalarNode('description')->end();
+
+        foreach ($factories as $factory) {
+            $name = \str_replace('-', '_', $factory->getKey());
+            $factoryNode = $nodeBuilder->children()
+                ->arrayNode($name)
+                ->canBeUnset();
+
+            $factory->addConfiguration($factoryNode);
+        }
+
+        $icons = $this->defaultIconsData();
+        $nodeBuilder->beforeNormalization()
+            ->always()
+            ->then(static function ($provider) use ($icons) {
+                $keys = array_intersect(array_keys($provider), array_keys($icons));
+                $name = reset($keys);
+                if (!$name || !isset($icons[$name])) {
+                    return $provider;
+                }
+
+                $provider += $icons[$name];
+                return $provider;
+            })
+            ->end();
+
+        //
+        $nodeBuilder->end();
+    }
+
+    private function defaultIconsData(): array
+    {
+        return [
+            'github' => [
+                'logo' => '/packeton/img/logo/github.png',
+                'svg_logo' => 'svg/github.html.twig',
+                'login_title' => 'Login with GitHub',
+            ],
+            'gitlab' => [
+                'logo' => '/packeton/img/logo/gitlab.png',
+                'svg_logo' => 'svg/gitlab.html.twig',
+                'login_title' => 'Login with GitLab',
+            ],
+            'gitea' => [
+                'logo' => '/packeton/img/logo/gitea.png',
+                'svg_logo' => 'svg/gitea.html.twig',
+                'login_title' => 'Login with Gitea',
+            ],
+            'bitbucket' => [
+                'logo' => '/packeton/img/logo/bitbucket.png',
+                'svg_logo' => 'svg/gitea.html.twig',
+                'login_title' => 'Login with Bitbucket',
+            ]
+        ];
     }
 }

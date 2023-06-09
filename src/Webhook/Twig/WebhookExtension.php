@@ -9,9 +9,7 @@ use Packeton\Entity\Webhook;
 use Packeton\Util\ChangelogUtils;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Component\HttpClient\NoPrivateNetworkHttpClient;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -22,22 +20,15 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
 {
     use LoggerAwareTrait;
 
-    private $registry;
-    private $changelogUtils;
-    private $redis;
-
     /** @var WebhookContext */
     private $context;
 
     public function __construct(
-        ManagerRegistry $registry,
-        ChangelogUtils $changelogUtils,
-        \Redis $redis
+        private readonly ManagerRegistry $registry,
+        private readonly ChangelogUtils $changelogUtils,
+        private readonly \Redis $redis,
+        private readonly HttpClientInterface $noPrivateHttpClient,
     ) {
-        $this->registry = $registry;
-        $this->changelogUtils = $changelogUtils;
-        $this->redis = $redis;
-        $this->logger = new NullLogger();
     }
 
     /**
@@ -92,9 +83,9 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
     {
         try {
             preg_match_all($regex, $content, $matches);
-            $this->logger->debug(sprintf('preg_match_all result "%s": "%s"', $regex, json_encode($matches)));
+            $this->logger?->debug(sprintf('preg_match_all result "%s": "%s"', $regex, json_encode($matches)));
         } catch (\Throwable $e) {
-            $this->logger->error(sprintf('Error in regex "%s": %s', $regex, $e->getMessage()));
+            $this->logger?->error(sprintf('Error in regex "%s": %s', $regex, $e->getMessage()));
             return [];
         }
 
@@ -142,12 +133,12 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
      *
      * {@inheritDoc}
      */
-    public function hook_function_hash_mac($algo, $value, $key)
+    public function hook_function_hash_mac($algo, $value, string $key, bool $binary = false)
     {
         try {
-            return hash_hmac($algo, $value, $key);
+            return hash_hmac($algo, (string)$value, $key, $binary);
         } catch (\Throwable $exception) {
-            $this->logger->error('hash_hmac error: ' . $exception->getMessage());
+            $this->logger?->error('hash_hmac error: ' . $exception->getMessage());
         }
 
         return null;
@@ -167,12 +158,11 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         $isRaw = $options['raw'] ?? false;
 
         unset($options['method'], $options['raw']);
-        $client = new NoPrivateNetworkHttpClient(HttpClient::create(['max_duration' => 60]));
 
         try {
-            $response = $client->request($method, $url, $options);
+            $response = $this->noPrivateHttpClient->request($method, $url, $options);
         } catch (\Throwable $exception) {
-            $this->logger->error('Http request failed: ' . $exception->getMessage());
+            $this->logger?->error('Http request failed: ' . $exception->getMessage());
             return null;
         }
 
@@ -184,7 +174,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
             $content = $response->getContent(false);
             $array = $content ? @json_decode($content, true) : null;
         } catch (\Throwable $exception) {
-            $this->logger->warning('Http get response failed: ' . $exception->getMessage());
+            $this->logger?->warning('Http get response failed: ' . $exception->getMessage());
         }
 
         if (false === $isRaw) {
@@ -231,7 +221,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
         if (null !== $hook) {
             $this->context[WebhookContext::CHILD_WEBHOOK][] = [$hook, $context];
         } else {
-            $this->logger->warning(sprintf('webhook %s not found', $hookId));
+            $this->logger?->warning(sprintf('webhook %s not found', $hookId));
         }
     }
 
@@ -246,7 +236,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
             $value = json_encode($value);
         }
 
-        $this->logger->log($level, $value);
+        $this->logger?->log($level, $value);
     }
 
     /**

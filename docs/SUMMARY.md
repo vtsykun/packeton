@@ -25,6 +25,7 @@
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
     - [LDAP Configuration](authentication-ldap.md)
+  - [OAuth2 Integrations](oauth2.md)
 
 # Development
   - [Contributing](dev/CONTRIBUTING.md)

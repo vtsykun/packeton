@@ -571,6 +571,7 @@ button {
     padding: 7px 11px 6px 9px;
     border-radius: 2px;
     box-shadow: none;
+    border-color: inherit;
 }
 
 .form-control[data-api-token] {
@@ -773,12 +774,16 @@ input:focus:invalid:focus, textarea:focus:invalid:focus, select:focus:invalid:fo
     font-size: 12px;
 }
 
-.btn.loading, .btn.loading:hover, .btn.loading:active, .btn.loading:focus {
+a.loading .btn, .btn.loading, .btn.loading:hover, .btn.loading:active, .btn.loading:focus, a.loading .btn:focus, a.loading .btn:active {
     background-image: url("../img/loader.gif");
     background-position: 95% 50%;
     background-repeat: no-repeat;
     pointer-events: none;
     opacity: 0.75;
+}
+
+a.loading, a:has(> .btn.loading ) {
+    pointer-events: none;
 }
 
 .btn-default {
@@ -1829,4 +1834,15 @@ label.required em {
 }
 .well-card .title {
     font-size: 26px !important;
+}
+
+.select2-selection {
+    min-height: 33px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 33px!important;
+}
+.select2-selection__rendered {
+    padding-top: 2px;
 }

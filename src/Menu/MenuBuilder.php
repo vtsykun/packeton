@@ -5,6 +5,7 @@ namespace Packeton\Menu;
 use Knp\Menu\FactoryInterface;
 use Knp\Menu\ItemInterface;
 use Packeton\Entity\User;
+use Packeton\Integrations\IntegrationRegistry;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -16,7 +17,8 @@ class MenuBuilder
         private readonly FactoryInterface $factory,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly TranslatorInterface $translator,
-        private readonly AuthorizationCheckerInterface $checker
+        private readonly AuthorizationCheckerInterface $checker,
+        private readonly IntegrationRegistry $integrations
     ) {}
 
     public function createUserMenu()
@@ -51,6 +53,9 @@ class MenuBuilder
         $menu->addChild($this->translator->trans('menu.ssh_keys'), ['label' => 'menu.ssh_keys_icon', 'route' => 'user_add_sshkey', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.webhooks'), ['label' => 'menu.webhooks_icon', 'route' => 'webhook_index', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.proxies'), ['label' => 'menu.proxies_icon', 'route' => 'proxies_list', 'extras' => ['safe_label' => true]]);
+        if ($this->integrations->getNames()) {
+            $menu->addChild($this->translator->trans('menu.integrations'), ['label' => 'menu.integrations_icon', 'route' => 'integration_list', 'extras' => ['safe_label' => true]]);
+        }
 
         return $menu;
     }

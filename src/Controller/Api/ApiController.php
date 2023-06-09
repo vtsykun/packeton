@@ -7,9 +7,12 @@ namespace Packeton\Controller\Api;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Controller\ControllerTrait;
+use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
+use Packeton\Integrations\IntegrationRegistry;
+use Packeton\Model\AutoHookUser;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
 use Packeton\Service\Scheduler;
@@ -34,7 +37,9 @@ class ApiController extends AbstractController
         protected DownloadManager $downloadManager,
         protected LoggerInterface $logger,
         protected ValidatorInterface $validator,
-    ){}
+        protected IntegrationRegistry $integrations
+    ) {
+    }
 
     #[Route('/api/create-package', name: 'generic_create', methods: ['POST'])]
     public function createPackageAction(Request $request): Response
@@ -64,6 +69,8 @@ class ApiController extends AbstractController
             $em = $this->registry->getManager();
             $em->persist($package);
             $em->flush();
+
+            $this->container->get(PackageManager::class)->insetPackage($package);
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), ['exception', $e]);
             return new JsonResponse(['status' => 'error', 'message' => 'Error saving package'], 500);
@@ -74,17 +81,38 @@ class ApiController extends AbstractController
         return new JsonResponse(['status' => 'success', 'job' => $job->getId()], 202);
     }
 
+    #[Route('/api/hooks/{alias}/{id}', name: 'api_integration_postreceive')]
+    public function integrationHook(Request $request, string $alias, #[Vars] OAuthIntegration $oauth): Response
+    {
+        if ($alias !== $oauth->getAlias()) {
+            return new JsonResponse(['error' => "App $alias is not found"], 409);
+        }
+
+        $response = $this->receiveIntegrationHook($request, $oauth);
+        if (null !== $response) {
+            return new JsonResponse($response, $response['code'] ?? 200);
+        }
+
+        return $this->updatePackageAction($request, fallback: true);
+    }
+
     #[Route('/api/github', name: 'github_postreceive')]
     #[Route('/api/bitbucket', name: 'bitbucket_postreceive')]
     #[Route('/api/update-package', name: 'generic_postreceive')]
     #[Route('/api/update-package/{name}', name: 'generic_named_postreceive', requirements: ['name' => '%package_name_regex%'])]
-    public function updatePackageAction(Request $request, #[Vars] Package $package = null): Response
+    public function updatePackageAction(Request $request, #[Vars] Package $package = null, bool $fallback = false): Response
     {
         // parse the payload
         $payload = $this->getJsonPayload($request);
 
         if (!$payload && !$request->get('composer_package_name') && null === $package) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing payload parameter'], 406);
+        }
+
+        // May helpfully for GitLab Packagist Integrations. Replacement for group webhooks that enabled only for PAID EE version
+        // See docs how to use GitLab Integrations
+        if (false === $fallback && $this->getUser() instanceof AutoHookUser && null !== ($response = $this->receiveIntegrationHook($request))) {
+            return new JsonResponse($response, $response['code'] ?? 200);
         }
 
         $packages = [$package];
@@ -322,6 +350,26 @@ class ApiController extends AbstractController
         $packages = $this->findPackagesByUrl($url, $urlRegex);
 
         return $this->schedulePostJobs($packages);
+    }
+
+    protected function receiveIntegrationHook(Request $request, OAuthIntegration $oauth = null): ?array
+    {
+        $user = $this->getUser();
+        if (null === $oauth && $user instanceof AutoHookUser) {
+            $oauth = $this->registry->getRepository(OAuthIntegration::class)->find((int) $user->getHookIdentifier());
+            if (null === $oauth) {
+                return null;
+            }
+        }
+
+        try {
+            $app = $this->integrations->findApp($oauth->getAlias());
+            return $app->receiveHooks($oauth, $request, $this->getJsonPayload($request));
+        } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage(), ['e' => $e]);
+        }
+
+        return null;
     }
 
     /**

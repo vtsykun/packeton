@@ -37,4 +37,9 @@ class PatUserScores
 
         return array_unique($routes);
     }
+
+    public static function isAllowed(string|array $scores, $route): bool
+    {
+        return in_array($route, self::getAllowedRoutes($scores), true);
+    }
 }

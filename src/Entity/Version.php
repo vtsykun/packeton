@@ -16,9 +16,10 @@ use Composer\Package\Version\VersionParser;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Packeton\Composer\MetadataMinifier;
+use Packeton\Repository\VersionRepository;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity(repositoryClass: 'Packeton\Repository\VersionRepository')]
+#[ORM\Entity(repositoryClass: VersionRepository::class)]
 #[ORM\Table(name: 'package_version')]
 #[ORM\UniqueConstraint(name: 'pkg_ver_idx', columns: ['package_id', 'normalizedVersion'])]
 #[ORM\Index(columns: ['releasedAt'], name: 'release_idx')]

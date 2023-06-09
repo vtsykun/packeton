@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Composer\IO\NullIO;
+use Composer\Package\BasePackage;
 use Composer\Package\CompletePackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
@@ -15,9 +16,10 @@ use Packeton\Composer\PackagistFactory;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
+use Packeton\Integrations\IntegrationRegistry;
+use Packeton\Integrations\ZipballInterface;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
-use Packeton\Util\PacketonUtils;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
@@ -30,6 +32,7 @@ class DistManager
         private readonly PackagistFactory $packagistFactory,
         private readonly ManagerRegistry $registry,
         private readonly UploadZipballStorage $storage,
+        private readonly IntegrationRegistry $integrations,
         private readonly Filesystem $fs
     ) {
     }
@@ -47,6 +50,10 @@ class DistManager
                 $this->fs->touch($path);
             } catch (IOException) {}
             return $path;
+        }
+
+        if ($package->getRepoType() === RepTypes::INTEGRATION) {
+            return $this->downloadUsingIntegration($reference, $package, $version);
         }
 
         return RepTypes::isBuildInDist($package->getRepoType()) ?
@@ -70,39 +77,20 @@ class DistManager
             return $path;
         }
 
+        if ($package->getRepoType() === RepTypes::INTEGRATION) {
+            $version = 'dev-master';
+            return $this->downloadUsingIntegration($reference, $package);
+        }
+
         $repository = $this->createRepositoryAndIo($package);
         $versions = $repository->getPackages();
 
-        $selectedVersion = null;
-        foreach ($versions as $rootVersion) {
-            // Try to create zip archive by hash commit, select the first package and use it as template in composer API
-            if ($rootVersion instanceof CompletePackage) {
-                $selectedVersion = $rootVersion;
-                break;
-            }
-        }
+        $selectedVersion = $this->guessCompletePackage($reference, $versions);
 
         $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
 
         if ($selectedVersion instanceof CompletePackage) {
-            if ($selectedVersion->getDistReference() && str_contains($selectedVersion->getDistUrl(), $selectedVersion->getDistReference())) {
-                $selectedVersion->setDistUrl(str_replace($selectedVersion->getDistReference(), $reference, $selectedVersion->getDistUrl()));
-                $selectedVersion->setDistReference($reference);
-            } else {
-                $selectedVersion->setDistType(null);
-                $selectedVersion->setDistReference(null);
-                $selectedVersion->setDistUrl(null);
-            }
-
-            $selectedVersion->setDistMirrors(null);
-            $selectedVersion->setSourceMirrors(null);
-            if (str_contains($selectedVersion->getSourceUrl(), $selectedVersion->getSourceReference())) {
-                $selectedVersion->setSourceUrl(str_replace($selectedVersion->getSourceReference(), $reference, $selectedVersion->getSourceUrl()));
-            }
-
-            $selectedVersion->setSourceReference($reference);
-
             $version = 'dev-master'; // Used only for check ACL, if exists restriction by versions
             $fileName = $this->config->getFileName($reference, $version);
 
@@ -115,6 +103,96 @@ class DistManager
         }
 
         throw new \InvalidArgumentException('Not found reference for the package in cache or VCS');
+    }
+
+    public function downloadUsingIntegration(string $reference, Package $package, Version $version = null): string
+    {
+        if (!$oauth = $package->getIntegration()) {
+            throw new \InvalidArgumentException('Oauth2 credentials package->integration can not be empty for integration VCS package type');
+        }
+
+        $printVersion = $version ? $version->getVersion() : 'dev-master';
+        $repository = $this->createRepositoryAndIo($package);
+        /** @var  $archiveManager */
+        $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
+        $archiveManager->setOverwriteFiles(false);
+        $archiveManager->getDownloadManager()->setPreferDist(true);
+
+        $targetPath = $this->config->generateDistFileName($package->getName(), $reference, $printVersion);
+        $targetDir = $this->config->generateTargetDir($package->getName());
+        $fileName = $this->config->getFileName($reference, $printVersion);
+        $format = $this->config->getArchiveFormat();
+
+        if ($version !== null) {
+            if ($probe = $this->tryFromVersion($version)) {
+                try {
+                    $path = $archiveManager->tryFromGitArchive($probe, $format, $targetDir, $fileName);
+                    if ($path !== null) {
+                        return $path;
+                    }
+
+                } catch (\Throwable $e) {
+                    // Try from ref
+                }
+            }
+        }
+
+        $client = $this->integrations->get($oauth->getAlias());
+        if ($client instanceof ZipballInterface) {
+            return $client->zipballDownload($oauth, $package->getExternalRef(), $reference, $targetPath);
+        }
+
+        $versions = $repository->getPackages();
+        if (!$selectedVersion = $this->guessCompletePackage($reference, $versions)) {
+            throw new \InvalidArgumentException('Not found reference for the package in cache or VCS');
+        }
+
+        return $archiveManager->archive($selectedVersion, $format, $targetDir, $fileName);
+    }
+
+    /**
+     * @param string $reference
+     * @param CompletePackage[]|BasePackage[] $versions
+     * @return CompletePackage|null
+     */
+    private function guessCompletePackage(string $reference, array $versions): ?CompletePackage
+    {
+        $selectedVersion = $exampleVersion = null;
+        foreach ($versions as $rootVersion) {
+            if ($rootVersion instanceof CompletePackage) {
+                $exampleVersion = $rootVersion;
+            }
+
+            if ($reference === $rootVersion->getSourceReference() || $reference === $rootVersion->getDistReference()) {
+                $selectedVersion = $rootVersion;
+            }
+        }
+
+        if ($selectedVersion !== null) {
+            return $selectedVersion;
+        }
+
+        if ($exampleVersion instanceof CompletePackage) {
+            if ($exampleVersion->getDistReference() && str_contains($exampleVersion->getDistUrl(), $exampleVersion->getDistReference())) {
+                $exampleVersion->setDistUrl(str_replace($exampleVersion->getDistReference(), $reference, $exampleVersion->getDistUrl()));
+                $exampleVersion->setDistReference($reference);
+            } else {
+                $exampleVersion->setDistType(null);
+                $exampleVersion->setDistReference(null);
+                $exampleVersion->setDistUrl(null);
+            }
+
+            $exampleVersion->setDistMirrors(null);
+            $exampleVersion->setSourceMirrors(null);
+            if (str_contains($exampleVersion->getSourceUrl(), $exampleVersion->getSourceReference())) {
+                $exampleVersion->setSourceUrl(str_replace($exampleVersion->getSourceReference(), $reference, $exampleVersion->getSourceUrl()));
+            }
+
+            $exampleVersion->setSourceReference($reference);
+            return $exampleVersion;
+        }
+
+        return null;
     }
 
     private function lookupInCache(string $reference, string $packageName): ?array

@@ -29,6 +29,20 @@ class UserRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function findByOAuth2Data(array $data): ?User
+    {
+        $user = null;
+        if (isset($data['user_identifier'])) {
+            $user = $this->findOneByUsernameOrEmail($data['user_identifier']);
+        }
+
+        if (null === $user && isset($data['external_id'])) {
+            $user = $this->findOneBy(['githubId' => $data['external_id']]);
+        }
+
+        return $user;
+    }
+
     public function findOneByUsernameOrEmail(string $usernameOrEmail)
     {
         if (preg_match('/^.+@\S+\.\S+$/', $usernameOrEmail)) {

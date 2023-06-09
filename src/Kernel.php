@@ -6,6 +6,7 @@ use Packeton\DBAL\OpensslCrypter;
 use Packeton\DBAL\Types\EncryptedArrayType;
 use Packeton\DBAL\Types\EncryptedTextType;
 use Packeton\DependencyInjection\CompilerPass\ApiFirewallCompilerPass;
+use Packeton\DependencyInjection\CompilerPass\IntegrationsConfigCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\LdapServicesPass;
 use Packeton\DependencyInjection\CompilerPass\MirrorsConfigCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\UpdaterLocatorPass;
@@ -74,13 +75,14 @@ class Kernel extends BaseKernel
         $extension = $container->getExtension('security');
         $extension->addAuthenticatorFactory(new ApiHttpBasicFactory());
 
-        $container->registerExtension(new PacketonExtension());
+        $container->registerExtension($extension = new PacketonExtension());
 
         $container->addCompilerPass(new LdapServicesPass());
         $container->addCompilerPass(new ApiFirewallCompilerPass());
         $container->addCompilerPass(new WorkerLocatorPass());
         $container->addCompilerPass(new UpdaterLocatorPass());
         $container->addCompilerPass(new MirrorsConfigCompilerPass());
+        $container->addCompilerPass(new IntegrationsConfigCompilerPass($extension));
     }
 
     /**

@@ -36,6 +36,16 @@ trait PackageSerializedTrait
         $this->setSerializedField('excludedGlob', $glob);
     }
 
+    public function getWebhookInfo(): ?array
+    {
+        return $this->serializedData['webhook_info'] ?? null;
+    }
+
+    public function setWebhookInfo(?array $info): void
+    {
+        $this->setSerializedField('webhook_info', $info);
+    }
+
     public function isSkipNotModifyTag(): ?bool
     {
         return (bool)($this->serializedData['skip_empty_tag'] ?? null);

@@ -6,6 +6,7 @@ namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;
+use Packeton\Integrations\IntegrationRegistry;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
@@ -29,7 +30,7 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/login', name: 'login')]
-    public function loginAction(AuthenticationUtils $authenticationUtils): Response
+    public function loginAction(AuthenticationUtils $authenticationUtils, IntegrationRegistry $integrations): Response
     {
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
@@ -39,6 +40,7 @@ class SecurityController extends AbstractController
 
         return $this->render('user/login.html.twig', [
             'lastUsername' => $lastUsername,
+            'loginProviders' => $integrations->getLoginProviders(),
             'error' => $error,
         ]);
     }

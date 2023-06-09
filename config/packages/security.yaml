@@ -34,13 +34,15 @@ security:
             lazy: true
             pattern:      .*
             user_checker: Packeton\Security\UserChecker
+            provider: all_users
+            custom_authenticators:
+                - Packeton\Integrations\Security\OAuth2Authenticator
             '%default_login_provider%': '%default_login_options%'
 
             remember_me:
                 secret: '%env(APP_SECRET)%'
                 user_providers: all_users
                 name: pauth
-                always_remember_me: true
                 samesite: 'lax'
                 lifetime: 31104000 # 1y
             logout:       true
@@ -53,7 +55,7 @@ security:
         - { path: ^/_profiler/, roles: PUBLIC_ACCESS }
 
         - { path: ^/login$, roles: PUBLIC_ACCESS }
-        - { path: ^/login/, roles: PUBLIC_ACCESS }
+        - { path: (^(/login/|/oauth2/))+, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
 
         # Packagist
@@ -69,7 +71,7 @@ security:
         # Maintainers
         - { path: (^(/users/(.+)/packages))+, roles: ROLE_MAINTAINER }
         - { path: (^(/users/(.+)/favorites))+, roles: ROLE_MAINTAINER }
-        - { path: (^(/metadata/changes.json$|/explore|/jobs/|/archive/))+, roles: ROLE_MAINTAINER }
+        - { path: (^(/metadata/changes.json$|/explore|/jobs/|/archive/|/api/hooks/))+, roles: ROLE_MAINTAINER }
 
         # Secured part of the site
         # This config requires being logged for the whole site and having the admin role for the admin part.

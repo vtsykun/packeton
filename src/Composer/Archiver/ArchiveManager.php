@@ -42,6 +42,11 @@ class ArchiveManager extends ComposerArchiveManager
         $this->subDirectory = $subDir;
     }
 
+    public function getDownloadManager(): DownloadManager
+    {
+        return $this->downloadManager;
+    }
+
     /**
      * {@inheritdoc}
      */

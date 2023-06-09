@@ -16,10 +16,10 @@ class JobPersister
         $this->registry = $registry;
     }
 
-    public function persist(Job $job): void
+    public function persist(Job $job, bool $checkIfExists = true): void
     {
         $isExists = false;
-        if (null !== $job->getId()) {
+        if (null !== $job->getId() && $checkIfExists) {
             $isExists = (bool) $this->registry->getRepository(Job::class)
                 ->createQueryBuilder('j')
                 ->resetDQLPart('select')

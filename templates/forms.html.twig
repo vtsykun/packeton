@@ -153,3 +153,38 @@
         });
     </script>
 {%- endblock mono_repo_package_widget -%}
+
+{% block integration_package_widget %}
+    {{ form.repoType is defined ? form_row(form.repoType) }}
+    {{ form.integration is defined ? form_row(form.integration) }}
+    {{ form.externalRef is defined ? form_row(form.externalRef) }}
+
+    {{ form_rest(form) }}
+    <p>You must select an integration to add a package.</p>
+    <p> <b>Notice.</b> If you don't see the package in repository name select2 then you need to refresh the cache on the integration page.</p>
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+            let select = $('.integration');
+            select.on('change', (e) => {
+                let val = select.val();
+                let s2 = $('.jselect2');
+                if (!val) {
+                    s2.select2({'data': []});
+                    s2.html('').change();
+                    return;
+                }
+
+                let url = '/integration/all/' + val + '/repos';
+
+                $.ajax({
+                    url: url,
+                    success: (result) => {
+                        let options = result.map((item) => '<option value="' + item.id + '">' + item.text + '</option>');
+                        s2.select2({'data': result});
+                        s2.html(options.join('')).change();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

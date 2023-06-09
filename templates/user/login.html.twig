@@ -38,4 +38,27 @@
         <input class="btn btn-block btn-success btn-lg" type="submit" id="_submit" name="_submit" value="{{ 'security.login.submit'|trans }}" />
     </form>
     <hr>
+    {% if loginProviders|length > 0 %}
+        {% include 'user/login_providers.html.twig' %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+            let check = $('#remember_me');
+            check.on('change', () => {
+                let checked = check.is(':checked');
+                let expires = new Date();
+                expires.setTime(expires.getTime() + 1000 * 1800);
+                if (checked) {
+                    document.cookie = '_remember_me_flag=on;expires='+ expires.toUTCString() +';path=/';
+                } else {
+                    document.cookie = "_remember_me_flag=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                }
+
+            });
+            check.trigger('change');
+        });
+    </script>
 {% endblock %}

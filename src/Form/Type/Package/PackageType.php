@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Form\Type;
+namespace Packeton\Form\Type\Package;
 
 use Packeton\Entity\Package;
+use Packeton\Form\Type\CredentialType;
 use Packeton\Model\PackageManager;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;

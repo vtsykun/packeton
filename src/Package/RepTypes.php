@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Packeton\Package;
 
-use Packeton\Form\Type\ArtifactPackageType;
-use Packeton\Form\Type\MonoRepoPackageType;
-use Packeton\Form\Type\PackageType;
+use Packeton\Form\Type\Package\ArtifactPackageType;
+use Packeton\Form\Type\Package\IntegrationPackageType;
+use Packeton\Form\Type\Package\MonoRepoPackageType;
+use Packeton\Form\Type\Package\PackageType;
 
 class RepTypes
 {
     public const VCS = 'vcs';
     public const MONO_REPO = 'mono-repo';
     public const ARTIFACT = 'artifact';
+    public const INTEGRATION = 'integration';
     public const CUSTOM = 'artifact';
 
     private static $types = [
         self::ARTIFACT,
         self::MONO_REPO,
+        self::INTEGRATION,
         self::VCS,
     ];
 
@@ -26,6 +29,7 @@ class RepTypes
         return match ($type) {
             self::MONO_REPO => MonoRepoPackageType::class,
             self::ARTIFACT => ArtifactPackageType::class,
+            self::INTEGRATION => IntegrationPackageType::class,
             default => PackageType::class,
         };
     }
@@ -51,6 +55,7 @@ class RepTypes
         return match ($type) {
             self::MONO_REPO => self::MONO_REPO,
             self::ARTIFACT => self::ARTIFACT,
+            self::INTEGRATION => self::INTEGRATION,
             default => self::VCS,
         };
     }

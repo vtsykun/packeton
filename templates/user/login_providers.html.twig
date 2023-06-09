@@ -1,0 +1,27 @@
+<style>
+    .logo-wrapper svg path{
+        fill: white;
+    }
+    .logo-wrapper {
+        margin: 0 10px 0 0;
+        vertical-align: text-top;
+        font-size: 22px;
+    }
+</style>
+<div>
+    <p></p>
+    {% for provider in loginProviders %}
+        <a class="btn btn-block btn-primary btn-lg" href="{{ path('oauth_login', {'alias': provider['name']}) }}">
+            {% if provider['logo'] %}
+                <span class="logo-wrapper">
+                            {% if provider['logo'] starts with 'svg/' %}
+                                {% include provider['logo'] %}
+                            {% else %}
+                                {{ provider['logo']|raw }}
+                            {% endif %}
+                        </span>
+            {% endif %}
+            {{ provider['title'] }}
+        </a>
+    {% endfor %}
+</div>

@@ -8,14 +8,11 @@ use Packeton\Entity\Job;
 
 class Scheduler
 {
-    /** @var ManagerRegistry */
-    private $doctrine;
-    private $redis;
-
-    public function __construct(\Redis $redis, ManagerRegistry $doctrine)
-    {
-        $this->doctrine = $doctrine;
-        $this->redis = $redis;
+    public function __construct(
+        private readonly \Redis $redis,
+        private readonly ManagerRegistry $doctrine,
+        private readonly JobPersister $persister,
+    ) {
     }
 
     public function scheduleUpdate($packageOrId, bool $updateEqualRefs = false, bool $deleteBefore = false, \DateTimeInterface $executeAfter = null): Job
@@ -42,6 +39,35 @@ class Scheduler
         }
 
         return $this->createJob('package:updates', ['id' => $packageOrId, 'update_equal_refs' => $updateEqualRefs, 'delete_before' => $deleteBefore], $packageOrId, $executeAfter);
+    }
+
+    public function publish(string $type, array|Job|null $job = null, int $packageId = null): Job
+    {
+        if ($job instanceof Job) {
+            $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
+            $job->setType($type);
+        } else {
+            $payload = $job ?: [];
+            $job = new Job();
+            $job->setType($type);
+            $job->setPayload($payload);
+            $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
+        }
+
+        $packageId ??= $job->getPackageId();
+        $job->setPackageId($packageId);
+        if (null !== $packageId && null !== $this->persister->getPendingJob($type, $packageId)) {
+            $job->setStatus(Job::STATUS_COMPLETED);
+            return $job;
+        }
+
+        $this->persister->persist($job);
+        // trigger immediately if not scheduled for later
+        if (!$job->getExecuteAfter()) {
+            $this->redis->lpush('jobs', $job->getId());
+        }
+
+        return $job;
     }
 
     private function getPendingUpdateJob(int $packageId, $updateEqualRefs = false, $deleteBefore = false)
@@ -115,9 +141,7 @@ class Scheduler
             $job->setExecuteAfter($executeAfter);
         }
 
-        $em = $this->doctrine->getManager();
-        $em->persist($job);
-        $em->flush();
+        $this->persister->persist($job, false);
 
         // trigger immediately if not scheduled for later
         if (!$job->getExecuteAfter()) {
