@@ -47,6 +47,7 @@ Table of content
 - [Ssh key access](#ssh-key-access-and-composer-oauth-token)
 - [Configuration](#configuration)
 - [LDAP Authenticating](/docs/authentication-ldap.md)
+- [OAuth2 and Sync](/docs/oauth2.md)
 - [Update Webhooks](#update-webhooks)
     - [Github](#github-webhooks)
     - [GitLab](#gitlab-service)
