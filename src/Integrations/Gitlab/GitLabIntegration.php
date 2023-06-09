@@ -56,10 +56,9 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];
-        if (empty($this->config['oauth2_registration']['default_roles'])) {
-            $this->config['oauth2_registration']['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_USER'];
+        if (empty($this->config['default_roles'])) {
+            $this->config['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_GITLAB'];
         }
-        $this->config['oauth2_registration']['default_roles'][] = 'ROLE_GITLAB';
 
         if ($config['base_url'] ?? false) {
             $this->baseUrl = rtrim($config['base_url'], '/');
@@ -206,7 +205,6 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
                 $accessToken = $this->refreshToken($app);
                 return $this->makeCGetRequest($accessToken, '/projects', ['query' => ['membership' => true, 'owned' => true]]);
             });
-
             $allRepos = array_merge($allRepos, $ownRepos);
         }
 
@@ -215,7 +213,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
                 $accessToken = $this->refreshToken($app);
 
                 try {
-                    return $this->makeCGetRequest($accessToken, "/groups/{$organization}/projects", ['query' => ['membership' => true, 'owned' => true]]);
+                    return $this->makeCGetRequest($accessToken, "/groups/{$organization}/projects");
                 } catch (\Exception $e) {
                     $this->logger->error($e->getMessage(), ['e' => $e]);
                     return [];
@@ -477,11 +475,15 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
             return null;
         }
 
-        return $this->getCached($app, "sync:$path", false === $newAdded, function (CacheItem $item) use ($externalId, $app) {
+        $job = null;
+        $this->getCached($app, "sync:$path", false === $newAdded, function (CacheItem $item) use ($externalId, $app, &$job) {
             $item->expiresAfter(86400);
             $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $externalId, 'app' => $app->getId()], $app->getId());
-            return ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
+            $job = ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
+            return [];
         });
+
+        return $job;
     }
 
     protected function getApiUrl(string $path): string

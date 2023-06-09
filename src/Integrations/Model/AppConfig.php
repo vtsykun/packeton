@@ -6,17 +6,13 @@ namespace Packeton\Integrations\Model;
 
 class AppConfig
 {
-    protected $defaultRoles = ['ROLE_MAINTAINER', 'ROLE_OAUTH'];
-
     public function __construct(protected array $config)
     {
-        $defaultRoles = $this->config['oauth2_registration']['default_roles'] ?? [];
-        $this->defaultRoles = array_values(array_unique(array_merge(['ROLE_USER'], $defaultRoles ?: $this->defaultRoles)));
     }
 
     public function isRegistration(): bool
     {
-        return $this->config['oauth2_registration']['enabled'] ?? false;
+        return ($this->config['allow_register'] ?? false);
     }
 
     public function clonePref(): string
@@ -31,7 +27,7 @@ class AppConfig
 
     public function isLogin(): bool
     {
-        return $this->config['oauth2_login'] ?? false;
+        return $this->config['allow_login'] ?? false;
     }
 
     public function isEnabled(): bool
@@ -58,7 +54,7 @@ class AppConfig
 
     public function roles(): array
     {
-        return $this->defaultRoles;
+        return $this->config['default_roles'] ?? [];
     }
 
     public function getLogo(): ?string

@@ -50,7 +50,7 @@ class IntegrationListener
 
         try {
             $app = $this->integrations->findApp($oauth->getAlias(), false);
-            $app->removeHook($oauth, $package->getExternalRef());
+            $app->removeHook($oauth, $package->getExternalRef(), $package->getWebhookInfo());
         } catch (\Throwable $e) {
         }
     }

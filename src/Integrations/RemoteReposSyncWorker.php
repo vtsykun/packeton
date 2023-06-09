@@ -45,7 +45,10 @@ class RemoteReposSyncWorker
 
         $owner = $app->getOwner() ? $this->registry->getRepository(User::class)->findOneByUsernameOrEmail($app->getOwner()) : null;
         $package = new Package();
-        $package->addMaintainer($owner);
+        if ($owner instanceof User) {
+            $package->addMaintainer($owner);
+        }
+
         $package->setExternalRef($payload['external_id']);
         $package->setRepository($url);
         $package->setIntegration($app);

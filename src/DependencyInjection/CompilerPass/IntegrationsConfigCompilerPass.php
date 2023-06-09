@@ -65,7 +65,7 @@ final class IntegrationsConfigCompilerPass implements CompilerPassInterface
 
     private function useForLoginCheck(array $config): ?array
     {
-        if (!($config['oauth2_login'] ?? false) || !($config['enabled'] ?? true)) {
+        if (!($config['allow_login'] ?? false) || !($config['enabled'] ?? true)) {
             return null;
         }
 

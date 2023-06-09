@@ -61,7 +61,7 @@ class AppUtils
         return $oauth->isEnableSynchronization() !== null ? $oauth->isEnableSynchronization() : $config->enableSync();
     }
 
-    public static function isRepoExcluded(App $app, ?string $path, array $orgs, string $fullPathColumn = 'namespace'): bool
+    public static function isRepoExcluded(App $app, ?string $path, array $orgs, string $fullPathColumn = 'identifier'): bool
     {
         if (null === $path) {
             return true;

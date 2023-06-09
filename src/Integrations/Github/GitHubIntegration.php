@@ -8,6 +8,8 @@ use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Entity\OAuthIntegration as App;
+use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Integrations\AppInterface;
 use Packeton\Integrations\Base\AppIntegrationTrait;
@@ -15,7 +17,9 @@ use Packeton\Integrations\Base\BaseIntegrationTrait;
 use Packeton\Integrations\IntegrationInterface;
 use Packeton\Integrations\LoginInterface;
 use Packeton\Integrations\Model\AppUtils;
+use Psr\Cache\CacheItemInterface as CacheItem;
 use Packeton\Integrations\Model\OAuth2State;
+use Packeton\Service\Scheduler;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,12 +44,14 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected OAuth2State $state,
         protected LockFactory $lock,
         protected ManagerRegistry $registry,
+        protected Scheduler $scheduler,
         protected \Redis $redis,
         protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];
-        $this->config['oauth2_registration']['default_roles'] ??= ['ROLE_MAINTAINER', 'ROLE_GITHUB'];
-        $this->config['oauth2_registration']['default_roles'][] = 'ROLE_GITHUB';
+        if (empty($this->config['default_roles'])) {
+            $this->config['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_GITHUB'];
+        }
 
         if ($config['base_url'] ?? false) {
             $this->baseUrl = rtrim($config['base_url'], '/');
@@ -108,9 +114,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         $allRepos = [];
         $callback = function() use ($app, &$accessToken, &$url) {
             $accessToken ??= $this->refreshToken($app);
-            $param = $this->getApiHeaders($accessToken);
-            $pager = new GithubResultPager($this->httpClient, $this->getApiUrl($url), $param);
-            return $pager->all();
+            return $this->makeCGetRequest($accessToken, $url);
         };
 
         if ($app->isConnected('@self')) {
@@ -123,7 +127,6 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
             if ($org === '@self') {
                 continue;
             }
-
             $url = '/orgs/'.rawurlencode($org).'/repos';
             try {
                 $orgRepos = $this->getCached($app->getId(), "repos:$org", callback: $callback);
@@ -137,6 +140,239 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         }
 
         return $this->formatRepos($allRepos);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addOrgHook(App $app, int|string $orgId): ?array
+    {
+        return $this->doAddHook($app, (string) $orgId, false);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeOrgHook(App $app, int|string $orgId): ?array
+    {
+        return $this->doRemoveHook($app, (string) $orgId, false);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addHook(App $app, int|string $repoId): ?array
+    {
+        if ($repoId = $this->findRepoNameById($app, $repoId)) {
+            return $this->doAddHook($app, $repoId, true);
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeHook(App $app, int|string $repoId, array $webHookInfo = null): ?array
+    {
+        if (isset($webHookInfo['owner_id'], $webHookInfo['id'])) {
+            return $this->doRemoveHook($app, $webHookInfo['owner_id'], true, $webHookInfo['id']);
+        }
+
+        if ($repoId = $this->findRepoNameById($app, $repoId)) {
+            return $this->doRemoveHook($app, $repoId, true);
+        }
+
+        return null;
+    }
+
+    protected function findRepoNameById(App $app, $extRef): ?string
+    {
+        $repos = $this->repositories($app);
+        $repos = array_filter($repos, fn ($repo) => $repo['ext_ref'] === $extRef);
+        $repos = reset($repos) ?: null;
+        return $repos['full_name'] ?? null;
+    }
+
+    public function findHooks(App|array $accessToken, int|string $orgId, ?bool $isRepo = null, ?string $url = null): ?array
+    {
+        $orgId = (string) $orgId;
+        $isRepo ??= count(explode('/', $orgId)) > 1;
+
+        $accessToken = $this->refreshToken($accessToken);
+        try {
+            $list = $this->makeCGetRequest($accessToken, $isRepo ? "/repos/$orgId/hooks" : "/orgs/$orgId/hooks");
+        } catch (\Exception $e) {
+            return $url ? null : [];
+        }
+
+        if (null !== $url) {
+            $list = array_filter($list, fn ($u) => $u['config']['url'] === $url);
+            return reset($list) ?: null;
+        }
+
+        return $list;
+    }
+
+    protected function doAddHook(App $app, string $orgId, bool $isRepo): ?array
+    {
+        if ('@self' === $orgId) {
+            return null;
+        }
+
+        $url = $this->getConfig($app)->getHookUrl();
+        $body = ['name' => 'web', 'config' => ['url' => $url, 'content_type' => 'json'], 'events' => ['push', 'pull_request']];
+        $accessToken = $this->refreshToken($app);
+        if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
+            return ['status' => true, 'id' => $hook['id']];
+        }
+
+        try {
+            $response = $this->makeApiRequest($accessToken, 'POST', $isRepo ? "/repos/$orgId/hooks" : "/orgs/$orgId/hooks", ['json' => $body]);
+            if (isset($response['id'])) {
+                return ['status' => true, 'id' => $response['id'], 'owner_id' => $orgId];
+            }
+        } catch (\Exception $e) {
+            return ['status' => false, 'error' => AppUtils::castError($e), 'status_message' => $statusMessage ?? null];
+        }
+
+        if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
+            return ['status' => true, 'id' => $hook['id'], 'owner_id' => $orgId];
+        }
+        return null;
+    }
+
+    protected function doRemoveHook(App $app, string $orgId, bool $isRepo, int $hookId = null): ?array
+    {
+        if ('@self' === $orgId) {
+            return null;
+        }
+
+        $accessToken = $this->refreshToken($app);
+        $url = $this->getConfig($app)->getHookUrl();
+
+        $id = false === $isRepo ? ($app->getWebhookInfo($orgId)['id'] ?? $hookId) : $hookId;
+        if ($id !== null) {
+            try {
+                $this->makeApiRequest($accessToken, 'DELETE', $isRepo ? "/repos/$orgId/hooks/$id" : "/orgs/$orgId/hooks/$id");
+                return [];
+            } catch (\Exception $e) {
+            }
+        }
+
+        if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
+            $id = $hook['id'];
+            try {
+                $this->makeApiRequest($accessToken, 'DELETE', $isRepo ? "/repos/$orgId/hooks/$id" : "/orgs/$orgId/hooks/$id");
+                return [];
+            } catch (\Exception $e) {
+                return ['status' => false, 'error' => AppUtils::castError($e), 'id' => $id];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array
+    {
+        if (null === $payload || !($repoName = $payload['repository']['full_name'] ?? null)) {
+            return null;
+        }
+
+        $repoId = $payload['repository']['id'];
+        $kind = $request->headers->get('x-github-event', 'push');
+
+        if (in_array($kind, ['push', 'tag_push'])) {
+            return $this->processPushEvent($accessToken, $payload, $repoId, $repoName);
+        }
+
+        return null;
+    }
+
+    protected function processPushEvent(App $app, array $payload, $id, $repoName): ?array
+    {
+        $repo = $this->registry->getRepository(Package::class);
+        $pkg = $repo->findOneBy(['externalRef' => $externalId = "{$this->name}:$id"]);
+
+        if (null !== $pkg) {
+            $pkg->setAutoUpdated(true);
+            $job = $this->scheduler->scheduleUpdate($pkg);
+            return ['status' => 'success', 'job' => $job->getId(), 'code' => 202];
+        }
+
+        $config = $this->getConfig();
+        if (!AppUtils::enableSync($config, $app)
+            || AppUtils::isRepoExcluded($app, $repoName, $this->organizations($app))
+        ) {
+            return null;
+        }
+
+        $hasNewComposer = $this->getCached($app, "hasComposer:$repoName", callback: function (CacheItem $item) use ($app, $externalId, $payload, $repoName, $repo) {
+            $item->expiresAfter(7*86400);
+            $token = $this->refreshToken($app);
+            try {
+                $data = $this->makeApiRequest($token, 'GET', "/repos/$repoName/contents/composer.json");
+                $content = base64_decode($data['content'] ?? '');
+                $content = $content ? json_decode($content, true) : $content;
+            } catch (\Throwable $e) {
+                $this->logger->error($e->getMessage(), ['e' => $e]);
+                return false;
+            }
+
+            if (!is_string($name = ($content['name'] ?? null))) {
+                return false;
+            }
+
+            if ($pkg = $repo->findOneByName($name)) {
+                $urls = [
+                    $payload['repository']['git_url'] ?? null,
+                    $payload['repository']['ssh_url'] ?? null,
+                    $payload['repository']['clone_url'] ?? null,
+                    $payload['repository']['url'] ?? null,
+                ];
+                $this->updatePackageExternalRef($pkg, $externalId, $urls);
+            }
+
+            return $pkg === null;
+        });
+
+        $newAdded = false;
+        $commits = $payload['commits'] ?? [];
+        foreach ($commits as $commit) {
+            $files = array_merge((array)($commit['added'] ?? []), (array)($commit['modified'] ?? []));
+            if (in_array('composer.json', $files)) {
+                $newAdded = true;
+                break;
+            }
+        }
+
+        if (false === $newAdded && false === $hasNewComposer) {
+            return null;
+        }
+
+        $job = null;
+        $this->getCached($app, "sync:$repoName", false === $newAdded, function (CacheItem $item) use ($externalId, $app, &$job) {
+            $item->expiresAfter(86400);
+            $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $externalId, 'app' => $app->getId()], $app->getId());
+            $job = ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
+            return [];
+        });
+
+        return $job;
+    }
+
+    protected function updatePackageExternalRef(Package $pkg, $externalId, array $urls): bool
+    {
+        foreach ($urls as $url) {
+            if ($url && $pkg->getRepository() === $url) {
+                $pkg->setExternalRef($externalId);
+                $this->registry->getManager()->flush();
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function formatRepos(array $repos): array
@@ -272,11 +508,27 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         ]);
     }
 
+    protected function makeApiRequest(array $token, string $method, string $path, array $params = []): array
+    {
+        $params = array_merge_recursive($this->getApiHeaders($token), $params);
+        $response = $this->httpClient->request($method, $this->getApiUrl($path), $params);
+        $content = $response->getContent();
+        $content = $content ? json_decode($content, true) : [];
+
+        return is_array($content) ? $content : [];
+    }
+
+    protected function makeCGetRequest(array $token, string $path, array $params = []): array
+    {
+        $params = array_merge_recursive($this->getApiHeaders($token), $params);
+        $paginator = new GithubResultPager($this->httpClient, $this->getApiUrl($path), $params);
+        return $paginator->all();
+    }
+
     protected function getApiHeaders(array $token, array $default = []): array
     {
         $params = $this->getAuthorizationHeaders($token);
         $params['headers'] = array_merge($params['headers'], ['Accept' => 'application/vnd.github+json'], $default);
-
         return $params;
     }
 
