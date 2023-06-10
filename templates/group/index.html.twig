@@ -22,7 +22,7 @@
                 <div class="col-xs-12 package-item" style="border-width: 1px;border-style: groove; border-radius: 0">
                     <div class="row" style="margin: 6px 12px;">
                         <div class="s-flex">
-                            <h4 class="s-flex tab-cell font-bold"><a class="no-underline" href="{{ groupUrl }}">{{ group.name }}</a></h4>
+                            <h4 class="s-flex tab-cell font-bold"><a class="no-underline" style="white-space: nowrap" href="{{ groupUrl }}">{{ group.name }}</a></h4>
                             <div style="width: 100%; margin-top: 10px">
                                 <form class="onsubmit-confirm" action="{{ path('groups_delete', { 'id': group.id}) }}" style="float: right" method="POST">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete') }}">

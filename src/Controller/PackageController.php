@@ -333,6 +333,7 @@ class PackageController extends AbstractController
 
         if ('json' === $req->getRequestFormat()) {
             $data = $package->toArray($this->registry->getRepository(Version::class));
+            $data['groups'] = $repo->getPackageGroupsData($package->getId());
             $data['dependents'] = $repo->getDependentCount($package->getName());
             $data['suggesters'] = $repo->getSuggestCount($package->getName());
 
@@ -390,6 +391,7 @@ class PackageController extends AbstractController
 
         $data['dependents'] = $repo->getDependentCount($package->getName());
         $data['suggesters'] = $repo->getSuggestCount($package->getName());
+        $data['groups'] = $repo->getPackageGroupsData($package->getId());
 
         if ($maintainerForm = $this->createAddMaintainerForm($package)) {
             $data['addMaintainerForm'] = $maintainerForm->createView();
