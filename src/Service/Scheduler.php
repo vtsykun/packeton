@@ -56,7 +56,8 @@ class Scheduler
 
         $packageId ??= $job->getPackageId();
         $job->setPackageId($packageId);
-        if (null !== $packageId && null !== $this->persister->getPendingJob($type, $packageId)) {
+        if (null !== $packageId && null !== ($id = $this->persister->getPendingJob($type, $packageId))) {
+            $job->setId($id);
             $job->setStatus(Job::STATUS_COMPLETED);
             return $job;
         }

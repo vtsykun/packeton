@@ -262,7 +262,7 @@ trait AppIntegrationTrait
             $repo = $this->registry->getRepository(Package::class);
             $package = PacketonUtils::findPackagesByPayload($payload, $repo);
             if (!$package?->isPullRequestReview()) {
-                return null;
+                return [];
             }
         }
 
@@ -272,14 +272,14 @@ trait AppIntegrationTrait
             return (bool)$this->getRemoteContent($token, $payload['id'], 'composer.lock', $payload['default_branch'] ?? null);
         });
         if (false === $hasComposerLock) {
-            return null;
+            return [];
         }
 
         $token = $this->refreshToken($app);
         $newLock = $this->getRemoteContent($token, $payload['source_id'], 'composer.lock', $payload['source_branch']);
         $prevLock = $this->getRemoteContent($token, $payload['target_id'], 'composer.lock', $payload['target_branch']);
         if (null === ($diff = ComposerDiffReview::generateDiff($prevLock, $newLock))) {
-            return null;
+            return [];
         }
 
         $iid = $payload['iid'];
@@ -305,7 +305,7 @@ trait AppIntegrationTrait
             $request("PUT", $diff, $commentId);
             return [];
         }
-        return null;
+        return [];
     }
 
     protected function getRemoteContent(array $token, string|int $projectId, string $file, ?string $ref = null, bool $asJson = true): null|string|array

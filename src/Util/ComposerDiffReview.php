@@ -29,7 +29,7 @@ class ComposerDiffReview
         $data = $this->doMarkdownFormat($prodPack) . "\n\n\n" . $this->doMarkdownFormat($devPack, 'Dev Packages');
         $data = trim($data);
 
-        if (($options['collapse'] ?? true) && explode("\n", $data) > 10) {
+        if ($data && ($options['collapse'] ?? true) && count(explode("\n", $data)) > 15) {
             $data = <<<TXT
 <details>
   <summary>Click to show all ($count)</summary>
@@ -129,7 +129,7 @@ TXT;
         }
 
         foreach ($pack1s as $name => $value) {
-            if (!isset($pack2[$name])) {
+            if (!isset($pack2s[$name])) {
                 $diff[] = ['op' => 'Removed', 'item' => $value, 'base' => $value['version'] ?? null];
             }
         }

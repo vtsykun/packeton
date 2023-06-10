@@ -81,7 +81,7 @@ class PacketonUtils
             $urlRegex = $payload['packeton']['regex'];
         }
 
-        if (preg_match($urlRegex, $url, $matched)) {
+        if (!preg_match($urlRegex, $url, $matched)) {
             return null;
         }
 

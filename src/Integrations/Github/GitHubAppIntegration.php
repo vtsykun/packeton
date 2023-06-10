@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Github;
 
+use Composer\Config;
+use Composer\IO\IOInterface;
 use Firebase\JWT\JWT;
 use Packeton\Entity\OAuthIntegration as App;
 use Packeton\Form\Type\IntegrationGitHubAppType;
@@ -87,6 +89,22 @@ class GitHubAppIntegration extends GitHubIntegration implements FormSettingsInte
         }
 
         return array_merge([$this->ownOrg], array_values($organizations));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function authenticateIO(App $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
+    {
+        parent::authenticateIO($oauth2, $io, $config, $repoUrl);
+
+        if ($config->get('_no_api')) {
+            $token = $this->refreshToken($oauth2);
+            $domains = $config->get('github-domains') ?: [];
+            foreach ($domains as $domain) {
+                $io->setAuthentication($domain, 'x-access-token', $token['access_token']);
+            }
+        }
     }
 
     /**
