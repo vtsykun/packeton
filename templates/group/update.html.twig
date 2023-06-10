@@ -31,6 +31,10 @@
             {% for vendor, items in aclPermissions %}
                 {% set vid = 'ven-' ~ vendor  %}
                     <div role="tabpanel" class="tab-pane {{ loop.first ? 'active' : '' }}" id="{{ vid }}">
+                        <div style="margin-bottom: -15px">
+                            <button type="button" class="btn-link select-all">Select All</button>
+                            <button type="button" class="btn-link select-none">Select None</button>
+                        </div>
                         {% for permission in items['items'] %}
                             <div>{{ form_row(permission) }}</div>
                         {% endfor %}
@@ -44,4 +48,19 @@
         <div class="col-md-6">
         </div>
     </section>
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+           $('.select-all').on('click', (e) => {
+               e.preventDefault();
+               let checkbox = $(e.target).closest('.tab-pane').find('input[type=checkbox]');
+               checkbox.prop('checked', true);
+           });
+
+            $('.select-none').on('click', (e) => {
+                e.preventDefault();
+                let checkbox = $(e.target).closest('.tab-pane').find('input[type=checkbox]');
+                checkbox.prop('checked', false);
+            });
+        });
+    </script>
 {% endblock %}

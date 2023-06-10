@@ -338,6 +338,17 @@ class PackageRepository extends EntityRepository
         return true;
     }
 
+    public function getPackageGroupsData(int $packageId): array
+    {
+        $sql = "SELECT g.id, g.name FROM user_group g 
+            INNER JOIN group_acl_permission gap on g.id = gap.group_id
+            WHERE gap.package_id = :pid";
+
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery($sql, ['pid' => $packageId])
+            ->fetchAllAssociative();
+    }
+
     public function getDependentCount($name)
     {
         $sql = 'SELECT COUNT(*) count FROM (

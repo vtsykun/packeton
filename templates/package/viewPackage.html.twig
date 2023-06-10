@@ -244,6 +244,34 @@
                             {% if package.type is not empty and package.type != 'library' %}
                                 <p><span>Type:</span>{{ package.type }}</p>
                             {% endif %}
+
+                            {% if groups is defined and groups is not empty %}
+                                {%- set listGroups -%}
+                                    {%- for group in groups -%}
+                                        {% if _key != 0 or groups|length > 4 %}
+                                            <p><span></span>&nbsp;<a href="{{ path('groups_update', {'id': group['id']}) }}">{{ group['name'] }}</a></p>
+                                        {% endif %}
+                                    {%- endfor -%}
+                                {%- endset -%}
+
+                                <p><span>Groups:</span>
+                                    {% if groups|length > 4 %}
+                                        <a data-toggle="collapse" href="#all-groups" aria-expanded="false" aria-controls="all-groups">
+                                            View all
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ path('groups_update', {'id': groups[0]['id']}) }}">{{ groups[0]['name'] }}</a>
+                                    {% endif %}
+                                </p>
+
+                                {% if groups|length > 4 %}
+                                    <div class="collapse" id="all-groups" >
+                                        {{ listGroups }}
+                                    </div>
+                                {% else %}
+                                    {{ listGroups }}
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
