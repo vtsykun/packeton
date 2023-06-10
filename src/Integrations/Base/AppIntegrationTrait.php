@@ -80,9 +80,12 @@ trait AppIntegrationTrait
         return [];
     }
 
-    public function cacheClear($appId): void
+    public function cacheClear($appId, bool $isFull = false): void
     {
         $this->redis->del("oauthapp:{$this->name}:$appId");
+        if ($isFull === true) {
+            $this->redis->del("pull_review:$appId");
+        }
     }
 
     public function organizations(OAuthIntegration $accessToken): array

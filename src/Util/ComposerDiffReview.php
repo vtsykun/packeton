@@ -29,7 +29,7 @@ class ComposerDiffReview
         $data = $this->doMarkdownFormat($prodPack) . "\n\n\n" . $this->doMarkdownFormat($devPack, 'Dev Packages');
         $data = trim($data);
 
-        if ($data && ($options['collapse'] ?? true) && count(explode("\n", $data)) > 15) {
+        if ($data && ($options['collapse'] ?? true) && count(explode("\n", $data)) > 25) {
             $data = <<<TXT
 <details>
   <summary>Click to show all ($count)</summary>

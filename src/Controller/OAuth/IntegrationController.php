@@ -151,7 +151,7 @@ class IntegrationController extends AbstractController
     public function flushCache(#[Vars] OAuthIntegration $oauth)
     {
         $client = $this->getClient($oauth);
-        $client->cacheClear($oauth->getId());
+        $client->cacheClear($oauth->getId(), true);
 
         return new JsonResponse([], 204);
     }
