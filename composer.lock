@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "18675230faa74628e8dbfc53ea93edfd",
+    "content-hash": "f1ed9693585136ac78cbb98665c89a3a",
     "packages": [
         {
             "name": "babdev/pagerfanta-bundle",
@@ -2325,6 +2325,67 @@
             "time": "2023-05-24T07:17:17+00:00"
         },
         {
+            "name": "graze/dog-statsd",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/graze/dog-statsd.git",
+                "reference": "f8c2048ce71c32b8b8afe62c1acc40be75c6f5eb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/graze/dog-statsd/zipball/f8c2048ce71c32b8b8afe62c1acc40be75c6f5eb",
+                "reference": "f8c2048ce71c32b8b8afe62c1acc40be75c6f5eb",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1|^8.0"
+            },
+            "require-dev": {
+                "graze/standards": "^2",
+                "johnkary/phpunit-speedtrap": "^2|^3",
+                "phpunit/phpunit": "^7|^8|^9",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Graze\\DogStatsD\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Harry Bragg",
+                    "email": "harry.bragg@graze.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Graze Developers",
+                    "email": "developers@graze.com",
+                    "homepage": "http://www.graze.com",
+                    "role": "Development Team"
+                }
+            ],
+            "description": "DataDog StatsD Client",
+            "homepage": "https://github.com/graze/dog-statsd",
+            "keywords": [
+                "DataDog",
+                "dog-statsd",
+                "dogstatsd",
+                "graze",
+                "statsd"
+            ],
+            "support": {
+                "issues": "https://github.com/graze/dog-statsd/issues",
+                "source": "https://github.com/graze/dog-statsd/tree/1.0.0"
+            },
+            "time": "2021-04-14T20:34:48+00:00"
+        },
+        {
             "name": "justinrainbow/json-schema",
             "version": "5.2.12",
             "source": {
@@ -3187,6 +3248,67 @@
                 "source": "https://github.com/vtsykun/cron-bundle/releases"
             },
             "time": "2023-05-23T23:00:03+00:00"
+        },
+        {
+            "name": "okvpn/datadog-symfony",
+            "version": "v0.4.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/okvpn/datadog-symfony.git",
+                "reference": "e6f93eca3dd164bc42896f6c3bf63bd55f9f6b1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/okvpn/datadog-symfony/zipball/e6f93eca3dd164bc42896f6c3bf63bd55f9f6b1b",
+                "reference": "e6f93eca3dd164bc42896f6c3bf63bd55f9f6b1b",
+                "shasum": ""
+            },
+            "require": {
+                "graze/dog-statsd": "^0.4 || ^1.0",
+                "php": ">=7.2",
+                "symfony/framework-bundle": "^3.4 || ^4.0 || ^5.0 || ^6.0",
+                "symfony/yaml": "^3.4 || ^4.0 || ^5.0 || ^6.0"
+            },
+            "require-dev": {
+                "doctrine/doctrine-bundle": "^1.6.10 || ^2.0.6",
+                "doctrine/orm": "2.5.11 || 2.6.x-dev as 2.6.3 || ^2.7.0",
+                "ext-pdo_sqlite": "*",
+                "phpunit/phpunit": "^6.2 || ^8.5",
+                "symfony/browser-kit": "^3.4 || ^4.0 || ^5.0 || ^6.0",
+                "symfony/console": "^3.4 || ^4.0 || ^5.0 || ^6.0",
+                "symfony/monolog-bundle": "^3.2.0",
+                "symfony/phpunit-bridge": "^3.4 || ^4.0 || ^5.0 || ^6.0",
+                "symfony/security-bundle": "^3.4 || ^4.0 || ^5.0 || ^6.0",
+                "symfony/var-dumper": "^3.4 || ^4.0 || ^5.0 || ^6.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Okvpn\\Bundle\\DatadogBundle\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Uladzimir Tsykun",
+                    "email": "vtsykun@okvpn.org",
+                    "homepage": "https://github.com/vtsykun"
+                }
+            ],
+            "description": "Symfony Datadog integration",
+            "keywords": [
+                "datadog-symfony",
+                "dogstatsd",
+                "php-datadog"
+            ],
+            "support": {
+                "issues": "https://github.com/okvpn/datadog-symfony/issues",
+                "source": "https://github.com/okvpn/datadog-symfony/tree/v0.4.1"
+            },
+            "time": "2023-03-04T00:03:49+00:00"
         },
         {
             "name": "okvpn/expression-language",
