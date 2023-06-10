@@ -51,6 +51,15 @@ class IntegrationSettingsType extends AbstractType
                     'Auto sync new repos' => true,
                     'Disabled'  => false,
                 ],
+            ])
+            ->add('pullRequestReview', ChoiceType::class, [
+                'required' => false,
+                'label' => 'Pull request review',
+                'choices' => [
+                    'Use global integration settings'  => null,
+                    'Enable PR Review' => true,
+                    'Disabled'  => false,
+                ],
             ]);
     }
 
