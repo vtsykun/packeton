@@ -44,11 +44,11 @@ jobs:
             type=pep440,pattern={{major}}.{{minor}}
       
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
           tags: "${{ steps.set-tag.outputs.tags }}"
-          file: "Dockerfile"
+          context: .
           platforms: linux/amd64,linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache-all
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
