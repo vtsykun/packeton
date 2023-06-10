@@ -61,7 +61,12 @@ class AppUtils
         return $oauth->isEnableSynchronization() !== null ? $oauth->isEnableSynchronization() : $config->enableSync();
     }
 
-    public static function isRepoExcluded(App $app, ?string $path, array $orgs, string $fullPathColumn = 'identifier'): bool
+    public static function enableReview(AppConfig $config, App $oauth): bool
+    {
+        return $oauth->isPullRequestReview() !== null ? $oauth->isPullRequestReview() : $config->isPullRequestReview();
+    }
+
+    public static function isRepoExcluded(App $app, ?string $path, ?array $orgs = null, ?string $fullPathColumn = 'identifier'): bool
     {
         if (null === $path) {
             return true;
@@ -70,7 +75,11 @@ class AppUtils
         if (!$app->filteredRepos([['name' => $path]])) {
             return true;
         }
+        if (null === $orgs) {
+            return false;
+        }
 
+        $fullPathColumn ??= 'identifier';
         [$namespace] = self::parseNamespace($path);
         $belong = array_filter($orgs, fn($org) => ($org[$fullPathColumn] ?? null) === $namespace);
         $belong = reset($belong) ?: [];

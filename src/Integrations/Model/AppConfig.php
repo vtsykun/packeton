@@ -25,6 +25,11 @@ class AppConfig
         return $this->config['repos_synchronization'] ?? false;
     }
 
+    public function isPullRequestReview()
+    {
+        return $this->config['pull_request_review'] ?? false;
+    }
+
     public function isLogin(): bool
     {
         return $this->config['allow_login'] ?? false;

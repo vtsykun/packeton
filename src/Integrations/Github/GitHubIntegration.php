@@ -7,9 +7,7 @@ namespace Packeton\Integrations\Github;
 use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\OAuthIntegration as App;
-use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Integrations\AppInterface;
 use Packeton\Integrations\Base\AppIntegrationTrait;
@@ -17,7 +15,6 @@ use Packeton\Integrations\Base\BaseIntegrationTrait;
 use Packeton\Integrations\IntegrationInterface;
 use Packeton\Integrations\LoginInterface;
 use Packeton\Integrations\Model\AppUtils;
-use Psr\Cache\CacheItemInterface as CacheItem;
 use Packeton\Integrations\Model\OAuth2State;
 use Packeton\Service\Scheduler;
 use Psr\Log\LoggerInterface;
@@ -56,6 +53,8 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         if ($config['base_url'] ?? false) {
             $this->baseUrl = rtrim($config['base_url'], '/');
         }
+
+        $this->remoteContentUrl = '/repos/{project_id}/contents/{file}?ref={ref}';
     }
 
     /**
@@ -81,7 +80,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function organizations(OAuthIntegration $app, bool $withCache = true): array
+    public function organizations(App $app, bool $withCache = true): array
     {
         $orgs = $this->getCached($app->getId(), 'orgs', $withCache, function () use ($app) {
             $accessToken = $this->refreshToken($app);
@@ -106,7 +105,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function repositories(OAuthIntegration $app): array
+    public function repositories(App $app): array
     {
         $orgs = $app->getEnabledOrganizations();
         $accessToken = null;
@@ -288,91 +287,78 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
             return $this->processPushEvent($accessToken, $payload, $repoId, $repoName);
         }
 
+        if ($kind === 'pull_request') {
+            return $this->processPullRequest($accessToken, $payload, $repoName);
+        }
+
         return null;
+    }
+
+    protected function processPullRequest(App $app, array $payload, $repoName): ?array
+    {
+        $statues = ['opened', 'synchronize', 'reopened'];
+        if (!in_array($payload['action'] ?? 'opened', $statues)) {
+            return null;
+        }
+
+        $pullRequest = $payload['pull_request'];
+
+        $data = [
+            'id' => $repoName,
+            'name' => $repoName,
+            'source_id' => $pullRequest['head']['repo']['full_name'],
+            'target_id' => $pullRequest['base']['repo']['full_name'],
+            'source_branch' => $pullRequest['head']['ref'],
+            'target_branch' => $pullRequest['base']['ref'],
+            'iid' => $iid = $pullRequest['number'],
+        ];
+
+        return $this->pullRequestReview($app, $data, function (string $method, string $diff, $commentId = null) use ($app, $repoName, $iid) {
+            $token = $this->refreshToken($app);
+            $body = ['body' => $diff];
+            if ($method === 'PUT') {
+                return $this->makeApiRequest($token, "PATCH", "/repos/$repoName/issues/comments/$commentId", ['json' => $body]);
+            }
+            if ($method === 'POST') {
+                return $this->makeApiRequest($token, "POST", "/repos/$repoName/issues/$iid/comments", ['json' => $body]);
+            }
+            return [];
+        });
     }
 
     protected function processPushEvent(App $app, array $payload, $id, $repoName): ?array
     {
-        $repo = $this->registry->getRepository(Package::class);
-        $pkg = $repo->findOneBy(['externalRef' => $externalId = "{$this->name}:$id"]);
+        $data = [
+            'id' => $repoName,
+            'name' => $repoName,
+            'external_ref' => "{$this->name}:$id",
+            'urls' => [
+                $payload['repository']['git_url'] ?? null,
+                $payload['repository']['ssh_url'] ?? null,
+                $payload['repository']['clone_url'] ?? null,
+                $payload['repository']['url'] ?? null,
+            ]
+        ];
 
-        if (null !== $pkg) {
-            $pkg->setAutoUpdated(true);
-            $job = $this->scheduler->scheduleUpdate($pkg);
-            return ['status' => 'success', 'job' => $job->getId(), 'code' => 202];
-        }
-
-        $config = $this->getConfig();
-        if (!AppUtils::enableSync($config, $app)
-            || AppUtils::isRepoExcluded($app, $repoName, $this->organizations($app))
-        ) {
-            return null;
-        }
-
-        $hasNewComposer = $this->getCached($app, "hasComposer:$repoName", callback: function (CacheItem $item) use ($app, $externalId, $payload, $repoName, $repo) {
-            $item->expiresAfter(7*86400);
-            $token = $this->refreshToken($app);
-            try {
-                $data = $this->makeApiRequest($token, 'GET', "/repos/$repoName/contents/composer.json");
-                $content = base64_decode($data['content'] ?? '');
-                $content = $content ? json_decode($content, true) : $content;
-            } catch (\Throwable $e) {
-                $this->logger->error($e->getMessage(), ['e' => $e]);
-                return false;
-            }
-
-            if (!is_string($name = ($content['name'] ?? null))) {
-                return false;
-            }
-
-            if ($pkg = $repo->findOneByName($name)) {
-                $urls = [
-                    $payload['repository']['git_url'] ?? null,
-                    $payload['repository']['ssh_url'] ?? null,
-                    $payload['repository']['clone_url'] ?? null,
-                    $payload['repository']['url'] ?? null,
-                ];
-                $this->updatePackageExternalRef($pkg, $externalId, $urls);
-            }
-
-            return $pkg === null;
-        });
-
-        $newAdded = false;
-        $commits = $payload['commits'] ?? [];
-        foreach ($commits as $commit) {
-            $files = array_merge((array)($commit['added'] ?? []), (array)($commit['modified'] ?? []));
-            if (in_array('composer.json', $files)) {
-                $newAdded = true;
-                break;
-            }
-        }
-
-        if (false === $newAdded && false === $hasNewComposer) {
-            return null;
-        }
-
-        $job = null;
-        $this->getCached($app, "sync:$repoName", false === $newAdded, function (CacheItem $item) use ($externalId, $app, &$job) {
-            $item->expiresAfter(86400);
-            $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $externalId, 'app' => $app->getId()], $app->getId());
-            $job = ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
-            return [];
-        });
-
-        return $job;
+        return $this->pushEventSynchronize($app, $data + $payload);
     }
 
-    protected function updatePackageExternalRef(Package $pkg, $externalId, array $urls): bool
+    protected function getRemoteContent(array $token, string|int $projectId, string $file, ?string $ref = null, bool $asJson = true): null|string|array
     {
-        foreach ($urls as $url) {
-            if ($url && $pkg->getRepository() === $url) {
-                $pkg->setExternalRef($externalId);
-                $this->registry->getManager()->flush();
-                return true;
-            }
+        $url = str_replace(['{project_id}', '{file}', '{ref}'], [(string)$projectId, $file, $ref], $this->remoteContentUrl);
+        if (empty($ref)) {
+            $url = str_replace('?ref=', '', $url);
         }
-        return false;
+
+        try {
+            $content = $this->makeApiRequest($token, 'GET', $url, ['headers' => ['Accept' => 'application/vnd.github.raw']], false);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        $content = $asJson && is_string($content) ? json_decode($content, true) : $content;
+
+        return $asJson ? (is_array($content) ? $content : null) : $content;
     }
 
     protected function formatRepos(array $repos): array
@@ -383,7 +369,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
                 'label' => $repo['full_name'],
                 'ext_ref' => $this->name.':'.$repo['id'],
                 'url' => $repo['clone_url'],
-                'ssh_url' => $repo['ssh_url'],
+                'ssh_url' => $repo['ssh_url'] ?? null,
             ];
 
             return $required + $repo;
@@ -441,7 +427,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function authenticateIO(OAuthIntegration $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(App $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
     {
         $token = $this->refreshToken($oauth2);
         $urls = parse_url($this->baseUrl);
@@ -506,23 +492,6 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
                 'Authorization' => "Bearer {$token['access_token']}",
             ]
         ]);
-    }
-
-    protected function makeApiRequest(array $token, string $method, string $path, array $params = []): array
-    {
-        $params = array_merge_recursive($this->getApiHeaders($token), $params);
-        $response = $this->httpClient->request($method, $this->getApiUrl($path), $params);
-        $content = $response->getContent();
-        $content = $content ? json_decode($content, true) : [];
-
-        return is_array($content) ? $content : [];
-    }
-
-    protected function makeCGetRequest(array $token, string $path, array $params = []): array
-    {
-        $params = array_merge_recursive($this->getApiHeaders($token), $params);
-        $paginator = new GithubResultPager($this->httpClient, $this->getApiUrl($path), $params);
-        return $paginator->all();
     }
 
     protected function getApiHeaders(array $token, array $default = []): array

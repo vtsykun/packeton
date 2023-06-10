@@ -8,6 +8,7 @@ use Doctrine\Persistence\ObjectRepository;
 use Packeton\Package\RepTypes;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
+use Packeton\Util\PacketonUtils;
 
 #[ORM\Entity(repositoryClass: PackageRepository::class)]
 #[ORM\Table(name: 'package')]
@@ -431,20 +432,7 @@ class Package
     public function getBrowsableRepository()
     {
         $repository = $this->parentPackage ? $this->parentPackage->getRepository() : $this->repository;
-
-        if (preg_match('{(://|@)bitbucket.org[:/]}i', $repository)) {
-            return preg_replace('{^(?:git@|https://|git://)bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $repository);
-        }
-
-        if (preg_match('{^(git://github.com/|git@github.com:)}', $repository)) {
-            return preg_replace('{^(git://github.com/|git@github.com:)}', 'https://github.com/', $repository);
-        }
-
-        if (preg_match('{^((git|ssh)@(.+))}', $repository, $match) && isset($match[3])) {
-            return 'https://' . str_replace(':', '/', $match[3]);
-        }
-
-        return $repository;
+        return $repository ? PacketonUtils::getBrowsableRepository($repository) : null;
     }
 
     public function getRepoConfig(): array

@@ -46,6 +46,16 @@ trait PackageSerializedTrait
         $this->setSerializedField('webhook_info', $info);
     }
 
+    public function isPullRequestReview(): bool
+    {
+        return (bool)($this->config['pull_request_review'] ?? false);
+    }
+
+    public function setPullRequestReview(?bool $value = null): void
+    {
+        $this->setSerializedField('pull_request_review', $value);
+    }
+
     public function isSkipNotModifyTag(): ?bool
     {
         return (bool)($this->serializedData['skip_empty_tag'] ?? null);

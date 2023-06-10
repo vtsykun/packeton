@@ -48,6 +48,8 @@ class ArtifactPackageType extends AbstractType
                 'attr'  => ['class' => 'jselect2 archive-select']
             ]);
 
+        $builder->remove('pullRequestReview');
+
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->updateRepository(...), 255);
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->setUsageFlag(...), -255);
     }

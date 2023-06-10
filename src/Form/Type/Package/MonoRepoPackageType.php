@@ -28,6 +28,8 @@ class MonoRepoPackageType extends AbstractType
                 'required' => false,
                 'label' => 'Skip not modified packages tags/releases'
             ]);
+
+        $builder->remove('pullRequestReview');
     }
 
     /**

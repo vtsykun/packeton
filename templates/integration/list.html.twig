@@ -23,7 +23,7 @@
                                         {% if config.logo %}
                                             <img height="40" src="{{ config.logo }}" alt="ref">
                                         {% endif %}
-                                        <h4 class="tab-cell">{{ config.title ?? config.name|capitalize }}</h4>
+                                        <h4 class="tab-cell">{{ config.title ?? config.name }}</h4>
                                     </a>
                                 </div>
                                 {% include 'integration/info_app.html.twig' %}
