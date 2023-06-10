@@ -27,8 +27,19 @@ class BasePackageType extends AbstractType
                 'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
                 'Artifacts' => RepTypes::ARTIFACT,
             ];
-            if ($this->hasActiveIntegration()) {
+
+            if ($options['has_active_integration']) {
                 $choices['Integration'] = RepTypes::INTEGRATION;
+
+                $builder->add('pullRequestReview', ChoiceType::class, [
+                    'required' => false,
+                    'label' => 'Pull Request composer diff review',
+                    'choices' => [
+                        'Use global config settings'  => null,
+                        'Enable PR Review' => true,
+                    ],
+                    'priority' => -10,
+                ]);
             }
 
             $builder->add('repoType', ChoiceType::class, [
@@ -50,5 +61,6 @@ class BasePackageType extends AbstractType
     {
         $resolver->setDefault('is_created', false);
         $resolver->setDefault('data_class', Package::class);
+        $resolver->setDefault('has_active_integration', $this->hasActiveIntegration());
     }
 }

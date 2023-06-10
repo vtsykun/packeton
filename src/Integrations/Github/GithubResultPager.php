@@ -21,7 +21,7 @@ class GithubResultPager
     ) {
     }
 
-    public function all(): array
+    public function all(string $column = null): array
     {
         $params = $this->params;
         $params['query']['per_page'] ??= $this->perPage;
@@ -33,7 +33,16 @@ class GithubResultPager
         while (true) {
             $response = $this->httpClient->request($this->method, $url, $params);
             $processed[$url] = 1;
-            $result = array_merge($result, $response->toArray());
+            $current = $response->toArray();
+            if ($column !== null) {
+                if (isset($current[$column])) {
+                    $result = array_merge($result, $current[$column]);
+                } elseif (is_array($current[0] ?? null)) {
+                    $result = array_merge($result, $current);
+                }
+            } else {
+                $result = array_merge($result, $current);
+            }
 
             $pagination = $this->getPagination($response);
             $url = $pagination['next'] ?? null;

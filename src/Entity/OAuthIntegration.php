@@ -62,7 +62,7 @@ class OAuthIntegration
 
     public function getAccessToken(): array
     {
-        return $this->accessToken + ['tid' => $this->id];
+        return ($this->accessToken ?: []) + ['tid' => $this->id];
     }
 
     public function setAccessToken(?array $accessToken): self
@@ -232,6 +232,16 @@ class OAuthIntegration
         return $this->setSerialized('clone_preference', $flag);
     }
 
+    public function getInstallationId(): ?int
+    {
+        return $this->getSerialized('installation_id', 'int');
+    }
+
+    public function setInstallationId(null|string|int $id = null): self
+    {
+        return $this->setSerialized('installation_id', $id ? (int) $id : null);
+    }
+
     protected function setSerialized(string $field, mixed $value): self
     {
         if (null === $value) {
@@ -245,7 +255,12 @@ class OAuthIntegration
     protected function getSerialized(string $field, string $type, mixed $default = null): int|null|array|string|bool
     {
         $value = $this->serializedFields[$field] ?? $default;
+        static $aliases = [
+            'int' => 'integer',
+            'bool' => 'boolean'
+        ];
 
+        $type = $aliases[$type] ?? $type;
         return gettype($value) === $type ? $value : $default;
     }
 

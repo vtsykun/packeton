@@ -3,7 +3,7 @@
     Created: {{ oauth.createdAt|date('M d, Y') }} <br>
     Client ID: <code>{{ config.clientId }}</code> <br>
 
-    App Caps: {{ config.caps|map(value => "<span class='role-name'>#{value}</span>")|join(' ')|raw }} <br>
+    App Caps: {{ config.caps(oauth)|map(value => "<span class='role-name'>#{value}</span>")|join(' ')|raw }} <br>
     {% if config.registration %}
         Reg Roles: {{ config.roles|map(value => "<span class='role-name'>#{value}</span>")|join(' ')|raw }} <br>
     {% endif %}

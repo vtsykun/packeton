@@ -16,6 +16,7 @@ use Packeton\Model\AutoHookUser;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
 use Packeton\Service\Scheduler;
+use Packeton\Util\PacketonUtils;
 use Packeton\Webhook\HookBus;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -117,64 +118,30 @@ class ApiController extends AbstractController
 
         $packages = [$package];
         // Get from query parameter.
+        $repo = $this->registry->getRepository(Package::class);
         if ($packageNames = $request->get('composer_package_name')) {
             $packageNames = \explode(',', $packageNames);
-            $repo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $packageName) {
-                $packages = \array_merge($packages, $repo->findBy(['name' => $packageName]));
+                $packages = array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
         }
 
-        $packages = \array_values(\array_filter($packages));
-
-        if (isset($payload['project']['git_http_url'])) { // gitlab event payload
-            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
-            $url = $payload['project']['git_http_url'];
-	    } elseif (isset($payload['repository']['html_url']) && !isset($payload['repository']['url'])) { // gitea event payload https://docs.gitea.io/en-us/webhooks/
-            $urlRegex = '{^(?:ssh://(git@|gitea@)|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
-            $url = $payload['repository']['html_url'];
-        } elseif (isset($payload['repository']['url'])) { // github/anything hook
-            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
-            $url = $payload['repository']['url'];
-            $url = \str_replace('https://api.github.com/repos', 'https://github.com', $url);
-        } elseif (isset($payload['repository']['links']['html']['href'])) { // bitbucket push event payload
-            $urlRegex = '{^(?:https?://|git://|git@)?(?:api\.)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
-            $url = $payload['repository']['links']['html']['href'];
-        } elseif (isset($payload['repository']['links']['clone'][0]['href'])) { // bitbucket on-premise
-            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
-            $url = '';
-            foreach ($payload['repository']['links']['clone'] as $id => $data) {
-                if ($data['name'] == 'ssh') {
-                    $url = $data['href'];
-                    break;
-                }
-            }
-        } elseif (isset($payload['canon_url']) && isset($payload['repository']['absolute_url'])) { // bitbucket post hook (deprecated)
-            $urlRegex = '{^(?:https?://|git://|git@)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
-            $url = $payload['canon_url'] . $payload['repository']['absolute_url'];
-        } elseif (isset($payload['composer']['package_name'])) { // custom webhook
+        $packages = array_values(array_filter($packages));
+        if (empty($packages) && isset($payload['composer']['package_name'])) { // custom webhook
             $packages = [];
             $packageNames = (array) $payload['composer']['package_name'];
-            $repo = $this->registry->getRepository(Package::class);
             foreach ($packageNames as $packageName) {
                 $packages = \array_merge($packages, $repo->findBy(['name' => $packageName]));
             }
-        } elseif (empty($packages)) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Missing or invalid payload'], 406);
+        }
+        if (empty($packages)) {
+            if (!$packages = PacketonUtils::findPackagesByPayload($payload, $repo, true)) {
+                return new JsonResponse(['status' => 'error', 'message' => 'Missing or invalid payload'], 406);
+            }
         }
 
-        if ($packages) {
-            return $this->schedulePostJobs($packages);
-        }
-
-        // Use the custom regex
-        if (isset($payload['packeton']['regex'])) {
-            $urlRegex = $payload['packeton']['regex'];
-        }
-
-        return $this->receivePost($request, $url, $urlRegex);
+        return $this->schedulePostJobs($packages);
     }
-
 
     #[Route('/api/packages/{name}', name: 'api_edit_package', requirements: ['name' => '%package_name_regex%'], methods: ['PUT'])]
     public function editPackageAction(Request $request, #[Vars] Package $package): Response
@@ -331,27 +298,6 @@ class ApiController extends AbstractController
         return \is_array($payload) ? $payload : null;
     }
 
-    /**
-     * Perform the package update
-     *
-     * @param Request $request the current request
-     * @param string $url the repository's URL (deducted from the request)
-     * @param string $urlRegex the regex used to split the user packages into domain and path
-     * @return Response
-     */
-    protected function receivePost(Request $request, $url, $urlRegex)
-    {
-        // try to parse the URL first to avoid the DB lookup on malformed requests
-        if (!\preg_match($urlRegex, $url)) {
-            return new Response(\json_encode(['status' => 'error', 'message' => 'Could not parse payload repository URL']), 406);
-        }
-
-        // try to find the all package
-        $packages = $this->findPackagesByUrl($url, $urlRegex);
-
-        return $this->schedulePostJobs($packages);
-    }
-
     protected function receiveIntegrationHook(Request $request, OAuthIntegration $oauth = null): ?array
     {
         $user = $this->getUser();
@@ -376,7 +322,7 @@ class ApiController extends AbstractController
      * @param Package[] $packages
      * @return Response
      */
-    protected function schedulePostJobs(array $packages)
+    protected function schedulePostJobs(array|null $packages)
     {
         if (!$packages) {
             return new Response(\json_encode(['status' => 'error', 'message' => 'Could not find a package that matches this request (does user maintain the package?)']), 404);
@@ -397,33 +343,6 @@ class ApiController extends AbstractController
         }
 
         return new JsonResponse(['status' => 'success', 'jobs' => $jobs], 202);
-    }
-
-    /**
-     * Find a user package given by its full URL
-     *
-     * @param string $url
-     * @param string $urlRegex
-     * @return array the packages found
-     */
-    protected function findPackagesByUrl($url, $urlRegex)
-    {
-        if (!\preg_match($urlRegex, $url, $matched)) {
-            return [];
-        }
-
-        $packages = [];
-        $repo = $this->registry->getRepository(Package::class);
-        foreach ($repo->getWebhookDataForUpdate() as $package) {
-            if (\preg_match($urlRegex, $package['repository'], $candidate)
-                && \strtolower($candidate['host']) === \strtolower($matched['host'])
-                && \strtolower($candidate['path']) === \strtolower($matched['path'])
-            ) {
-                $packages[] = $repo->find($package['id']);
-            }
-        }
-
-        return $packages;
     }
 
     /**

@@ -220,6 +220,7 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('base_url')->end()
             ->enumNode('clone_preference')->values(AppUtils::$clonePref)->end()
             ->booleanNode('repos_synchronization')->end()
+            ->booleanNode('pull_request_review')->end()
             ->scalarNode('webhook_url')->info('Static current host')->end()
             ->scalarNode('svg_logo')->end()
             ->scalarNode('logo')->end()
@@ -268,6 +269,11 @@ class Configuration implements ConfigurationInterface
     {
         return [
             'github' => [
+                'logo' => '/packeton/img/logo/github.png',
+                'svg_logo' => 'svg/github.html.twig',
+                'login_title' => 'Login with GitHub',
+            ],
+            'githubapp' => [
                 'logo' => '/packeton/img/logo/github.png',
                 'svg_logo' => 'svg/github.html.twig',
                 'login_title' => 'Login with GitHub',

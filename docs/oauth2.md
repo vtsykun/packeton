@@ -13,6 +13,8 @@ packeton:
             login_title: Login or Register with GitHub
             clone_preference: 'api'
             repos_synchronization: true
+            pull_request_review: true # Enable pull request composer.lock review. Default false 
+
 #            webhook_url: 'https://packeton.google.dev/' - overwrite host when setup webhooks
             github:
                 client_id: 'xxx'
@@ -25,6 +27,17 @@ packeton:
                 client_id: 'xxx'
                 client_secret: 'xxx'
                 api_version: 'v4' # you may overwrite only for gitlab provider, default v4
+
+        # Use GitHub APP JWT
+        # See https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/about-authentication-with-a-github-app
+        githubapp_main:
+            repos_synchronization: true
+            pull_request_review: true
+            githubapp:
+                private_key: '%kernel.project_dir%/var/packeton-private-key.pem'
+                passphrase: ~ # private key pass
+                app_id: 345472
+
 ```
 
 Where `clone_preference`:

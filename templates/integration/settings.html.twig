@@ -40,16 +40,7 @@
         {{ form_end(form) }}
 
         <div class="col-sm-6">
-            <p>New releases update will be frozen if auto sync is disabled. Metadata frozen as permanent snapshot</p>
-
-            <p>If strict mode is enabled, you will be able to use those packages that you have manually approved from the user interface.</p>
-
-            <p>
-                You can disable Composer v2 API to avoid too many 304 requests.
-                Instead, the Packeton takes a snapshot of all packages and uses <code>includes</code> directive.
-                This may be useful if missing HTTPS 2 or your network is slower.
-            </p>
-
+            <p>If you do not see any repos in the Excluded VCS repos select2 try to clear cache</p>
         </div>
     </section>
 {% endblock %}

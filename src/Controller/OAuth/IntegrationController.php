@@ -9,11 +9,13 @@ use Packeton\Attribute\Vars;
 use Packeton\Composer\JsonResponse;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
+use Packeton\Exception\SkipLoggerExceptionInterface;
 use Packeton\Form\Type\IntegrationSettingsType;
 use Packeton\Integrations\Exception\NotFoundAppException;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\AppInterface;
 use Packeton\Integrations\Model\AppUtils;
+use Packeton\Integrations\Model\FormSettingsInterface;
 use Packeton\Integrations\Model\OAuth2State;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -55,7 +57,7 @@ class IntegrationController extends AbstractController
         try {
             $orgs = $client->organizations($oauth);
         } catch (\Throwable $e) {
-            $this->logger->error($e->getMessage(), ['e' => $e]);
+            $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($e->getMessage(), ['e' => $e]) : $this->logger->error($e->getMessage(), ['e' => $e]);
             $errorMsg = $e->getMessage();
         }
 
@@ -86,9 +88,18 @@ class IntegrationController extends AbstractController
     public function settings(Request $request, string $alias, #[Vars] OAuthIntegration $oauth): Response
     {
         $client = $this->getClient($alias, $oauth);
-        $repos = $client->repositories($oauth);
+        $repos = [];
+        $errorMsg = null;
+        try {
+            $repos = $client->repositories($oauth);
+        } catch (\Throwable $e) {
+            $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($e->getMessage(), ['e' => $e]) : $this->logger->error($e->getMessage(), ['e' => $e]);
+            $errorMsg = $e->getMessage();
+        }
 
-        $form = $this->createForm(IntegrationSettingsType::class, $oauth, ['repos' => $repos]);
+        [$formType, $formData] = $client instanceof FormSettingsInterface ? $client->getFormSettings($oauth) : [IntegrationSettingsType::class, []];
+
+        $form = $this->createForm($formType, $oauth, $formData + ['repos' => $repos]);
         $form->handleRequest($request);
         $config = $client->getConfig($oauth);
 
@@ -104,6 +115,7 @@ class IntegrationController extends AbstractController
             'alias' => $alias,
             'config' => $config,
             'oauth' => $oauth,
+            'errorMsg' => $errorMsg,
         ]);
     }
 
@@ -139,7 +151,7 @@ class IntegrationController extends AbstractController
     public function flushCache(#[Vars] OAuthIntegration $oauth)
     {
         $client = $this->getClient($oauth);
-        $client->cacheClear($oauth->getId());
+        $client->cacheClear($oauth->getId(), true);
 
         return new JsonResponse([], 204);
     }

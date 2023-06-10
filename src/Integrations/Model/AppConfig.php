@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Model;
 
+use Packeton\Entity\OAuthIntegration;
+
 class AppConfig
 {
     public function __construct(protected array $config)
@@ -25,6 +27,11 @@ class AppConfig
         return $this->config['repos_synchronization'] ?? false;
     }
 
+    public function isPullRequestReview()
+    {
+        return $this->config['pull_request_review'] ?? false;
+    }
+
     public function isLogin(): bool
     {
         return $this->config['allow_login'] ?? false;
@@ -40,9 +47,13 @@ class AppConfig
         return $this->config['client_id'] ?? null;
     }
 
-    public function getCaps(): array
+    public function getCaps(OAuthIntegration $app = null): array
     {
         $caps = ['APP' => true, 'ALLOW_LOGIN' => $this->isLogin(), 'ALLOW_REGISTRATION' => $this->isRegistration()];
+        if (null !== $app) {
+            $caps['PR_REVIEW_ENABLED'] = AppUtils::enableReview($this, $app);
+            $caps['AUTO_SYNC_ENABLED'] = AppUtils::enableSync($this, $app);
+        }
 
         return array_keys(array_filter($caps));
     }

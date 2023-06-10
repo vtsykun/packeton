@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Packeton\Util;
 
 use Composer\Package\PackageInterface;
+use Packeton\Entity\Package;
+use Packeton\Repository\PackageRepository;
 use Symfony\Component\Finder\Glob;
 
 class PacketonUtils
@@ -38,6 +40,85 @@ class PacketonUtils
         });
 
         return $packages;
+    }
+
+    public static function findPackagesByPayload(array $payload, PackageRepository $repo, bool $multiply = false): Package|array|null
+    {
+        $urlRegex = $url = null;
+        if (isset($payload['project']['git_http_url'])) { // gitlab event payload
+            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+            $url = $payload['project']['git_http_url'];
+        } elseif (isset($payload['repository']['html_url']) && !isset($payload['repository']['url'])) { // gitea event payload https://docs.gitea.io/en-us/webhooks/
+            $urlRegex = '{^(?:ssh://(git@|gitea@)|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+            $url = $payload['repository']['html_url'];
+        } elseif (isset($payload['repository']['url'])) { // github/anything hook
+            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+            $url = $payload['repository']['url'];
+            $url = \str_replace('https://api.github.com/repos', 'https://github.com', $url);
+        } elseif (isset($payload['repository']['links']['html']['href'])) { // bitbucket push event payload
+            $urlRegex = '{^(?:https?://|git://|git@)?(?:api\.)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
+            $url = $payload['repository']['links']['html']['href'];
+        } elseif (isset($payload['repository']['links']['clone'][0]['href'])) { // bitbucket on-premise
+            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+            $url = '';
+            foreach ($payload['repository']['links']['clone'] as $id => $data) {
+                if ($data['name'] == 'ssh') {
+                    $url = $data['href'];
+                    break;
+                }
+            }
+        } elseif (isset($payload['canon_url']) && isset($payload['repository']['absolute_url'])) { // bitbucket post hook (deprecated)
+            $urlRegex = '{^(?:https?://|git://|git@)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
+            $url = $payload['canon_url'] . $payload['repository']['absolute_url'];
+        }
+
+        if (empty($url) || empty($urlRegex)) {
+            return null;
+        }
+
+        // Use the custom regex
+        if (isset($payload['packeton']['regex'])) {
+            $urlRegex = $payload['packeton']['regex'];
+        }
+
+        if (!preg_match($urlRegex, $url, $matched)) {
+            return null;
+        }
+
+        $packages = [];
+        foreach ($repo->getWebhookDataForUpdate() as $package) {
+            if ($package['repository']
+                && preg_match($urlRegex, $package['repository'], $candidate)
+                && strtolower($candidate['host']) === strtolower($matched['host'])
+                && strtolower($candidate['path']) === strtolower($matched['path'])
+                && ($found = $repo->find($package['id']))
+            ) {
+                if ($multiply === false) {
+                    return $found;
+                }
+
+                $packages[] = $found;
+            }
+        }
+
+        return $packages ? : null;
+    }
+
+    public static function getBrowsableRepository(string $repository): ?string
+    {
+        if (preg_match('{(://|@)bitbucket.org[:/]}i', $repository)) {
+            return preg_replace('{^(?:git@|https://|git://)bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $repository);
+        }
+
+        if (preg_match('{^(git://github.com/|git@github.com:)}', $repository)) {
+            return preg_replace('{^(git://github.com/|git@github.com:)}', 'https://github.com/', $repository);
+        }
+
+        if (preg_match('{^((git|ssh)@(.+))}', $repository, $match) && isset($match[3])) {
+            return 'https://' . str_replace(':', '/', $match[3]);
+        }
+
+        return $repository;
     }
 
     public static function formatSize(int $size): string

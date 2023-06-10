@@ -27,7 +27,7 @@
                     {% if config.logo %}
                         <img src="{{ config.logo }}" height="40" alt="connect">
                     {% endif %}
-                    <b>{{ config.title ?? config.name|capitalize }}</b>
+                    <b>{{ config.title ?? config.name }}</b>
                     <div class="form-group">
                         <label class="link-gray">Redirect Urls</label>
                         <textarea class="form-control" readonly rows="4" style="width: 450px;">{{ config.redirectUrls|join("\n") }}</textarea>

@@ -9,18 +9,15 @@ use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\OAuthIntegration as App;
-use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Integrations\AppInterface;
 use Packeton\Integrations\Base\AppIntegrationTrait;
 use Packeton\Integrations\Base\BaseIntegrationTrait;
-use Packeton\Integrations\Github\GithubResultPager;
 use Packeton\Integrations\IntegrationInterface;
 use Packeton\Integrations\LoginInterface;
 use Packeton\Integrations\Model\AppUtils;
 use Packeton\Integrations\Model\OAuth2State;
 use Packeton\Service\Scheduler;
-use Psr\Cache\CacheItemInterface as CacheItem;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -63,6 +60,8 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         if ($config['base_url'] ?? false) {
             $this->baseUrl = rtrim($config['base_url'], '/');
         }
+
+        $this->remoteContentUrl = "/projects/{project_id}/repository/files/{file}?ref={ref}";
     }
 
     /**
@@ -410,114 +409,74 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
      */
     public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array
     {
-        if (null === $payload || !($id = $payload['project']['id'] ?? null)) {
+        if (null === $payload || !($payload['project']['id'] ?? null)) {
             return null;
         }
 
         $kind = $payload['object_kind'] ?? 'push';
         if (in_array($kind, ['push', 'tag_push'])) {
-            return $this->processPushEvent($accessToken, $payload, $id);
+            return $this->processPushEvent($accessToken, $payload);
+        }
+        if ($kind === 'merge_request') {
+            return $this->processPullRequest($accessToken, $payload);
         }
 
         return null;
     }
 
-    protected function processPushEvent(App $app, array $payload, $id): ?array
+    protected function processPushEvent(App $app, array $payload): ?array
     {
-        $repo = $this->registry->getRepository(Package::class);
-        $pkg = $repo->findOneBy(['externalRef' => $externalId = "{$this->name}:$id"]);
-        if (null !== $pkg) {
-            $pkg->setAutoUpdated(true);
-            $job = $this->scheduler->scheduleUpdate($pkg);
-            return ['status' => 'success', 'job' => $job->getId(), 'code' => 202];
-        }
+        $data = [
+            'id' => $payload['project']['id'],
+            'name' => $payload['project']['path_with_namespace'] ?? null,
+            'default_branch' => $payload['project']['default_branch'],
+            'organization_column' => 'full_path',
+            'external_ref' => "{$this->name}:{$payload['project']['id']}",
+            'urls' => [
+                $payload['project']['git_ssh_url'] ?? null,
+                $payload['project']['git_http_url'] ?? null,
+                $payload['project']['web_url'] ?? null,
+            ]
+        ];
 
-        $config = $this->getConfig();
-        if (!AppUtils::enableSync($config, $app)
-            || !($path = $payload['project']['path_with_namespace'] ?? null)
-            || AppUtils::isRepoExcluded($app, $path, $this->organizations($app), 'full_path')
-        ) {
+        return $this->pushEventSynchronize($app, $data + $payload);
+    }
+
+    protected function processPullRequest(App $app, array $payload): ?array
+    {
+        $pullRequest = $payload['object_attributes'];
+        $statues = ['open', 'update', 'reopen'];
+        if (!in_array($pullRequest['action'], $statues)) {
             return null;
         }
 
-        $hasNewComposer = $this->getCached($app, "hasComposer:$path", callback: function (CacheItem $item) use ($app, $id, $payload, $repo) {
-            $item->expiresAfter(7*86400);
+        $data = [
+            'id' => $payload['project']['id'],
+            'name' => $payload['project']['path_with_namespace'] ?? null,
+            'source_id' => $pullRequest['source_project_id'],
+            'target_id' => $pullRequest['target_project_id'],
+            'source_branch' => $pullRequest['source_branch'],
+            'target_branch' => $pullRequest['target_branch'],
+            'default_branch' => $payload['project']['default_branch'],
+            'iid' => $iid = $pullRequest['iid'],
+        ];
+
+        return $this->pullRequestReview($app, $data, function (string $method, string $diff, $commentId = null) use ($app, $payload, $iid) {
             $token = $this->refreshToken($app);
-            try {
-                $ref = $payload['project']['default_branch'];
-                $data = $this->makeApiRequest($token, 'GET', "/projects/$id/repository/files/composer.json?ref=$ref");
-                $content = base64_decode($data['content'] ?? '');
-                $content = $content ? json_decode($content, true) : $content;
-            } catch (\Throwable $e) {
-                $this->logger->error($e->getMessage(), ['e' => $e]);
-                return false;
+            $body = ['body' => $diff];
+            if ($method === 'PUT') {
+                return $this->makeApiRequest($token, "PUT", "/projects/{$payload['project']['id']}/merge_requests/$iid/notes/$commentId", ['json' => $body]);
             }
-
-            if (!is_string($name = ($content['name'] ?? null))) {
-                return false;
+            if ($method === 'POST') {
+                return $this->makeApiRequest($token, "POST", "/projects/{$payload['project']['id']}/merge_requests/$iid/notes", ['json' => $body]);
             }
-
-            $pkg = $repo->findOneByName($name);
-            return $pkg === null;
-        });
-
-        $newAdded = false;
-        $commits = $payload['commits'] ?? [];
-        foreach ($commits as $commit) {
-            $files = array_merge((array)($commit['added'] ?? []), (array)($commit['modified'] ?? []));
-            if (in_array('composer.json', $files)) {
-                $newAdded = true;
-                break;
-            }
-        }
-
-        if (false === $newAdded && false === $hasNewComposer) {
-            return null;
-        }
-
-        $job = null;
-        $this->getCached($app, "sync:$path", false === $newAdded, function (CacheItem $item) use ($externalId, $app, &$job) {
-            $item->expiresAfter(86400);
-            $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $externalId, 'app' => $app->getId()], $app->getId());
-            $job = ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
             return [];
         });
-
-        return $job;
     }
 
     protected function getApiUrl(string $path): string
     {
         $apiVer = $this->config['api_version'] ?? 'v4';
         return $this->baseUrl . '/api/' . $apiVer . $path;
-    }
-
-    protected function makeApiRequest(array $token, string $method, string $path, array $params = []): array
-    {
-        $params = array_merge_recursive($this->getApiHeaders($token), $params);
-        $response = $this->httpClient->request($method, $this->getApiUrl($path), $params);
-        $content = $response->getContent();
-        $content = $content ? json_decode($content, true) : [];
-
-        return is_array($content) ? $content : [];
-    }
-
-    protected function makeCGetRequest(array $token, string $path, array $params = []): array
-    {
-        $params = array_merge_recursive($this->getApiHeaders($token), $params);
-        $paginator = new GithubResultPager($this->httpClient, $this->getApiUrl($path), $params);
-        return $paginator->all();
-    }
-
-    protected function getApiHeaders(array $token, array $default = []): array
-    {
-        $params = array_merge_recursive($this->config['http_options'] ?? [], [
-            'headers' => [
-                'Authorization' => "Bearer {$token['access_token']}",
-            ]
-        ]);
-
-        $params['headers'] = array_merge($params['headers'], ['Accept' => 'application/json'], $default);
-        return $params;
     }
 }
