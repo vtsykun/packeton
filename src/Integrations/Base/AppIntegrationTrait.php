@@ -123,11 +123,6 @@ trait AppIntegrationTrait
         return null;
     }
 
-    public function zipballDownload(OAuthIntegration $accessToken, string $reference): string
-    {
-        throw new \LogicException('Zipball Download is not supported');
-    }
-
     public function authenticateIO(OAuthIntegration $accessToken, IOInterface $io, Config $config, string $repoUrl = null): void
     {
     }
@@ -349,8 +344,13 @@ trait AppIntegrationTrait
         $column = $params['column'] ?? null;
         unset($params['column']);
 
+        $options = [];
+        if ($name = ($this->paginatorQueryName ?? null)) {
+            $options['query_name'] = $name;
+        }
+
         $params = array_merge_recursive($this->getApiHeaders($token), $params);
-        $paginator = new GithubResultPager($this->httpClient, $this->getApiUrl($path), $params);
+        $paginator = new GithubResultPager($this->httpClient, $this->getApiUrl($path), $params, options: $options);
         return $paginator->all($column);
     }
 

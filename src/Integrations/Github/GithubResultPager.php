@@ -17,14 +17,18 @@ class GithubResultPager
         private readonly HttpClientInterface $httpClient,
         private readonly string $url,
         private readonly array $params,
-        private readonly string $method = 'GET'
+        private readonly string $method = 'GET',
+        private readonly array $options = [],
     ) {
     }
 
     public function all(string $column = null): array
     {
         $params = $this->params;
-        $params['query']['per_page'] ??= $this->perPage;
+        $paginationParameter = $this->options['query_name'] ?? 'per_page';
+        $maxLimit = $this->options['per_page'] ?? $this->perPage;
+
+        $params['query'][$paginationParameter] ??= $maxLimit;
 
         $processed = [];
         $url = $this->url;

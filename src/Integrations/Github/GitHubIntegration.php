@@ -30,9 +30,13 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     use BaseIntegrationTrait;
     use AppIntegrationTrait;
 
-    protected $baseUrl = 'https://github.com';
-    protected $apiUrl = 'https://api.github.com';
-    protected $name;
+    protected string $baseUrl = 'https://github.com';
+    protected string $apiUrl = 'https://api.github.com';
+    protected string $name;
+
+    protected array $baseScores = ['user:email'];
+    protected array $appScores = ['read:org', 'repo', 'admin:org_hook', 'admin:repo_hook'];
+    protected ?string $authorizationResponseRoute = null;
 
     public function __construct(
         protected array $config,
@@ -46,12 +50,17 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];
-        if (empty($this->config['default_roles'])) {
-            $this->config['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_GITHUB'];
-        }
-
         if ($config['base_url'] ?? false) {
             $this->baseUrl = rtrim($config['base_url'], '/');
+        }
+
+        $this->init();
+    }
+
+    protected function init(): void
+    {
+        if (empty($this->config['default_roles'])) {
+            $this->config['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_GITHUB'];
         }
 
         $this->remoteContentUrl = '/repos/{project_id}/contents/{file}?ref={ref}';
@@ -62,9 +71,9 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
      */
     public function redirectOAuth2Url(Request $request = null, array $options = []): RedirectResponse
     {
-        $options = $options + ['scope' => ['user:email']];
+        $options = $options + ['scope' => $this->baseScores];
 
-        return $this->getAuthorizationResponse($this->baseUrl . '/login/oauth/authorize', $options);
+        return $this->getAuthorizationResponse($this->baseUrl . '/login/oauth/authorize', $options, $this->authorizationResponseRoute);
     }
 
     /**
@@ -72,9 +81,9 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
      */
     public function redirectOAuth2App(Request $request = null, array $options = []): RedirectResponse
     {
-        $options = $options + ['scope' => ['read:org', 'repo', 'admin:org_hook', 'admin:repo_hook']];
+        $options = $options + ['scope' => $this->appScores];
 
-        return $this->getAuthorizationResponse($this->baseUrl . '/login/oauth/authorize', $options, 'oauth_install');
+        return $this->getAuthorizationResponse($this->baseUrl . '/login/oauth/authorize', $options, $this->authorizationResponseRoute ?: 'oauth_install');
     }
 
     /**
