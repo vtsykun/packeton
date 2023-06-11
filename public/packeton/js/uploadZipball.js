@@ -37,6 +37,11 @@
         request.onreadystatechange = (e) => {
             if (request.readyState === 4) {
                 progressBar.remove();
+                if (request.status === 413) {
+                    alert("413 Request Entity Too Large");
+                    return;
+                }
+
                 let result = JSON.parse(request.responseText);
 
                 if (result.error) {
@@ -50,7 +55,7 @@
                         deleteFile(el, result.id);
                     });
                     att.append(el);
-                    updateSelect2();
+                    updateSelect2(result.id);
                 }
             }
         };
@@ -100,11 +105,14 @@
         });
     }
 
-    function updateSelect2()
+    function updateSelect2(withId = null)
     {
         let select2 = $('.archive-select');
+        let value = select2.val();
+        let querySearch = value ? value.join(',') : '';
+
         $.ajax({
-            url: searchUrl,
+            url: searchUrl + '?with_archives=' + querySearch,
             success: (data) => {
                 let result = [];
                 for (let item of data) {
@@ -115,6 +123,11 @@
                 for (let i = 0; i < select2.length; i++) {
                     let wrap = $(select2[i]);
                     let prev = wrap.val();
+                    if (withId) {
+                        prev = prev ? prev : [];
+                        prev.push(withId+'');
+                        withId = null;
+                    }
 
                     wrap.select2({'data': result});
                     wrap.html(options.join('')).change();

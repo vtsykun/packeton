@@ -30,21 +30,23 @@ class BasePackageType extends AbstractType
 
             if ($options['has_active_integration']) {
                 $choices['Integration'] = RepTypes::INTEGRATION;
-
-                $builder->add('pullRequestReview', ChoiceType::class, [
-                    'required' => false,
-                    'label' => 'Pull Request composer diff review',
-                    'choices' => [
-                        'Use global config settings'  => null,
-                        'Enable PR Review' => true,
-                    ],
-                    'priority' => -10,
-                ]);
             }
 
             $builder->add('repoType', ChoiceType::class, [
                 'choices' => $choices,
                 'attr' => ['class' => 'repo-type']
+            ]);
+        }
+
+        if ($options['has_active_integration']) {
+            $builder->add('pullRequestReview', ChoiceType::class, [
+                'required' => false,
+                'label' => 'Pull Request composer diff review',
+                'choices' => [
+                    'Use global config settings'  => null,
+                    'Enable PR Review' => true,
+                ],
+                'priority' => -10,
             ]);
         }
     }

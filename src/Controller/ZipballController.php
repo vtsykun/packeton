@@ -63,9 +63,11 @@ class ZipballController extends AbstractController
 
     #[Route('/archive/list', name: 'archive_list')]
     #[IsGranted('ROLE_MAINTAINER')]
-    public function zipballList(): Response
+    public function zipballList(Request $request): Response
     {
-        $data = $this->registry->getRepository(Zipball::class)->ajaxSelect();
+        $withIds = $request->query->get('with_archives');
+        $withIds = $withIds ? explode(',', $withIds) : [];
+        $data = $this->registry->getRepository(Zipball::class)->ajaxSelect(true, $withIds);
 
         return new JsonResponse($data);
     }

@@ -44,7 +44,7 @@ class ArtifactPackageType extends AbstractType
                 'required' => false,
                 'multiple' => true,
                 'label' => 'Zipball Assets (if path is empty)',
-                'choices' => $this->getChoices(),
+                'choices' => $this->getChoices($options['is_created']),
                 'attr'  => ['class' => 'jselect2 archive-select']
             ]);
 
@@ -88,10 +88,10 @@ class ArtifactPackageType extends AbstractType
         return BasePackageType::class;
     }
 
-    protected function getChoices(): array
+    protected function getChoices(bool $unsetUsed): array
     {
         $choices = [];
-        $all = $this->registry->getRepository(Zipball::class)->ajaxSelect();
+        $all = $this->registry->getRepository(Zipball::class)->ajaxSelect($unsetUsed);
         foreach ($all as $item) {
             $label = $item['filename'] . ' ('.  PacketonUtils::formatSize($item['size']) . ')';
             $choices[$label] = $item['id'];
