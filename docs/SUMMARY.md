@@ -25,7 +25,10 @@
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
     - [LDAP Configuration](authentication-ldap.md)
-  - [OAuth2 Integrations](oauth2.md)
+  - [OAuth2 GitHub/GitLab Integrations](oauth2.md)
+    - [Pull Request review](pull-request-review.md)
+    - [GitHub Setup](oauth2/github-oauth.md)
+    - [GitLab Setup](oauth2/gitlab-integration.md)
 
 # Development
   - [Contributing](dev/CONTRIBUTING.md)

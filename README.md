@@ -24,6 +24,8 @@ Features
 - Mirroring for packages zip files and downloads it's from your host.
 - Credentials and Authentication http-basic config or ssh keys.
 - Support monolithic repositories, like `symfony/symfony`
+- Pull Request `composer.lock` change review.
+- OAuth2 GitHub, GitLab and Other Integrations.
 
 What was changed in this fork?
 -----------------------------
@@ -47,7 +49,9 @@ Table of content
 - [Ssh key access](#ssh-key-access-and-composer-oauth-token)
 - [Configuration](#configuration)
 - [LDAP Authenticating](/docs/authentication-ldap.md)
-- [OAuth2 and Sync](/docs/oauth2.md)
+- [OAuth2 GitHub, GitLab Integrations](/docs/oauth2.md)
+    - [Pull Request review](/docs/pull-request-review.md)
+    - [GitHub Setup](/docs/oauth2/github-oauth.md)
 - [Update Webhooks](#update-webhooks)
     - [Github](#github-webhooks)
     - [GitLab](#gitlab-service)

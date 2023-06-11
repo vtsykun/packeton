@@ -1,5 +1,12 @@
 # OAuth2 and Sync integrations
 
+Table of content
+---------------
+- [Pull Request review](pull-request-review.md)
+- [GitHub Setup](oauth2/github-oauth.md)
+- [GitHub App Setup](oauth2/githubapp.md)
+- [GitLab Setup](oauth2/gitlab-integration.md)
+
 ## Base configuration
 
 To enable OAuth2 integrations you need to add following configuration 
