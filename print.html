@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li class="chapter-item expanded affix "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 GitHub/GitLab Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -2249,6 +2249,13 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
             - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="oauth2-and-sync-integrations"><a class="header" href="#oauth2-and-sync-integrations">OAuth2 and Sync integrations</a></h1>
+<h2 id="table-of-content-1"><a class="header" href="#table-of-content-1">Table of content</a></h2>
+<ul>
+<li><a href="pull-request-review.html">Pull Request review</a></li>
+<li><a href="oauth2/github-oauth.html">GitHub Setup</a></li>
+<li><a href="oauth2/githubapp.html">GitHub App Setup</a></li>
+<li><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li>
+</ul>
 <h2 id="base-configuration"><a class="header" href="#base-configuration">Base configuration</a></h2>
 <p>To enable OAuth2 integrations you need to add following configuration </p>
 <pre><code class="language-yml">packeton:
@@ -2321,6 +2328,73 @@ This feature enabled only for Premium / EE / Gold paid plan, but it can be repla
 <p><a href="img/gitlab.png"><img src="img/gitlab.png" alt="Gitlab" /></a></p>
 <p>Where token you can find on the packeton integration view page. The token must have <code>whk</code> prefix 
 to find related integration access token.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="pull-request-composer-lock-review"><a class="header" href="#pull-request-composer-lock-review">Pull Request composer lock review</a></h1>
+<p>Every time when you create a Pull Request with <code>composer.lock</code> changes, the Packeton add a comment with descriptions 
+of changing dependencies. It detects the next of changes:</p>
+<ul>
+<li>Added a new dependency</li>
+<li>Remove dependency</li>
+<li>Downgrade dependency</li>
+<li>Upgrades dependency.</li>
+<li>Change dist or source url.</li>
+</ul>
+<p><a href="img/pr-review.png"><img src="img/pr-review.png" alt="PR review" /></a></p>
+<h3 id="configure-pull-request-review"><a class="header" href="#configure-pull-request-review">Configure Pull Request Review.</a></h3>
+<p>In the first you need add oauth integration. It may also GitHub app bot for GitHub hosting, see <a href="oauth2.html">oauth2</a>.</p>
+<p>You must enable <code>pull_request_review</code> on configuration level. Or later you may enable per repository individually in the case then you 
+don't use the integration synchronization.</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        github:
+            pull_request_review: true
+            githubapp:
+                ...
+</code></pre>
+<p>Now the bot will add comments automatically if you use with integration synchronization. 
+But for enable it manually only for one selected repository you need add webhook (<code>pull_request</code> score) with integration access token.</p>
+<p>it may look like. you can found this on integration view page.</p>
+<pre><code>https://example.com/api/hooks/gitlab/6?token=whk_810d6b279b3f78b758e09fe01f12378d2bd809c4
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="github-oauth2-setup"><a class="header" href="#github-oauth2-setup">GitHub OAuth2 Setup</a></h1>
+<p>Go to you GitHub account Settings / Developer settings (<code>https://github.com/settings/developers</code>) and select &quot;New OAuth App&quot;</p>
+<p>Use the packeton host as &quot;Callback URL / Redirect URL&quot;. For example <code>https://packeton.example.org</code></p>
+<p><a href="oauth2/../img/github-oauth2.png"><img src="oauth2/../img/github-oauth2.png" alt="Groups" /></a></p>
+<p>Use obtained <code>clinent_id</code>, <code>client_secret</code> to create configuration in yaml. For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        github: # any alias name 
+            allow_login: true 
+            ... more options see oauth2 md
+            gitlab: # Provider name: github, gitlab, bitbucket etc 
+                client_id: 'xxx'
+                client_secret: 'xxx'
+</code></pre>
+<p>Now go to Packeton integration page and click Install Integration. You will see list of available integrations and its Redirect Urls</p>
+<p>Click to Connect to set up oauth2 credentials</p>
+<p><a href="oauth2/../img/github-connect.png"><img src="oauth2/../img/github-connect.png" alt="Groups" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="gitlab-integration-setup"><a class="header" href="#gitlab-integration-setup">GitLab Integration Setup</a></h1>
+<p>Go to you GitLab account preferences (<code>https://gitlab.example.com/-/profile/preferences</code>) and select &quot;Applications&quot;</p>
+<p><a href="oauth2/../img/gitlab-app.png"><img src="oauth2/../img/gitlab-app.png" alt="Groups" /></a></p>
+<p>Redirect Urls:</p>
+<pre><code>https://example.com/oauth2/{alias}/install
+https://example.com/oauth2/{alias}/check
+</code></pre>
+<p>Select the <code>api</code>, <code>read_user</code>, <code>read_repository</code> scopes and save the new application. The redirect urls you may change later.</p>
+<p>Use obtained <code>clinent_id</code>, <code>client_secret</code> to create configuration in yaml. For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        gitlab: # - {alias}
+            base_url: 'https://gitlab.example.com/'
+            clone_preference: 'clone_https' # Allows [api, clone_https, clone_ssh]
+            ... more options see oauth2 md
+            gitlab: # Provider name: github, gitlab, bitbucket etc 
+                client_id: 'xxx'
+                client_secret: 'xxx'
+#                api_version: 'v4'
+</code></pre>
+<p>Now go to Packeton integration page and click Install Integration. You will see list of available integrations and its Redirect Urls</p>
+<p>Click to Connect to setup oauth2 credentials</p>
+<p><a href="oauth2/../img/gitlab-connect.png"><img src="oauth2/../img/gitlab-connect.png" alt="Groups" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
 <p>Everyone is welcome to contribute code to <a href="https://github.com/vtsykun/packeton.git">https://github.com/vtsykun/packeton.git</a></p>
 <h3 id="1-development-environment"><a class="header" href="#1-development-environment">1. Development environment.</a></h3>
