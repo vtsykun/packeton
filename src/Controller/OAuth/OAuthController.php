@@ -33,6 +33,8 @@ class OAuthController extends AbstractController
             return $this->redirect('/');
         }
 
+        $this->state->set('controller', 'oauth_check');
+
         return $this->findLogin($alias)->redirectOAuth2Url($request);
     }
 
@@ -47,9 +49,28 @@ class OAuthController extends AbstractController
     public function integration(string $alias, Request $request): Response
     {
         $this->state->set('username', $this->getUser()->getUserIdentifier());
+        $this->state->set('controller', 'oauth_install');
         $this->state->save();
 
         return $this->findApp($alias)->redirectOAuth2App($request);
+    }
+
+    #[Route('/oauth2/{alias}/auto', name: 'oauth_auto_redirect')]
+    public function autoRedirect(string $alias, Request $request): Response
+    {
+        if (!$action = $this->state->get('controller')) {
+            throw $this->createNotFoundException("State parameter is lost, please check why oauth2_state cookie is lost");
+        }
+
+        if (null === $this->getUser()) {
+            // safe redirect without usage session when same site = strict
+            $session = $request->getSession();
+            $request->cookies->set($session->getName(), $session->getId());
+        }
+        $query = $request->query->all();
+        $route = $this->generateUrl($action, ['alias' => $alias] + $query);
+
+        return $this->render('user/redirect.html.twig', ['route' => $route]);
     }
 
     #[Route('/oauth2/{alias}/install', name: 'oauth_install')]
