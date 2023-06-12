@@ -88,7 +88,7 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
         if ($config->hasLoginExpression()) {
             $result = $client->evaluateExpression(['user' => $user, 'data' => $data]);
             if (empty($result)) {
-                throw new CustomUserMessageAuthenticationException('Registration is not allowed');
+                throw new CustomUserMessageAuthenticationException('Login is not allowed by custom rules');
             }
 
             if (is_array($result) && is_string($result[0] ?? null) && str_starts_with($result[0], 'ROLE_')) {
