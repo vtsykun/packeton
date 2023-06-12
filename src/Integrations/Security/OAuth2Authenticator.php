@@ -81,10 +81,23 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
 
     protected function loadOrCreateUser(LoginInterface $client, array $data): User
     {
+        $config = $client->getConfig();
+        $config->overwriteRoles();
         $repo = $this->registry->getRepository(User::class);
         $user = $repo->findByOAuth2Data($data);
+        if ($config->hasLoginExpression()) {
+            $result = $client->evaluateExpression(['user' => $user, 'data' => $data]);
+            if (empty($result)) {
+                throw new CustomUserMessageAuthenticationException('Registration is not allowed');
+            }
+
+            if (is_array($result) && is_string($result[0] ?? null) && str_starts_with($result[0], 'ROLE_')) {
+                $config->overwriteRoles($result);
+            }
+        }
+
         if ($user === null) {
-            if (!$client->getConfig()->isRegistration()) {
+            if (!$config->isRegistration()) {
                 throw new CustomUserMessageAuthenticationException('Registration is not allowed');
             }
 
@@ -95,6 +108,7 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
             $em->flush();
         }
 
+        $config->overwriteRoles();
         return $user;
     }
 

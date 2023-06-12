@@ -8,6 +8,8 @@ use Packeton\Entity\OAuthIntegration;
 
 class AppConfig
 {
+    protected $overwriteRoles = null;
+
     public function __construct(protected array $config)
     {
     }
@@ -30,6 +32,11 @@ class AppConfig
     public function isPullRequestReview()
     {
         return $this->config['pull_request_review'] ?? false;
+    }
+
+    public function hasLoginExpression(): bool
+    {
+        return $this->config['login_control_expression'] ?? false;
     }
 
     public function isLogin(): bool
@@ -63,9 +70,14 @@ class AppConfig
         return $this->config['client_secret'] ?? null;
     }
 
+    public function overwriteRoles(array $roles = null): void
+    {
+        $this->overwriteRoles = $roles;
+    }
+
     public function roles(): array
     {
-        return $this->config['default_roles'] ?? [];
+        return $this->overwriteRoles ?: ($this->config['default_roles'] ?? []);
     }
 
     public function getLogo(): ?string

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Base;
 
+use Okvpn\Expression\TwigLanguage;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Integrations\Model\AppConfig;
+use Packeton\Integrations\Model\OAuth2ExpressionExtension;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 trait BaseIntegrationTrait
 {
     protected $defaultScopes = [''];
+    protected ?TwigLanguage $exprLang = null;
 
     /**
      * {@inheritdoc}
@@ -19,6 +22,45 @@ trait BaseIntegrationTrait
     public function getConfig(OAuthIntegration $app = null, bool $details = false): AppConfig
     {
         return new AppConfig($this->config + $this->getConfigApp($app, $details));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function evaluateExpression(array $context = []): mixed
+    {
+        if (null === $this->exprLang) {
+            $this->initExprLang();
+        }
+
+        $script = trim($this->config['login_control_expression']);
+        if (!str_starts_with($script, '{%')) {
+            $script = "{% return $script %}";
+        }
+
+        return $this->exprLang->execute($script, $context, true);
+    }
+
+    protected function initExprLang(): void
+    {
+        $this->exprLang = new TwigLanguage();
+        $repo = $this->registry->getRepository(OAuthIntegration::class);
+        $baseApp = $repo->findOneBy(['alias' => $this->name], ['id' => 'ASC']);
+
+        $funcList = [
+            'api_cget' => function(string $url, array $query = [], int $app = null) use ($repo, $baseApp) {
+                $baseApp = $app ? $repo->find($app) : $baseApp;
+                $token = $this->refreshToken($baseApp);
+                return $this->makeApiRequest($token, 'GET', $url, ['query' => $query]);
+            },
+            'api_get' => function(string $url, array $query = [], int $app = null) use ($repo, $baseApp) {
+                $baseApp = $app ? $repo->find($app) : $baseApp;
+                $token = $this->refreshToken($baseApp);
+                return $this->makeCGetRequest($token, $url, ['query' => $query]);
+            },
+        ];
+
+        $this->exprLang->addExtension(new OAuth2ExpressionExtension($funcList));
     }
 
     /**
