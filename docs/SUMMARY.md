@@ -29,6 +29,7 @@
     - [Pull Request review](pull-request-review.md)
     - [GitHub Setup](oauth2/github-oauth.md)
     - [GitLab Setup](oauth2/gitlab-integration.md)
+    - [Gitea Setup](oauth2/gitea.md)
 
 # Development
   - [Contributing](dev/CONTRIBUTING.md)
