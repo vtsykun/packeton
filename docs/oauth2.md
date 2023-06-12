@@ -6,6 +6,7 @@ Table of content
 - [GitHub Setup](oauth2/github-oauth.md)
 - [GitHub App Setup](oauth2/githubapp.md)
 - [GitLab Setup](oauth2/gitlab-integration.md)
+- [Gitea Setup](oauth2/gitea.md)
 
 ## Base configuration
 
@@ -45,6 +46,14 @@ packeton:
                 passphrase: ~ # private key pass
                 app_id: 345472
 
+        gitea:
+            allow_login: true
+            repos_synchronization: true
+            pull_request_review: true
+            base_url: 'https://gitea.packeton.com.ar/'
+            gitea:
+                client_id: '44000000-0000-0000-0000-00000000000'
+                client_secret: 'gto_acxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 ```
 
 Where `clone_preference`:
@@ -96,3 +105,16 @@ You must manually setup this integration.
 
 Where token you can find on the packeton integration view page. The token must have `whk` prefix 
 to find related integration access token.
+
+### Gitea
+
+Scopes:
+
+- login: `read:user`
+- repositories: `organization`, `repository`, `write:issue`
+
+Redirect Urls:
+
+```
+https://example.com/oauth2/{alias}/auto
+```

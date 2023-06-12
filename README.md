@@ -25,7 +25,7 @@ Features
 - Credentials and Authentication http-basic config or ssh keys.
 - Support monolithic repositories, like `symfony/symfony`
 - Pull Request `composer.lock` change review.
-- OAuth2 GitHub, GitLab and Other Integrations.
+- OAuth2 GitHub, GitLab/Gitea and Other Integrations.
 
 What was changed in this fork?
 -----------------------------

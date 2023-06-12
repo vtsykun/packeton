@@ -116,7 +116,8 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
      */
     public function repositories(App $app): array
     {
-        $orgs = $app->getEnabledOrganizations();
+        $organizations = $app->getEnabledOrganizations();
+        $organizations = array_diff($organizations, ['@self']);
         $accessToken = null;
 
         $allRepos = [];
@@ -131,10 +132,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
             $allRepos = array_merge($allRepos, $userRepos);
         }
 
-        foreach ($orgs as $org) {
-            if ($org === '@self') {
-                continue;
-            }
+        foreach ($organizations as $org) {
             $url = '/orgs/'.rawurlencode($org).'/repos';
             try {
                 $orgRepos = $this->getCached($app->getId(), "repos:$org", callback: $callback);
@@ -228,7 +226,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         }
 
         $url = $this->getConfig($app)->getHookUrl();
-        $body = ['name' => 'web', 'config' => ['url' => $url, 'content_type' => 'json'], 'events' => ['push', 'pull_request']];
+        $body = $this->getWebhookBody($url);
         $accessToken = $this->refreshToken($app);
         if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
             return ['status' => true, 'id' => $hook['id']];
@@ -247,6 +245,11 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
             return ['status' => true, 'id' => $hook['id'], 'owner_id' => $orgId];
         }
         return null;
+    }
+
+    protected function getWebhookBody(string $url): array
+    {
+        return ['name' => 'web', 'config' => ['url' => $url, 'content_type' => 'json'], 'events' => ['push', 'pull_request']];
     }
 
     protected function doRemoveHook(App $app, string $orgId, bool $isRepo, int $hookId = null): ?array
@@ -305,7 +308,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
 
     protected function processPullRequest(App $app, array $payload, $repoName): ?array
     {
-        $statues = ['opened', 'synchronize', 'reopened'];
+        $statues = ['opened', 'synchronize', 'synchronized', 'reopened'];
         if (!in_array($payload['action'] ?? 'opened', $statues)) {
             return null;
         }
