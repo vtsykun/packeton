@@ -2255,6 +2255,7 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
 <li><a href="oauth2/github-oauth.html">GitHub Setup</a></li>
 <li><a href="oauth2/githubapp.html">GitHub App Setup</a></li>
 <li><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li>
+<li><a href="oauth2/gitea.html">Gitea Setup</a></li>
 </ul>
 <h2 id="base-configuration"><a class="header" href="#base-configuration">Base configuration</a></h2>
 <p>To enable OAuth2 integrations you need to add following configuration </p>
@@ -2292,6 +2293,14 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
                 passphrase: ~ # private key pass
                 app_id: 345472
 
+        gitea:
+            allow_login: true
+            repos_synchronization: true
+            pull_request_review: true
+            base_url: 'https://gitea.packeton.com.ar/'
+            gitea:
+                client_id: '44000000-0000-0000-0000-00000000000'
+                client_secret: 'gto_acxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 </code></pre>
 <p>Where <code>clone_preference</code>:</p>
 <ul>
@@ -2328,6 +2337,15 @@ This feature enabled only for Premium / EE / Gold paid plan, but it can be repla
 <p><a href="img/gitlab.png"><img src="img/gitlab.png" alt="Gitlab" /></a></p>
 <p>Where token you can find on the packeton integration view page. The token must have <code>whk</code> prefix 
 to find related integration access token.</p>
+<h3 id="gitea"><a class="header" href="#gitea">Gitea</a></h3>
+<p>Scopes:</p>
+<ul>
+<li>login: <code>read:user</code></li>
+<li>repositories: <code>organization</code>, <code>repository</code>, <code>write:issue</code></li>
+</ul>
+<p>Redirect Urls:</p>
+<pre><code>https://example.com/oauth2/{alias}/auto
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pull-request-composer-lock-review"><a class="header" href="#pull-request-composer-lock-review">Pull Request composer lock review</a></h1>
 <p>Every time when you create a Pull Request with <code>composer.lock</code> changes, the Packeton add a comment with descriptions 
 of changing dependencies. It detects the next of changes:</p>
