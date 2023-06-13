@@ -30,7 +30,8 @@ class OAuth2ExpressionExtension extends AbstractExtension
             new TwigFunction('preg_match', 'preg_match'),
             new TwigFunction('json_decode', fn ($data) => json_decode($data, true)),
             new TwigFunction('hash_mac', 'hash_mac'),
-            new TwigFunction('array_unique', 'array_unique')
+            new TwigFunction('array_unique', 'array_unique'),
+            new TwigFunction('dump', 'dump'),
         ]);
     }
 }

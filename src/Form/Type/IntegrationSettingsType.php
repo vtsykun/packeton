@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Packeton\Form\Type;
 
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Integrations\Model\AppConfig;
 use Packeton\Util\PacketonUtils;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -61,6 +63,13 @@ class IntegrationSettingsType extends AbstractType
                     'Disabled'  => false,
                 ],
             ]);
+
+        $config = $options['api_config'];
+        if ($config instanceof AppConfig) {
+            if ($config->hasLoginExpression()) {
+                $builder->add('useForExpressionApi', CheckboxType::class, ['required' => false]);
+            }
+        }
     }
 
     /**
@@ -71,6 +80,7 @@ class IntegrationSettingsType extends AbstractType
         $resolver->setDefaults([
             'data_class' => OAuthIntegration::class,
             'repos' => [],
+            'api_config' => null,
         ]);
     }
 }

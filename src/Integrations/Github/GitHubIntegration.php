@@ -7,6 +7,7 @@ namespace Packeton\Integrations\Github;
 use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Okvpn\Expression\TwigLanguage;
 use Packeton\Entity\OAuthIntegration as App;
 use Packeton\Entity\User;
 use Packeton\Integrations\AppInterface;
@@ -47,6 +48,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected ManagerRegistry $registry,
         protected Scheduler $scheduler,
         protected \Redis $redis,
+        protected TwigLanguage $twigLanguage,
         protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];

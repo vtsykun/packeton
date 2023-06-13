@@ -91,7 +91,13 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
                 throw new CustomUserMessageAuthenticationException('Login is not allowed by custom rules');
             }
 
-            if (is_array($result) && is_string($result[0] ?? null) && str_starts_with($result[0], 'ROLE_')) {
+            if (is_array($result) ) {
+                $probe = $result[0] ?? null;
+                if (!is_string($probe) || !str_starts_with($probe, 'ROLE_')) {
+                    $this->logger->error("OAuth2 expression error, return result must be list of a valid roles");
+                    throw new CustomUserMessageAuthenticationException('OAuth2 login failed by invalid expression configuration');
+                }
+
                 $config->overwriteRoles($result);
             }
         }

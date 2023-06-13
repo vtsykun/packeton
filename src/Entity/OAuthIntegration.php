@@ -222,6 +222,16 @@ class OAuthIntegration
         return $this->getSerialized('pull_request_review', 'boolean');
     }
 
+    public function isUseForExpressionApi(): ?bool
+    {
+        return $this->getSerialized('use_for_expr', 'boolean');
+    }
+
+    public function setUseForExpressionApi(?bool $value = null): self
+    {
+        return $this->setSerialized('use_for_expr', $value);
+    }
+
     public function getClonePreference(): ?string
     {
         return $this->getSerialized('clone_preference', 'string');

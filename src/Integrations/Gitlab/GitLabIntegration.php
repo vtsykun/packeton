@@ -7,6 +7,7 @@ namespace Packeton\Integrations\Gitlab;
 use Composer\Config;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Okvpn\Expression\TwigLanguage;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\OAuthIntegration as App;
 use Packeton\Entity\User;
@@ -50,6 +51,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         protected LockFactory $lock,
         protected ManagerRegistry $registry,
         protected \Redis $redis,
+        protected TwigLanguage $twigLanguage,
         protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];

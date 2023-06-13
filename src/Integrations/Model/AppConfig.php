@@ -8,7 +8,7 @@ use Packeton\Entity\OAuthIntegration;
 
 class AppConfig
 {
-    protected $overwriteRoles = null;
+    protected static $overwriteRoles = null;
 
     public function __construct(protected array $config)
     {
@@ -36,7 +36,18 @@ class AppConfig
 
     public function hasLoginExpression(): bool
     {
-        return $this->config['login_control_expression'] ?? false;
+        return (bool)($this->config['login_control_expression'] ?? false);
+    }
+
+    public function isDebugExpression(): bool
+    {
+        return $this->config['login_control_expression_debug'] ?? false;
+    }
+
+    public function getLoginExpression(): ?string
+    {
+        $expr = $this->config['login_control_expression'] ?? null;
+        return $expr && str_starts_with($expr, 'base64:') ? base64_decode(substr($expr, 7)) : $expr;
     }
 
     public function isLogin(): bool
@@ -72,12 +83,12 @@ class AppConfig
 
     public function overwriteRoles(array $roles = null): void
     {
-        $this->overwriteRoles = $roles;
+        self::$overwriteRoles = $roles;
     }
 
     public function roles(): array
     {
-        return $this->overwriteRoles ?: ($this->config['default_roles'] ?? []);
+        return self::$overwriteRoles ?: ($this->config['default_roles'] ?? []);
     }
 
     public function getLogo(): ?string

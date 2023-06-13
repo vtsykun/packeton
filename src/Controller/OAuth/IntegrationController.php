@@ -14,6 +14,7 @@ use Packeton\Form\Type\IntegrationSettingsType;
 use Packeton\Integrations\Exception\NotFoundAppException;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\AppInterface;
+use Packeton\Integrations\LoginInterface;
 use Packeton\Integrations\Model\AppUtils;
 use Packeton\Integrations\Model\FormSettingsInterface;
 use Packeton\Integrations\Model\OAuth2State;
@@ -99,7 +100,7 @@ class IntegrationController extends AbstractController
 
         [$formType, $formData] = $client instanceof FormSettingsInterface ? $client->getFormSettings($oauth) : [IntegrationSettingsType::class, []];
 
-        $form = $this->createForm($formType, $oauth, $formData + ['repos' => $repos]);
+        $form = $this->createForm($formType, $oauth, $formData + ['repos' => $repos, 'api_config' => $client->getConfig()]);
         $form->handleRequest($request);
         $config = $client->getConfig($oauth);
 
@@ -190,6 +191,32 @@ class IntegrationController extends AbstractController
         $em->flush();
 
         return new RedirectResponse($this->generateUrl('integration_list'));
+    }
+
+    #[Route('/{alias}/{id}/debug', name: 'integration_debug', methods: ['POST'])]
+    public function debugAction(Request $request, string $alias, #[Vars] OAuthIntegration $oauth): Response
+    {
+        if (!$this->isCsrfTokenValid('token', $request->request->get('_token')) || !$this->canEdit($oauth)) {
+            return new Response('Invalid Csrf Form', 400);
+        }
+
+        $client = $this->getClient($alias, $oauth);
+        if (!$client->getConfig()->isDebugExpression() || !$client instanceof LoginInterface) {
+            throw $this->createAccessDeniedException('not allowed debug');
+        }
+
+        $context = $request->get('context');
+        $context = $context ? json_decode($context, true) : [];
+        $payload = $request->get('twig') ? trim($request->get('twig')) : null;
+
+        try {
+            $result = $client->evaluateExpression(['user' => $this->getUser(), 'data' => $context], $payload ?: null);
+            $result = is_string($result) ? $result : json_encode($result, JSON_UNESCAPED_SLASHES);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['error' => $e->getMessage()]);
+        }
+
+        return new JsonResponse(['result' => $result]);
     }
 
     protected function canDelete(OAuthIntegration $oauth): bool
