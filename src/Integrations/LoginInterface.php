@@ -41,4 +41,13 @@ interface LoginInterface extends IntegrationInterface
      * @return User
      */
     public function createUser(array $userData): User;
+
+    /**
+     * Login/Register expression check.
+     *
+     * @param array $context
+     * @param string|null $scriptPayload
+     * @return mixed
+     */
+    public function evaluateExpression(array $context = [], string $scriptPayload = null): mixed;
 }

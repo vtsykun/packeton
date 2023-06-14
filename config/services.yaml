@@ -223,3 +223,8 @@ services:
             - [addTokenChecker, ['@Packeton\Security\Token\IntegrationTokenChecker']]
 
     Symfony\Component\HttpClient\NoPrivateNetworkHttpClient: ~
+
+    Okvpn\Expression\TwigLanguage:
+        arguments:
+            $options:
+                cache: '%kernel.cache_dir%/expr'

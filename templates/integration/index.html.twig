@@ -53,13 +53,22 @@
                     </div>
 
                     {% if canEdit %}
-                    <div class="btn-group btn-group-xs">
+                        <div class="btn-group btn-group-xs">
                         <a class="settings action onclick-confirm" data-msg="Please make sure you are using the same account.
 If a different account is used, you may lose access to the current organization and the webhooks will not be removed."
                            href="{{ path('integration_regenerate', {'alias': alias, 'id': oauth.id, '_token': token}) }}">
                             <button type="button" class="btn btn-danger">Regenerate Token</button>
                         </a>
-                    </div>
+                        </div>
+
+                        {% if config.hasLoginExpression() and config.debugExpression %}
+                            <div class="btn-group btn-group-xs">
+                                <a class="settings action" type="button" data-toggle="collapse" data-target="#collapse-expr" aria-expanded="false" aria-controls="collapse-expr">
+                                    <button type="button" class="btn btn-primary">Check login expression</button>
+                                </a>
+                            </div>
+                        {% endif %}
+
                     {% endif %}
 
                     {% if canDelete %}
@@ -70,10 +79,32 @@ If a different account is used, you may lose access to the current organization 
                         </form>
                     </div>
                     {% endif %}
-
                 </div>
-            </div>
 
+                {% if canEdit and config.hasLoginExpression() and config.debugExpression %}
+                <div class="collapse" id="collapse-expr">
+                    <form name="debug_integration" id="debug_integration" method="POST" action="{{ path('integration_debug', { 'alias': alias, 'id': oauth.id }) }}">
+                        <p class="card card-body" style="font-size: 1.2em">
+                            Here you can dry run and test login expression checker config.
+                        </p>
+
+                        <input type="hidden" name="_token" value="{{ token }}"/>
+
+                        <div class="form-group">
+                            <label for="context_payload">OAuth2 fetch user context (JSON)</label>
+                            <textarea id="context_payload" class="form-control" name="context" style="resize: none" rows="6"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="twig_payload">Enter twig expression to test</label>
+                            <textarea id="twig_payload" class="form-control" name="twig" style="resize: none" rows="12">{{ config.loginExpression }}</textarea>
+                        </div>
+                        <div id="result-container"></div>
+                        <input class="btn btn-success"  style="min-width: 200px;" type="submit" value="Check Expression" />
+                    </form>
+                </div>
+                {% endif %}
+            </div>
 
             {% if orgs|length > 0 %}
             <div class="row">
@@ -93,6 +124,7 @@ If a different account is used, you may lose access to the current organization 
                     {% for org in orgs %}
                         {% set isConn = oauth.isConnected(org['identifier']) %}
                         {% set webhookInfo = oauth.getWebhookInfo(org['identifier']) %}
+                        {% if canEdit or isConn %}
                         <div style="padding-bottom: 25px; max-width: 440px; display: flex; justify-content: space-between">
                             <div>
                                 {% if org['logo'] is defined and org['logo'] %}
@@ -136,6 +168,7 @@ If a different account is used, you may lose access to the current organization 
                                 {% endif %}
                             </a>
                         </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

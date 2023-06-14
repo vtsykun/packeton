@@ -3,6 +3,7 @@
 Table of content
 ---------------
 - [Pull Request review](pull-request-review.md)
+- [Login Restriction](oauth2/login-expression.md)
 - [GitHub Setup](oauth2/github-oauth.md)
 - [GitHub App Setup](oauth2/githubapp.md)
 - [GitLab Setup](oauth2/gitlab-integration.md)
@@ -21,6 +22,8 @@ packeton:
             login_title: Login or Register with GitHub
             clone_preference: 'api'
             repos_synchronization: true
+            login_control_expression: "data['email'] ends with '@packeton.org'" # Restrict logic/register by custom condition.
+
             pull_request_review: true # Enable pull request composer.lock review. Default false 
 
 #            webhook_url: 'https://packeton.google.dev/' - overwrite host when setup webhooks

@@ -81,16 +81,30 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
 
     protected function loadOrCreateUser(LoginInterface $client, array $data): User
     {
+        $config = $client->getConfig();
         $repo = $this->registry->getRepository(User::class);
         $user = $repo->findByOAuth2Data($data);
+
+        $em = $this->registry->getManager();
         if ($user === null) {
-            if (!$client->getConfig()->isRegistration()) {
+            if (!$config->isRegistration()) {
                 throw new CustomUserMessageAuthenticationException('Registration is not allowed');
             }
-
-            $em = $this->registry->getManager();
-
             $user = $client->createUser($data);
+        }
+
+        if ($config->hasLoginExpression()) {
+            $result = $client->evaluateExpression(['user' => $user, 'data' => $data]);
+            if (empty($result)) {
+                throw new CustomUserMessageAuthenticationException('Login is not allowed by custom rules');
+            }
+
+            if (null === $user->getId() && is_array($result) && is_string($probe = $result[0] ?? null) && str_starts_with($probe, 'ROLE_')) {
+                $user->setRoles($result);
+            }
+        }
+
+        if (null === $user->getId()) {
             $em->persist($user);
             $em->flush();
         }

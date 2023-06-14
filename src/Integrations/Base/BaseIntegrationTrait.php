@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Base;
 
+use Okvpn\Expression\TwigLanguage;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Integrations\Model\AppConfig;
+use Packeton\Integrations\Model\OAuth2ExpressionExtension;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 trait BaseIntegrationTrait
 {
     protected $defaultScopes = [''];
+    protected ?TwigLanguage $exprLang = null;
 
     /**
      * {@inheritdoc}
@@ -19,6 +22,57 @@ trait BaseIntegrationTrait
     public function getConfig(OAuthIntegration $app = null, bool $details = false): AppConfig
     {
         return new AppConfig($this->config + $this->getConfigApp($app, $details));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function evaluateExpression(array $context = [], string $scriptPayload = null): mixed
+    {
+        if (null === $this->exprLang) {
+            $this->initExprLang();
+        }
+
+        $script = trim($this->getConfig()->getLoginExpression());
+        if (str_starts_with($script, '/') && file_exists($script)) {
+            if ($scriptPayload === $script) {
+                $scriptPayload = null;
+            }
+            $script = file_get_contents($script);
+        }
+
+        $scriptPayload ??= $script;
+        if (!str_contains($scriptPayload, '{%')) {
+            $scriptPayload = "{% return $scriptPayload %}";
+        }
+
+        return $this->exprLang->execute($scriptPayload, $context, true);
+    }
+
+    protected function initExprLang(): void
+    {
+        $this->exprLang = isset($this->twigLanguage) ? clone $this->twigLanguage : new TwigLanguage();
+        $repo = $this->registry->getRepository(OAuthIntegration::class);
+
+        $apiCallable = function(string $action, string $url, array $query = [], bool $cache = true, int $app = null) use ($repo) {
+            $baseApp = $app ? $repo->find($app) : $repo->findForExpressionUsage($this->name);
+            $key = "twig-expr:" . sha1(serialize([$action, $url, $query]));
+
+            return $this->getCached($baseApp, $key, $cache, function () use ($baseApp, $url, $action, $query) {
+                $token = $this->refreshToken($baseApp);
+                return match ($action) {
+                    'cget' => $this->makeCGetRequest($token, $url, ['query' => $query]),
+                    default => $this->makeApiRequest($token, 'GET', $url, ['query' => $query]),
+                };
+            });
+        };
+
+        $funcList = [
+            'api_cget' => fn () => call_user_func_array($apiCallable, array_merge(['cget'], func_get_args())),
+            'api_get' => fn () => call_user_func_array($apiCallable, array_merge(['get'], func_get_args()))
+        ];
+
+        $this->exprLang->addExtension(new OAuth2ExpressionExtension($funcList));
     }
 
     /**

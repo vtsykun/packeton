@@ -225,6 +225,14 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('svg_logo')->end()
             ->scalarNode('logo')->end()
             ->scalarNode('login_title')->end()
+            ->scalarNode('login_control_expression')
+                ->beforeNormalization()
+                ->always(function ($value) {
+                    return is_string($value) && str_contains($value, '{%') ? 'base64:' . base64_encode($value) : $value;
+                })
+                ->end()
+            ->end()
+            ->booleanNode('login_control_expression_debug')->end()
             ->booleanNode('allow_login')
                 ->defaultFalse()
             ->end()

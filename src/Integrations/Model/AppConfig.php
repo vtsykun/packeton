@@ -8,6 +8,7 @@ use Packeton\Entity\OAuthIntegration;
 
 class AppConfig
 {
+
     public function __construct(protected array $config)
     {
     }
@@ -30,6 +31,22 @@ class AppConfig
     public function isPullRequestReview()
     {
         return $this->config['pull_request_review'] ?? false;
+    }
+
+    public function hasLoginExpression(): bool
+    {
+        return (bool)($this->config['login_control_expression'] ?? false);
+    }
+
+    public function isDebugExpression(): bool
+    {
+        return $this->config['login_control_expression_debug'] ?? false;
+    }
+
+    public function getLoginExpression(): ?string
+    {
+        $expr = $this->config['login_control_expression'] ?? null;
+        return $expr && str_starts_with($expr, 'base64:') ? base64_decode(substr($expr, 7)) : $expr;
     }
 
     public function isLogin(): bool

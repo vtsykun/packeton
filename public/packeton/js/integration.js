@@ -2,8 +2,28 @@
     "use strict";
     let connBtn = $('.connect');
 
-    connBtn.on('click', (e) => {
+    let form = $('#debug_integration');
+    form.on('submit', (e) => {
+        e.preventDefault();
+        let btn = form.find('.btn');
+        btn.addClass('loading');
+        let url = form.attr('action');
+        let formData = form.serializeArray();
 
+        $.post(url, formData, function (data) {
+            btn.removeClass('loading');
+            let html = '';
+            if (data.error) {
+                html += '<li><div class="alert alert-warning">'+data.error+'</div></li>';
+            }
+            if (data.result) {
+                html += '<li>'+data.result+'</li>';
+            }
+            $('#result-container').html('<ul class="list-unstyled package-errors">'+html+'</ul>');
+        });
+    });
+
+    connBtn.on('click', (e) => {
         e.preventDefault();
         let el = $(e.currentTarget);
         let btn = el.find('.btn')
