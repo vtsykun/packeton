@@ -2252,6 +2252,7 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
 <h2 id="table-of-content-1"><a class="header" href="#table-of-content-1">Table of content</a></h2>
 <ul>
 <li><a href="pull-request-review.html">Pull Request review</a></li>
+<li><a href="oauth2/login-expression.html">Login Restriction</a></li>
 <li><a href="oauth2/github-oauth.html">GitHub Setup</a></li>
 <li><a href="oauth2/githubapp.html">GitHub App Setup</a></li>
 <li><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li>
@@ -2268,6 +2269,8 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
             login_title: Login or Register with GitHub
             clone_preference: 'api'
             repos_synchronization: true
+            login_control_expression: &quot;data['email'] ends with '@packeton.org'&quot; # Restrict logic/register by custom condition.
+
             pull_request_review: true # Enable pull request composer.lock review. Default false 
 
 #            webhook_url: 'https://packeton.google.dev/' - overwrite host when setup webhooks
