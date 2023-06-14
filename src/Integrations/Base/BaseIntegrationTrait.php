@@ -42,7 +42,7 @@ trait BaseIntegrationTrait
         }
 
         $scriptPayload ??= $script;
-        if (!str_starts_with($scriptPayload, '{%')) {
+        if (!str_contains($scriptPayload, '{%')) {
             $scriptPayload = "{% return $scriptPayload %}";
         }
 

@@ -8,7 +8,6 @@ use Packeton\Entity\OAuthIntegration;
 
 class AppConfig
 {
-    protected static $overwriteRoles = null;
 
     public function __construct(protected array $config)
     {
@@ -81,14 +80,9 @@ class AppConfig
         return $this->config['client_secret'] ?? null;
     }
 
-    public function overwriteRoles(array $roles = null): void
-    {
-        self::$overwriteRoles = $roles;
-    }
-
     public function roles(): array
     {
-        return self::$overwriteRoles ?: ($this->config['default_roles'] ?? []);
+        return $this->config['default_roles'] ?? [];
     }
 
     public function getLogo(): ?string

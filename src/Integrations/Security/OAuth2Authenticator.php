@@ -82,39 +82,33 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
     protected function loadOrCreateUser(LoginInterface $client, array $data): User
     {
         $config = $client->getConfig();
-        $config->overwriteRoles();
         $repo = $this->registry->getRepository(User::class);
         $user = $repo->findByOAuth2Data($data);
+
+        $em = $this->registry->getManager();
+        if ($user === null) {
+            if (!$config->isRegistration()) {
+                throw new CustomUserMessageAuthenticationException('Registration is not allowed');
+            }
+            $user = $client->createUser($data);
+        }
+
         if ($config->hasLoginExpression()) {
             $result = $client->evaluateExpression(['user' => $user, 'data' => $data]);
             if (empty($result)) {
                 throw new CustomUserMessageAuthenticationException('Login is not allowed by custom rules');
             }
 
-            if (is_array($result) ) {
-                $probe = $result[0] ?? null;
-                if (!is_string($probe) || !str_starts_with($probe, 'ROLE_')) {
-                    $this->logger->error("OAuth2 expression error, return result must be list of a valid roles");
-                    throw new CustomUserMessageAuthenticationException('OAuth2 login failed by invalid expression configuration');
-                }
-
-                $config->overwriteRoles($result);
+            if (null === $user->getId() && is_array($result) && is_string($probe = $result[0] ?? null) && str_starts_with($probe, 'ROLE_')) {
+                $user->setRoles($result);
             }
         }
 
-        if ($user === null) {
-            if (!$config->isRegistration()) {
-                throw new CustomUserMessageAuthenticationException('Registration is not allowed');
-            }
-
-            $em = $this->registry->getManager();
-
-            $user = $client->createUser($data);
+        if (null === $user->getId()) {
             $em->persist($user);
             $em->flush();
         }
 
-        $config->overwriteRoles();
         return $user;
     }
 
