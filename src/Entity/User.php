@@ -77,6 +77,9 @@ class User extends BaseUser implements PacketonUserInterface
     #[ORM\Column(name: 'expired_updates_at', type: 'date', nullable: true)]
     private $expiredUpdatesAt;
 
+    #[ORM\Column(name: 'sub_repos', type: 'json', nullable: true)]
+    private ?array $subRepos = null;
+
     public function __construct()
     {
         $this->packages = new ArrayCollection();
@@ -382,6 +385,21 @@ class User extends BaseUser implements PacketonUserInterface
     public function setExpiredUpdatesAt($expiredUpdatesAt)
     {
         $this->expiredUpdatesAt = $expiredUpdatesAt;
+        return $this;
+    }
+
+    /**
+     * @return array|int[]|null
+     */
+    public function getSubRepos(): ?array
+    {
+        return $this->subRepos;
+    }
+
+    public function setSubRepos(?array $subRepos): static
+    {
+        $this->subRepos = $subRepos;
+
         return $this;
     }
 }

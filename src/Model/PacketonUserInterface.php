@@ -14,6 +14,11 @@ interface PacketonUserInterface extends UserInterface
     public function getAclGroups(): ?array;
 
     /**
+     * @return array|int[]|null
+     */
+    public function getSubRepos(): ?array;
+
+    /**
      * @return \DateTimeInterface|null
      */
     public function getExpiredUpdatesAt(): ?\DateTimeInterface;
