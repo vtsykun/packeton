@@ -42,11 +42,11 @@ class CronWorker
         $output = $envelope->get(OutputStamp::class) ?
             $envelope->get(OutputStamp::class)->getOutput() : 'No output';
 
-        $this->logger->info("Executed cron job. Result: " . $output);
+        $this->logger->info("Executed cron job. Result: " . ($msg = (is_array($output) ? json_encode($output) : $output)));
 
         return [
             'status' => Job::STATUS_COMPLETED,
-            'message' => $output
+            'message' => $msg
         ];
     }
 
