@@ -9,7 +9,6 @@ use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
-use Packeton\Service\DistManager;
 use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[Route(defaults: ['_format' => 'json'], methods: ['GET'])]
 class ProviderController extends AbstractController
 {
     use ControllerTrait;
@@ -28,9 +28,9 @@ class ProviderController extends AbstractController
     ) {
     }
 
-    #[Route('/packages.json', name: 'root_packages', defaults: ['_format' => 'json'], methods: ['GET'])]
-    #[Route('/{slug}/packages.json', name: 'root_packages_slug', defaults: ['_format' => 'json'], methods: ['GET'])]
-    public function packagesAction(Request $request, string $slug = null): Response
+    #[Route('/packages.json', name: 'root_packages')]
+    #[Route('/{slug}/packages.json', name: 'root_packages_slug')]
+    public function packagesAction(Request $request): Response
     {
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getRootLastModify());
@@ -40,8 +40,9 @@ class ProviderController extends AbstractController
 
         $ua = new UserAgentParser($request->headers->get('User-Agent'));
         $apiVersion = $request->query->get('ua') ? (int) $request->query->get('ua') : $ua->getComposerMajorVersion();
+        $subRepo = $request->attributes->get('_sub_repo');
 
-        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser(), $apiVersion);
+        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser(), $apiVersion, $subRepo);
 
         $response->setData($rootPackages);
         $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
@@ -49,11 +50,12 @@ class ProviderController extends AbstractController
         return $response;
     }
 
-    #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'], defaults: ['_format' => 'json'], methods: ['GET'])]
-    #[Route('/{slug}/p/providers${hash}.json', name: 'root_providers_slug', requirements: ['hash' => '[a-f0-9]+'], defaults: ['_format' => 'json'], methods: ['GET'])]
-    public function providersAction(string $hash, string $slug = null): Response
+    #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'])]
+    #[Route('/{slug}/p/providers${hash}.json', name: 'root_providers_slug', requirements: ['hash' => '[a-f0-9]+'])]
+    public function providersAction(string $hash, Request $request): Response
     {
-        $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash);
+        $subRepo = $request->attributes->get('_sub_repo');
+        $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash, $subRepo);
         if (!$providers) {
             return $this->createNotFound();
         }
@@ -65,7 +67,7 @@ class ProviderController extends AbstractController
      * Copy from Packagist. Can be used for https://workers.cloudflare.com sync mirrors.
      * Used two unix format: Packagist and RFC-3399
      */
-    #[Route('/metadata/changes.json', name: 'metadata_changes', defaults: ['_format' => 'json'], methods: ['GET'])]
+    #[Route('/metadata/changes.json', name: 'metadata_changes')]
     public function metadataChangesAction(Request $request): Response
     {
         $now = time() * 10000;
@@ -92,16 +94,13 @@ class ProviderController extends AbstractController
         return new JsonResponse(['actions' => array_merge($updatesDev, $updatesStab), 'timestamp' => $now]);
     }
 
-    #[Route(
-        '/p/{package}.json',
-        name: 'root_package',
-        requirements: ['package' => '%package_name_regex_v1%'],
-        defaults: ['_format' => 'json'],
-        methods: ['GET']
-    )]
-    public function packageAction(string $package): Response
+    #[Route('/p/{package}.json', name: 'root_package', requirements: ['package' => '%package_name_regex_v1%'])]
+    #[Route('/{slug}/p/{package}.json', name: 'root_package_slug', requirements: ['package' => '%package_name_regex_v1%'])]
+    public function packageAction(string $package, Request $request): Response
     {
         $package = \explode('$', $package);
+        $subRepo = $request->attributes->get('_sub_repo');
+
         if (\count($package) !== 2) {
             $package = $this->packageManager->getPackageJson($this->getUser(), $package[0]);
             if ($package) {
@@ -110,7 +109,7 @@ class ProviderController extends AbstractController
             return $this->createNotFound();
         }
 
-        $package = $this->packageManager->getCachedPackageJson($this->getUser(), $package[0], $package[1]);
+        $package = $this->packageManager->getCachedPackageJson($this->getUser(), $package[0], $package[1], $subRepo);
         if (!$package) {
             return $this->createNotFound();
         }
@@ -118,16 +117,13 @@ class ProviderController extends AbstractController
         return new JsonResponse($package);
     }
 
-    #[Route(
-        '/p2/{package}.json',
-        name: 'root_package_v2',
-        requirements: ['package' => '%package_name_regex_v2%'],
-        defaults: ['_format' => 'json'],
-        methods: ['GET']
-    )]
+    #[Route('/p2/{package}.json', name: 'root_package_v2', requirements: ['package' => '%package_name_regex_v2%'])]
+    #[Route('/{slug}/p2/{package}.json', name: 'root_package_v2_slug', requirements: ['package' => '%package_name_regex_v2%'])]
     public function packageV2Action(Request $request, string $package): Response
     {
         $response = new JsonResponse([]);
+        $subRepo = $request->attributes->get('_sub_repo');
+
         $response->setLastModified($this->providerManager->getLastModify($package));
         if ($response->isNotModified($request)) {
             return $response;
@@ -150,18 +146,5 @@ class ProviderController extends AbstractController
     protected function createNotFound(?string $msg = null): Response
     {
         return new JsonResponse(['status' => 'error', 'message' => $msg ?: 'Not Found'], 404);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getSubscribedServices(): array
-    {
-        return array_merge(
-            parent::getSubscribedServices(),
-            [
-                DistManager::class
-            ]
-        );
     }
 }

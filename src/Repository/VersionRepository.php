@@ -207,7 +207,7 @@ class VersionRepository extends EntityRepository
         return $qb;
     }
 
-    public function getLatestReleases($count = 10)
+    public function getLatestReleases($count = 10, ?array $allowed = null)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('v.name, v.version, v.description')
@@ -217,6 +217,9 @@ class VersionRepository extends EntityRepository
             ->orderBy('v.releasedAt', 'DESC')
             ->setMaxResults($count)
             ->setParameter('now', date('Y-m-d H:i:s'));
+        if (null !== $allowed) {
+            $qb->andWhere('IDENTITY(v.package) IN (:ids)')->setParameter('ids', $allowed ?: [-1]);
+        }
 
         return $qb->getQuery()->getResult();
     }

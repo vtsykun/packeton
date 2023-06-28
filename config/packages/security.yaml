@@ -59,7 +59,7 @@ security:
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
 
         # Packagist
-        - { path: (^(/change-password|/profile|/logout))+, roles: ROLE_USER }
+        - { path: (^(/change-password|/profile|/logout|/subrepository/))+, roles: ROLE_USER }
         - { path: (^(/search|/packages/|/versions/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
         - { path: ^/mirror/, roles: ROLE_USER, allow_if: "is_granted('PACKETON_MIRROR_PUBLIC')" }
         - { path: (^(/packages.json$|/p/|/p2/|/downloads/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }

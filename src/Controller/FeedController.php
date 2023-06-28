@@ -18,6 +18,7 @@ use Laminas\Feed\Writer\Entry;
 use Laminas\Feed\Writer\Feed;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
+use Packeton\Service\SubRepositoryHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,8 +32,10 @@ use Symfony\Component\Routing\Annotation\Route;
 class FeedController extends AbstractController
 {
     public function __construct(
-        protected ManagerRegistry $registry
-    ){}
+        protected ManagerRegistry $registry,
+        protected SubRepositoryHelper $subRepositoryHelper,
+    ) {
+    }
 
     #[Route('/', name: 'feeds')]
     public function feedsAction(): Response
@@ -142,7 +145,7 @@ class FeedController extends AbstractController
      */
     protected function getLimitedResults(QueryBuilder $queryBuilder)
     {
-        $query = $queryBuilder
+        $query = $this->subRepositoryHelper->applySubRepository($queryBuilder)
             ->getQuery()
             ->setMaxResults(
                 $this->getParameter('packagist_web.rss_max_items')

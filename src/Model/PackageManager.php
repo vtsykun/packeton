@@ -141,20 +141,22 @@ class PackageManager
         return true;
     }
 
-    public function getRootPackagesJson(UserInterface $user = null, int $apiVersion = null)
+    public function getRootPackagesJson(UserInterface $user = null, int $apiVersion = null, ?int $subRepo = null)
     {
-        $packagesData = $this->dumpInMemory($user, false, $apiVersion);
+        $packagesData = $this->dumpInMemory($user, false, $apiVersion, $subRepo);
         return $packagesData[0];
     }
 
     /**
      * @param User|null|object $user
      * @param string $hash
+     * @param int|null $subRepo
+     *
      * @return bool|array
      */
-    public function getProvidersJson(?UserInterface $user, $hash)
+    public function getProvidersJson(?UserInterface $user, $hash, int $subRepo = null)
     {
-        [$root, $providers] = $this->dumpInMemory($user);
+        [$root, $providers] = $this->dumpInMemory($user, subRepo: $subRepo);
         if (null === $providers || !isset($root['provider-includes'])) {
             return false;
         }
@@ -197,12 +199,13 @@ class PackageManager
      * @param UserInterface|null|object $user
      * @param string $package
      * @param string|null $hash
+     * @param int|null $subRepo
      *
      * @return mixed
      */
-    public function getCachedPackageJson(?UserInterface $user, string $package, string $hash = null)
+    public function getCachedPackageJson(?UserInterface $user, string $package, string $hash = null, int $subRepo = null)
     {
-        [$root, $providers, $packages] = $this->dumpInMemory($user);
+        [$root, $providers, $packages] = $this->dumpInMemory($user, subRepo: $subRepo);
 
         if (false === isset($providers['providers'][$package]) ||
             ($hash && $providers['providers'][$package]['sha256'] !== $hash)
@@ -213,17 +216,17 @@ class PackageManager
         return $packages[$package];
     }
 
-    private function dumpInMemory(UserInterface $user = null, bool $ignoreLastModify = true, int $apiVersion = null)
+    private function dumpInMemory(UserInterface $user = null, bool $ignoreLastModify = true, int $apiVersion = null, int $subRepo = null)
     {
         if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;
         }
 
-        $cacheKey = 'pkg_user_cache_' . $this->dumper->getFormat()->value . '_' . ($user ? $user->getUserIdentifier() : 0);
+        $cacheKey = 'pkg_user_cache_' . $this->dumper->getFormat()->value . '_' . ($user ? $user->getUserIdentifier() : 0) . "_$subRepo";
 
         return $this->cache->get(
             $cacheKey,
-            fn () => [...$this->dumper->dump($user, $apiVersion), $apiVersion],
+            fn () => [...$this->dumper->dump($user, $apiVersion, $subRepo), $apiVersion],
             false === $ignoreLastModify ? $this->providerManager->getRootLastModify()->getTimestamp() : null,
             fn ($meta) => $ignoreLastModify === false && (($meta[4] ?? null) !== $apiVersion)
         );

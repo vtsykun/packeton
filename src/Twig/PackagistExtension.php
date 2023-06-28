@@ -11,6 +11,7 @@ use Packeton\Entity\Zipball;
 use Packeton\Form\Model\PackagePermission;
 use Packeton\Model\ProviderManager;
 use Packeton\Security\JWTUserManager;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\PacketonUtils;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -27,6 +28,7 @@ class PackagistExtension extends AbstractExtension
         private readonly ManagerRegistry $registry,
         private readonly JWTUserManager $jwtUserManager,
         private readonly CsrfTokenManagerInterface $csrf,
+        private readonly SubRepositoryHelper $subRepositoryHelper,
     ) {
     }
 
@@ -44,8 +46,9 @@ class PackagistExtension extends AbstractExtension
         return [
             new TwigFunction('package_job_result', [$this, 'getLatestJobResult']),
             new TwigFunction('get_group_data', [$this, 'getGroupData']),
-            new TwigFunction('get_group_acl_form_data', [$this, 'getGroupAclForm']),
+            new TwigFunction('get_packages_choice_form_data', [$this, 'buildPackagesExpandedList']),
             new TwigFunction('get_api_token', [$this, 'getApiToken']),
+            new TwigFunction('get_sub_repos_data', [$this, 'getSubReposData']),
             new TwigFunction('get_free_zipballs', [$this, 'getZipballs']),
             new TwigFunction('show_api_token', [$this, 'showApiTokenButton'], ['is_safe' => ['html']]),
             new TwigFunction('csrf_token_input', [$this, 'renderCsrfTokenInput'], ['is_safe' => ['html']]),
@@ -61,13 +64,23 @@ class PackagistExtension extends AbstractExtension
         ];
     }
 
-    public function getGroupAclForm(FormView $items)
+    public function getSubReposData(UserInterface $user = null)
+    {
+        return $this->subRepositoryHelper->getTwigData($user);
+    }
+
+    public function buildPackagesExpandedList(FormView $items, bool $asValue = false)
     {
         $byVendors = [];
         foreach ($items->children as $item) {
             $data = $item->vars['data'] ?? null;
             if ($data instanceof PackagePermission) {
                 [$vendor] = \explode('/', $data->getName());
+                $byVendors[$vendor][] = $item;
+            }
+
+            if ($asValue && ($name = $item->vars['value'] ?? null)) {
+                [$vendor] = \explode('/', $name);
                 $byVendors[$vendor][] = $item;
             }
         }
@@ -86,8 +99,13 @@ class PackagistExtension extends AbstractExtension
             $grouped['other'] = $otherVendors;
         }
         foreach ($grouped as $vendor => $children) {
-            \usort($children, fn($a, $b) => $a->vars['data']->getName() <=> $b->vars['data']->getName());
-            $selected = \count(\array_filter($children, fn($a) => $a->vars['data']->getSelected()));
+            if ($asValue) {
+                \usort($children, fn($a, $b) => $a->vars['value'] <=> $b->vars['value']);
+            } else {
+                \usort($children, fn($a, $b) => $a->vars['data']->getName() <=> $b->vars['data']->getName());
+            }
+
+            $selected = \count(\array_filter($children, fn($a) => is_object($a->vars['data']) ? $a->vars['data']->getSelected() : $a->vars['data']));
             $grouped[$vendor] = ['items' => $children, 'selected' => $selected];
         }
 

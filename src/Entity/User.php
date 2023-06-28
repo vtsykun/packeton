@@ -389,7 +389,7 @@ class User extends BaseUser implements PacketonUserInterface
     }
 
     /**
-     * @return array|int[]|null
+     * {@inheritdoc}
      */
     public function getSubRepos(): ?array
     {
@@ -399,6 +399,23 @@ class User extends BaseUser implements PacketonUserInterface
     public function setSubRepos(?array $subRepos): static
     {
         $this->subRepos = $subRepos;
+
+        return $this;
+    }
+
+    public function getSubReposView(): array
+    {
+        return $this->subRepos ?: [0];
+    }
+
+
+    public function setSubReposView(?array $subRepos): self
+    {
+        if ($subRepos && count($subRepos) === 1 && 0 === ((int)reset($subRepos))) {
+            $subRepos = null;
+        }
+
+        $this->subRepos = $subRepos ? array_values(array_map(fn($id) => (int) $id, $subRepos)) : null;
 
         return $this;
     }

@@ -2,11 +2,15 @@
 
 namespace Packeton\Form\Type;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Group;
+use Packeton\Entity\SubRepository;
 use Packeton\Entity\User;
+use Packeton\Util\PacketonUtils;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
@@ -21,6 +25,10 @@ use Symfony\Component\Validator\Constraints\Regex;
 
 class CustomerUserType extends AbstractType
 {
+    public function __construct(protected ManagerRegistry $registry)
+    {
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -79,8 +87,24 @@ class CustomerUserType extends AbstractType
                 'class' => Group::class,
                 'label' => 'ACL Groups',
                 'multiple' => true,
-                'required' => false
+                'required' => false,
+                'attr' => ['class'  => 'jselect2']
             ]);
+
+        $subRepos = $this->registry->getRepository(SubRepository::class)->getSubRepositoryData();
+        if ($subRepos) {
+            $subRepos = PacketonUtils::buildChoices($subRepos, 'name', 'id');
+            $subRepos = array_merge(['root' => 0], $subRepos);
+
+            $builder
+                ->add('subReposView', ChoiceType::class, [
+                    'label' => 'Allowed subrepositories',
+                    'multiple' => true,
+                    'required' => false,
+                    'choices' => $subRepos,
+                    'attr' => ['class'  => 'jselect2']
+                ]);
+        }
 
         $builder->addEventListener(FormEvents::POST_SET_DATA, $this->postSetData(...));
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->postSubmit(...));

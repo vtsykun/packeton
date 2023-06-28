@@ -22,6 +22,7 @@ use Packeton\Package\RepTypes;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 use Packeton\Service\Scheduler;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\ChangelogUtils;
 use Packeton\Util\PacketonUtils;
 use Pagerfanta\Adapter\FixedAdapter;
@@ -49,8 +50,9 @@ class PackageController extends AbstractController
         protected DownloadManager $downloadManager,
         protected FavoriteManager $favoriteManager,
         protected ProviderManager $providerManager,
+        protected SubRepositoryHelper $subRepositoryHelper,
         protected LoggerInterface $logger,
-    ){
+    ) {
     }
 
     #[Route('/packages/', name: 'all_packages')]
@@ -66,6 +68,7 @@ class PackageController extends AbstractController
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
         $fields = $req->query->all('fields');
+        $allowed = $this->subRepositoryHelper->allowedPackageIds();
 
         if ($fields) {
             $baseFields = array_intersect($fields, ['repository', 'type']);
@@ -75,7 +78,7 @@ class PackageController extends AbstractController
                 'vendor' => $req->query->get('vendor'),
             ]);
 
-            $packages = $repo->getPackagesWithFields($filters, $baseFields);
+            $packages = $repo->getPackagesWithFields($filters, $baseFields, $allowed);
             if ($fields !== $baseFields) {
                 $versionRepo = $this->registry->getRepository(Version::class);
                 foreach ($packages as $name => $packageData) {
@@ -90,18 +93,18 @@ class PackageController extends AbstractController
                 }
             }
 
-            return new JsonResponse(['packages' => $packages]);
+            return (new JsonResponse(['packages' => $packages]))->setEncodingOptions(JSON_UNESCAPED_SLASHES);
         }
 
         if ($req->query->get('type')) {
-            $names = $repo->getPackageNamesByType($req->query->get('type'));
+            $names = $repo->getPackageNamesByType($req->query->get('type'), $allowed);
         } elseif ($req->query->get('vendor')) {
-            $names = $repo->getPackageNamesByVendor($req->query->get('vendor'));
+            $names = $repo->getPackageNamesByVendor($req->query->get('vendor'), $allowed);
         } else {
-            $names = $repo->getPackageNames();
+            $names = $repo->getPackageNames($allowed);
         }
 
-        return new JsonResponse(['packageNames' => $names]);
+        return (new JsonResponse(['packageNames' => $names]))->setEncodingOptions(JSON_UNESCAPED_SLASHES);
     }
 
     #[Route('/packages/submit/{type}', name: 'submit', defaults: ['type' => 'vcs'])]
@@ -252,9 +255,11 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function viewVendorAction($vendor)
     {
-        $packages = $this->registry
+        $qb = $this->registry
             ->getRepository(Package::class)
-            ->getFilteredQueryBuilder(['vendor' => $vendor.'/%'], true)
+            ->getFilteredQueryBuilder(['vendor' => $vendor.'/%'], true);
+
+        $packages = $this->subRepositoryHelper->applySubRepository($qb)
             ->getQuery()
             ->getResult();
 
@@ -275,6 +280,8 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_MAINTAINER')]
     public function viewProvidersAction($name, \Redis $redis): Response
     {
+        $this->checkSubrepositoryAccess($name);
+
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
         $providers = $repo->findProviders($name);
@@ -310,6 +317,8 @@ class PackageController extends AbstractController
     #[Route('/packages/{name}.{_format}', name: 'view_package', requirements: ['name' => '%package_name_regex%?', '_format' => '(json)'], defaults: ['_format' => 'html'], methods: ['GET'])]
     public function viewPackageAction(Request $req, $name, CsrfTokenManagerInterface $csrfTokenManager): Response
     {
+        $this->checkSubrepositoryAccess($name);
+
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
             if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
                 throw new AccessDeniedHttpException;
@@ -423,6 +432,8 @@ class PackageController extends AbstractController
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
+        $this->checkSubrepositoryAccess($package->getName());
+
         $changelogBuilder = $this->container->get(ChangelogUtils::class);
         $fromVersion = $request->get('from');
         $toVersion = $request->get('to');
@@ -460,6 +471,7 @@ class PackageController extends AbstractController
     {
         /** @var PackageRepository $repo */
         $repo = $this->registry->getRepository(Package::class);
+        $this->checkSubrepositoryAccess($name);
 
         try {
             /** @var $package Package */
@@ -500,13 +512,14 @@ class PackageController extends AbstractController
     {
         /** @var VersionRepository $repo  */
         $repo = $this->registry->getRepository(Version::class);
-        if (!$this->isGranted('ROLE_FULL_CUSTOMER', $repo->find($versionId))) {
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER', $ver = $repo->find($versionId))) {
             throw new AccessDeniedHttpException;
         }
+        $this->checkSubrepositoryAccess($ver->getName());
 
         $html = $this->renderView(
             'package/versionDetails.html.twig',
-            ['version' => $repo->getFullVersion($versionId)]
+            ['version' => $ver = $repo->getFullVersion($versionId)]
         );
 
         return new JsonResponse(['content' => $html]);
@@ -523,6 +536,7 @@ class PackageController extends AbstractController
         /** @var Version $version  */
         $version = $repo->getFullVersion($versionId);
         $package = $version->getPackage();
+        $this->checkSubrepositoryAccess($package->getName());
 
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_DELETE_PACKAGES')) {
             throw new AccessDeniedException;
@@ -545,6 +559,7 @@ class PackageController extends AbstractController
     public function updatePackageAction(Request $req, $name): Response
     {
         $doctrine = $this->registry;
+        $this->checkSubrepositoryAccess($name);
 
         try {
             /** @var Package $package */
@@ -590,6 +605,8 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_MAINTAINER')]
     public function deletePackageAction(Request $req, $name): Response
     {
+        $this->checkSubrepositoryAccess($name);
+
         if (!$this->isCsrfTokenValid('delete', $req->request->get('_token'))) {
             throw new BadRequestHttpException('Csrf token is not valid');
         }
@@ -615,6 +632,8 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_MAINTAINER')]
     public function createMaintainerAction(Request $req, $name): Response
     {
+        $this->checkSubrepositoryAccess($name);
+
         /** @var $package Package */
         $package = $this->registry
             ->getRepository(Package::class)
@@ -670,6 +689,8 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_MAINTAINER')]
     public function removeMaintainerAction(Request $req, $name): Response
     {
+        $this->checkSubrepositoryAccess($name);
+
         /** @var $package Package */
         $package = $this->registry
             ->getRepository(Package::class)
@@ -722,6 +743,8 @@ class PackageController extends AbstractController
     #[Route('/packages/{name}/edit', name: 'edit_package', requirements: ['name' => '%package_name_regex%'])]
     public function editAction(Request $req, #[Vars] Package $package): Response
     {
+        $this->checkSubrepositoryAccess($package->getName());
+
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
         }
@@ -766,6 +789,8 @@ class PackageController extends AbstractController
     #[Route('/packages/{name}/abandon', name: 'abandon_package', requirements: ['name' => '%package_name_regex%'])]
     public function abandonAction(Request $request, #[Vars] Package $package): Response
     {
+        $this->checkSubrepositoryAccess($package->getName());
+
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
         }
@@ -794,6 +819,8 @@ class PackageController extends AbstractController
     #[Route('/packages/{name}/unabandon', name: 'unabandon_package', requirements: ['name' => '%package_name_regex%'])]
     public function unabandonAction(#[Vars] Package $package): Response
     {
+        $this->checkSubrepositoryAccess($package->getName());
+
         if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
             throw new AccessDeniedException;
         }
@@ -814,6 +841,8 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function statsAction(Request $req, #[Vars] Package $package): Response
     {
+        $this->checkSubrepositoryAccess($package->getName());
+
         $versions = $package->getVersions()->toArray();
         usort($versions, Package::class.'::sortVersions');
         $date = $this->guessStatsStartDate($package);
@@ -856,6 +885,7 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function dependentsAction(Request $req, $name): Response
     {
+        $this->checkSubrepositoryAccess($name);
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -884,6 +914,7 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function suggestersAction(Request $req, $name): Response
     {
+        $this->checkSubrepositoryAccess($name);
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -908,6 +939,8 @@ class PackageController extends AbstractController
     #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function overallStatsAction(Request $req, \Redis $redis, #[Vars] Package $package, Version $version = null): Response
     {
+        $this->checkSubrepositoryAccess($package->getName());
+
         if ($from = $req->query->get('from')) {
             $from = new \DateTimeImmutable($from);
         } else {
@@ -983,6 +1016,7 @@ class PackageController extends AbstractController
     {
         $normalizer = new VersionParser;
         $normVersion = $normalizer->normalize($version);
+        $this->checkSubrepositoryAccess($package->getName());
 
         $version = $this->registry->getRepository(Version::class)->findOneBy([
             'package' => $package,
@@ -1047,6 +1081,14 @@ class PackageController extends AbstractController
         }
 
         return true;
+    }
+
+    private function checkSubrepositoryAccess(string $name): void
+    {
+        $packages = $this->subRepositoryHelper->allowedPackageNames();
+        if (null !== $packages && !in_array($name, $packages, true)) {
+            throw new NotFoundHttpException("The package does not exists in current subrepository");
+        }
     }
 
     private function createDatePoints(\DateTimeImmutable $from, \DateTimeImmutable $to, $average, Package $package, Version $version = null)

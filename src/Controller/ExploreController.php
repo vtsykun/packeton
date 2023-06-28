@@ -19,6 +19,7 @@ use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
+use Packeton\Service\SubRepositoryHelper;
 use Pagerfanta\Adapter\FixedAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -37,7 +38,9 @@ class ExploreController extends AbstractController
         protected ManagerRegistry $registry,
         protected DownloadManager $downloadManager,
         protected FavoriteManager $favoriteManager,
-    ) {}
+        protected SubRepositoryHelper $subRepositoryHelper,
+    ) {
+    }
 
     #[Route('', name: 'browse')]
     public function exploreAction(\Redis $redis): Response
@@ -46,12 +49,20 @@ class ExploreController extends AbstractController
         $pkgRepo = $this->registry->getRepository(Package::class);
         /** @var VersionRepository $verRepo */
         $verRepo = $this->registry->getRepository(Version::class);
-        $newSubmitted = $pkgRepo->getQueryBuilderForNewestPackages()->setMaxResults(10)
-            ->getQuery()->getResult();
-        $newReleases = $verRepo->getLatestReleases(10);
+        $allowed = $this->subRepositoryHelper->allowedPackageIds();
+
+        $newSubmitted = $this->subRepositoryHelper
+            ->applySubRepository($pkgRepo->getQueryBuilderForNewestPackages())
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
+        $newReleases = $verRepo->getLatestReleases(10, $allowed);
         $maxId = $this->getEM()->getConnection()->fetchOne('SELECT max(id) FROM package');
-        $random = $pkgRepo
-            ->createQueryBuilder('p')->where('p.id >= :randId')->andWhere('p.abandoned = :abandoned')
+        $random = $this->subRepositoryHelper
+            ->applySubRepository($pkgRepo->createQueryBuilder('p'))
+            ->andWhere('p.id >= :randId')
+            ->andWhere('p.abandoned = :abandoned')
             ->setParameter('randId', rand(1, $maxId))
             ->setParameter('abandoned', false)
             ->setMaxResults(10)
@@ -60,8 +71,9 @@ class ExploreController extends AbstractController
         $popular = [];
         $popularIds = $redis->zrevrange('downloads:trending', 0, 9);
         if ($popularIds) {
-            $popular = $pkgRepo->createQueryBuilder('p')
-                ->where('p.id IN (:ids)')
+            $popular = $this->subRepositoryHelper
+                ->applySubRepository($pkgRepo->createQueryBuilder('p'))
+                ->andWhere('p.id IN (:ids)')
                 ->setParameter('ids', $popularIds)
                 ->getQuery()->getResult();
             usort($popular, function ($a, $b) use ($popularIds) {
@@ -98,8 +110,10 @@ class ExploreController extends AbstractController
             ($req->get('page', 1) - 1) * $perPage,
             $req->get('page', 1) * $perPage - 1
         );
-        $popular = $this->registry->getRepository(Package::class)
-            ->createQueryBuilder('p')->where('p.id IN (:ids)')->setParameter('ids', $popularIds)
+        $qb = $this->registry->getRepository(Package::class)->createQueryBuilder('p');
+        $popular = $this->subRepositoryHelper->applySubRepository($qb)
+            ->andWhere('p.id IN (:ids)')
+            ->setParameter('ids', $popularIds)
             ->getQuery()->getResult();
         usort($popular, function ($a, $b) use ($popularIds) {
             return array_search($a->getId(), $popularIds) > array_search($b->getId(), $popularIds) ? 1 : -1;

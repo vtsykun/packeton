@@ -119,6 +119,29 @@ strong {
     text-decoration: none;
 }
 
+.navbar-brand-dropdown {
+    padding: 12px 4px;
+    line-height: 32px;
+    margin: 0;
+}
+
+.navbar .navbar-brand-dropdown a.dropdown-toggle {
+    float: left;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,.05), inset 0 2px 0 -1px rgba(255,255,255,.1);
+    background-color: #37373c;
+    border-radius: 3px;
+    border: 1px solid #5c5c5c;
+    padding: 0px 12px;
+}
+.navbar-brand-dropdown a.dropdown-toggle:hover {
+    background-color: #2d2d2e;
+}
+
 .navbar .navbar-brand em {
     padding-left: 15px;
     padding-top: 8px;
