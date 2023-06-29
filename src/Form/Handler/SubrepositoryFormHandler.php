@@ -28,12 +28,17 @@ class SubrepositoryFormHandler
         $em = $this->registry->getManager();
         if ($form->isSubmitted() && $form->isValid()) {
             $entity = $form->getData();
-            $this->cache->delete('sub_repos_list');
+            $this->deleteCache();
             $em->persist($entity);
             $em->flush();
             return true;
         }
 
         return false;
+    }
+
+    public function deleteCache(): void
+    {
+        $this->cache->delete('sub_repos_list');
     }
 }

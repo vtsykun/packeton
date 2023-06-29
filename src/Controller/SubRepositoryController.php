@@ -25,8 +25,10 @@ class SubRepositoryController extends AbstractController
 
     #[Route('', name: 'subrepository_index')]
     #[IsGranted('ROLE_ADMIN')]
-    public function index(Request $request): Response
+    public function index(): Response
     {
+        $repos = $this->registry->getRepository(SubRepository::class)->findAll();
+        return $this->render('subrepository/index.html.twig', ['repos' => $repos]);
     }
 
     #[Route('/create', name: 'subrepository_create')]
@@ -44,6 +46,23 @@ class SubRepositoryController extends AbstractController
         return $this->handleUpdate($request, $entity, 'Saved successfully');
     }
 
+    #[Route('/{id}/delete', name: 'subrepository_delete')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteAction(Request $request, #[Vars] SubRepository $entity): Response
+    {
+        if (!$this->isCsrfTokenValid('delete', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Csrf token is not valid');
+        } else {
+            $em = $this->registry->getManager();
+            $em->remove($entity);
+            $em->flush();
+            $this->formHandler->deleteCache();
+            $this->addFlash('success', 'Subrepository ' . $entity->getName() . ' has been deleted successfully');
+        }
+
+        return $this->redirect($this->generateUrl("subrepository_index"));
+    }
+
     #[Route('/{id}/switch', name: 'subrepository_switch')]
     public function switchAction(Request $request, #[Vars] SubRepository $entity): Response
     {
@@ -58,12 +77,12 @@ class SubRepositoryController extends AbstractController
         return new RedirectResponse('/');
     }
 
-    protected function handleUpdate(Request $request, SubRepository $group, string $flashMessage)
+    protected function handleUpdate(Request $request, SubRepository $group, string $flashMessage): Response
     {
         $form = $this->createForm(SubRepositoryType::class, $group);
         if ($this->formHandler->handle($request, $form)) {
             $this->addFlash('success', $flashMessage);
-            return new RedirectResponse($this->generateUrl('groups_index'));
+            return new RedirectResponse($this->generateUrl('subrepository_index'));
         }
 
         return $this->render('subrepository/update.html.twig', [

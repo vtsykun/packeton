@@ -9,7 +9,8 @@ class PatUserScores
     private static $scoresMap = [
         'metadata' => [
             'root_packages', 'root_providers', 'metadata_changes', 'root_package', 'root_package_v2', 'download_dist_package',
-            'track_download', 'track_download_batch'
+            'track_download', 'track_download_batch',
+            'root_packages_slug', 'root_providers_slug', 'root_package_slug', 'root_package_v2_slug',
         ],
         'mirror:read' => ['mirror_root', 'mirror_metadata_v2', 'mirror_metadata_v1', 'mirror_zipball', 'mirror_provider_includes'],
         'mirror:all' => ['@mirror:read'],
