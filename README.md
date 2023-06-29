@@ -26,6 +26,7 @@ Features
 - Support monolithic repositories, like `symfony/symfony`
 - Pull Request `composer.lock` change review.
 - OAuth2 GitHub, GitLab/Gitea and Other Integrations.
+- Milty sub repositories.
 
 What was changed in this fork?
 -----------------------------
