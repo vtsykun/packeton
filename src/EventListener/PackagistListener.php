@@ -12,6 +12,7 @@ use Doctrine\ORM\Event\PostLoadEventArgs;
 use Packeton\Entity\Group;
 use Packeton\Entity\GroupAclPermission;
 use Packeton\Entity\Package;
+use Packeton\Entity\SubRepository;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
 use Packeton\Event\FormHandlerEvent;
@@ -31,6 +32,7 @@ class PackagistListener
         User::class => true,
         Version::class => true,
         Package::class => true,
+        SubRepository::class => true,
     ];
 
     public function __construct(

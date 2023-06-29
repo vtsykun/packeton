@@ -5,6 +5,7 @@ namespace Packeton\Controller;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Entity\SubRepository;
+use Packeton\Form\Handler\SubrepositoryFormHandler;
 use Packeton\Form\Type\SubRepositoryType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -17,8 +18,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class SubRepositoryController extends AbstractController
 {
     public function __construct(
-        protected ManagerRegistry $registry
+        protected ManagerRegistry $registry,
+        protected SubrepositoryFormHandler $formHandler,
     ) {
+    }
+
+    #[Route('', name: 'subrepository_index')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function index(Request $request): Response
+    {
     }
 
     #[Route('/create', name: 'subrepository_create')]
@@ -53,24 +61,14 @@ class SubRepositoryController extends AbstractController
     protected function handleUpdate(Request $request, SubRepository $group, string $flashMessage)
     {
         $form = $this->createForm(SubRepositoryType::class, $group);
-        if ($request->getMethod() === 'POST') {
-            $form->handleRequest($request);
-            if ($form->isSubmitted() && $form->isValid()) {
-                $group = $form->getData();
-                $em = $this->registry->getManager();
-                $em->persist($group);
-                $em->flush();
-
-                $this->addFlash('success', $flashMessage);
-                return new RedirectResponse($this->generateUrl('groups_index'));
-            }
+        if ($this->formHandler->handle($request, $form)) {
+            $this->addFlash('success', $flashMessage);
+            return new RedirectResponse($this->generateUrl('groups_index'));
         }
 
-        $data = [
+        return $this->render('subrepository/update.html.twig', [
             'form' => $form->createView(),
             'entity' => $group
-        ];
-
-        return $this->render('subrepository/update.html.twig', $data);
+        ]);
     }
 }

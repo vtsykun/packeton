@@ -9,6 +9,7 @@ use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,12 +26,13 @@ class ProviderController extends AbstractController
         private readonly PackageManager $packageManager,
         private readonly ProviderManager $providerManager,
         private readonly ManagerRegistry $registry,
+        private readonly SubRepositoryHelper $subRepositoryHelper,
     ) {
     }
 
     #[Route('/packages.json', name: 'root_packages')]
     #[Route('/{slug}/packages.json', name: 'root_packages_slug')]
-    public function packagesAction(Request $request): Response
+    public function packagesAction(Request $request, string $slug = null): Response
     {
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getRootLastModify());
@@ -40,7 +42,7 @@ class ProviderController extends AbstractController
 
         $ua = new UserAgentParser($request->headers->get('User-Agent'));
         $apiVersion = $request->query->get('ua') ? (int) $request->query->get('ua') : $ua->getComposerMajorVersion();
-        $subRepo = $request->attributes->get('_sub_repo');
+        $subRepo = $this->subRepositoryHelper->getSubrepositoryId();;
 
         $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser(), $apiVersion, $subRepo);
 
@@ -52,9 +54,9 @@ class ProviderController extends AbstractController
 
     #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'])]
     #[Route('/{slug}/p/providers${hash}.json', name: 'root_providers_slug', requirements: ['hash' => '[a-f0-9]+'])]
-    public function providersAction(string $hash, Request $request): Response
+    public function providersAction(string $hash, Request $request, string $slug = null): Response
     {
-        $subRepo = $request->attributes->get('_sub_repo');
+        $subRepo = $this->subRepositoryHelper->getSubrepositoryId();
         $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash, $subRepo);
         if (!$providers) {
             return $this->createNotFound();
@@ -96,10 +98,13 @@ class ProviderController extends AbstractController
 
     #[Route('/p/{package}.json', name: 'root_package', requirements: ['package' => '%package_name_regex_v1%'])]
     #[Route('/{slug}/p/{package}.json', name: 'root_package_slug', requirements: ['package' => '%package_name_regex_v1%'])]
-    public function packageAction(string $package, Request $request): Response
+    public function packageAction(string $package): Response
     {
         $package = \explode('$', $package);
-        $subRepo = $request->attributes->get('_sub_repo');
+        $subRepo = $this->subRepositoryHelper->getSubrepositoryId();
+        if (!$this->checkSubrepositoryAccess($package[0])) {
+            return $this->createNotFound();
+        }
 
         if (\count($package) !== 2) {
             $package = $this->packageManager->getPackageJson($this->getUser(), $package[0]);
@@ -121,18 +126,19 @@ class ProviderController extends AbstractController
     #[Route('/{slug}/p2/{package}.json', name: 'root_package_v2_slug', requirements: ['package' => '%package_name_regex_v2%'])]
     public function packageV2Action(Request $request, string $package): Response
     {
-        $response = new JsonResponse([]);
-        $subRepo = $request->attributes->get('_sub_repo');
+        $isDev = str_ends_with($package, '~dev');
+        $packageName = preg_replace('/~dev$/', '', $package);
+        if (!$this->checkSubrepositoryAccess($packageName)) {
+            return $this->createNotFound();
+        }
 
+        $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getLastModify($package));
         if ($response->isNotModified($request)) {
             return $response;
         }
 
-        $isDev = str_ends_with($package, '~dev');
-        $package = preg_replace('/~dev$/', '', $package);
-
-        $package = $this->packageManager->getPackageV2Json($this->getUser(), $package, $isDev);
+        $package = $this->packageManager->getPackageV2Json($this->getUser(), $packageName, $isDev);
         if (!$package) {
             return $this->createNotFound();
         }
@@ -146,5 +152,11 @@ class ProviderController extends AbstractController
     protected function createNotFound(?string $msg = null): Response
     {
         return new JsonResponse(['status' => 'error', 'message' => $msg ?: 'Not Found'], 404);
+    }
+
+    protected function checkSubrepositoryAccess(string $name): bool
+    {
+        $packages = $this->subRepositoryHelper->allowedPackageNames();
+        return $packages === null || in_array($name, $packages, true);
     }
 }

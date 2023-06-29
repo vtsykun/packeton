@@ -15,6 +15,7 @@ use Packeton\Model\PacketonUserInterface as PUI;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 use Packeton\Security\Acl\PackagesAclChecker;
+use Packeton\Service\SubRepositoryHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -27,6 +28,7 @@ class InMemoryDumper
         private readonly ManagerRegistry $registry,
         private readonly PackagesAclChecker $checker,
         private readonly RouterInterface $router,
+        private readonly SubRepositoryHelper $subRepositoryHelper,
         array $config = null,
     ) {
         $this->infoMessage = $config['info_cmd_message'] ?? null;
@@ -94,7 +96,7 @@ class InMemoryDumper
 
         $rootFile = ['packages' => []];
         $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
-        $slug = $subRepo ? '/'. $subRepo->getSlug() : '';
+        $slug = $subRepo && !$this->subRepositoryHelper->isAutoHost() ? '/'. $subRepo->getSlug() : '';
 
         $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
         $rootFile['notify-batch'] = $this->router->generate('track_download_batch');

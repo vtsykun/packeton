@@ -12,6 +12,9 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[UniqueEntity(fields: ['slug'])]
 class SubRepository
 {
+    public const ROOT_REPO = 0;
+    public const AUTO_HOST = -1;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -69,6 +72,25 @@ class SubRepository
     public function setUrls(?string $urls): static
     {
         $this->urls = $urls;
+
+        return $this;
+    }
+
+    public function addPackage(string $name): static
+    {
+        $this->packages ??= [];
+        $this->packages[] = $name;
+        $this->packages = array_values(array_unique($this->packages));
+
+        return $this;
+    }
+
+    public function removePackage(string $name): static
+    {
+        if ($this->packages && false !== ($index = array_search($name, $this->packages))) {
+            unset($this->packages[$index]);
+            $this->packages = array_values(array_unique($this->packages));
+        }
 
         return $this;
     }

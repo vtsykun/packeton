@@ -47,7 +47,7 @@ class SubRepositoryHelper
 
     public function allowedPackageNames(): ?array
     {
-        $entity = $this->getCurrentSubRepository();
+        $entity = $this->getCurrentSubrepository();
         $packages = $entity?->getPackages();
 
         return $entity === null ? null : (empty($packages) ? [] : $packages);
@@ -55,7 +55,7 @@ class SubRepositoryHelper
 
     public function allowedPackageIds(array $moreAllowed = null): ?array
     {
-        $entity = $this->getCurrentSubRepository();
+        $entity = $this->getCurrentSubrepository();
         if (null === $entity) {
             return $moreAllowed;
         }
@@ -79,6 +79,15 @@ class SubRepositoryHelper
             $ids = array_intersect($ids, $moreAllowed);
         }
         return $ids;
+    }
+
+    public function isAutoHost(): bool
+    {
+        if (!$req = $this->requestStack->getMainRequest()) {
+            return false;
+        }
+
+        return $req->attributes->get('_sub_repo_type') === SubRepository::AUTO_HOST;
     }
 
     public static function applyCondition(QueryBuilder $qb, ?array $allowed): QueryBuilder
@@ -105,7 +114,7 @@ class SubRepositoryHelper
         return self::applyCondition($qb, $allowed);
     }
 
-    protected function getCurrentSubRepository(): ?SubRepository
+    public function getCurrentSubrepository(): ?SubRepository
     {
         if (!$req = $this->requestStack->getMainRequest()) {
             return null;
@@ -116,6 +125,14 @@ class SubRepositoryHelper
             $entity = $subRepo > 0 ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
         }
         return $entity;
+    }
+
+    public function getSubrepositoryId(): ?int
+    {
+        if (!$req = $this->requestStack->getMainRequest()) {
+            return null;
+        }
+        return $req->attributes->get('_sub_repo');
     }
 
     public function getTwigData(UserInterface $user = null): array

@@ -83,7 +83,7 @@ class ZipballController extends AbstractController
         if ((false === $this->dm->isEnabled() && false === RepTypes::isBuildInDist($package->getRepoType()))
             || !\preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])
         ) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
+            return $this->createNotFound();
         }
 
         $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getReference() === $reference);

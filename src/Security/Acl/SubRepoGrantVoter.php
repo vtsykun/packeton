@@ -13,6 +13,8 @@ class SubRepoGrantVoter implements CacheableVoterInterface
     public static $subRoutes = [
         'root_packages_slug' => 1,
         'root_providers_slug' => 1,
+        'root_package_slug' => 1,
+        'root_package_v2_slug' => 1,
     ];
 
     /**

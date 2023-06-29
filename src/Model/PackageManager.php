@@ -16,6 +16,7 @@ use Packeton\Event\UpdaterEvent;
 use Packeton\Package\InMemoryDumper;
 use Packeton\Repository\VersionRepository;
 use Packeton\Entity\Package;
+use Packeton\Service\SubRepositoryHelper;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -38,13 +39,17 @@ class PackageManager
         protected EventDispatcherInterface $dispatcher,
         protected MetadataCache $cache,
         protected MetadataMinifier $metadataMinifier,
-        protected \Redis $redis,
+        protected SubRepositoryHelper $subRepositoryHelper,
     ) {
     }
 
     public function insetPackage(Package $package): void
     {
         $this->providerManager->insertPackage($package);
+        if ($subRepo = $this->subRepositoryHelper->getCurrentSubrepository()) {
+            $subRepo->addPackage($package->getName());
+        }
+
         $this->dispatcher->dispatch(new PackageEvent($package), PackageEvent::PACKAGE_CREATE);
         $em = $this->doctrine->getManager();
         $em->flush();
@@ -223,6 +228,7 @@ class PackageManager
         }
 
         $cacheKey = 'pkg_user_cache_' . $this->dumper->getFormat()->value . '_' . ($user ? $user->getUserIdentifier() : 0) . "_$subRepo";
+        $cacheKey .= $this->subRepositoryHelper->isAutoHost() ? '_auto' : '';
 
         return $this->cache->get(
             $cacheKey,

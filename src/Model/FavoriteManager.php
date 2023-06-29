@@ -16,6 +16,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Repository\UserRepository;
+use Packeton\Service\SubRepositoryHelper;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -23,13 +24,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class FavoriteManager
 {
-    protected $redis;
-    protected $registry;
-
-    public function __construct(\Redis $redis, ManagerRegistry $registry)
-    {
-        $this->redis = $redis;
-        $this->registry = $registry;
+    public function __construct(
+        protected \Redis $redis,
+        protected ManagerRegistry $registry,
+        protected SubRepositoryHelper $subRepositoryHelper,
+    ) {
     }
 
     public function markFavorite(UserInterface $user, Package $package)
@@ -49,6 +48,7 @@ class FavoriteManager
     public function getFavorites(UserInterface $user, $limit = 0, $offset = 0)
     {
         $favoriteIds = $this->redis->zrevrange('usr:'.$this->getUid($user).':fav', $offset, $offset + $limit - 1);
+        $favoriteIds = $this->subRepositoryHelper->allowedPackageIds($favoriteIds);
 
         return $this->getPackageRepo()->findById($favoriteIds);
     }

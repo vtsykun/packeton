@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\EventListener;
 
+use Packeton\Entity\SubRepository;
 use Packeton\Entity\User;
 use Packeton\Model\PacketonUserInterface;
 use Packeton\Security\Acl\SubRepoGrantVoter;
@@ -51,11 +52,13 @@ class SubRepositoryListener
             $subRepo = $request->getSession()->get('_sub_repo') ?: $subRepo;
         }
 
+        $withSlug = false;
         if ($request->attributes->has('slug') && (SubRepoGrantVoter::$subRoutes[$route] ?? null)) {
             $subRepo = $this->helper->getBySlug($request->attributes->get('slug'));
             if (null === $subRepo) {
                 throw new NotFoundHttpException("subrepository does not exists");
             }
+            $withSlug = true;
         }
 
         $token = $this->tokenStorage->getToken();
@@ -63,13 +66,14 @@ class SubRepositoryListener
 
         if ($subRepo) {
             $request->attributes->set('_sub_repo', $subRepo);
+            $request->attributes->set('_sub_repo_type', !$withSlug ? SubRepository::AUTO_HOST : null);
         }
 
         if ($user instanceof PacketonUserInterface) {
             $allowedRepos = $user->getSubRepos() ?: [];
             $isAdmin = $user instanceof User ? $user->isAdmin() : in_array('ROLE_ADMIN', $token->getRoleNames());
 
-            // For BC. Always allow root repository if it does not exist restriction.
+            // Always allow root repository if it does not exist restriction.
             if (empty($allowedRepos) && null === $subRepo) {
                 return;
             }
@@ -83,7 +87,11 @@ class SubRepositoryListener
                     return;
                 }
 
-                throw new AccessDeniedHttpException("This subrepository is not allowed");
+                if ($withSlug) {
+                    throw new NotFoundHttpException("subrepository does not exists");
+                } else {
+                    throw new AccessDeniedHttpException("This subrepository is not allowed");
+                }
             }
         }
     }

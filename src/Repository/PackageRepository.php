@@ -305,7 +305,7 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function getFilteredQueryBuilder(array $filters = [], $orderByName = false)
+    public function getFilteredQueryBuilder(array $filters = [], $orderByName = false): QueryBuilder
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p')
