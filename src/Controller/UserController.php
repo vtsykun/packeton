@@ -31,6 +31,7 @@ use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Model\RedisAdapter;
 use Packeton\Security\Token\PatTokenManager;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\SshKeyHelper;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -58,6 +59,7 @@ class UserController extends AbstractController
         protected FavoriteManager $favoriteManager,
         protected DownloadManager $downloadManager,
         protected UserFormHandler $formHandler,
+        protected SubRepositoryHelper $subRepositoryHelper,
     ){
     }
 
@@ -426,6 +428,7 @@ class UserController extends AbstractController
         $packages = $this->registry
             ->getRepository(Package::class)
             ->getFilteredQueryBuilder(['maintainer' => $user->getId()], true);
+        $packages = $this->subRepositoryHelper->applySubRepository($packages);
 
         $paginator = new Pagerfanta(new QueryAdapter($packages, true));
         $paginator->setMaxPerPage(15);

@@ -83,7 +83,7 @@ final class JWTUser implements UserInterface, EquatableInterface
             return false;
         }
 
-        if (array_diff($this->roles, $user->roles) || array_diff($user->roles, $this->roles)) {
+        if (array_diff($this->roles, $user->getRoles()) || array_diff($user->getRoles(), $this->roles)) {
             return false;
         }
 

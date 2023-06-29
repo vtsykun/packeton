@@ -65,10 +65,18 @@ class PatTokenUser implements PacketonUserInterface
     }
 
     /**
-     * @return array|int[]|null
+     * {@inheritdoc}
      */
     public function getAclGroups(): ?array
     {
         return $this->groups;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getSubRepos(): ?array
+    {
+        return $this->attributes['sub_repos'] ?? null;
     }
 }

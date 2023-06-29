@@ -1,0 +1,44 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+
+<div style="float:right; margin: 20px">
+    <a class="btn btn-default" href="{{ path('subrepository_create') }}">Create subrepository</a>
+</div>
+
+<section class="row">
+    <ul class="packages list-unstyled">
+        {% for repo in repos %}
+            {% set url = path('subrepository_update', { 'id' : repo.id }) %}
+            <li data-url="{{ url }}" class="row">
+                <div class="col-xs-12 package-item" style="border-width: 1px;border-style: groove; border-radius: 0">
+                    <div class="row" style="margin: 6px 12px;">
+                        <div class="s-flex">
+                            <h4 class="s-flex font-bold"><a class="no-underline" style="white-space: nowrap" href="{{ url }}">{{ repo.name }}</a></h4>
+                            <div style="width: 100%; margin-top: 10px">
+                                <form class="onsubmit-confirm" action="{{ path('subrepository_delete', { 'id': repo.id}) }}" style="float: right" method="POST">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete') }}">
+                                    <button type="submit" class="btn btn-danger" title="Delete">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <p class="link-gray" style="font-size: 12px; margin: 0">
+                        Repository URLs
+                        <pre style="border-left: none;padding: 0; margin: 0; overflow: hidden">
+{
+  "repositories": [{
+    "type": "composer",
+    "url": "{{ app.request.getSchemeAndHttpHost() ~ '/' ~ repo.slug }}"
+  }]
+}</pre>
+                        </p>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+
+
+</section>
+{% endblock %}

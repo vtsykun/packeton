@@ -9,7 +9,7 @@ use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
-use Packeton\Service\DistManager;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[Route(defaults: ['_format' => 'json'], methods: ['GET'])]
 class ProviderController extends AbstractController
 {
     use ControllerTrait;
@@ -25,11 +26,13 @@ class ProviderController extends AbstractController
         private readonly PackageManager $packageManager,
         private readonly ProviderManager $providerManager,
         private readonly ManagerRegistry $registry,
+        private readonly SubRepositoryHelper $subRepositoryHelper,
     ) {
     }
 
-    #[Route('/packages.json', name: 'root_packages', defaults: ['_format' => 'json'], methods: ['GET'])]
-    public function packagesAction(Request $request): Response
+    #[Route('/packages.json', name: 'root_packages')]
+    #[Route('/{slug}/packages.json', name: 'root_packages_slug')]
+    public function packagesAction(Request $request, string $slug = null): Response
     {
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getRootLastModify());
@@ -39,8 +42,9 @@ class ProviderController extends AbstractController
 
         $ua = new UserAgentParser($request->headers->get('User-Agent'));
         $apiVersion = $request->query->get('ua') ? (int) $request->query->get('ua') : $ua->getComposerMajorVersion();
+        $subRepo = $this->subRepositoryHelper->getSubrepositoryId();;
 
-        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser(), $apiVersion);
+        $rootPackages = $this->packageManager->getRootPackagesJson($this->getUser(), $apiVersion, $subRepo);
 
         $response->setData($rootPackages);
         $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
@@ -48,10 +52,12 @@ class ProviderController extends AbstractController
         return $response;
     }
 
-    #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'], defaults: ['_format' => 'json'], methods: ['GET'])]
-    public function providersAction($hash): Response
+    #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'])]
+    #[Route('/{slug}/p/providers${hash}.json', name: 'root_providers_slug', requirements: ['hash' => '[a-f0-9]+'])]
+    public function providersAction(string $hash, Request $request, string $slug = null): Response
     {
-        $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash);
+        $subRepo = $this->subRepositoryHelper->getSubrepositoryId();
+        $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash, $subRepo);
         if (!$providers) {
             return $this->createNotFound();
         }
@@ -63,7 +69,7 @@ class ProviderController extends AbstractController
      * Copy from Packagist. Can be used for https://workers.cloudflare.com sync mirrors.
      * Used two unix format: Packagist and RFC-3399
      */
-    #[Route('/metadata/changes.json', name: 'metadata_changes', defaults: ['_format' => 'json'], methods: ['GET'])]
+    #[Route('/metadata/changes.json', name: 'metadata_changes')]
     public function metadataChangesAction(Request $request): Response
     {
         $now = time() * 10000;
@@ -90,16 +96,16 @@ class ProviderController extends AbstractController
         return new JsonResponse(['actions' => array_merge($updatesDev, $updatesStab), 'timestamp' => $now]);
     }
 
-    #[Route(
-        '/p/{package}.json',
-        name: 'root_package',
-        requirements: ['package' => '%package_name_regex_v1%'],
-        defaults: ['_format' => 'json'],
-        methods: ['GET']
-    )]
+    #[Route('/p/{package}.json', name: 'root_package', requirements: ['package' => '%package_name_regex_v1%'])]
+    #[Route('/{slug}/p/{package}.json', name: 'root_package_slug', requirements: ['package' => '%package_name_regex_v1%'])]
     public function packageAction(string $package): Response
     {
         $package = \explode('$', $package);
+        $subRepo = $this->subRepositoryHelper->getSubrepositoryId();
+        if (!$this->checkSubrepositoryAccess($package[0])) {
+            return $this->createNotFound();
+        }
+
         if (\count($package) !== 2) {
             $package = $this->packageManager->getPackageJson($this->getUser(), $package[0]);
             if ($package) {
@@ -108,7 +114,7 @@ class ProviderController extends AbstractController
             return $this->createNotFound();
         }
 
-        $package = $this->packageManager->getCachedPackageJson($this->getUser(), $package[0], $package[1]);
+        $package = $this->packageManager->getCachedPackageJson($this->getUser(), $package[0], $package[1], $subRepo);
         if (!$package) {
             return $this->createNotFound();
         }
@@ -116,25 +122,23 @@ class ProviderController extends AbstractController
         return new JsonResponse($package);
     }
 
-    #[Route(
-        '/p2/{package}.json',
-        name: 'root_package_v2',
-        requirements: ['package' => '%package_name_regex_v2%'],
-        defaults: ['_format' => 'json'],
-        methods: ['GET']
-    )]
+    #[Route('/p2/{package}.json', name: 'root_package_v2', requirements: ['package' => '%package_name_regex_v2%'])]
+    #[Route('/{slug}/p2/{package}.json', name: 'root_package_v2_slug', requirements: ['package' => '%package_name_regex_v2%'])]
     public function packageV2Action(Request $request, string $package): Response
     {
+        $isDev = str_ends_with($package, '~dev');
+        $packageName = preg_replace('/~dev$/', '', $package);
+        if (!$this->checkSubrepositoryAccess($packageName)) {
+            return $this->createNotFound();
+        }
+
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getLastModify($package));
         if ($response->isNotModified($request)) {
             return $response;
         }
 
-        $isDev = str_ends_with($package, '~dev');
-        $package = preg_replace('/~dev$/', '', $package);
-
-        $package = $this->packageManager->getPackageV2Json($this->getUser(), $package, $isDev);
+        $package = $this->packageManager->getPackageV2Json($this->getUser(), $packageName, $isDev);
         if (!$package) {
             return $this->createNotFound();
         }
@@ -150,16 +154,9 @@ class ProviderController extends AbstractController
         return new JsonResponse(['status' => 'error', 'message' => $msg ?: 'Not Found'], 404);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public static function getSubscribedServices(): array
+    protected function checkSubrepositoryAccess(string $name): bool
     {
-        return array_merge(
-            parent::getSubscribedServices(),
-            [
-                DistManager::class
-            ]
-        );
+        $packages = $this->subRepositoryHelper->allowedPackageNames();
+        return $packages === null || in_array($name, $packages, true);
     }
 }

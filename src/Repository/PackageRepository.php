@@ -12,6 +12,7 @@
 
 namespace Packeton\Repository;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
 use Doctrine\ORM\EntityRepository;
@@ -20,6 +21,7 @@ use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Service\SubRepositoryHelper;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -107,45 +109,57 @@ class PackageRepository extends EntityRepository
         return array_map('strtolower', $names);
     }
 
-    public function getPackageNamesByType($type)
+    public function getPackageNamesByType($type, ?array $allowed = null)
     {
-        $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name FROM Packeton\Entity\Package p WHERE p.type = :type")
-            ->setParameters(['type' => $type]);
+        $qb = $this->createQueryBuilder('p')
+            ->resetDQLPart('select')
+            ->select(['p.name'])
+            ->andWhere('p.type = :type')
+            ->setParameter('type', $type);
+
+        $query = SubRepositoryHelper::applyCondition($qb, $allowed)->getQuery();
 
         return $this->getPackageNamesForQuery($query);
     }
 
-    public function getPackageNamesByVendor($vendor)
+    public function getPackageNamesByVendor($vendor, ?array $allowed = null)
     {
-        $query = $this->getEntityManager()
-            ->createQuery("SELECT p.name FROM Packeton\Entity\Package p WHERE p.name LIKE :vendor")
-            ->setParameters(['vendor' => $vendor.'/%']);
+        $qb = $this->createQueryBuilder('p')
+            ->resetDQLPart('select')
+            ->select(['p.name'])
+            ->andWhere('p.name LIKE :vendor')
+            ->setParameter('vendor', $vendor.'/%');
+
+        $query = SubRepositoryHelper::applyCondition($qb, $allowed)->getQuery();
 
         return $this->getPackageNamesForQuery($query);
     }
 
-    public function getPackagesWithFields($filters, $fields)
+    public function getPackagesWithFields($filters, $fields, ?array $allowed = null)
     {
         $selector = '';
         foreach ($fields as $field) {
             $selector .= ', p.'.$field;
         }
-        $where = '';
+        $where = [];
 
         $vendor = $filters['vendor'] ?? null;
         unset($filters['vendor']);
 
         foreach ($filters as $filter => $val) {
-            $where .= ' p.'.$filter.' = :'.$filter;
+            $where[] = ' p.'.$filter.' = :'.$filter;
         }
         if ($vendor) {
-            $where .= ' p.name LIKE :vendor ';
+            $where[] = ' p.name LIKE :vendor ';
             $filters['vendor'] = $vendor .'/%';
+        }
+        if (null !== $allowed) {
+            $where[] = ' p.id IN (:pid) ';
+            $filters['pid'] = $allowed ?: [-1];
         }
 
         if ($where) {
-            $where = 'WHERE '.$where;
+            $where = 'WHERE '. implode(' AND ', $where);
         }
         $query = $this->getEntityManager()
             ->createQuery("SELECT p.name $selector  FROM Packeton\Entity\Package p $where")
@@ -291,11 +305,11 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function getFilteredQueryBuilder(array $filters = [], $orderByName = false)
+    public function getFilteredQueryBuilder(array $filters = [], $orderByName = false): QueryBuilder
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p')
-            ->from('Packeton\Entity\Package', 'p');
+            ->from(Package::class, 'p');
 
         if (isset($filters['tag'])) {
             $qb->leftJoin('p.versions', 'v');
@@ -459,7 +473,7 @@ class PackageRepository extends EntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p')
-            ->from('Packeton\Entity\Package', 'p')
+            ->from(Package::class, 'p')
             ->where('p.abandoned = false')
             ->orderBy('p.id', 'DESC');
 
@@ -499,7 +513,7 @@ class PackageRepository extends EntityRepository
 
             return array_map(
                 fn ($item) => $this->find($item['id']),
-                $conn->executeQuery($sql, $params, ['ids' => Connection::PARAM_INT_ARRAY])->fetchAllAssociative()
+                $conn->executeQuery($sql, $params, ['ids' => ArrayParameterType::INTEGER])->fetchAllAssociative()
             );
         }
 

@@ -17,7 +17,7 @@
             {{ form_row(form.proxies) }}
         {% endif %}
         <h3>Access matrix</h3>
-        {% set aclPermissions = get_group_acl_form_data(form.aclPermissions) %}
+        {% set aclPermissions = get_packages_choice_form_data(form.aclPermissions) %}
         {% if aclPermissions|length > 0 %}
             <ul class="nav nav-tabs" role="tablist">
             {% for vendor, items in aclPermissions %}

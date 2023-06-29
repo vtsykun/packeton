@@ -65,6 +65,24 @@
     </div>
 {%- endblock package_permission_widget -%}
 
+{%- block _sub_repository_packages_entry_row -%}
+<div class="collection-item">
+    <div class="input-group">
+        <div class="input-group-addon" style="width: 80%;">{{ value }}</div>
+        <div class="input-group-addon" style="width: 20%; border-right: 1px solid;">
+            {{- form_widget(form) -}}
+        </div>
+    </div>
+</div>
+{%- endblock -%}
+
+{% block _sub_repository_slug_widget %}
+<div class="input-group">
+    <span class="input-group-addon" style="width: 50%">{{ app.request.schemeAndHttpHost }}/</span>
+    {{- form_widget(form, {'attr': {'style': 'width: 50%'}}) -}}
+</div>
+{% endblock %}
+
 {%- block form_label -%}
     {% if label is not same as(false) -%}
         {% if not compound -%}

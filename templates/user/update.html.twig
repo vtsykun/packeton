@@ -1,6 +1,7 @@
 {% extends "layout.html.twig" %}
 {% block stylesheets %}
     <link href="{{ asset('libs/datepicker/bootstrap-datepicker.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
 {% endblock %}
 {% set title  = entity.id ? 'Update user ' ~ entity.userIdentifier : 'Create a new user' %}
 {% block title %}{{ title }}{% endblock %}
@@ -33,6 +34,7 @@
 
 {% block scripts %}
     <script src="{{ asset('libs/datepicker/bootstrap-datepicker.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
     <script nonce="{{ csp_nonce('script') }}">
         $(function(){
             $('.js-datepicker').datepicker({

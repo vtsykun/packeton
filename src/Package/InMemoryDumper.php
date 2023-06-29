@@ -9,11 +9,13 @@ use Doctrine\Persistence\ObjectRepository;
 use Packeton\Composer\MetadataFormat;
 use Packeton\Entity\Group;
 use Packeton\Entity\Package;
+use Packeton\Entity\SubRepository;
 use Packeton\Entity\Version;
 use Packeton\Model\PacketonUserInterface as PUI;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 use Packeton\Security\Acl\PackagesAclChecker;
+use Packeton\Service\SubRepositoryHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -26,20 +28,16 @@ class InMemoryDumper
         private readonly ManagerRegistry $registry,
         private readonly PackagesAclChecker $checker,
         private readonly RouterInterface $router,
+        private readonly SubRepositoryHelper $subRepositoryHelper,
         array $config = null,
     ) {
         $this->infoMessage = $config['info_cmd_message'] ?? null;
         $this->metadataFormat = MetadataFormat::tryFrom((string) ($config['format'] ?? null)) ?: MetadataFormat::AUTO;
     }
 
-    /**
-     * @param UserInterface|null $user
-     * @param int|null $apiVersion
-     * @return array
-     */
-    public function dump(UserInterface $user = null, int $apiVersion = null): array
+    public function dump(UserInterface $user = null, int $apiVersion = null, int $subRepo = null): array
     {
-        return $this->dumpRootPackages($user, $apiVersion);
+        return $this->dumpRootPackages($user, $apiVersion, $subRepo);
     }
 
     public function getFormat(): MetadataFormat
@@ -90,18 +88,25 @@ class InMemoryDumper
         return $packageData;
     }
 
-    private function dumpRootPackages(UserInterface $user = null, int $apiVersion = null)
+    private function dumpRootPackages(UserInterface $user = null, int $apiVersion = null, int $subRepo = null)
     {
-        [$providers, $packagesData, $availablePackages] = $this->dumpUserPackages($user, $apiVersion);
+        /** @var SubRepository $subRepo */
+        $subRepo = $subRepo ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
+        [$providers, $packagesData, $availablePackages] = $this->dumpUserPackages($user, $apiVersion, $subRepo);
 
         $rootFile = ['packages' => []];
         $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
+        $slug = $subRepo && !$this->subRepositoryHelper->isAutoHost() ? '/'. $subRepo->getSlug() : '';
+
         $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
         $rootFile['notify-batch'] = $this->router->generate('track_download_batch');
         $rootFile['metadata-changes-url'] = $this->router->generate('metadata_changes');
-        $rootFile['providers-url'] = '/p/%package%$%hash%.json';
+        $rootFile['providers-url'] = $slug . '/p/%package%$%hash%.json';
 
-        $rootFile['metadata-url'] = '/p2/%package%.json';
+        $rootFile['metadata-url'] = $slug . '/p2/%package%.json';
+        if ($subRepo) {
+            $rootFile['_comment'] = "Subrepository {$subRepo->getSlug()}";
+        }
 
         if (null !== $providers) {
             $userHash = \hash('sha256', \json_encode($providers));
@@ -116,7 +121,7 @@ class InMemoryDumper
 
         if ($this->metadataFormat->lazyProviders($apiVersion)) {
             unset($rootFile['provider-includes'], $rootFile['providers-url']);
-            $rootFile['providers-lazy-url'] = '/p/%package%.json';
+            $rootFile['providers-lazy-url'] = $slug . '/p/%package%.json';
         }
 
         if (false === $this->metadataFormat->metadataUrl($apiVersion)) {
@@ -130,13 +135,14 @@ class InMemoryDumper
         return [$rootFile, $providers, $packagesData];
     }
 
-    private function dumpUserPackages(UserInterface $user = null, int $apiVersion = null): array
+    private function dumpUserPackages(UserInterface $user = null, int $apiVersion = null, SubRepository $subRepo = null): array
     {
         if (false === $this->metadataFormat->providerIncludes($apiVersion)) {
             $allowed = $user ? $this->registry->getRepository(Group::class)
                 ->getAllowedPackagesForUser($user, false) : null;
 
             $availablePackages = $this->getPackageRepo()->getPackageNames($allowed);
+            $availablePackages = $subRepo ? $subRepo->filterAllowed($availablePackages) : $availablePackages;
             return [null, [], $availablePackages];
         }
 
@@ -147,10 +153,13 @@ class InMemoryDumper
 
         $providers = $packagesData = [];
         $versionData = $this->getVersionData($packages);
+
         $availablePackages = array_map(fn(Package $pkg) => $pkg->getName(), $packages);
+        $availablePackages = $subRepo ? $subRepo->filterAllowed($availablePackages) : $availablePackages;
+        $keys = array_flip($availablePackages);
 
         foreach ($packages as $package) {
-            if (!$packageData = $this->dumpPackage($user, $package, $versionData)) {
+            if (!isset($keys[$package->getName()]) || !($packageData = $this->dumpPackage($user, $package, $versionData))) {
                 continue;
             }
 

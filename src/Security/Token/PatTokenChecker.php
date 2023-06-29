@@ -61,6 +61,7 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
         $attributes['scores'] = $apiToken->getScores();
         if ($loadedUser instanceof User) {
             $attributes['expired_updates'] = $loadedUser->getExpiredUpdatesAt();
+            $attributes['sub_repos'] = $loadedUser->getSubRepos();
             $groups = $loadedUser->getAclGroups();
         }
 

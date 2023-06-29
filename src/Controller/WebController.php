@@ -19,6 +19,7 @@ use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Form\Model\SearchQuery;
 use Packeton\Form\Type\SearchQueryType;
+use Packeton\Service\SubRepositoryHelper;
 use Pagerfanta\Adapter\ArrayAdapter;
 use Pagerfanta\Adapter\CallbackAdapter;
 use Pagerfanta\Pagerfanta;
@@ -33,8 +34,9 @@ use Symfony\Component\Routing\Annotation\Route;
 class WebController extends AbstractController
 {
     public function __construct(
-        protected ManagerRegistry $registry
-    ){
+        protected ManagerRegistry $registry,
+        protected SubRepositoryHelper $subRepositoryHelper
+    ) {
     }
 
     #[Route('/', name: 'home')]
@@ -89,6 +91,8 @@ class WebController extends AbstractController
                 $this->registry
                     ->getRepository(Group::class)
                     ->getAllowedPackagesForUser($this->getUser(), false);
+
+            $allowed = $this->subRepositoryHelper->allowedPackageIds($allowed);
 
             $page = $req->query->get('page', 1) - 1;
             $packages = $this->registry->getRepository(Package::class)
@@ -342,11 +346,16 @@ class WebController extends AbstractController
         $qb = $this->registry->getManager()->createQueryBuilder();
         $qb->from(Package::class, 'p');
         $repo = $this->registry->getRepository(Package::class);
+
+        $allowed = null;
         if (!$this->isGranted('ROLE_FULL_CUSTOMER')) {
-            $packages = $this->registry->getRepository(Group::class)
+            $allowed = $this->registry->getRepository(Group::class)
                 ->getAllowedPackagesForUser($this->getUser());
-            $qb->andWhere('p.id IN (:ids)')
-                ->setParameter('ids', $packages);
+        }
+
+        $allowed = $this->subRepositoryHelper->allowedPackageIds($allowed);
+        if (null !== $allowed) {
+            $qb->andWhere('p.id IN (:ids)')->setParameter('ids', $allowed ? : [-1]);
         }
 
         $adapter = new CallbackAdapter(
