@@ -155,8 +155,12 @@ trait BaseIntegrationTrait
         }
 
         $options['client_id'] = $this->config['client_id'];
-        if (empty($options['redirect_uri'])) {
+        if (!isset($options['redirect_uri'])) {
             $options['redirect_uri'] = $this->router->generate($route, ['alias' => $this->config['name']], UrlGeneratorInterface::ABSOLUTE_URL);
+        }
+
+        if (empty($options['redirect_uri'])) {
+            unset($options['redirect_uri']);
         }
 
         return $options;
