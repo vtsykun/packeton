@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Integrations\Gitea;
+namespace Packeton\Integrations\Bitbucket;
 
 use Packeton\Integrations\Factory\OAuth2FactoryInterface;
 use Packeton\Integrations\Factory\OAuth2FactoryTrait;
@@ -10,10 +10,10 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 #[Exclude]
-class GiteaOAuth2Factory implements OAuth2FactoryInterface
+class BitbucketOAuth2Factory implements OAuth2FactoryInterface
 {
-    protected $class = GiteaIntegration::class;
-    protected $key = 'gitea';
+    protected $class = BitbucketIntegration::class;
+    protected $key = 'bitbucket';
 
     use OAuth2FactoryTrait;
 
@@ -25,9 +25,8 @@ class GiteaOAuth2Factory implements OAuth2FactoryInterface
         $builder = $node->children();
 
         $builder
-            ->scalarNode('client_id')->end()
-            ->scalarNode('client_secret')->end()
-            ->scalarNode('api_version')->example('v1')->end();
-
+            ->scalarNode('key')->end()
+            ->scalarNode('secret')->end()
+            ->scalarNode('api_version')->example('2.0')->end();
     }
 }

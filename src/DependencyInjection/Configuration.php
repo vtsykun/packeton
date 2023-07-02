@@ -298,7 +298,7 @@ class Configuration implements ConfigurationInterface
             ],
             'bitbucket' => [
                 'logo' => '/packeton/img/logo/bitbucket.png',
-                'svg_logo' => 'svg/gitea.html.twig',
+                'svg_logo' => 'svg/bitbucket.html.twig',
                 'login_title' => 'Login with Bitbucket',
             ]
         ];

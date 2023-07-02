@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\DependencyInjection;
 
 use Packeton\Attribute\AsWorker;
+use Packeton\Integrations\Bitbucket\BitbucketOAuth2Factory;
 use Packeton\Integrations\Factory\OAuth2FactoryInterface;
 use Packeton\Integrations\Gitea\GiteaOAuth2Factory;
 use Packeton\Integrations\Github\GithubAppFactory;
@@ -25,6 +26,7 @@ class PacketonExtension extends Extension
         $this->addFactories(new GitLabOAuth2Factory());
         $this->addFactories(new GithubAppFactory());
         $this->addFactories(new GiteaOAuth2Factory());
+        $this->addFactories(new BitbucketOAuth2Factory());
     }
 
     public function addFactories(OAuth2FactoryInterface $factory): void
