@@ -83,6 +83,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
     public function redirectOAuth2Url(Request $request = null, array $options = []): Response
     {
         $options['redirect_uri'] = false;
+        $options['scope'] = ['email'];
         return $this->getAuthorizationResponse($this->baseUrl . $this->pathAuthorize, $options, 'oauth_auto_redirect');
     }
 
@@ -486,8 +487,8 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
         $user = new User();
         $user->setEnabled(true)
             ->setRoles($this->getConfig()->roles())
-            ->setEmail($userData['email'])
-            ->setUsername($userData['login'])
+            ->setEmail($userData['username'] . '@example.com')
+            ->setUsername($userData['username'])
             ->setGithubId($userData['external_id'] ?? null)
             ->generateApiToken();
 

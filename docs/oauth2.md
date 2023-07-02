@@ -8,6 +8,7 @@ Table of content
 - [GitHub App Setup](oauth2/githubapp.md)
 - [GitLab Setup](oauth2/gitlab-integration.md)
 - [Gitea Setup](oauth2/gitea.md)
+- [Bitbucket Setup](oauth2/bitbucket.md)
 
 ## Base configuration
 
@@ -57,6 +58,15 @@ packeton:
             gitea:
                 client_id: '44000000-0000-0000-0000-00000000000'
                 client_secret: 'gto_acxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+        bitbucket:
+            repos_synchronization: true
+            pull_request_review: true
+            bitbucket:
+                key: GA7000000000000000
+                secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
+                api_version: '/example/rest/v2/'  # custom api prefix
+
 ```
 
 Where `clone_preference`:
@@ -115,6 +125,18 @@ Scopes:
 
 - login: `read:user`
 - repositories: `organization`, `repository`, `write:issue`
+
+Redirect Urls:
+
+```
+https://example.com/oauth2/{alias}/auto
+```
+
+### Bitbucket
+
+Scopes:
+
+- repositories & login: `account`, `webhook`, `team`, `project`, `pullrequest`
 
 Redirect Urls:
 

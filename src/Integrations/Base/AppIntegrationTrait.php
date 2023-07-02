@@ -157,10 +157,10 @@ trait AppIntegrationTrait
         if (null !== $callback) {
             $result = call_user_func($callback, $item);
             $item->set($result);
-
-            $this->setCached($appId, $key, $result);
+            $this->setCached($appId, $key, $item->getExpiry() !== null ? $item : $result);
             return $result;
         }
+
         return null;
     }
 
@@ -266,7 +266,7 @@ trait AppIntegrationTrait
             }
         }
 
-        $hasComposerLock = $this->getCached($app, "hasLock:$name", callback: function (CacheItem $item) use ($app, $payload) {
+        $hasComposerLock = $this->getCached($app, "hasLocks:$name", callback: function (CacheItem $item) use ($app, $payload) {
             $item->expiresAfter(3600);
             $token = $this->refreshToken($app);
             return (bool)$this->getRemoteContent($token, $payload['id'], 'composer.lock', $payload['default_branch'] ?? null);
