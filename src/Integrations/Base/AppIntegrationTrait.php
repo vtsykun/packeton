@@ -23,6 +23,7 @@ trait AppIntegrationTrait
 {
     protected $ownOrg = ['name' => 'Own profile', 'identifier' => '@self'];
     protected $remoteContentUrl = null;
+    protected $remoteContentFormat = null;
 
     protected \Redis $redis;
     protected LockFactory $lock;
@@ -103,12 +104,12 @@ trait AppIntegrationTrait
         return $this->registry->getRepository(OAuthIntegration::class)->findBy(['alias' => $this->name]);
     }
 
-    public function addHook(array|OAuthIntegration $accessToken, int|string $repositoryId): ?array
+    public function addHook(array|OAuthIntegration $accessToken, int|string $repoId): ?array
     {
         return null;
     }
 
-    public function removeHook(OAuthIntegration $accessToken, int|string $repositoryId): ?array
+    public function removeHook(OAuthIntegration $accessToken, int|string $repoId): ?array
     {
         return null;
     }
@@ -195,7 +196,8 @@ trait AppIntegrationTrait
             return null;
         }
 
-        $hasNewComposer = $this->getCached($app, "hasComposer:{$payload['name']}", callback: function (CacheItem $item) use ($app, $payload, $repo) {
+        $useCache = $payload['with_cache'] ?? true;
+        $hasNewComposer = $this->getCached($app, "hasComposer:{$payload['name']}", $useCache, function (CacheItem $item) use ($app, $payload, $repo) {
             $item->expiresAfter(7*86400);
             $token = $this->refreshToken($app);
             try {
@@ -313,15 +315,18 @@ trait AppIntegrationTrait
             $url = str_replace('?ref=', '', $url);
         }
 
+        $isRaw = $this->remoteContentFormat === 'raw';
         try {
-            $data = $this->makeApiRequest($token, 'GET', $url);
+            $content = $this->makeApiRequest($token, 'GET', $url, [], !$isRaw);
         } catch (\Throwable $e) {
             return null;
         }
 
-        $content = base64_decode($data['content'] ?? '') ?: null;
-        $content = $asJson && $content ? json_decode($content, true) : $content;
+        if (!$isRaw) {
+            $content = base64_decode($content['content'] ?? '') ?: null;
+        }
 
+        $content = $asJson && $content ? json_decode($content, true) : $content;
         return $asJson ? (is_array($content) ? $content : null) : $content;
     }
 
