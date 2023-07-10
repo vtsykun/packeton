@@ -5,11 +5,6 @@ if [[ ! -z "$WAIT_FOR_HOST" ]]; then
   wait-for-it.sh $WAIT_FOR_HOST
 fi
 
-if [[ "$SKIP_INIT" == "1" ]]; then
-  echo "Skip init application"
-  exec "$@"
-fi
-
 [ ! -d /data/redis ] && mkdir -p /data/redis
 [ ! -d /data/composer ] && mkdir /data/composer
 [ ! -d /data/zipball ] && mkdir /data/zipball
@@ -45,6 +40,12 @@ for _DOMAIN in $PRIVATE_REPO_DOMAIN_LIST ; do
 done
 
 cp -r /var/www/.ssh/* /root/.ssh && chmod -R 600 /root/.ssh/*
+
+if [[ "$SKIP_INIT" == "1" ]]; then
+  echo "Skip init application"
+  exec "$@"
+  exit 0;
+fi
 
 # Additional script handler
 if [ -f /var/tmp/data/handler.sh ]; then
