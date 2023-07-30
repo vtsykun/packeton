@@ -1,6 +1,6 @@
 <?php
 
-$bundles =  [
+return [
     Symfony\Bundle\FrameworkBundle\FrameworkBundle::class => ['all' => true],
     Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
     Symfony\Bundle\SecurityBundle\SecurityBundle::class => ['all' => true],
@@ -16,6 +16,7 @@ $bundles =  [
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true],
     BabDev\PagerfantaBundle\BabDevPagerfantaBundle::class => ['all' => true],
     Nelmio\SecurityBundle\NelmioSecurityBundle::class => ['all' => true],
+    League\FlysystemBundle\FlysystemBundle::class => ['all' => true],
 ];
 
 if (!class_exists(Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class)) {

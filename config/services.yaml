@@ -64,7 +64,8 @@ services:
             $swaggerDocsDir: '%kernel.project_dir%/swagger'
             $artifactPaths: '%packeton_artifact_paths%'
             $noPrivateHttpClient: '@Symfony\Component\HttpClient\NoPrivateNetworkHttpClient'
-            'Symfony\Component\Security\Core\User\UserCheckerInterface': '@Packeton\Security\UserChecker'
+            Symfony\Component\Security\Core\User\UserCheckerInterface: '@Packeton\Security\UserChecker'
+            League\Flysystem\FilesystemOperator $baseStorage: '@base.storage'
 
     Packeton\:
         resource: '../src/'

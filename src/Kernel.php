@@ -12,6 +12,7 @@ use Packeton\DependencyInjection\CompilerPass\MirrorsConfigCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\UpdaterLocatorPass;
 use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packeton\DependencyInjection\PacketonExtension;
+use Packeton\DependencyInjection\Resolve\ResolveExtension;
 use Packeton\DependencyInjection\Security\ApiHttpBasicFactory;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\DependencyInjection\SecurityExtension;
@@ -83,6 +84,23 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new UpdaterLocatorPass());
         $container->addCompilerPass(new MirrorsConfigCompilerPass());
         $container->addCompilerPass(new IntegrationsConfigCompilerPass($extension));
+
+        $container->registerExtension(new ResolveExtension());
+    }
+
+    protected function buildContainer(): ContainerBuilder
+    {
+        $container = parent::buildContainer();
+
+        $resolveConfig = $container->getExtensionConfig('resolve');
+        $extension = $container->getExtension('resolve');
+        $extension->load($resolveConfig, $container);
+
+        \Closure::bind(static function ($obj) use ($extension) {
+            unset($obj->extensionConfigs['resolve']);
+        }, null, ContainerBuilder::class)($container);
+
+        return $container;
     }
 
     /**

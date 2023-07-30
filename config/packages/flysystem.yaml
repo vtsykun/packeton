@@ -1,0 +1,35 @@
+flysystem:
+    storages:
+        local.storage:
+            adapter: 'local'
+            options:
+                directory: '%env(resolve:PACKAGIST_DIST_PATH)%'
+
+        base.storage:
+            adapter: 'lazy'
+            options:
+                source: '%env(STORAGE_SOURCE)%.storage'
+
+resolve:
+    expression: 'env("STORAGE_SOURCE") == "s3"'
+    flysystem:
+        storages:
+            s3.storage:
+                adapter: 'aws'
+                options:
+                    client: 'Aws\S3\S3Client'
+                    bucket: '%env(STORAGE_AWS_BUCKET)%'
+                    prefix: 'packeton'
+
+    services:
+        Packeton\Flysystem\AwsAdapterFactory:
+            arguments:
+                - '%env(STORAGE_AWS_REGION)%'
+                - '%env(default:storage.aws.opaque_auth:bool:STORAGE_AWS_OPAQUE_AUTH)%'
+                - '%env(default:storage.aws.key:STORAGE_AWS_KEY)%'
+                - '%env(default:storage.aws.secret:STORAGE_AWS_SECRET)%'
+                - '%env(default:storage.aws.endpoint:STORAGE_AWS_ENDPOINT)%'
+                - '%env(default:storage.aws.pathstyle:bool:STORAGE_AWS_PATH_STYLE_ENDPOINT)%'
+
+        Aws\S3\S3Client:
+            factory: ['@Packeton\Flysystem\AwsAdapterFactory', create]
