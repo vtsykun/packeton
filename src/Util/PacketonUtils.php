@@ -7,6 +7,8 @@ namespace Packeton\Util;
 use Composer\Package\PackageInterface;
 use Packeton\Entity\Package;
 use Packeton\Repository\PackageRepository;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\Finder\Glob;
 
 class PacketonUtils
@@ -289,5 +291,27 @@ class PacketonUtils
             fclose($out);
             fclose($stream);
         };
+    }
+
+    public static function setCompilerExtensionPriority(string|ExtensionInterface $extension, ContainerBuilder $container, int $order)
+    {
+        \Closure::bind(static function() use ($extension, $container, $order) {
+            $aliasName = is_string($extension) ? $extension : $extension->getAlias();
+            $target = $container->extensions[$aliasName] ?? null;
+            $i = 0;
+            $result = [];
+            foreach ($container->extensions as $alias => $extension) {
+                if ($i >= $order && null !== $target) {
+                    $result[$aliasName] = $target;
+                    $target = null;
+                }
+
+                if ($alias !== $aliasName) {
+                    $result[$alias] = $extension;
+                    $i++;
+                }
+            }
+            $container->extensions = $result;
+        }, null, ContainerBuilder::class)();
     }
 }

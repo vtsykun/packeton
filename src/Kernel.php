@@ -14,6 +14,7 @@ use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packeton\DependencyInjection\PacketonExtension;
 use Packeton\DependencyInjection\Resolve\ResolveExtension;
 use Packeton\DependencyInjection\Security\ApiHttpBasicFactory;
+use Packeton\Util\PacketonUtils;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\DependencyInjection\SecurityExtension;
 use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
@@ -39,6 +40,19 @@ class Kernel extends BaseKernel
         }
 
         parent::__construct($environment, $debug);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerBundles(): iterable
+    {
+        $contents = require $this->getBundlesPath();
+        foreach ($contents as $class => $envs) {
+            if (($envs[$this->environment] ?? ($envs['all'] ?? false)) && class_exists($class)) {
+                yield new $class();
+            }
+        }
     }
 
     private function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
@@ -77,6 +91,7 @@ class Kernel extends BaseKernel
         $extension->addAuthenticatorFactory(new ApiHttpBasicFactory());
 
         $container->registerExtension($extension = new PacketonExtension());
+        PacketonUtils::setCompilerExtensionPriority($extension, $container, 1);
 
         $container->addCompilerPass(new LdapServicesPass());
         $container->addCompilerPass(new ApiFirewallCompilerPass());

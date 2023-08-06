@@ -66,7 +66,8 @@ services:
             $artifactPaths: '%packeton_artifact_paths%'
             $noPrivateHttpClient: '@Symfony\Component\HttpClient\NoPrivateNetworkHttpClient'
             Symfony\Component\Security\Core\User\UserCheckerInterface: '@Packeton\Security\UserChecker'
-            League\Flysystem\FilesystemOperator $baseStorage: '@base.storage'
+            League\Flysystem\FilesystemOperator $baseStorage: '@flysystem.base'
+            League\Flysystem\FilesystemOperator $artifactStorage: '@flysystem.artifact'
 
     Packeton\:
         resource: '../src/'
@@ -114,8 +115,8 @@ services:
     
     Packeton\Model\UploadZipballStorage:
         arguments:
-            $artifactStorage: '%packeton_artifact_storage%'
             $supportTypes: '%packeton_artifact_types%'
+            $tmpDir: '%packeton_artifact_storage%'
 
     Packeton\Service\DistConfig:
         arguments:

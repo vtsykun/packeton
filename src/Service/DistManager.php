@@ -169,7 +169,7 @@ class DistManager
 
     private function downloadArtifact(string $reference, Package $package): ?string
     {
-        if ($path = $this->artifact->getPath($reference)) {
+        if ($path = $this->artifact->moveToLocal($reference)) {
             return $path;
         }
 

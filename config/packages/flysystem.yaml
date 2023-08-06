@@ -5,16 +5,33 @@ flysystem:
             options:
                 directory: '%env(resolve:PACKAGIST_DIST_PATH)%'
 
-        base.storage:
+        local.artifact:
+            adapter: 'local'
+            options:
+                directory: '%packeton_artifact_storage%'
+
+        flysystem.base:
             adapter: 'lazy'
             options:
                 source: '%env(STORAGE_SOURCE)%.storage'
+
+        flysystem.artifact:
+            adapter: 'lazy'
+            options:
+                source: '%env(STORAGE_SOURCE)%.artifact'
 
 resolve:
     expression: 'env("STORAGE_SOURCE") == "s3"'
     flysystem:
         storages:
             s3.storage:
+                adapter: 'asyncaws'
+                options:
+                    client: 'packeton.s3.storage'
+                    bucket: '%env(STORAGE_AWS_BUCKET)%'
+                    prefix: '%env(STORAGE_AWS_PREFIX)%'
+
+            s3.artifact:
                 adapter: 'asyncaws'
                 options:
                     client: 'packeton.s3.storage'

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Packeton\Model;
 
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use Packeton\Entity\Zipball;
 use Packeton\Util\PacketonUtils;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -14,9 +16,12 @@ class UploadZipballStorage
 {
     public function __construct(
         protected ManagerRegistry $registry,
-        protected ?string $artifactStorage,
-        protected array $supportTypes
+        protected FilesystemOperator $artifactStorage,
+        protected Filesystem $fs,
+        protected array $supportTypes,
+        protected ?string $tmpDir = null,
     ) {
+        $this->tmpDir ??= sys_get_temp_dir();
     }
 
     public function remove(Zipball $zip): void
@@ -25,10 +30,13 @@ class UploadZipballStorage
         $manager->remove($zip);
         $manager->flush();
 
-        @unlink($this->getPath($zip));
+        try {
+            $this->artifactStorage->delete($zip->getFilename());
+        } catch (\Exception $e) {
+        }
     }
 
-    public function getPath(Zipball|string $zipOrReference): ?string
+    public function moveToLocal(Zipball|string $zipOrReference): ?string
     {
         if (is_string($zipOrReference)) {
             $zip = $this->registry->getRepository(Zipball::class)->findOneBy(['reference' => $zipOrReference]);
@@ -40,7 +48,16 @@ class UploadZipballStorage
             return null;
         }
 
-        return PacketonUtils::buildPath($this->artifactStorage, $zip->getFilename());
+        $localName = PacketonUtils::buildPath($this->tmpDir, $zip->getFilename());
+        if ($this->fs->exists($localName)) {
+            return $localName;
+        }
+
+        $stream = $this->artifactStorage->readStream($zip->getFilename());
+        $local = fopen($localName, 'w+b');
+        stream_copy_to_stream($stream, $local);
+
+        return $localName;
     }
 
     public function save(UploadedFile $file): array
@@ -59,9 +76,15 @@ class UploadZipballStorage
         $filename = $hash.'.'.$extension;
 
         try {
-            $file->move($this->artifactStorage, $filename);
-        } catch (\RuntimeException $e) {
-            return ['code' => 400, 'error' => $e];
+            $file->move($this->tmpDir, $filename);
+            $fullname = PacketonUtils::buildPath($this->tmpDir, $filename);
+            if (!$this->artifactStorage->fileExists($filename)) {
+                $stream = fopen($fullname, 'r');
+                $this->artifactStorage->writeStream($filename, $stream);
+            }
+
+        } catch (\Exception $e) {
+            return ['code' => 400, 'error' => $e->getMessage()];
         }
 
         $zipball = new Zipball();

@@ -8,7 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
-use Packeton\Entity\Version;
 use Packeton\Entity\Zipball;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
