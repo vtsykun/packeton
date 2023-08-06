@@ -12,6 +12,7 @@ parameters:
     env(TRUSTED_PROXIES): null
     env(MAILER_FROM): 'Packeton <packeton@example.com>'
     env(PUBLIC_ACCESS): false
+    env(STORAGE_SOURCE): local
 
     # twig sandbox
     security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim', 'return']

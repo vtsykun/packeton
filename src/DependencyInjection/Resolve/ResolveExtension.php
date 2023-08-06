@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Packeton\DependencyInjection\Resolve;
 
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ExpressionLanguage;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 class ResolveExtension extends Extension
@@ -23,7 +25,7 @@ class ResolveExtension extends Extension
 
         $context = ['container' => $container];
         $configProcessor = function (array $configs) use (&$configProcessor, $context, $container) {
-            foreach ($configs as $i => $config) {
+            foreach ($configs as $config) {
                 if (isset($config['expression'])) {
                     $expression = $config['expression'];
                     unset($config['expression']);
@@ -31,7 +33,7 @@ class ResolveExtension extends Extension
                         $services = ['services' => $config['services'] ?? [], 'parameters' => $config['parameters'] ?? []];
 
                         if ($services = array_filter($services)) {
-                            // todo process services
+                            $this->loadDeferredServices($container, $services);
                         }
 
                         unset($services['services'], $services['parameters']);
@@ -62,10 +64,18 @@ class ResolveExtension extends Extension
         return 'resolve';
     }
 
+    private function loadDeferredServices(ContainerBuilder $container, array $content): void
+    {
+        $loader = \Closure::bind(static function() use ($container, $content) {
+            $loader = new YamlFileLoader($container, new FileLocator(__DIR__));
+            $loader->loadContent($content, __FILE__);
+        }, null, YamlFileLoader::class);
+
+        $loader();
+    }
+
     private function getExpressionLanguage(): ExpressionLanguage
     {
-        return $this->expressionLanguage ??= new ExpressionLanguage(getEnv: function (string $name) {
-            return $_ENV[strtoupper($name)] ?? null;
-        });
+        return $this->expressionLanguage ??= new ExpressionLanguage(getEnv: static fn (string $name) => $_ENV[strtoupper($name)] ?? null);
     }
 }

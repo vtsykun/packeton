@@ -279,4 +279,15 @@ class PacketonUtils
             $_ENV['COMPOSER_DISABLE_NETWORK'] = 1;
         }
     }
+
+    public static function readStream($stream): callable
+    {
+        return static function () use ($stream) {
+            /** @var resource $out */
+            $out = fopen('php://output', 'wb');
+            stream_copy_to_stream($stream, $out);
+            fclose($out);
+            fclose($stream);
+        };
+    }
 }

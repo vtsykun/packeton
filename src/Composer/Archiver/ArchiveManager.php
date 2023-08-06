@@ -56,13 +56,6 @@ class ArchiveManager extends ComposerArchiveManager
             throw new \InvalidArgumentException('Format must be specified');
         }
 
-        try {
-            if ($path = $this->tryFromGitArchive($package, $format, $targetDir, $fileName)) {
-                return $path;
-            }
-        } catch (\Exception $e) {
-        }
-
         // Search for the most appropriate archiver
         $usableArchiver = null;
         foreach ($this->archivers as $archiver) {
@@ -151,25 +144,13 @@ class ArchiveManager extends ComposerArchiveManager
         return $target;
     }
 
-    public function tryFromGitArchive(CompletePackageInterface $package, string $format, string $targetDir, ?string $fileName = null): ?string
+    public function tryFromGitArchive(string $reference, string $format, string $targetDir, string $fileName, bool $withNetwork = false): ?string
     {
-        if ($package->getSourceType() !== 'git') {
-            return null;
-        }
-
         $filesystem = new Filesystem();
-        $driver = new TreeGitDriver($this->repoConfig, $this->io, $this->config, $this->httpDownloader, $this->processExecutor);
-        $driver = $driver->withSubDirectory($this->subDirectory);
-
-        PacketonUtils::toggleNetwork(false);
-        try {
-            $driver->initialize();
-        } finally {
-            PacketonUtils::toggleNetwork(true);
-        }
 
         try {
-            $jsonData = $driver->getComposerInformation($package->getSourceReference());
+            $driver = $this->createGitTreeDriver($withNetwork);
+            $jsonData = $driver->getComposerInformation($reference);
             if (empty($jsonData)) {
                 return null;
             }
@@ -177,14 +158,8 @@ class ArchiveManager extends ComposerArchiveManager
             return null;
         }
 
-        $packageNameParts = null === $fileName ?
-            $this->getPackageFilenameParts($package)
-            : ['base' => $fileName];
-
-        $packageName = $this->getPackageFilenameFromParts($packageNameParts);
-
         $filesystem->ensureDirectoryExists($targetDir);
-        $target = realpath($targetDir).'/'.$packageName.'.'.$format;
+        $target = realpath($targetDir).'/'.$fileName.'.'.$format;
         $filesystem->ensureDirectoryExists(dirname($target));
 
         if (!$this->overwriteFiles && file_exists($target)) {
@@ -195,7 +170,7 @@ class ArchiveManager extends ComposerArchiveManager
         $filesystem->ensureDirectoryExists(dirname($tempTarget));
 
         try {
-            $tempTarget = $driver->makeArchive($package->getSourceReference(), $tempTarget, $format);
+            $tempTarget = $driver->makeArchive($reference, $tempTarget, $format);
         } catch (\Exception $e) {
             return null;
         }
@@ -257,5 +232,24 @@ class ArchiveManager extends ComposerArchiveManager
         }
 
         return array_unique($formats);
+    }
+
+    private function createGitTreeDriver(bool $withNetwork): TreeGitDriver
+    {
+        $driver = new TreeGitDriver($this->repoConfig, $this->io, $this->config, $this->httpDownloader, $this->processExecutor);
+        $driver = $driver->withSubDirectory($this->subDirectory);
+
+        if ($withNetwork === false) {
+            PacketonUtils::toggleNetwork(false);
+            try {
+                $driver->initialize();
+            } finally {
+                PacketonUtils::toggleNetwork(true);
+            }
+        } else {
+            $driver->initialize();
+        }
+
+        return $driver;
     }
 }

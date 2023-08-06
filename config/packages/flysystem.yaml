@@ -15,21 +15,21 @@ resolve:
     flysystem:
         storages:
             s3.storage:
-                adapter: 'aws'
+                adapter: 'asyncaws'
                 options:
-                    client: 'Aws\S3\S3Client'
+                    client: 'packeton.s3.storage'
                     bucket: '%env(STORAGE_AWS_BUCKET)%'
-                    prefix: 'packeton'
+                    prefix: '%env(STORAGE_AWS_PREFIX)%'
+
+    parameters:
+        env(STORAGE_AWS_BUCKET): 'packeton-bucket'
+        env(STORAGE_AWS_PREFIX): 'packeton'
+        env(STORAGE_AWS_ARGS): '[]'
 
     services:
-        Packeton\Flysystem\AwsAdapterFactory:
+        packeton.s3.storage:
+            class: AsyncAws\S3\S3Client
             arguments:
-                - '%env(STORAGE_AWS_REGION)%'
-                - '%env(default:storage.aws.opaque_auth:bool:STORAGE_AWS_OPAQUE_AUTH)%'
-                - '%env(default:storage.aws.key:STORAGE_AWS_KEY)%'
-                - '%env(default:storage.aws.secret:STORAGE_AWS_SECRET)%'
-                - '%env(default:storage.aws.endpoint:STORAGE_AWS_ENDPOINT)%'
-                - '%env(default:storage.aws.pathstyle:bool:STORAGE_AWS_PATH_STYLE_ENDPOINT)%'
-
-        Aws\S3\S3Client:
-            factory: ['@Packeton\Flysystem\AwsAdapterFactory', create]
+                $configuration: '%env(json:STORAGE_AWS_ARGS)%'
+                $httpClient: '@Symfony\Contracts\HttpClient\HttpClientInterface'
+                $logger: '@logger'

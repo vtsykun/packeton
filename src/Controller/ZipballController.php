@@ -13,10 +13,12 @@ use Packeton\Entity\Zipball;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
 use Packeton\Service\DistManager;
+use Packeton\Util\PacketonUtils;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -86,28 +88,26 @@ class ZipballController extends AbstractController
             return $this->createNotFound();
         }
 
-        $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getReference() === $reference);
-        if ($version instanceof Version) {
-            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) and $path = $this->dm->getDistPath($version)) {
-                return new BinaryFileResponse($path);
-            }
-
+        $version = $package->getVersionByReference($reference);
+        if (!$this->isGranted('ROLE_FULL_CUSTOMER', $version) && !$this->isGranted('VIEW_ALL_VERSION', $package)) {
             return $this->createNotFound();
         }
 
         try {
-            $path = $this->dm->getDistByOrphanedRef($reference, $package, $version);
-            $version = $package->getVersions()->findFirst(fn($k, $v) => $v->getVersion() === $version);
-
-            if ($this->isGranted('ROLE_FULL_CUSTOMER', $version) || $this->isGranted('VIEW_ALL_VERSION', $package)) {
-                return new BinaryFileResponse($path);
-            }
+            $dist = $this->dm->getDist($reference, $package);
         } catch (\Exception $e) {
             $msg = $this->isGranted('ROLE_MAINTAINER') ? $e->getMessage() : null;
             return $this->createNotFound($msg);
         }
 
-        return $this->createNotFound();
+        if (is_string($dist)) {
+            return new BinaryFileResponse($dist);
+        }
+
+        return new StreamedResponse(PacketonUtils::readStream($dist), 200, [
+            'Accept-Ranges' => 'bytes',
+            'Content-Type' => 'application/zip',
+        ]);
     }
 
     protected function createNotFound(?string $msg = null): Response
