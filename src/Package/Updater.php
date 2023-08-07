@@ -546,7 +546,7 @@ class Updater implements UpdaterInterface
             return null;
         }
 
-        if (false === $this->distConfig->isLazy()) {
+        if ($this->distConfig->isPreBuild()) {
             $path = null;
             try {
                 $path = $this->distManager->buildAndWriteArchive(

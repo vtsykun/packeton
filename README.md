@@ -282,18 +282,19 @@ packeton:
     github_no_api: '%env(bool:GITHUB_NO_API)%' # default true
     rss_max_items: 30
     archive: true
-    
+
     # default false
     anonymous_access: '%env(bool:PUBLIC_ACCESS)%'
 
     anonymous_archive_access: '%env(bool:PUBLIC_ACCESS)%' # default false
-    
+
     archive_options:
         format: zip
         basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'
         endpoint: '%env(PACKAGIST_DIST_HOST)%' # default auto detect by host headers 
         include_archive_checksum: false
-    
+        prebuild_zipball: false # If true - will be created .zip package for each release (and uploaded to S3/storage). Default - build dynamically, only if requested
+
     # disable by default 
     jwt_authentication:
         algo: EdDSA
@@ -314,7 +315,7 @@ packeton:
         #Allowed paths for artifact composer repo type
         allowed_paths:
             - '/data/hdd1/composer'
-        # Default path to storage of uploaded artifacts
+        # Default path to storage/(local cache for S3) of uploaded artifacts
         artifact_storage: '%composer_home_dir%/artifact_storage'
 ```
 

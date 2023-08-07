@@ -149,8 +149,8 @@ class DistConfig
     /**
      * @return bool
      */
-    public function isLazy(): bool
+    public function isPreBuild(): bool
     {
-        return $this->config['lazy'] ?? true;
+        return $this->config['prebuild_zipball'] ?? false;
     }
 }
