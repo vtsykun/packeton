@@ -79,6 +79,7 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('format')->defaultValue('zip')->end()
                         ->scalarNode('basedir')->cannotBeEmpty()->end()
                         ->scalarNode('endpoint')->defaultNull()->end()
+                        ->booleanNode('prebuild_zipball')->end()
                         ->booleanNode('include_archive_checksum')->defaultFalse()->end()
                     ->end()
                 ->end()

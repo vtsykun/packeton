@@ -13,7 +13,6 @@
 namespace Packeton\Package;
 
 use cebe\markdown\GithubMarkdown;
-use Composer\Package\Archiver\ArchiveManager;
 use Composer\Package\AliasPackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\PackageInterface;
@@ -30,7 +29,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
-use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Author;
 use Packeton\Entity\Package;
 use Packeton\Entity\Tag;
@@ -40,6 +38,7 @@ use Packeton\Event\UpdaterEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Repository\VersionRepository;
 use Packeton\Service\DistConfig;
+use Packeton\Service\DistManager;
 use Packeton\Util\PacketonUtils;
 use Seld\Signal\SignalHandler;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -85,6 +84,7 @@ class Updater implements UpdaterInterface
         protected PackagistFactory $packagistFactory,
         protected ProviderManager $providerManager,
         protected EventDispatcherInterface $dispatcher,
+        protected DistManager $distManager,
     ) {
         ErrorHandler::register();
     }
@@ -110,12 +110,7 @@ class Updater implements UpdaterInterface
 
         /** @var EntityManagerInterface $em */
         $em = $this->doctrine->getManager();
-        $rootIdentifier = $archiveManager = null;
-
-        if ($repository instanceof PacketonRepositoryInterface) {
-            $archiveManager = $this->packagistFactory->createArchiveManager($io, $repository);
-            $archiveManager->setOverwriteFiles(false);
-        }
+        $rootIdentifier = null;
 
         if ($repository instanceof VcsRepository) {
             $rootIdentifier = $repository->getDriver()->getRootIdentifier();
@@ -154,7 +149,6 @@ class Updater implements UpdaterInterface
             $lastProcessed = $version;
 
             $result = $this->updateInformation(
-                $archiveManager,
                 $package,
                 $existingVersions,
                 $version,
@@ -262,7 +256,6 @@ class Updater implements UpdaterInterface
     }
 
     /**
-     * @param ArchiveManager|null $archiveManager
      * @param Package $package
      * @param array $existingVersions
      * @param PackageInterface|CompletePackageInterface $data
@@ -276,7 +269,6 @@ class Updater implements UpdaterInterface
      *                    - object (Version instance if it was updated)
      */
     private function updateInformation(
-        ?ArchiveManager $archiveManager,
         Package $package,
         array $existingVersions,
         PackageInterface $data,
@@ -297,7 +289,7 @@ class Updater implements UpdaterInterface
             // update if the right flag is set, or the source reference has changed (re-tag or new commit on branch)
             $version = $versionRepo->find($existingVersion['id']);
             if ($prevRef === $newRef && !($flags & self::UPDATE_EQUAL_REFS)) {
-                if ($dist = $this->updateArchive($archiveManager, $data)) {
+                if ($dist = $this->updateArchive($data, $package)) {
                     $updated = $this->updateDist($dist, $version);
                 } else {
                     $updated = $version->getDist() !== null;
@@ -345,7 +337,7 @@ class Updater implements UpdaterInterface
             $version->setSource(null);
         }
 
-        if ($dist = $this->updateArchive($archiveManager, $data)) {
+        if ($dist = $this->updateArchive($data, $package)) {
             $this->updateDist($dist, $version);
         } elseif ($data->getDistType()) {
             $dist['type'] = $data->getDistType();
@@ -530,13 +522,7 @@ class Updater implements UpdaterInterface
         ];
     }
 
-    /**
-     * @param ArchiveManager|null $archiveManager
-     * @param PackageInterface|CompletePackageInterface $data
-     *
-     * @return array|null
-     */
-    private function updateArchive(?ArchiveManager $archiveManager, PackageInterface $data): ?array
+    private function updateArchive(PackageInterface $data, Package $package): ?array
     {
         // Process local path repos
         if (is_string($distUrl = $data->getDistUrl()) && str_starts_with($distUrl, '/') && empty($data->getSourceUrl())) {
@@ -560,19 +546,18 @@ class Updater implements UpdaterInterface
             return null;
         }
 
-        if (false === $this->distConfig->isLazy() && $archiveManager !== null) {
-            $fileName = $this->distConfig->getFileName(
-                $data->getSourceReference(),
-                $data->getVersion()
-            );
+        if ($this->distConfig->isPreBuild()) {
+            $path = null;
+            try {
+                $path = $this->distManager->buildAndWriteArchive(
+                    $data->getSourceReference() ?: $data->getDistReference(),
+                    $package,
+                    $data->getVersion()
+                );
+            } catch (\Throwable $e) {
+            }
 
-            $path = $archiveManager->archive(
-                $data,
-                $this->distConfig->getArchiveFormat(),
-                $this->distConfig->generateTargetDir($data->getName()),
-                $fileName
-            );
-            $dist['shasum'] = $this->distConfig->isIncludeArchiveChecksum() ? \hash_file('sha1', $path) : null;
+            $dist['shasum'] = $this->distConfig->isIncludeArchiveChecksum() && is_string($path) && file_exists($path) ? \hash_file('sha1', $path) : null;
         }
 
         $dist['type'] = $this->distConfig->getArchiveFormat();

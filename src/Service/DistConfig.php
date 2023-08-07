@@ -26,7 +26,25 @@ class DistConfig
     public function generateTargetDir(string $name)
     {
         $intermediatePath = \preg_replace('#[^a-z0-9-_/]#i', '-', $name);
+
         return \sprintf('%s/%s', $this->config['basedir'], $intermediatePath);
+    }
+
+    public function buildName(string $packageName, string $reference, string $version): string
+    {
+        $intermediatePath = \preg_replace('#[^a-z0-9-_/]#i', '-', $packageName);
+        $filename = str_replace('/', '-', $version . '-' . $reference) . '.' . $this->getArchiveFormat();
+
+        return $intermediatePath . '/' . $filename;
+    }
+
+    public function resolvePath(?string $keyName = null): string
+    {
+        if ($dir = $this->getDistDir()) {
+            return $dir . '/' . $keyName;
+        }
+
+        throw new \InvalidArgumentException('archive_options[basedir] option can not be empty');
     }
 
     /**
@@ -131,8 +149,8 @@ class DistConfig
     /**
      * @return bool
      */
-    public function isLazy(): bool
+    public function isPreBuild(): bool
     {
-        return $this->config['lazy'] ?? true;
+        return $this->config['prebuild_zipball'] ?? false;
     }
 }

@@ -91,7 +91,9 @@ class VcsDriverFactory
             throw new \UnexpectedValueException("VCS Driver not found for repository $repoUrl");
         }
 
-        $driver->initialize();
+        if (!($options['lazy'] ?? false)) {
+            $driver->initialize();
+        }
 
         return $driver;
     }

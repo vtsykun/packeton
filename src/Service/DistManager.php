@@ -10,8 +10,8 @@ use Composer\Package\CompletePackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\PackageInterface;
-use Composer\Repository\RepositoryInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use Packeton\Composer\PackagistFactory;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
@@ -20,45 +20,61 @@ use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\ZipballInterface;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
-use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
-use Symfony\Component\Finder\Finder;
 
 class DistManager
 {
+    public const EMPTY_VERSION_NAME = 'dev-master';
+
     public function __construct(
         private readonly DistConfig $config,
         private readonly PackagistFactory $packagistFactory,
         private readonly ManagerRegistry $registry,
-        private readonly UploadZipballStorage $storage,
+        private readonly UploadZipballStorage $artifact,
         private readonly IntegrationRegistry $integrations,
-        private readonly Filesystem $fs
+        private readonly FilesystemOperator $baseStorage,
+        private readonly Filesystem $fs,
     ) {
     }
 
-    public function getDistPath(Version $version): ?string
+    public function getDist(string $reference, Package $package): mixed
     {
-        if (!$reference = $version->getReference()) {
-            return null;
+        $version = $package->getVersionByReference($reference);
+        $keyName = $this->config->buildName($package->getName(), $reference, $version?->getVersion() ?: self::EMPTY_VERSION_NAME);
+        $cachedName = $this->config->resolvePath($keyName);
+
+        if (($useCached = $this->fs->exists($cachedName)) || $this->baseStorage->fileExists($keyName)) {
+            return $this->loadCacheOrArchiveFromStorage($keyName, $useCached);
         }
 
-        $package = $version->getPackage();
-        $path = $this->config->generateDistFileName($version->getName(), $reference, $version->getVersion());
-        if ($this->fs->exists($path)) {
-            try {
-                $this->fs->touch($path);
-            } catch (IOException) {}
-            return $path;
+        return $this->buildAndWriteArchive($reference, $package, $version);
+    }
+
+    public function buildAndWriteArchive(string $reference, Package $package, Version|string $version = null): mixed
+    {
+        $versionName = $version instanceof Version ? $version->getVersion() : $version;
+
+        $keyName = $this->config->buildName($package->getName(), $reference, $versionName ?: self::EMPTY_VERSION_NAME);
+        $archive = $this->buildArchive($reference, $package, $version);
+
+        if (is_string($archive) && $this->fs->exists($archive) && !$this->baseStorage->fileExists($keyName)) {
+            $stream = fopen($archive, 'r');
+            $this->baseStorage->writeStream($keyName, $stream);
         }
 
-        if ($package->getRepoType() === RepTypes::INTEGRATION) {
-            return $this->downloadUsingIntegration($reference, $package, $version);
-        }
+        return $archive;
+    }
 
-        return RepTypes::isBuildInDist($package->getRepoType()) ?
-            $this->downloadArtifact($version, $reference, $path)
-            : $this->downloadVCS($version, $reference);
+    public function buildArchive(string $reference, Package $package, Version|string $version = null): mixed
+    {
+        $version ??= $package->getVersionByReference($reference);
+        $versionName = $version instanceof Version ? $version->getVersion() : $version;
+
+        return match (true) {
+            $package->getRepoType() === RepTypes::INTEGRATION => $this->downloadUsingIntegration($reference, $package, $versionName),
+            RepTypes::isBuildInDist($package->getRepoType()) => $this->downloadArtifact($reference, $package),
+            default => $this->downloadVCS($reference, $package, $versionName)
+        };
     }
 
     public function isEnabled(): bool
@@ -66,75 +82,31 @@ class DistManager
         return $this->config->isEnable();
     }
 
-    public function getDistByOrphanedRef(string $reference, Package $package, &$version = null): string
-    {
-        if (RepTypes::isBuildInDist($package->getRepoType())) {
-            throw new \InvalidArgumentException('Unable to found reference for the artifact package');
-        }
-
-        if ($cacheRef = $this->lookupInCache($reference, $package->getName())) {
-            [$path, $version] = $cacheRef;
-            return $path;
-        }
-
-        if ($package->getRepoType() === RepTypes::INTEGRATION) {
-            $version = 'dev-master';
-            return $this->downloadUsingIntegration($reference, $package);
-        }
-
-        $repository = $this->createRepositoryAndIo($package);
-        $versions = $repository->getPackages();
-
-        $selectedVersion = $this->guessCompletePackage($reference, $versions);
-
-        $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
-        $archiveManager->setOverwriteFiles(false);
-
-        if ($selectedVersion instanceof CompletePackage) {
-            $version = 'dev-master'; // Used only for check ACL, if exists restriction by versions
-            $fileName = $this->config->getFileName($reference, $version);
-
-            return $archiveManager->archive(
-                $selectedVersion,
-                $this->config->getArchiveFormat(),
-                $this->config->generateTargetDir($package->getName()),
-                $fileName
-            );
-        }
-
-        throw new \InvalidArgumentException('Not found reference for the package in cache or VCS');
-    }
-
-    public function downloadUsingIntegration(string $reference, Package $package, Version $version = null): string
+    public function downloadUsingIntegration(string $reference, Package $package, ?string $versionName = null): string
     {
         if (!$oauth = $package->getIntegration()) {
             throw new \InvalidArgumentException('Oauth2 credentials package->integration can not be empty for integration VCS package type');
         }
 
-        $printVersion = $version ? $version->getVersion() : 'dev-master';
+        $versionName ??= self::EMPTY_VERSION_NAME;
+
         $repository = $this->createRepositoryAndIo($package);
         /** @var  $archiveManager */
         $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
         $archiveManager->getDownloadManager()->setPreferDist(true);
 
-        $targetPath = $this->config->generateDistFileName($package->getName(), $reference, $printVersion);
+        $targetPath = $this->config->generateDistFileName($package->getName(), $reference, $versionName);
         $targetDir = $this->config->generateTargetDir($package->getName());
-        $fileName = $this->config->getFileName($reference, $printVersion);
+        $fileName = $this->config->getFileName($reference, $versionName);
         $format = $this->config->getArchiveFormat();
 
-        if ($version !== null) {
-            if ($probe = $this->tryFromVersion($version)) {
-                try {
-                    $path = $archiveManager->tryFromGitArchive($probe, $format, $targetDir, $fileName);
-                    if ($path !== null) {
-                        return $path;
-                    }
-
-                } catch (\Throwable $e) {
-                    // Try from ref
-                }
+        try {
+            if ($path = $archiveManager->tryFromGitArchive($reference, $format, $targetDir, $fileName)) {
+                return $path;
             }
+        } catch (\Throwable $e) {
+            // Try from ref
         }
 
         $client = $this->integrations->get($oauth->getAlias());
@@ -195,81 +167,64 @@ class DistManager
         return null;
     }
 
-    private function lookupInCache(string $reference, string $packageName): ?array
+    private function downloadArtifact(string $reference, Package $package): ?string
     {
-        $finder = new Finder();
-
-        try {
-            $files = $finder
-                ->in($this->config->generateTargetDir($packageName))
-                ->name("/$reference/")
-                ->files();
-        } catch (DirectoryNotFoundException) {
-            return null;
-        }
-
-        /** @var \SplFileObject $file */
-        foreach ($files as $file) {
-            $fileName = $file->getFilename();
-            if ($version = $this->config->guessesVersion($fileName)) {
-                try {
-                    $this->fs->touch($file->getRealPath());
-                } catch (IOException) {}
-
-                return [$file->getRealPath(), $version];
-            }
-        }
-
-        return null;
-    }
-
-    private function downloadArtifact(Version $version, string $reference, string $cachePath): ?string
-    {
-        if ($path = $this->storage->getPath($reference)) {
+        if ($path = $this->artifact->moveToLocal($reference)) {
             return $path;
         }
 
-        $repository = $this->createRepositoryAndIo($version->getPackage());
+        $repository = $this->createRepositoryAndIo($package);
         $packages = $repository->getPackages();
         $found = array_filter($packages, fn($p) => $reference === $p->getDistReference());
+
         /** @var PackageInterface $package */
         if ($package = reset($found)) {
             $distUrl = $package->getDistUrl();
             if (is_string($distUrl) && str_starts_with($distUrl, '/')) {
-                $this->fs->copy($distUrl, $cachePath);
-                return $cachePath;
+                return $distUrl;
             }
         }
 
         return null;
     }
 
-    private function downloadVCS(Version $version, string $reference): ?string
+    private function downloadVCS(string $reference, Package $package, ?string $versionName = null): ?string
     {
-        $repository = $this->createRepositoryAndIo($version->getPackage());
+        $repository = $this->createRepositoryAndIo($package);
+
         $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
         $archiveManager->setOverwriteFiles(false);
 
-        $targetDir = $this->config->generateTargetDir($version->getName());
-        $fileName = $this->config->getFileName($reference, $version->getVersion());
+        $format = $this->config->getArchiveFormat();
+        $targetDir = $this->config->generateTargetDir($package->getName());
+        $fileName = $this->config->getFileName($reference, $versionName);
 
-        if ($package = $this->tryFromVersion($version)) {
-            try {
-                return $archiveManager->archive($package, $this->config->getArchiveFormat(), $targetDir, $fileName);
-            } catch (\Exception $e) {
-                // Try from ref
+        try {
+            if ($path = $archiveManager->tryFromGitArchive($reference, $format, $targetDir, $fileName)) {
+                return $path;
             }
+        } catch (\Exception $e) {
         }
 
-        if ($package = $this->tryFromReference($repository, $reference)) {
-            return $archiveManager->archive($package, $this->config->getArchiveFormat(), $targetDir, $fileName);
+        $probe = $versionName ? $this->tryFromVersion($package, $versionName) : null;
+        if (null === $probe || $probe->getSourceReference() !== $reference) {
+            $probe = $this->guessCompletePackage($reference, $repository->getPackages());
+        }
+
+        if (null !== $probe) {
+            return $archiveManager->archive($probe, $this->config->getArchiveFormat(), $targetDir, $fileName);
         }
 
         return null;
     }
 
-    private function tryFromVersion(Version $version): ?CompletePackageInterface
+    private function tryFromVersion(Package $package, string $version): ?CompletePackageInterface
     {
+        $version = $package->getVersions()->findFirst(fn(Version $ver) => $ver->getVersion() === $version);
+        if (null === $version) {
+            return null;
+        }
+
         $repo = $this->registry->getRepository(Version::class);
         $data = $repo->getVersionData([$version->getId()]);
         $data = $version->toArray($data);
@@ -283,18 +238,6 @@ class DistManager
         }
     }
 
-    private function tryFromReference(RepositoryInterface $repository, string $reference): ?CompletePackageInterface
-    {
-        $versions = $repository->getPackages();
-        foreach ($versions as $version) {
-            if ($version->getSourceReference() === $reference && $version instanceof CompletePackageInterface) {
-                return $version;
-            }
-        }
-
-        return null;
-    }
-
     private function createRepositoryAndIo(Package $package): PacketonRepositoryInterface
     {
         $io = new NullIO();
@@ -306,5 +249,33 @@ class DistManager
             $package->getCredentials(),
             $package->getRepoConfig(),
         );
+    }
+
+    private function loadCacheOrArchiveFromStorage(string $keyName, bool $useCached = false): mixed
+    {
+        $filename = $this->config->resolvePath($keyName);
+
+        // For performance always lookup in local cache dir in first
+        if (true === $useCached) {
+            try {
+                $this->fs->touch($filename);
+            } catch (\Throwable $e) {
+            }
+            return $filename;
+        }
+
+        $result = true;
+        if (!$this->fs->exists($filename)) {
+            $stream = $this->baseStorage->readStream($keyName);
+            $dirname = dirname($filename);
+            if (!$this->fs->exists($dirname)) {
+                $this->fs->mkdir($dirname);
+            }
+
+            $localCache = @fopen($filename, 'w+b');
+            $result = $localCache ? @stream_copy_to_stream($stream, $localCache) : false;
+        }
+
+        return $result ? $filename : $this->baseStorage->readStream($keyName);
     }
 }

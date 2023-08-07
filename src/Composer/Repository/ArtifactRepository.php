@@ -158,7 +158,7 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
                 continue;
             }
 
-            $path = $this->storage->getPath($zip);
+            $path = $this->storage->moveToLocal($zip);
             if (!file_exists($path)) {
                 $this->io->writeError("Archive #$archive was removed from storage '$path'");
                 continue;

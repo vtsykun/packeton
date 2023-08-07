@@ -12,7 +12,9 @@ use Packeton\DependencyInjection\CompilerPass\MirrorsConfigCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\UpdaterLocatorPass;
 use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
 use Packeton\DependencyInjection\PacketonExtension;
+use Packeton\DependencyInjection\Resolve\ResolveExtension;
 use Packeton\DependencyInjection\Security\ApiHttpBasicFactory;
+use Packeton\Util\PacketonUtils;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\DependencyInjection\SecurityExtension;
 use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
@@ -38,6 +40,19 @@ class Kernel extends BaseKernel
         }
 
         parent::__construct($environment, $debug);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerBundles(): iterable
+    {
+        $contents = require $this->getBundlesPath();
+        foreach ($contents as $class => $envs) {
+            if (($envs[$this->environment] ?? ($envs['all'] ?? false)) && class_exists($class)) {
+                yield new $class();
+            }
+        }
     }
 
     private function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
@@ -76,6 +91,7 @@ class Kernel extends BaseKernel
         $extension->addAuthenticatorFactory(new ApiHttpBasicFactory());
 
         $container->registerExtension($extension = new PacketonExtension());
+        PacketonUtils::setCompilerExtensionPriority($extension, $container, 1);
 
         $container->addCompilerPass(new LdapServicesPass());
         $container->addCompilerPass(new ApiFirewallCompilerPass());
@@ -83,6 +99,23 @@ class Kernel extends BaseKernel
         $container->addCompilerPass(new UpdaterLocatorPass());
         $container->addCompilerPass(new MirrorsConfigCompilerPass());
         $container->addCompilerPass(new IntegrationsConfigCompilerPass($extension));
+
+        $container->registerExtension(new ResolveExtension());
+    }
+
+    protected function buildContainer(): ContainerBuilder
+    {
+        $container = parent::buildContainer();
+
+        $resolveConfig = $container->getExtensionConfig('resolve');
+        $extension = $container->getExtension('resolve');
+        $extension->load($resolveConfig, $container);
+
+        \Closure::bind(static function ($obj) use ($extension) {
+            unset($obj->extensionConfigs['resolve']);
+        }, null, ContainerBuilder::class)($container);
+
+        return $container;
     }
 
     /**
