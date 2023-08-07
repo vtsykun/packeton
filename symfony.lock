@@ -71,6 +71,9 @@
     "okvpn/cron-bundle": {
         "version": "0.1.1"
     },
+    "okvpn/datadog-symfony": {
+        "version": "v0.4.1"
+    },
     "phpunit/phpunit": {
         "version": "10.0",
         "recipe": {

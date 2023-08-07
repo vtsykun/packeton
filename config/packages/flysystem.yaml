@@ -21,6 +21,7 @@ flysystem:
                 source: '%env(STORAGE_SOURCE)%.artifact'
 
 resolve:
+    # deferred config loading depending on env vars
     expression: 'env("STORAGE_SOURCE") == "s3"'
     flysystem:
         storages:
@@ -36,12 +37,13 @@ resolve:
                 options:
                     client: 'packeton.s3.storage'
                     bucket: '%env(STORAGE_AWS_BUCKET)%'
-                    prefix: '%env(STORAGE_AWS_PREFIX)%'
+                    prefix: '%env(STORAGE_AWS_ARTIFACT_PREFIX)%'
 
     parameters:
         env(STORAGE_AWS_BUCKET): 'packeton-bucket'
         env(STORAGE_AWS_PREFIX): 'packeton'
         env(STORAGE_AWS_ARGS): '[]'
+        env(STORAGE_AWS_ARTIFACT_PREFIX): 'artifact'
 
     services:
         packeton.s3.storage:

@@ -44,7 +44,7 @@ class DistManager
         $cachedName = $this->config->resolvePath($keyName);
 
         if (($useCached = $this->fs->exists($cachedName)) || $this->baseStorage->fileExists($keyName)) {
-            return $this->loadArchiveFromStorage($keyName, $useCached);
+            return $this->loadCacheOrArchiveFromStorage($keyName, $useCached);
         }
 
         return $this->buildAndWriteArchive($reference, $package, $version);
@@ -251,12 +251,12 @@ class DistManager
         );
     }
 
-    private function loadArchiveFromStorage(string $keyName, bool $useCached = false): mixed
+    private function loadCacheOrArchiveFromStorage(string $keyName, bool $useCached = false): mixed
     {
         $filename = $this->config->resolvePath($keyName);
 
         // For performance always lookup in local cache dir in first
-        if ($useCached || $this->fs->exists($filename)) {
+        if (true === $useCached) {
             try {
                 $this->fs->touch($filename);
             } catch (\Throwable $e) {
@@ -264,6 +264,18 @@ class DistManager
             return $filename;
         }
 
-        return $this->baseStorage->readStream($keyName);
+        $result = true;
+        if (!$this->fs->exists($filename)) {
+            $stream = $this->baseStorage->readStream($keyName);
+            $dirname = dirname($filename);
+            if (!$this->fs->exists($dirname)) {
+                $this->fs->mkdir($dirname);
+            }
+
+            $localCache = @fopen($filename, 'w+b');
+            $result = $localCache ? @stream_copy_to_stream($stream, $localCache) : false;
+        }
+
+        return $result ? $filename : $this->baseStorage->readStream($keyName);
     }
 }

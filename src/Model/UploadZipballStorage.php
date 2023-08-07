@@ -54,6 +54,12 @@ class UploadZipballStorage
         }
 
         $stream = $this->artifactStorage->readStream($zip->getFilename());
+
+        $dirname = dirname($localName);
+        if (!$this->fs->exists($dirname)) {
+            $this->fs->mkdir($dirname);
+        }
+
         $local = fopen($localName, 'w+b');
         stream_copy_to_stream($stream, $local);
 

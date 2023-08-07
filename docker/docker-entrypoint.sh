@@ -41,6 +41,10 @@ done
 
 cp -r /var/www/.ssh/* /root/.ssh && chmod -R 600 /root/.ssh/*
 
+if [[ ! -z "$COMPOSER_REQUIRE" ]]; then
+  composer require $COMPOSER_REQUIRE || true
+fi
+
 if [[ "$SKIP_INIT" == "1" ]]; then
   echo "Skip init application"
   exec "$@"
