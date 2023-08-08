@@ -222,6 +222,8 @@ class Configuration implements ConfigurationInterface
             ->enumNode('clone_preference')->values(AppUtils::$clonePref)->end()
             ->booleanNode('repos_synchronization')->end()
             ->booleanNode('pull_request_review')->end()
+            ->booleanNode('disable_hook_repos')->end()
+            ->booleanNode('disable_hook_org')->end()
             ->scalarNode('webhook_url')->info('Static current host')->end()
             ->scalarNode('svg_logo')->end()
             ->scalarNode('logo')->end()

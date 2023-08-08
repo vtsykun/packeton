@@ -29,6 +29,10 @@ class IntegrationListener
 
         try {
             $app = $this->integrations->findApp($oauth->getAlias());
+            if ($app->getConfig()->disableRepoHooks()) {
+                return;
+            }
+
             $info = $app->addHook($oauth, $package->getExternalRef());
             if ($info['status'] ?? false) {
                 $package->setAutoUpdated(true);

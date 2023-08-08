@@ -307,7 +307,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
             $this->makeApiRequest($accessToken, 'DELETE', $apiEndpoint . $hook['id']);
             return [];
         } catch (\Exception $e) {
-            return ['status' => false, 'error' => AppUtils::castError($e), 'id' => $hook['id']];
+            return ['status' => false, 'error' => AppUtils::castError($e), 'id' => $hook['id'] ?? null];
         }
     }
 

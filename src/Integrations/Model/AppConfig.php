@@ -28,6 +28,16 @@ class AppConfig
         return $this->config['repos_synchronization'] ?? false;
     }
 
+    public function disableRepoHooks(): bool
+    {
+        return $this->config['disable_hook_repos'] ?? false;
+    }
+
+    public function disableOrgHooks(): bool
+    {
+        return $this->config['disable_hook_org'] ?? false;
+    }
+
     public function isPullRequestReview()
     {
         return $this->config['pull_request_review'] ?? false;

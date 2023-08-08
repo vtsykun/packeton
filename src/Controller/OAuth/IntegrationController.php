@@ -133,15 +133,18 @@ class IntegrationController extends AbstractController
 
 
         $response = ['connected' => $connected];
-        try {
-            $status = $connected ? $client->addOrgHook($oauth, $org) : $client->removeOrgHook($oauth, $org);
-            if (is_array($status)) {
-                $oauth->setWebhookInfo($org, $status);
-                $response += $status;
+
+        if (false === $client->getConfig()->disableOrgHooks()) {
+            try {
+                $status = $connected ? $client->addOrgHook($oauth, $org) : $client->removeOrgHook($oauth, $org);
+                if (is_array($status)) {
+                    $oauth->setWebhookInfo($org, $status);
+                    $response += $status;
+                }
+            } catch (\Throwable $e) {
+                $this->logger->error($e->getMessage(), ['e' => $e]);
+                $response += ['error' => AppUtils::castError($e), 'code' => 409];
             }
-        } catch (\Throwable $e) {
-            $this->logger->error($e->getMessage(), ['e' => $e]);
-            $response += ['error' => AppUtils::castError($e), 'code' => 409];
         }
 
         $this->registry->getManager()->flush();
