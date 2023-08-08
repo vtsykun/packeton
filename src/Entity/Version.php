@@ -154,16 +154,16 @@ class Version
         $tags = [];
         if (isset($versionData[$this->id]['keywords'])) {
             $tags = array_values(array_filter($versionData[$this->id]['keywords']));
-        } else {
+        } else if (!isset($versionData[$this->id])) {
             foreach ($this->getTags() as $tag) {
                 $tags[] = $tag->getName();
             }
         }
 
+        $authors = [];
         if (isset($versionData[$this->id]['authors'])) {
             $authors = $versionData[$this->id]['authors'];
-        } else {
-            $authors = [];
+        } else if (!isset($versionData[$this->id])) {
             foreach ($this->getAuthors() as $author) {
                 /** @var $author Author */
                 $authors[] = $author->toArray();
