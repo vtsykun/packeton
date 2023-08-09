@@ -2,7 +2,7 @@
 (function ($, humane) {
     "use strict";
 
-    var versionCache = {},
+    let versionCache = {},
         ongoingRequest = false;
 
     $('#add-maintainer').on('click', function (e) {
@@ -16,11 +16,59 @@
         e.preventDefault();
     });
 
+    let initVersionFormData = function () {
+        $('.edit-requires').on('click', function (e) {
+            e.preventDefault();
+
+            let model = $('#patch-model');
+            model.find('.modal-content').html('');
+            let $el = $(e.currentTarget);
+            let url = $el.attr('href');
+
+            let bindEvents = function () {
+                let form = model.find('form');
+                let button = model.find('.btn-primary');
+                button.on('click', (e) => {
+                    button.addClass('loading');
+                    $.post(url, form.serializeArray(), success);
+                });
+            };
+
+            let success = function (data) {
+                if (data.success) {
+                    window.location.reload();
+                    return;
+                }
+                let button = model.find('.btn-primary');
+                if (data.html) {
+                    button.removeClass('loading');
+                    model.find('.modal-content').html(data.html);
+                    bindEvents();
+                }
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: (data) => {
+                    model.find('.modal-content').html(data.html);
+                    model.modal({show: true});
+                    bindEvents();
+                }
+            });
+
+            console.log(e);
+        });
+    };
+
+    initVersionFormData();
+
     $('.package .details-toggler').on('click', function () {
-        var target = $(this);
+        let target = $(this);
 
         if (versionCache[target.attr('data-version-id')]) {
             $('.package .version-details').html(versionCache[target.attr('data-version-id')]);
+            initVersionFormData();
         } else if (target.attr('data-load-more')) {
             if (ongoingRequest) { // TODO cancel previous requests instead?
                 return;
@@ -36,6 +84,8 @@
                     $('.package .version-details')
                         .removeClass('loading')
                         .html(data.content);
+
+                    initVersionFormData();
                 }
             });
         }
@@ -46,7 +96,7 @@
 
     // initializer for #<version-id> present on page load
     (function () {
-        var hash = document.location.hash;
+        let hash = document.location.hash;
         if (hash.length > 1) {
             hash = hash.substring(1);
             $('.package .details-toggler[data-version-id="'+hash+'"]').click();
@@ -54,7 +104,7 @@
     }());
 
     function dispatchAjaxForm(form, success, className) {
-        var options = {
+        let options = {
             cache: false,
             success: success,
             data: $(form).serializeArray(),
@@ -69,8 +119,8 @@
     }
 
     function forceUpdatePackage(e, updateAll) {
-        var submit = $('input[type=submit]', '.package .force-update'), data;
-        var showOutput = e && e.shiftKey;
+        let submit = $('input[type=submit]', '.package .force-update'), data;
+        let showOutput = e && e.shiftKey;
         if (e) {
             e.preventDefault();
         }
@@ -90,7 +140,7 @@
             type: $('.package .force-update').attr('method'),
             success: function (data) {
                 if (data.job) {
-                    var checkJobStatus = function () {
+                    let checkJobStatus = function () {
                         $.ajax({
                             url: '/jobs/' + data.job,
                             cache: false,
@@ -98,8 +148,8 @@
                                 if (data.status == 'completed' || data.status == 'errored' || data.status == 'failed' || data.status == 'package_deleted') {
                                     humane.remove();
 
-                                    var message = data.message;
-                                    var details = '';
+                                    let message = data.message;
+                                    let details = '';
                                     if (data.status !== 'completed') {
                                         message += ' [' + data.exceptionClass + '] ' + data.exceptionMsg;
                                         details = data.details;
@@ -136,7 +186,7 @@
     $('.package .force-update').on('submit', forceUpdatePackage);
     $('.package .force-update').on('click', forceUpdatePackage);
     $('.package .mark-favorite').on('click', function (e) {
-        var options = {
+        let options = {
             dataType: 'json',
             cache: false,
             success: function () {
@@ -179,7 +229,7 @@
     $('.package .delete-version').on('submit', function (e) {
         e.preventDefault();
         e.stopImmediatePropagation();
-        var form = this;
+        let form = this;
         if (window.confirm('Are you sure?')) {
             dispatchAjaxForm(this, function () {
                 humane.log('Version successfully deleted', {timeout: 3000, clickToClose: true});
@@ -195,7 +245,7 @@
     }
 
     $('.readme a').on('click', function (e) {
-        var targetEl,
+        let targetEl,
             href = e.target.getAttribute('href');
 
         if (href.substr(0, 1) === '#') {
@@ -208,7 +258,7 @@
         }
     });
 
-    var versionsList = $('.package .versions')[0];
+    let versionsList = $('.package .versions')[0];
     if (versionsList && versionsList.offsetHeight < versionsList.scrollHeight) {
         $('.package .versions-expander').removeClass('hidden').on('click', function () {
             $(this).addClass('hidden');

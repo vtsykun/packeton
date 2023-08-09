@@ -325,13 +325,13 @@
                         {% include 'package/versionDetails.html.twig' with {version: expandedVersion} %}
                     {% endif %}
                 </div>
-                {% include 'package/versionList.html.twig' with {versions: versions, expandedId: expandedVersion.id, deleteVersionCsrfToken: deleteVersionCsrfToken|default(null)} %}
+                {% include 'package/versionList.html.twig' with {package: package, versions: versions, expandedId: expandedVersion.id, deleteVersionCsrfToken: deleteVersionCsrfToken|default(null)} %}
             {% elseif package.crawledAt is null %}
                 <p class="col-xs-12">This package has not been crawled yet, some information is missing.</p>
             {% else %}
                 <p class="col-xs-12">This package has no released version yet, and little information is available.</p>
             {% endif %}
-        </div>
+            </div>
 
         {% if package.readme != null %}
             <hr class="clearfix">
@@ -340,5 +340,13 @@
                 {{ package.readme|raw }}
             </div>
         {% endif %}
+        </div>
     </div>
+
+<div class="modal fade" id="patch-model" tabindex="-1" role="dialog" >
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
 {% endblock %}

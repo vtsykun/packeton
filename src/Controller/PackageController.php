@@ -11,6 +11,7 @@ use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
 use Packeton\Form\Model\MaintainerRequest;
+use Packeton\Form\Type\EditRequiresMetadataType;
 use Packeton\Form\Type\Package\AbandonedType;
 use Packeton\Form\Type\Package\AddMaintainerRequestType;
 use Packeton\Form\Type\RemoveMaintainerRequestType;
@@ -19,6 +20,7 @@ use Packeton\Model\FavoriteManager;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
 use Packeton\Package\RepTypes;
+use Packeton\Package\Updater;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 use Packeton\Service\Scheduler;
@@ -506,6 +508,38 @@ class PackageController extends AbstractController
         return $response;
     }
 
+    #[Route('/packages/{name}/patch-version', name: 'package_patch_version', requirements: ['name' => '%package_name_regex%'], methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_MAINTAINER')]
+    public function patchVersion(Request $request, #[Vars] Package $package)
+    {
+        $version = $request->query->get('version');
+        if (!$this->canEditPackage($package)) {
+            $this->createAccessDeniedException();
+        }
+
+        $matchKey = null;
+        $patch = $version ? $package->findRequirePatch($version, $matchKey) : null;
+        $data = ['version' => $matchKey, 'metadata' => $patch];
+
+        $form = $this->createForm(EditRequiresMetadataType::class, $data);
+        if ($request->getMethod() === 'POST') {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $data = $form->getData();
+                $package->addRequirePatch($data['version'], $data['metadata'] ?? null);
+                $package->setUpdateFlags(Updater::UPDATE_LINKS);
+                $this->getEM()->flush();
+
+                return new JsonResponse(['success' => true]);
+            }
+        }
+
+        $html = $this->render('package/widget/patchVersion.html.twig', [
+            'form' => $form->createView(),
+        ]);
+
+        return new JsonResponse(['html' => $html->getContent()]);
+    }
 
     #[Route('/versions/{versionId}.{_format}', name: 'view_version', requirements: ['name' => '%package_name_regex%', 'versionId' => '[0-9]+', '_format' => '(json)'], methods: ['GET'])]
     public function viewPackageVersionAction(Request $req, $versionId): Response
@@ -745,7 +779,7 @@ class PackageController extends AbstractController
     {
         $this->checkSubrepositoryAccess($package->getName());
 
-        if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
+        if (!$this->canEditPackage($package)) {
             throw new AccessDeniedException;
         }
         if (!$package->isUpdatable()) {
@@ -791,7 +825,7 @@ class PackageController extends AbstractController
     {
         $this->checkSubrepositoryAccess($package->getName());
 
-        if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
+        if (!$this->canEditPackage($package)) {
             throw new AccessDeniedException;
         }
 
@@ -821,7 +855,7 @@ class PackageController extends AbstractController
     {
         $this->checkSubrepositoryAccess($package->getName());
 
-        if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_EDIT_PACKAGES')) {
+        if (!$this->canEditPackage($package)) {
             throw new AccessDeniedException;
         }
 
@@ -1050,7 +1084,7 @@ class PackageController extends AbstractController
             return null;
         }
 
-        if ($this->isGranted('ROLE_EDIT_PACKAGES') || $package->getMaintainers()->contains($user)) {
+        if ($this->canEditPackage($package)) {
             $maintainerRequest = new MaintainerRequest();
             return $this->createForm(RemoveMaintainerRequestType::class, $maintainerRequest, [
                 'package' => $package,
@@ -1058,6 +1092,11 @@ class PackageController extends AbstractController
         }
 
         return null;
+    }
+
+    private function canEditPackage(Package $package): bool
+    {
+        return $this->isGranted('ROLE_EDIT_PACKAGES') || $package->getMaintainers()->contains($this->getUser());
     }
 
     private function canDeletePackage(Package $package): bool

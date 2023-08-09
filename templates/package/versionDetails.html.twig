@@ -1,10 +1,17 @@
 {% import "macros.html.twig" as packagist %}
+
+{% set canEdit = is_granted('ROLE_EDIT_PACKAGES') or is_granted('ROLE_UPDATE_PACKAGES') or package.maintainers.contains(app.user) %}
+
 <div class="title">
     <span class="version-number">
         {{- version.version -}}
         {% if version.hasVersionAlias() %}
             / {{ version.versionAlias }}
-        {%- endif -%}
+        {%- endif -%}&nbsp;
+
+        {% if canEdit %}
+            <a href="{{ path('package_patch_version', {'name': version.name, 'version': version.normalizedVersion }) }}" title="Edit/Patch requires metadata" class="edit-requires"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+        {% endif %}
     </span>
 
     <span class="release-date">{{ version.releasedAt|date("Y-m-d H:i") }} UTC</span>

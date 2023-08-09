@@ -48,8 +48,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class Updater implements UpdaterInterface
 {
-    const UPDATE_EQUAL_REFS = 1;
-    const DELETE_BEFORE = 2;
+    public const UPDATE_EQUAL_REFS = 1;
+    public const DELETE_BEFORE = 2;
+    public const UPDATE_LINKS = 4;
 
     /**
      * Supported link types
@@ -59,6 +60,7 @@ class Updater implements UpdaterInterface
         'require'     => [
             'method' => 'getRequires',
             'entity' => 'RequireLink',
+            'patch' => 'findRequirePatch',
         ],
         'conflict'    => [
             'method' => 'getConflicts',
@@ -114,6 +116,9 @@ class Updater implements UpdaterInterface
 
         if ($repository instanceof VcsRepository) {
             $rootIdentifier = $repository->getDriver()->getRootIdentifier();
+        }
+        if ($addFlags = $package->resetUpdateFlags()) {
+            $flags |= $addFlags;
         }
 
         $versions = PacketonUtils::sort($repository->getPackages());
@@ -296,6 +301,10 @@ class Updater implements UpdaterInterface
                     $version->setDist(null);
                 }
 
+                if (self::UPDATE_LINKS & $flags) {
+                    goto get_update_links;
+                }
+
                 return [
                     'updated' => $updated,
                     'id' => $existingVersion['id'],
@@ -445,13 +454,25 @@ class Updater implements UpdaterInterface
             }
         }
 
+        get_update_links:
         // handle links
         foreach ($this->supportedLinkTypes as $linkType => $opts) {
-            $links = [];
+            $links = $patch = [];
+            if ($opts['patch'] ?? null) {
+                $patch = $package->{$opts['patch']}($normVersion);
+            }
+
             foreach ($data->{$opts['method']}() as $link) {
                 $constraint = $link->getPrettyConstraint();
+                if (isset($patch[$link->getTarget()])) {
+                    $constraint = $patch[$link->getTarget()];
+                    if ("unset" === $constraint) {
+                        continue;
+                    }
+                }
+
                 if (str_contains($constraint, ',') && str_contains($constraint, '@')) {
-                    $constraint = preg_replace_callback('{([><]=?\s*[^@]+?)@([a-z]+)}i', function ($matches) {
+                    $constraint = preg_replace_callback('{([><]=?\s*[^@]+?)@([a-z]+)}i', static function ($matches) {
                         if ($matches[2] === 'stable') {
                             return $matches[1];
                         }
