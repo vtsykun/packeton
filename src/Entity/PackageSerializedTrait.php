@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Packeton\Entity;
 
+use Composer\Package\Version\VersionParser;
+use Composer\Semver\Constraint\Constraint;
+
 trait PackageSerializedTrait
 {
     public function getSubDirectory(): ?string
@@ -83,6 +86,71 @@ trait PackageSerializedTrait
         }
 
         $this->setSerializedField('archives', $archives);
+    }
+
+    public function setUpdateFlags(int $flags): void
+    {
+        $this->serializedData['update_flags'] = $flags;
+    }
+
+    public function getUpdateFlags(): int
+    {
+        return $this->serializedData['update_flags'] ?? 0;
+    }
+
+    public function resetUpdateFlags(): int
+    {
+        $flags = $this->getUpdateFlags();
+        unset($this->serializedData['update_flags']);
+
+        return $flags;
+    }
+
+    public function getRequirePatches(): array
+    {
+        $patches = $this->serializedData['req_patch'] ?? [];
+        return is_array($patches) ? $patches : [];
+    }
+
+    public function setRequirePatches(?array $patches): void
+    {
+        $patches = $patches ?: null;
+        $this->setSerializedField('req_patch', $patches);
+    }
+
+    public function addRequirePatch(string $version, ?array $patch): void
+    {
+        $patches = $this->getRequirePatches();
+        if (empty($patch)) {
+            unset($patches[$version]);
+        } else {
+            $patches[$version] = $patch;
+        }
+
+        $this->setRequirePatches($patches);
+    }
+
+    public function hasRequirePatch(): bool
+    {
+        return (bool) $this->getRequirePatches();
+    }
+
+    public function findRequirePatch(string $normalizedVersion, string &$matchKey = null): ?array
+    {
+        $parser = new VersionParser();
+        foreach ($this->getRequirePatches() as $constraintStr => $patch) {
+            try {
+                $constraint = $parser->parseConstraints($constraintStr);
+                $match = new Constraint('==', $normalizedVersion);
+                if ($constraint->matches($match) === true) {
+                    $matchKey = $constraintStr;
+                    return $patch;
+                }
+            } catch (\Exception $e) {
+            }
+        }
+
+        return null;
     }
 
     protected function setSerializedField(string $field, mixed $value): void
