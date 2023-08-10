@@ -220,7 +220,7 @@ class DistManager
 
     private function tryFromVersion(Package $package, string $version): ?CompletePackageInterface
     {
-        $version = $package->getVersions()->findFirst(fn(Version $ver) => $ver->getVersion() === $version);
+        $version = $package->getVersions()->findFirst(fn($key, Version $ver) => $ver->getVersion() === $version);
         if (null === $version) {
             return null;
         }
