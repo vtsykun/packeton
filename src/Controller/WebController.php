@@ -79,6 +79,14 @@ class WebController extends AbstractController
         $packages = [];
         $form = $this->createForm(SearchQueryType::class, new SearchQuery());
         $form->handleRequest($req);
+
+        $allowed = $this->isGranted('ROLE_FULL_CUSTOMER') ? null :
+            $this->registry
+                ->getRepository(Group::class)
+                ->getAllowedPackagesForUser($this->getUser(), false);
+        $allowed = $this->subRepositoryHelper->allowedPackageIds($allowed);
+        $repo = $this->registry->getRepository(Package::class);
+
         if ($form->isSubmitted() && $form->isValid()) {
             $query = $form->getData()->getQuery();
 
@@ -87,16 +95,11 @@ class WebController extends AbstractController
                 $perPage = max(0, min(100, $perPage));
             }
 
-            $allowed = $this->isGranted('ROLE_FULL_CUSTOMER') ? null :
-                $this->registry
-                    ->getRepository(Group::class)
-                    ->getAllowedPackagesForUser($this->getUser(), false);
-
-            $allowed = $this->subRepositoryHelper->allowedPackageIds($allowed);
-
             $page = $req->query->get('page', 1) - 1;
-            $packages = $this->registry->getRepository(Package::class)
-                ->searchPackage($query, $perPage, $page, $allowed);
+            $packages = $repo->searchPackage($query, $perPage, $page, $allowed);
+        } else if ($tags = $req->query->get('tags')) {
+            $tags = explode(',', $tags);
+            $packages = $repo->searchPackageByTags($tags, $allowed);
         }
 
         $paginator = new Pagerfanta(new ArrayAdapter($packages));

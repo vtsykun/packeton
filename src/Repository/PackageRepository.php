@@ -128,7 +128,7 @@ class PackageRepository extends EntityRepository
             ->resetDQLPart('select')
             ->select(['p.name'])
             ->andWhere('p.name LIKE :vendor')
-            ->setParameter('vendor', $vendor.'/%');
+            ->setParameter('vendor', $vendor . '/%');
 
         $query = SubRepositoryHelper::applyCondition($qb, $allowed)->getQuery();
 
@@ -139,7 +139,7 @@ class PackageRepository extends EntityRepository
     {
         $selector = '';
         foreach ($fields as $field) {
-            $selector .= ', p.'.$field;
+            $selector .= ', p.' . $field;
         }
         $where = [];
 
@@ -147,11 +147,11 @@ class PackageRepository extends EntityRepository
         unset($filters['vendor']);
 
         foreach ($filters as $filter => $val) {
-            $where[] = ' p.'.$filter.' = :'.$filter;
+            $where[] = ' p.' . $filter . ' = :' . $filter;
         }
         if ($vendor) {
             $where[] = ' p.name LIKE :vendor ';
-            $filters['vendor'] = $vendor .'/%';
+            $filters['vendor'] = $vendor . '/%';
         }
         if (null !== $allowed) {
             $where[] = ' p.id IN (:pid) ';
@@ -159,7 +159,7 @@ class PackageRepository extends EntityRepository
         }
 
         if ($where) {
-            $where = 'WHERE '. implode(' AND ', $where);
+            $where = 'WHERE ' . implode(' AND ', $where);
         }
         $query = $this->getEntityManager()
             ->createQuery("SELECT p.name $selector  FROM Packeton\Entity\Package p $where")
@@ -336,7 +336,7 @@ class PackageRepository extends EntityRepository
                 FROM Packeton\Entity\Package p
                 JOIN p.maintainers m
                 WHERE p.name LIKE :vendor")
-            ->setParameters(array('vendor' => $vendor.'/%'));
+            ->setParameters(array('vendor' => $vendor . '/%'));
 
         $rows = $query->getArrayResult();
         if (!$rows) {
@@ -372,10 +372,10 @@ class PackageRepository extends EntityRepository
             ) x';
 
         $stmt = $this->getEntityManager()->getConnection()
-            ->executeQuery($sql, ['name' => $name], [], new QueryCacheProfile(86400, sha1('dependents_count_'.$name), $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
+            ->executeQuery($sql, ['name' => $name], [], new QueryCacheProfile(86400, sha1('dependents_count_' . $name), $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
         $result = $stmt->fetchAllAssociative();
 
-        return (int) $result[0]['count'];
+        return (int)$result[0]['count'];
     }
 
     public function getDependents($name, $offset = 0, $limit = 15)
@@ -385,14 +385,14 @@ class PackageRepository extends EntityRepository
                 SELECT pv.package_id FROM link_require r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = true) WHERE r.packageName = :name
                 UNION
                 SELECT pv.package_id FROM link_require_dev r INNER JOIN package_version pv ON (pv.id = r.version_id AND pv.development = true) WHERE r.packageName = :name
-            ) x ON x.package_id = p.id ORDER BY p.name ASC LIMIT '.((int)$limit).' OFFSET '.((int)$offset);
+            ) x ON x.package_id = p.id ORDER BY p.name ASC LIMIT ' . ((int)$limit) . ' OFFSET ' . ((int)$offset);
 
         $stmt = $this->getEntityManager()->getConnection()
             ->executeCacheQuery(
                 $sql,
                 ['name' => $name],
                 [],
-                new QueryCacheProfile(86400, sha1('dependents_'.$name.$offset.'_'.$limit), $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
+                new QueryCacheProfile(86400, sha1('dependents_' . $name . $offset . '_' . $limit), $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
             );
 
         return $stmt->fetchAllAssociative();
@@ -406,10 +406,10 @@ class PackageRepository extends EntityRepository
             WHERE s.packageName = :name';
 
         $stmt = $this->getEntityManager()->getConnection()
-            ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(86400, sha1('suggesters_count_'.$name), $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
+            ->executeCacheQuery($sql, ['name' => $name], [], new QueryCacheProfile(86400, sha1('suggesters_count_' . $name), $this->getEntityManager()->getConfiguration()->getResultCacheImpl()));
         $result = $stmt->fetchAllAssociative();
 
-        return (int) $result[0]['count'];
+        return (int)$result[0]['count'];
     }
 
     public function getSuggests($name, $offset = 0, $limit = 15)
@@ -420,14 +420,14 @@ class PackageRepository extends EntityRepository
             INNER JOIN package p ON (p.id = pv.package_id)
             WHERE s.packageName = :name
             GROUP BY pv.package_id
-            ORDER BY p.name ASC LIMIT '.((int)$limit).' OFFSET '.((int)$offset);
+            ORDER BY p.name ASC LIMIT ' . ((int)$limit) . ' OFFSET ' . ((int)$offset);
 
         $stmt = $this->getEntityManager()->getConnection()
             ->executeCacheQuery(
                 $sql,
                 ['name' => $name],
                 [],
-                new QueryCacheProfile(86400, sha1('suggesters_'.$name.$offset.'_'.$limit), $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
+                new QueryCacheProfile(86400, sha1('suggesters_' . $name . $offset . '_' . $limit), $this->getEntityManager()->getConfiguration()->getResultCacheImpl())
             );
         $result = $stmt->fetchAllAssociative();
 
@@ -443,12 +443,12 @@ class PackageRepository extends EntityRepository
 
             switch ($name) {
                 case 'tag':
-                    $qb->andWhere($qb->expr()->in('t.name', ':'.$name));
+                    $qb->andWhere($qb->expr()->in('t.name', ':' . $name));
                     break;
 
                 case 'maintainer':
                     $qb->leftJoin('p.maintainers', 'm');
-                    $qb->andWhere($qb->expr()->in('m.id', ':'.$name));
+                    $qb->andWhere($qb->expr()->in('m.id', ':' . $name));
                     break;
 
                 case 'vendor':
@@ -456,7 +456,7 @@ class PackageRepository extends EntityRepository
                     break;
 
                 default:
-                    $qb->andWhere($qb->expr()->in('p.'.$name, ':'.$name));
+                    $qb->andWhere($qb->expr()->in('p.' . $name, ':' . $name));
                     break;
             }
 
@@ -497,7 +497,23 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function searchPackage(string $search, int $limit = 10, int $page = 0, array $allowed = null)
+    public function searchPackageByTags(array $tags, array $allowed = null): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.versions', 'v')
+            ->leftJoin('v.tags', 't')
+            ->andWhere('t.name IN (:tags)')
+            ->setParameter('tags', $tags);
+
+        if (is_array($allowed)) {
+            $qb->andWhere('p.id IN (:ids)')
+                ->setParameter('ids', $allowed ?: [0]);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function searchPackage(string $search, int $limit = 10, int $page = 0, array $allowed = null): array
     {
         $search = strtolower(trim($search));
         $packageNames = $this->getPackageNames($allowed);
@@ -588,23 +604,5 @@ class PackageRepository extends EntityRepository
         }
 
         return $updates;
-    }
-
-    private function checkExtension(string $extensionName)
-    {
-        $conn = $this->getEntityManager()->getConnection();
-        try {
-            $count = $conn
-                ->executeQuery(
-                    'SELECT COUNT(1) as v FROM pg_extension WHERE extname = :name',
-                    [
-                        'name' => $extensionName
-                    ]
-                )->fetchAssociative();
-        } catch (\Exception) {
-            return false;
-        }
-
-        return isset($count['v']) && $count['v'] === 1;
     }
 }
