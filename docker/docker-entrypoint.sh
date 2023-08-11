@@ -66,8 +66,6 @@ if [[ -n ${ADMIN_USER} ]]; then
   app packagist:user:manager "$ADMIN_USER" --email="$ADMIN_EMAIL" --password="$ADMIN_PASSWORD" --admin --only-if-not-exists
 fi
 
-[[ "$DATABASE_URL" == *"postgresql"* ]] && app dbal:run-sql "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch" -vvv || true
-
 chown www-data:www-data -R var /data
 chown redis:redis -R /data/redis
 chmod -R 600 /var/www/.ssh/*
