@@ -499,61 +499,46 @@ class PackageRepository extends EntityRepository
 
     public function searchPackage(string $search, int $limit = 10, int $page = 0, array $allowed = null)
     {
-        $conn = $this->getEntityManager()->getConnection();
-        if ($conn->getDatabasePlatform() instanceof PostgreSqlPlatform && $this->checkExtension('fuzzystrmatch')) {
-            $params = ['search' => $search, 'limit' => $limit, 'ofs' => $page * $limit];
-            $sql = 'SELECT levenshtein(name, :search)/(1.0 + length(name)) AS idx, id'
-                . ' FROM package ';
+        $search = strtolower(trim($search));
+        $packageNames = $this->getPackageNames($allowed);
 
-            if (null !== $allowed) {
-                $sql .= ' WHERE id IN (:ids) ';
-                $params['ids'] = $allowed;
-            }
-            $sql .= 'ORDER BY idx LIMIT :limit OFFSET :ofs';
-
-            return array_map(
-                fn ($item) => $this->find($item['id']),
-                $conn->executeQuery($sql, $params, ['ids' => ArrayParameterType::INTEGER])->fetchAllAssociative()
-            );
-        }
-
-        $qb = $this->createQueryBuilder('p');
-        if (null !== $allowed) {
-            $qb->andWhere('p.id IN (:ids)')
-                ->setParameter('ids', $allowed);
-        }
-
-        $packages = $qb->andWhere('p.name LIKE :name')
-            ->setParameter('name', '%' . $search . '%')
-            ->setMaxResults($limit)
-            ->setFirstResult($limit * $page)
-            ->getQuery()->getResult();
-
-        // Use levenshtein search.
-        if ($page === 0 && count($packages) < $limit -1) {
-            $excPackages = array_map(fn (Package $p) => $p->getName(), $packages);
-            $packageNames = $this->getPackageNames($allowed);
+        if ($search) {
+            $search = substr($search, 0, 32);
             $alternatives = [];
             foreach ($packageNames as $name) {
-                $score = levenshtein($name, $search)/(1+strlen($name));
-                if (!in_array($name, $excPackages) && $score <= 0.8) {
-                    $alternatives[$name] = $score;
+                $len = strlen($search);
+                if (str_starts_with($name, $search) || str_ends_with($name, $search)) {
+                    $alternatives[] = [$name, 0.35*$len];
+                    continue;
                 }
+
+                if (str_contains($name, $search)) {
+                    $alternatives[] = [$name, 0.25*$len];
+                    continue;
+                }
+
+                $score = 0;
+                similar_text($name, $search, $score);
+                $alternatives[] = [$name, $score/100];
             }
 
-            asort($alternatives);
-            $count = min($limit - 1 - count($packages), count($alternatives));
-
-            if ($count > 0) {
-                $alternatives = array_slice(array_keys($alternatives), 0, $count);
-                $alternatives = $this->createQueryBuilder('p')
-                    ->where('LOWER(p.name) in (:packs)')
-                    ->setParameter('packs', $alternatives)
-                    ->getQuery()->getResult();
-
-                $packages = array_merge($packages, $alternatives);
-            }
+            usort($alternatives, fn($a, $b) => -1 * ($a[1] <=> $b[1]));
+            $packageNames = array_column($alternatives, 0);
         }
+
+        if ($page*$limit >= count($packageNames)) {
+            return [];
+        }
+
+        $packageNames = array_slice($packageNames, $page*$limit, $limit);
+        $packages = $this->createQueryBuilder('p')
+            ->where('LOWER(p.name) in (:packs)')
+            ->setParameter('packs', $packageNames)
+            ->getQuery()->getResult();
+
+        $packageNames = array_flip($packageNames);
+
+        usort($packages, fn(Package $a, Package $b) => ($packageNames[$a->getName()] ?? 0) <=> ($packageNames[$b->getName()] ?? 0));
 
         return $packages;
     }
