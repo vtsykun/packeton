@@ -153,6 +153,19 @@ trait PackageSerializedTrait
         return null;
     }
 
+    public function getCustomVersions(): ?array
+    {
+        return [
+            ['version' => '1.0.0'],
+            ['version' => '1.0.1'],
+        ];
+    }
+
+    public function setCustomVersions($versions): void
+    {
+
+    }
+
     protected function setSerializedField(string $field, mixed $value): void
     {
         if (null === $value) {
