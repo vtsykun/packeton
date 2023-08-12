@@ -30,6 +30,7 @@ class ArtifactPackageType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->remove('credentials');
+        $builder->remove('pullRequestReview');
 
         $builder
             ->add('repositoryPath', TextType::class, [
@@ -47,8 +48,6 @@ class ArtifactPackageType extends AbstractType
                 'choices' => $this->getChoices($options['is_created']),
                 'attr'  => ['class' => 'jselect2 archive-select']
             ]);
-
-        $builder->remove('pullRequestReview');
 
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->updateRepository(...), 255);
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->setUsageFlag(...), -255);

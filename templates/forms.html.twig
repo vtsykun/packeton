@@ -193,7 +193,6 @@
                 }
 
                 let url = '/integration/all/' + val + '/repos';
-
                 $.ajax({
                     url: url,
                     success: (result) => {
@@ -206,3 +205,64 @@
         });
     </script>
 {% endblock %}
+
+
+{#{%- block embed_collection_widget -%}#}
+{#    {% if prototype is defined and not prototype.rendered %}#}
+{#        {%- set attr = attr|merge({'data-prototype': form_row(prototype) }) -%}#}
+{#    {% endif %}#}
+
+{#    {{- block('form_widget') -}}#}
+{#    <button type="button" class="btn btn-primary btn-sm">Add</button>#}
+{#{%- endblock embed_collection_widget -%}#}
+
+
+{%- block embed_collection_widget -%}
+    {% import _self as self %}
+    {% if prototype is defined %}
+        {% set prototype_html = self.collection_item_prototype(form) %}
+    {% endif %}
+
+    {% set attr = attr|merge({'class': (attr.class is defined ? attr.class ~ ' ' : '') ~ 'collection-fields-list' }) %}
+    {% set id = id ~ '_collection' %}
+    <div class="row-embed">
+        {% set prototype_name = form.vars.prototype_name %}
+        <div {{ block('widget_container_attributes') }} data-last-index="{{ form.children|length}}" data-prototype-name="{{ prototype_name }}"{% if prototype_html is defined %} data-prototype="{{ prototype_html|escape }}"{% endif %}>
+            {% if form.children|length %}
+                {% for child in form.children %}
+                    {{ self.collection_item_prototype(child) }}
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% if allow_add %}
+            <button type="button" class="btn btn-primary btn-sm add-list-item">Add</button>
+        {% endif %}
+    </div>
+{%- endblock -%}
+
+{% macro collection_item_prototype(widget) %}
+    {% if 'collection' in widget.vars.block_prefixes %}
+        {% set form = widget.vars.prototype %}
+        {% set name = widget.vars.prototype.vars.name %}
+        {% set disabled = widget.vars.disabled %}
+        {% set allow_delete = widget.vars.allow_delete %}
+    {% else %}
+        {% set form = widget %}
+        {% set name = widget.vars.full_name %}
+        {% set disabled = widget.parent.vars.disabled %}
+        {% set allow_delete = widget.parent.vars.allow_delete %}
+        {% if widget.vars.allow_delete is defined %}
+            {% set allow_delete = allow_delete and widget.vars.allow_delete %}
+        {% endif %}
+    {% endif %}
+
+    <div class="collection-item" data-content="{{ name }}">
+        <div class="collection-row{% if not allow_delete %} not-removable{% endif %}">
+            {{ form_widget(form, {disabled: disabled}) }}
+            {% if allow_delete %}
+                <a class="removeRow" href="#" type="button" data-related="{{ name }}">&times;</a>
+            {% endif %}
+        </div>
+        <hr>
+    </div>
+{% endmacro %}
