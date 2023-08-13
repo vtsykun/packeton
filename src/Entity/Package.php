@@ -124,6 +124,12 @@ class Package
 
     /**
      * @internal
+     * @var \Packeton\Composer\Repository\CustomJsonRepository
+     */
+    public $customDriver = true;
+
+    /**
+     * @internal
      */
     public $driverError;
 

@@ -54,38 +54,4 @@ class ArtifactPackageType extends AbstractType
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->updateRepository(...), 255);
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->setUsageFlag(...), -255);
     }
-
-    public function updateRepository(FormEvent $event): void
-    {
-        $package = $event->getData();
-        if ($package instanceof Package) {
-            $this->handler->updatePackageUrl($package);
-        }
-    }
-
-    public function setUsageFlag(FormEvent $event): void
-    {
-        $package = $event->getData();
-        if (!$package instanceof Package) {
-            return;
-        }
-        $errors = $event->getForm()->getErrors(true);
-        if (count($errors) !== 0) {
-            return;
-        }
-
-        $repo = $this->registry->getRepository(Zipball::class);
-        foreach ($package->getArchives() ?: [] as $archive) {
-            // When form was submitted and called flush
-            $repo->find($archive)?->setUsed(true);
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getParent(): string
-    {
-        return BasePackageType::class;
-    }
 }

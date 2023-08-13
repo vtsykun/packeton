@@ -4,10 +4,13 @@ namespace Packeton\Form\Type\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Form\Handler\ArtifactHandler;
+use Packeton\Form\Handler\CustomPackageHandler;
 use Packeton\Form\Type\EmbedCollectionType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Validator\Constraints\Count;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 class CustomPackageType extends AbstractType
@@ -16,7 +19,7 @@ class CustomPackageType extends AbstractType
 
     public function __construct(
         protected ManagerRegistry $registry,
-        protected ArtifactHandler $handler,
+        protected CustomPackageHandler $handler,
     ) {
     }
 
@@ -38,8 +41,11 @@ class CustomPackageType extends AbstractType
                 'allow_delete' => true,
                 'entry_options' => [
                     'dist_choices' => $this->getChoices($options['is_created'])
-                ]
+                ],
             ]);
+
+        $builder->addEventListener(FormEvents::POST_SUBMIT, $this->updateRepository(...), 255);
+        $builder->addEventListener(FormEvents::POST_SUBMIT, $this->setUsageFlag(...), -255);
     }
 
     /**

@@ -74,6 +74,18 @@ trait PackageSerializedTrait
         return $this->serializedData['archives'] ?? null;
     }
 
+    public function getAllArchives(): ?array
+    {
+        $archives =  $this->serializedData['archives'] ?? [];
+        foreach ($this->getCustomVersions() as $version) {
+            if (isset($version['dist'])) {
+                $archives[] = $version['dist'];
+            }
+        }
+
+        return $archives;
+    }
+
     public function setArchives(?array $archives): void
     {
         $prev = $this->getArchives() ?: [];
@@ -153,14 +165,14 @@ trait PackageSerializedTrait
         return null;
     }
 
-    public function getCustomVersions(): ?array
+    public function getCustomVersions(): array
     {
-        return $this->serializedData['custom_versions'] ?? null;
+        return $this->serializedData['custom_versions'] ?? [];
     }
 
     public function setCustomVersions($versions): void
     {
-        $versions = $versions ?: null;
+        $versions = $versions ? array_values($versions) : null;
 
         $this->setSerializedField('custom_versions', $versions);
     }
