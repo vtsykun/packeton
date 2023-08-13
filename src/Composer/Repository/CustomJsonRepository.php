@@ -113,8 +113,18 @@ class CustomJsonRepository extends ArrayRepository implements PacketonRepository
 
         if ($version['dist'] ?? null) {
             $dist = $this->registry->getRepository(Zipball::class)->find($version['dist']);
+
+            $fileExtension = $dist->getExtension();
+            if (in_array($fileExtension, ['gz', 'tar', 'tgz'], true)) {
+                $fileType = 'tar';
+            } elseif ($fileExtension === 'zip') {
+                $fileType = 'zip';
+            } else {
+                throw new \RuntimeException('Files with "'.$fileExtension.'" extensions aren\'t supported. Only ZIP and TAR/TAR.GZ/TGZ archives are supported.');
+            }
+
             $data['dist'] = [
-                'type' => $dist->getExtension(),
+                'type' => $fileType,
                 'reference' => $dist->getReference(),
                 'url' => DistConfig::HOSTNAME_PLACEHOLDER,
             ];
