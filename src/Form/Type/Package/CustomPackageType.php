@@ -3,14 +3,12 @@
 namespace Packeton\Form\Type\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packeton\Form\Handler\ArtifactHandler;
 use Packeton\Form\Handler\CustomPackageHandler;
 use Packeton\Form\Type\EmbedCollectionType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvents;
-use Symfony\Component\Validator\Constraints\Count;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 class CustomPackageType extends AbstractType
