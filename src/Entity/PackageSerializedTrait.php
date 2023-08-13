@@ -172,6 +172,8 @@ trait PackageSerializedTrait
 
     public function setCustomVersions($versions): void
     {
+        $this->customDriver = null;
+
         $versions = $versions ? array_values($versions) : null;
 
         $this->setSerializedField('custom_versions', $versions);

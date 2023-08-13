@@ -22,6 +22,8 @@ class CustomPackageHandler
             return;
         }
 
+        $package->setRepositoryPath(null);
+
         try {
             $repository = $this->packagistFactory->createRepository(
                 $package->getRepository(),

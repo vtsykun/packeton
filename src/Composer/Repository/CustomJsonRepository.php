@@ -6,12 +6,15 @@ namespace Packeton\Composer\Repository;
 
 use Composer\Config;
 use Composer\IO\IOInterface;
+use Composer\Package\BasePackage;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\Loader\LoaderInterface;
 use Composer\Repository\ArrayRepository;
 use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Zipball;
+use Packeton\Service\DistConfig;
 
 class CustomJsonRepository extends ArrayRepository implements PacketonRepositoryInterface
 {
@@ -36,28 +39,87 @@ class CustomJsonRepository extends ArrayRepository implements PacketonRepository
         $this->loader = $loader;
     }
 
-    public function getRepoConfig()
+    /**
+     * {@inheritdoc}
+     */
+    public function getRepoConfig(): array
     {
         return $this->repoConfig;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getProcessExecutor(): ProcessExecutor
     {
         return $this->process;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getHttpDownloader(): HttpDownloader
     {
         return $this->httpDownloader;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getConfig(): Config
     {
         return $this->config;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getIO(): IOInterface
     {
         return $this->io;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRepoName(): string
+    {
+        return "Custom JSON repo";
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function initialize(): void
+    {
+        parent::initialize();
+
+        $this->doInitialize();
+    }
+
+    protected function doInitialize(): void
+    {
+        foreach ($this->repoConfig['customVersions'] as $version) {
+            $this->addPackage($this->loadVersion($version));
+        }
+    }
+
+    protected function loadVersion(array $version): BasePackage
+    {
+        $data = $version['definition'] ?? [];
+
+        $data['name'] = $this->repoConfig['packageName'];
+        $data['version'] ??= $version['version'];
+
+        if ($version['dist'] ?? null) {
+            $dist = $this->registry->getRepository(Zipball::class)->find($version['dist']);
+            $data['dist'] = [
+                'type' => $dist->getExtension(),
+                'reference' => $dist->getReference(),
+                'url' => DistConfig::HOSTNAME_PLACEHOLDER,
+            ];
+        }
+
+        return $this->loader->load($data);
     }
 }

@@ -9,10 +9,12 @@ use Composer\Factory;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\Repository\ArtifactRepository;
+use Packeton\Composer\Repository\CustomJsonRepository;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Composer\Repository\VcsRepository;
 use Packeton\Composer\Util\ProcessExecutor;
 use Packeton\Model\UploadZipballStorage;
+use Packeton\Package\RepTypes;
 
 class PacketonRepositoryFactory
 {
@@ -38,7 +40,8 @@ class PacketonRepositoryFactory
         $type ??= 'vcs';
 
         return match ($type) {
-            'artifact' => new ArtifactRepository($repoConfig, $this->zipballStorage, $this->registry, $io, $config, $httpDownloader),
+            RepTypes::ARTIFACT => new ArtifactRepository($repoConfig, $this->zipballStorage, $this->registry, $io, $config, $httpDownloader),
+            RepTypes::CUSTOM => new CustomJsonRepository($repoConfig, $this->registry, $io, $config, $httpDownloader),
             default => new VcsRepository($repoConfig, $io, $config, $httpDownloader, $this->driverFactory, null, $process),
         };
     }
