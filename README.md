@@ -93,13 +93,13 @@ Or build and run docker container with docker-compose:
 other jobs: nginx, redis, php-fpm, cron, worker. However, it does not follow the docker best-practises 
 where 1 service must be per container. But it is very easy to use and KISS principle 
 
-- [docker-compose-prod.yml](./docker-compose-prod.yml) - multiple containers, where 1 service per container
+- [docker-compose-split.yml](./docker-compose-split.yml) - multiple containers, where 1 service per container
 
 ```
 docker-compose build
 
 docker-compose up -d # Run with single supervisor container 
-docker-compose up -f docker-compose-prod.yml -d # Or split 
+docker-compose up -f docker-compose-split.yml -d # Or split 
 ```
 
 #### Docker Environment variables
