@@ -155,15 +155,14 @@ trait PackageSerializedTrait
 
     public function getCustomVersions(): ?array
     {
-        return [
-            ['version' => '1.0.0'],
-            ['version' => '1.0.1'],
-        ];
+        return $this->serializedData['custom_versions'] ?? null;
     }
 
     public function setCustomVersions($versions): void
     {
+        $versions = $versions ?: null;
 
+        $this->setSerializedField('custom_versions', $versions);
     }
 
     protected function setSerializedField(string $field, mixed $value): void

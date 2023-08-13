@@ -4,6 +4,10 @@
     {{ 'edit.page_title'|trans({ '%name%':package.name }) }}
 {% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
+{% endblock %}
+
 {% block content %}
 <h2 class="title">{{ 'edit.title'|trans({ '%name%':package.name }) }}</h2>
 

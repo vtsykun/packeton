@@ -18,6 +18,8 @@ use Symfony\Component\Form\FormEvents;
 
 class ArtifactPackageType extends AbstractType
 {
+    use ArtifactFormTrait;
+
     public function __construct(
         protected ManagerRegistry $registry,
         protected ArtifactHandler $handler,
@@ -85,17 +87,5 @@ class ArtifactPackageType extends AbstractType
     public function getParent(): string
     {
         return BasePackageType::class;
-    }
-
-    protected function getChoices(bool $unsetUsed): array
-    {
-        $choices = [];
-        $all = $this->registry->getRepository(Zipball::class)->ajaxSelect($unsetUsed);
-        foreach ($all as $item) {
-            $label = $item['filename'] . ' ('.  PacketonUtils::formatSize($item['size']) . ')';
-            $choices[$label] = $item['id'];
-        }
-
-        return $choices;
     }
 }

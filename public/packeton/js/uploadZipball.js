@@ -109,24 +109,34 @@
     {
         let select2 = $('.archive-select');
         let value = select2.val();
-        let querySearch = value ? value.join(',') : '';
+        let isMulti = !!select2.attr('multiple');
+        let querySearch = value && isMulti ? value.join(',') : (value ? value : '');
 
         $.ajax({
             url: searchUrl + '?with_archives=' + querySearch,
             success: (data) => {
-                let result = [];
+                let result = [{'id': '', 'text': ''}];
                 for (let item of data) {
                     result.push({'id': item.id, 'text': formatFilename(item)});
                 }
 
                 let options = result.map((item) => '<option value="' + item.id + '">' + item.text + '</option>');
+
                 for (let i = 0; i < select2.length; i++) {
                     let wrap = $(select2[i]);
                     let prev = wrap.val();
+                    let isMulti = !!wrap.attr('multiple');
+
                     if (withId) {
-                        prev = prev ? prev : [];
-                        prev.push(withId+'');
-                        withId = null;
+                        if (isMulti) {
+                            prev = prev ? prev : [];
+                            prev.push(withId+'');
+                            withId = null;
+                        } else {
+                            if (select2.length === i+1 && !prev) {
+                                prev = withId+'';
+                            }
+                        }
                     }
 
                     wrap.select2({'data': result});

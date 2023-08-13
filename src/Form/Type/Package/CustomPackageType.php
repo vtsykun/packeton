@@ -12,6 +12,8 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 
 class CustomPackageType extends AbstractType
 {
+    use ArtifactFormTrait;
+
     public function __construct(
         protected ManagerRegistry $registry,
         protected ArtifactHandler $handler,
@@ -34,6 +36,9 @@ class CustomPackageType extends AbstractType
                 'entry_type' => CustomVersionType::class,
                 'allow_add' => true,
                 'allow_delete' => true,
+                'entry_options' => [
+                    'dist_choices' => $this->getChoices($options['is_created'])
+                ]
             ]);
     }
 

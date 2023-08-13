@@ -49,6 +49,7 @@ class RepTypes
     {
         return match ($type) {
             self::ARTIFACT => "package/{$action}Artifact.html.twig",
+            self::CUSTOM => "package/{$action}Custom.html.twig",
             default => null,
         };
     }
