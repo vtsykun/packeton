@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
 {% endblock %}
 
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <h2 class="title">{{ 'edit.title'|trans({ '%name%':package.name }) }}</h2>
 

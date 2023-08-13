@@ -10,7 +10,9 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class CustomVersionType extends AbstractType
 {
@@ -46,6 +48,16 @@ class CustomVersionType extends AbstractType
      */
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(['dist_choices' => null]);
+        $resolver->setDefaults([
+            'dist_choices' => null,
+            'constraints' => [new Callback($this->validateData(...))]
+        ]);
+    }
+
+    public function validateData($value, ExecutionContextInterface $context): void
+    {
+        if (empty($value['dist']) && empty($value['definition']['dist']) && empty($value['definition']['source'])) {
+            $context->addViolation('You must select at least one dist or source archive.');
+        }
     }
 }
