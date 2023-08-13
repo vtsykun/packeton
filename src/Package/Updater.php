@@ -96,7 +96,7 @@ class Updater implements UpdaterInterface
      */
     public static function supportRepoTypes(): iterable
     {
-        return [RepTypes::VCS, RepTypes::ARTIFACT, RepTypes::INTEGRATION];
+        return [RepTypes::VCS, RepTypes::ARTIFACT, RepTypes::INTEGRATION, RepTypes::CUSTOM];
     }
 
     /**
@@ -546,7 +546,10 @@ class Updater implements UpdaterInterface
     private function updateArchive(PackageInterface $data, Package $package): ?array
     {
         // Process local path repos
-        if (is_string($distUrl = $data->getDistUrl()) && str_starts_with($distUrl, '/') && empty($data->getSourceUrl())) {
+        if (is_string($distUrl = $data->getDistUrl())
+            && (str_starts_with($distUrl, '/') || $distUrl === DistConfig::HOSTNAME_PLACEHOLDER)
+            && (empty($data->getSourceUrl()) || $package->getRepoType() === RepTypes::CUSTOM)
+        ) {
             return [
                 'url' => $this->distConfig->generateRoute($data->getName(), $data->getDistReference(), $data->getDistType()),
                 'type' => $data->getDistType(),

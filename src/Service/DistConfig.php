@@ -123,7 +123,7 @@ class DistConfig
      */
     public function generateRoute(string $name, string $reference, string $format = null): string
     {
-        $hostName = !isset($this->config['endpoint']) ? self::HOSTNAME_PLACEHOLDER : rtrim($this->config['endpoint'], '/');
+        $hostName = ($this->config['endpoint'] ?? null) ? rtrim($this->config['endpoint'], '/') : self::HOSTNAME_PLACEHOLDER;
 
         $format ??= '.' . $this->getArchiveFormat();
         if ($format && !str_starts_with($format, '.')) {
