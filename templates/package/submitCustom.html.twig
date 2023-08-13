@@ -1,4 +1,4 @@
-{% extends "package/edit.html.twig" %}
+{% extends "package/submitPackage.html.twig" %}
 
 {% block scripts %}
     {{ parent() }}
@@ -7,6 +7,6 @@
 
 {% block submit_form_guide %}
     <div class="col-md-6">
-        {% include 'package/zipball.html.twig' with {'pathArtifact': true} %}
+        {% include 'package/zipball.html.twig' with {'pathArtifact': false} %}
     </div>
 {% endblock %}

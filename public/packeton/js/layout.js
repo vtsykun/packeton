@@ -117,13 +117,39 @@
         $(this).remove();
     });
 
-    let select2 = $('.jselect2');
-    if (typeof select2.select2 === 'function') {
-        select2.select2();
-    }
-
     let tooltip = $('[data-toggle="tooltip"]');
     if (typeof tooltip.tooltip === 'function') {
         tooltip.tooltip();
     }
+
+    let initLayoutForms = function () {
+        let select2 = $('.jselect2');
+        if (typeof select2.select2 === 'function') {
+            select2.select2();
+        }
+
+        let rowRemove = $('.removeRow');
+        rowRemove.on('click', (e) => {
+            e.preventDefault();
+            let name = $(e.target).attr('data-related');
+            let el = $("[data-content='" + name + "']");
+            el.remove();
+        });
+    };
+    initLayoutForms();
+
+    $('.add-list-item').on('click', (e) => {
+        e.preventDefault();
+        let container = $(e.target).closest('.row-embed');
+        let collection = container.find('.collection-fields-list');
+        let prototype = collection.attr('data-prototype');
+        let index = collection.attr('data-last-index');
+        index = parseInt(index);
+        collection.attr('data-last-index', index + 1);
+
+        prototype = prototype.replace(/__name__/g, index);
+        collection.append(prototype);
+        initLayoutForms();
+    });
+
 })(jQuery, humane);

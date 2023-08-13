@@ -18,6 +18,8 @@ use Symfony\Component\Form\FormEvents;
 
 class ArtifactPackageType extends AbstractType
 {
+    use ArtifactFormTrait;
+
     public function __construct(
         protected ManagerRegistry $registry,
         protected ArtifactHandler $handler,
@@ -30,6 +32,7 @@ class ArtifactPackageType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->remove('credentials');
+        $builder->remove('pullRequestReview');
 
         $builder
             ->add('repositoryPath', TextType::class, [
@@ -48,55 +51,7 @@ class ArtifactPackageType extends AbstractType
                 'attr'  => ['class' => 'jselect2 archive-select']
             ]);
 
-        $builder->remove('pullRequestReview');
-
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->updateRepository(...), 255);
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->setUsageFlag(...), -255);
-    }
-
-    public function updateRepository(FormEvent $event): void
-    {
-        $package = $event->getData();
-        if ($package instanceof Package) {
-            $this->handler->updatePackageUrl($package);
-        }
-    }
-
-    public function setUsageFlag(FormEvent $event): void
-    {
-        $package = $event->getData();
-        if (!$package instanceof Package) {
-            return;
-        }
-        $errors = $event->getForm()->getErrors(true);
-        if (count($errors) !== 0) {
-            return;
-        }
-
-        $repo = $this->registry->getRepository(Zipball::class);
-        foreach ($package->getArchives() ?: [] as $archive) {
-            // When form was submitted and called flush
-            $repo->find($archive)?->setUsed(true);
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getParent(): string
-    {
-        return BasePackageType::class;
-    }
-
-    protected function getChoices(bool $unsetUsed): array
-    {
-        $choices = [];
-        $all = $this->registry->getRepository(Zipball::class)->ajaxSelect($unsetUsed);
-        foreach ($all as $item) {
-            $label = $item['filename'] . ' ('.  PacketonUtils::formatSize($item['size']) . ')';
-            $choices[$label] = $item['id'];
-        }
-
-        return $choices;
     }
 }

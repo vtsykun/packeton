@@ -1,5 +1,7 @@
 <h3>Zipball Assets</h3><hr>
+{% set pathArtifact = pathArtifact is defined and pathArtifact %}
 <div style="color: #656d76">
+    {% if pathArtifact %}
     <div>
         <p>To use archives directly as composer package, you can select an artifact repository type with a folder containing zip or tar.gz</p>
         {% if paths is defined and paths|length > 0 %}
@@ -8,6 +10,7 @@
         {% endif %}
     </div>
     <hr>
+    {% endif %}
     <p>Or attach files by dragging & dropping, selecting or pasting them.</p>
     <label class="label-1" id="releases-drag" for="releases-upload">
         <input type="file" multiple id="releases-upload" class="file-1" data-url="{{ path('archive_upload') }}">

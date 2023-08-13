@@ -124,6 +124,12 @@ class Package
 
     /**
      * @internal
+     * @var \Packeton\Composer\Repository\CustomJsonRepository
+     */
+    public $customDriver = true;
+
+    /**
+     * @internal
      */
     public $driverError;
 
@@ -387,6 +393,11 @@ class Package
             $this->artifactDriver = $this->driverError = null;
             $this->repository = $path;
         }
+
+        if ($this->getRepoType() === RepTypes::CUSTOM) {
+            $this->customDriver = $this->driverError = null;
+            $this->repository = $path;
+        }
     }
 
     public function getRepositoryPath(): ?string
@@ -443,6 +454,8 @@ class Package
             'archives' => $this->getArchives(),
             'oauth2' => $this->integration,
             'externalRef' => $this->externalRef,
+            'customVersions' => $this->getCustomVersions(),
+            'packageName' => $this->name,
         ];
 
         return array_filter($repoConfig);

@@ -163,7 +163,7 @@ class PackageController extends AbstractController
             RepTypes::getFormType($type),
             $package,
             [
-                'validation_groups' => ['Create'],
+                'validation_groups' => ['Create', 'Default'],
                 'is_created' => true,
             ]
         );
@@ -789,7 +789,7 @@ class PackageController extends AbstractController
         $formTypeClass = RepTypes::getFormType($package->getRepoType());
         $form = $this->createForm($formTypeClass, $package, [
             'action' => $this->generateUrl('edit_package', ['name' => $package->getName()]),
-            'validation_groups' => ['Update'],
+            'validation_groups' => ['Update', 'Default'],
         ]);
 
         $form->handleRequest($req);

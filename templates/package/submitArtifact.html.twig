@@ -5,13 +5,8 @@
     <script src="{{ asset('packeton/js/uploadZipball.js')}}"></script>
 {% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
-{% endblock %}
-
 {% block submit_form_guide %}
     <div class="col-md-6">
-        {% include 'package/zipball.html.twig' %}
+        {% include 'package/zipball.html.twig' with {'pathArtifact': true} %}
     </div>
 {% endblock %}

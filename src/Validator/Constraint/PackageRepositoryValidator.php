@@ -34,8 +34,28 @@ class PackageRepositoryValidator extends ConstraintValidator
 
         match ($value->getRepoType()) {
             RepTypes::ARTIFACT => $this->validateArtifactPackage($value),
+            RepTypes::CUSTOM => $this->validateCustomPackage($value),
             default => $this->validateVcsPackage($value),
         };
+    }
+
+    protected function validateCustomPackage(Package $value): void
+    {
+        if (empty($value->getCustomVersions())) {
+            $this->context->addViolation('You must select at least one versions.');
+            return;
+        }
+
+        if (!$value->getName()) {
+            $this->context->addViolation('Unable to fetch composer.json from archives');
+            return;
+        }
+
+        if ($value->driverError) {
+            $this->context->addViolation($value->driverError);
+        }
+
+        $this->validatePackageName($value->getName(), 'name');
     }
 
     protected function validateArtifactPackage(Package $value): void
@@ -160,9 +180,9 @@ class PackageRepositoryValidator extends ConstraintValidator
         }
     }
 
-    protected function validatePackageName($name): void
+    protected function validatePackageName($name, string $property = null): void
     {
-        $property = 'repository';
+        $property ??= 'repository';
         if (empty($name)) {
             $this->context->buildViolation('The package name was not found in the composer.json, make sure there is a name present.')
                 ->atPath($property)

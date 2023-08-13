@@ -26,6 +26,7 @@ class BasePackageType extends AbstractType
                 'VCS (auto)' => RepTypes::VCS,
                 'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
                 'Artifacts' => RepTypes::ARTIFACT,
+                'Custom (JSON)' => RepTypes::CUSTOM,
             ];
 
             if ($options['has_active_integration']) {

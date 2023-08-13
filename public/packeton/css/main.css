@@ -1869,3 +1869,14 @@ label.required em {
 .select2-selection__rendered {
     padding-top: 2px;
 }
+
+.collection-row {
+    display: flex;
+    justify-content: space-around;
+}
+.collection-row > div {
+    width: 85%;
+}
+.removeRow {
+    text-decoration: none !important;
+}
