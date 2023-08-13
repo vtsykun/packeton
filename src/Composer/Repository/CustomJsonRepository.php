@@ -130,6 +130,10 @@ class CustomJsonRepository extends ArrayRepository implements PacketonRepository
             ];
         }
 
+        if (($url = $version['dist']['url'] ?? null) && preg_match('{^(\.|[a-z]:|/)}i', $url)) {
+            throw new \RuntimeException('Local dist is not allowed');
+        }
+
         return $this->loader->load($data);
     }
 }
