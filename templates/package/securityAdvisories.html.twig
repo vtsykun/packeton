@@ -1,0 +1,57 @@
+{% extends "layout.html.twig" %}
+
+{% set showSearchDesc = 'hide' %}
+
+{% block head_additions %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block title %}{{ 'packages.security_title'|trans }} - {{ package.name }} - {{ parent() }}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12 package">
+            <div class="package-header">
+                <h2 class="title">
+                    <a href="{{ path("view_package", {name: package.name}) }}">{{ package.name }}</a> security vulnerabilities
+                    <small>({{ issues|length }})</small>
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <section class="row">
+        <section class="col-md-12">
+            {% if issues|length %}
+                <ul class="packages list-unstyled">
+                    {% for advisory in issues %}
+                        <li class="row">
+                            <div class="col-xs-12 package-item">
+                                <div class="row">
+                                    <div class="col-sm-8 col-lg-9">
+                                        <h4 class="font-bold">
+                                            <a href="{{ advisory.link ?? '#' }}">{{ advisory.title ?? '' }}</a>
+                                        </h4>
+                                        {% if advisory.cve is defined and advisory.cve %}
+                                            <p>
+                                                <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name={{ advisory.cve }}">{{ advisory.cve }}</a>
+                                            </p>
+                                        {% endif %}
+                                        <p>Affected version: {{ advisory.affectedVersions ?? '' }}</p>
+                                    </div>
+                                    <div class="col-sm-4 col-lg-3">
+                                        {% if advisory.sources is defined %}
+                                            <p>Reported by:<br/>{% for source in advisory.sources %}{{ source.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-danger">
+                    <p>Not found issues</p>
+                </div>
+            {% endif %}
+        </section>
+    </section>
+{% endblock %}

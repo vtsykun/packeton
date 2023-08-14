@@ -179,6 +179,12 @@ trait PackageSerializedTrait
         $this->setSerializedField('security_audit', $audit);
     }
 
+    public function hasSecurityIssue(): bool
+    {
+        $audit = $this->getSecurityAudit();
+        return ($audit['enabled'] ?? false) && ($audit['advisories'] ?? null);
+    }
+
     public function getCustomVersions(): array
     {
         return $this->serializedData['custom_versions'] ?? [];

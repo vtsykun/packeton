@@ -1064,6 +1064,21 @@ class PackageController extends AbstractController
         return $this->overallStatsAction($req, $redis, $package, $version);
     }
 
+    #[Route('/packages/{name}/security', name: 'view_package_security', requirements: ['name' => '%package_name_regex%'])]
+    #[IsGranted('ROLE_MAINTAINER')]
+    public function securityAdvisories(#[Vars('name')] Package $package)
+    {
+        $issues = [];
+        $advisories = $package->getSecurityAudit()['advisories'] ?? [];
+        foreach ($advisories as $advisory) {
+            if ($advisory = $this->providerManager->getSecurityAdvisory($advisory)) {
+                $issues[] = $advisory;
+            }
+        }
+
+        return $this->render('package/securityAdvisories.html.twig', ['issues' => $issues, 'package' => $package]);
+    }
+
     private function createAddMaintainerForm(Package $package)
     {
         if (!$user = $this->getUser()) {
