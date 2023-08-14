@@ -26,6 +26,7 @@ Features
 - Support monolithic repositories, like `symfony/symfony`
 - Pull Request `composer.lock` change review.
 - OAuth2 GitHub, Bitbucket, GitLab/Gitea and Other Integrations.
+- Security Monitoring.
 - Milty sub repositories.
 
 What was changed in this fork?
@@ -61,6 +62,7 @@ Table of content
     - [Manual hook](#manual-hook-setup)
     - [Custom webhook format](#custom-webhook-format-transformer)
 - [Mirroring Composer repos](docs/usage/mirroring.md)
+- [Security Monitoring](docs/usage/security-monitoring.md)
 - [Usage](#usage-and-authentication)
     - [Create admin user](#create-admin-and-maintainer-users)
 

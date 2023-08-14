@@ -25,6 +25,7 @@
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
     - [LDAP Configuration](authentication-ldap.md)
+  - [Security Monitoring](usage/security-monitoring.md)
   - [OAuth2 Integrations](oauth2.md)
     - [Pull Request review](pull-request-review.md)
     - [GitHub Setup](oauth2/github-oauth.md)
