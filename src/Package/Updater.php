@@ -13,13 +13,17 @@
 namespace Packeton\Package;
 
 use cebe\markdown\GithubMarkdown;
+use Composer\Advisory\SecurityAdvisory;
 use Composer\Package\AliasPackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\PackageInterface;
+use Composer\Package\Version\VersionParser;
+use Composer\Repository\ComposerRepository;
 use Composer\Repository\RepositoryInterface;
 use Composer\Repository\VcsRepository;
 use Composer\Repository\Vcs\GitHubDriver;
 use Composer\Repository\InvalidRepositoryException;
+use Composer\Semver\Constraint\Constraint;
 use Composer\Util\ErrorHandler;
 use Composer\Util\Filesystem;
 use Composer\Util\RemoteFilesystem;
@@ -29,11 +33,13 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
+use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Author;
 use Packeton\Entity\Package;
 use Packeton\Entity\Tag;
 use Packeton\Entity\Version;
 use Packeton\Entity\SuggestLink;
+use Packeton\Event\SecurityAdvisoryEvent;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Repository\VersionRepository;
@@ -235,6 +241,8 @@ class Updater implements UpdaterInterface
             if (false === $isUpdated) {
                 $this->updateReadme($io, $package, $repository);
             }
+
+            $this->securityAuditCheck($package, $repository, $io);
         }
 
         if ($stabilityVersionUpdated !== 0) {
@@ -611,6 +619,117 @@ class Updater implements UpdaterInterface
         $version->setDist($dist);
 
         return true;
+    }
+
+    private function securityAuditCheck(Package $package, VcsRepository $repository, IOInterface $io): void
+    {
+        if (!$repository instanceof PacketonRepositoryInterface) {
+            return;
+        }
+
+        $io->info("Check security audit...");
+        $audit = $package->getSecurityAudit();
+
+        try {
+            $versionParser = new VersionParser();
+            $driver = $repository->getDriver();
+            $root = $driver->getComposerInformation($driver->getRootIdentifier());
+            $ignored = (array)($root['config']['audit']['ignored'] ?? []);
+
+            try {
+                $lockInfo = $driver->getFileContent('composer.lock', $driver->getRootIdentifier());
+            } catch (\Exception $e) {
+                $lockInfo = null;
+            }
+
+            $lockInfo = $lockInfo && is_string($lockInfo) ? json_decode($lockInfo, true) : null;
+            if (empty($lockInfo)) {
+                $io->info("Security audit skipped, there are not composer.lock");
+                $audit['enabled'] = false;
+                return;
+            }
+
+            $audit['enabled'] = true;
+            $hash = sha1(serialize($lockInfo));
+            if (($audit['last_hash'] ?? null) === $hash && time() - ($audit['checked'] ?? 0) < 600) {
+                $io->info("Security audit skipped, composer.lock is not changed");
+                return;
+            }
+
+            $packageConstraintMap = [];
+            $composer = new ComposerRepository(['url' => 'https://repo.packagist.org'], $repository->getIO(), $repository->getConfig(), $repository->getHttpDownloader());
+            $packages = array_merge($lockInfo['packages'] ?? [], $lockInfo['packages-dev'] ?? []);
+            $packages = PacketonUtils::buildChoices($packages, 'name');
+            foreach ($packages as $pkg) {
+                if (!$this->isRemoteFormPackagist($pkg) || !($version = $pkg['version'] ?? null)) {
+                    continue;
+                }
+                try {
+                    $version = $versionParser->normalize($version);
+                } catch (\Exception $e) {
+                    continue;
+                }
+
+                $packageConstraintMap[$pkg['name']] = new Constraint('=', $version);
+            }
+
+            /** @var SecurityAdvisory[] $allAdvisories */
+            $allAdvisories = $findAdvisories = [];
+            $advisories = $composer->getSecurityAdvisories($packageConstraintMap)['advisories'];
+            foreach ($advisories as $advisory) {
+                $allAdvisories = array_merge($allAdvisories, is_array($advisory) ? $advisory : [$advisory]);
+            }
+
+            foreach ($allAdvisories as $advisory) {
+                if (!$advisory instanceof SecurityAdvisory
+                    || in_array($advisory->advisoryId, $ignored, true)
+                    || in_array($advisory->cve, $ignored, true)
+                ) {
+                    continue;
+                }
+
+                $advisory = $advisory->jsonSerialize();
+                $advisory['version'] = $packages[$advisory['packageName']]['version'] ?? null;
+                $findAdvisories[$advisory['advisoryId']] = $advisory;
+            }
+
+            $newAdvisories = [];
+            $prevAdvisories = array_flip($audit['advisories'] ?? []);
+            foreach ($findAdvisories as $id => $advisory) {
+                if (!isset($prevAdvisories[$id])) {
+                    $newAdvisories[] = $advisory;
+                }
+                $this->providerManager->setSecurityAdvisory($id, $advisory);
+            }
+
+            if ($newAdvisories) {
+                $event = new SecurityAdvisoryEvent($package, $newAdvisories, $findAdvisories);
+                $this->dispatcher->dispatch($event, SecurityAdvisoryEvent::PACKAGE_ADVISORY);
+            }
+
+            $audit['advisories'] = array_keys($findAdvisories);
+            $audit['last_hash'] = $hash;
+            $audit['checked'] = time();
+        } catch (\Throwable $e) {
+            $io->warning($e->getMessage());
+        } finally {
+            $package->setSecurityAudit($audit);
+        }
+
+        $package->setSecurityAudit($audit);
+    }
+
+    private function isRemoteFormPackagist(array $pkg): bool
+    {
+        if (($sourceUrl = $pkg['dist']['url'] ?? null) && parse_url($sourceUrl, PHP_URL_HOST) === 'api.github.com') {
+            return true;
+        }
+
+        if (($url = $pkg['notification-url'] ?? null) && parse_url($url, PHP_URL_HOST) === 'packagist.org') {
+            return true;
+        }
+
+        return false;
     }
 
     /**

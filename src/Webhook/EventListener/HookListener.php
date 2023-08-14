@@ -7,6 +7,7 @@ namespace Packeton\Webhook\EventListener;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Version;
 use Packeton\Entity\Webhook;
+use Packeton\Event\SecurityAdvisoryEvent;
 use Packeton\Event\UpdaterErrorEvent;
 use Packeton\Event\UpdaterEvent;
 use Packeton\Webhook\HookBus;
@@ -23,6 +24,18 @@ class HookListener
     {
         $this->registry = $registry;
         $this->hookBus = $hookBus;
+    }
+
+    public function onPackageAdvisory(SecurityAdvisoryEvent $event): void
+    {
+        $context = [
+            'package' => $event->getPackage(),
+            'event' => Webhook::HOOK_SECURITY_AUDIT,
+            'advisories' => $event->getAdvisories(),
+            'all_advisories' => $event->getAllAdvisories(),
+        ];
+
+        $this->hookBus->dispatchAll($context, Webhook::HOOK_SECURITY_AUDIT, $event->getPackage()->getName());
     }
 
     /**

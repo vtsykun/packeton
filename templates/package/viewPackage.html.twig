@@ -43,7 +43,7 @@
                                 {% set lastJob = package_job_result(package) %}
                                 {% if lastJob is not null %}
                                     {% if lastJob.errored %}
-                                        <i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #8B0000FF" title="Sync job failed"></i>
+                                        <i class="fa fa-exclamation-triangle" style="color: #8B0000FF" title="Sync job failed"></i>
                                     {% endif %}
 
                                     <a style="font-size: 0.9em; cursor: pointer"
@@ -207,6 +207,17 @@
                                     {{ suggesters|number_format(0, '.', '&#8201;')|raw }}
                                 </p>
                             {% endif %}
+
+                            {% if canEdit and package.hasSecurityIssue() %}
+                                <p>
+                                    <span>
+                                        <a href="{{ path('view_package_security', {'name': package.name }) }}">Security</a>:
+                                    </span>
+                                    <i class="fa fa-exclamation-triangle" style="color: #8B0000FF" title="Security advisories"></i>
+                                    {{ package.securityAudit['advisories']|length }}
+                                </p>
+                            {% endif %}
+
                             {% if package.gitHubStars is not null %}
                                 <p>
                                     <span>
@@ -245,7 +256,7 @@
                                 <p><span>Type:</span>{{ package.type }}</p>
                             {% endif %}
 
-                            {% if groups is defined and groups is not empty %}
+                            {% if groups is defined and groups is not empty and canEdit %}
                                 {%- set listGroups -%}
                                     {%- for group in groups -%}
                                         {% if _key != 0 or groups|length > 4 %}

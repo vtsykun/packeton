@@ -20,13 +20,17 @@ class WebhookRepository extends \Doctrine\ORM\EntityRepository
      *
      * @return Webhook[]
      */
-    public function findActive(string $package = null, array $events = [], $criteria = null): array
+    public function findActive(string $package = null, array $events = [], Criteria $criteria = null): array
     {
         $qb = $this->createQueryBuilder('w')
-            ->where('w.active = true');
-
+            ->andWhere('w.active = true');
         if (null !== $criteria) {
             $qb->addCriteria($criteria);
+        }
+
+        if (count($events) === 1) {
+            $qb->andWhere('w.events LIKE :event')
+                ->setParameter('event', "%{$events[0]}%");
         }
 
         $webhooks = $qb->getQuery()->getResult();

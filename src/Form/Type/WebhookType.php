@@ -229,6 +229,7 @@ class WebhookType extends AbstractType
             'Update tag/branch' => Webhook::HOOK_PUSH_UPDATE,
             'Created a new repository' => Webhook::HOOK_REPO_NEW,
             'Remove repository' => Webhook::HOOK_REPO_DELETE,
+            'Security audit issue' => Webhook::HOOK_SECURITY_AUDIT,
             'By HTTP requests to https://APP_URL/api/webhook-invoke/{name}' => Webhook::HOOK_HTTP_REQUEST,
             'User login event' => Webhook::HOOK_USER_LOGIN,
             'By cron' => Webhook::HOOK_CRON,
