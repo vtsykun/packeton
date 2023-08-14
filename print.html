@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -2248,6 +2248,42 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
             - .docker:/data
             - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="security-monitoring"><a class="header" href="#security-monitoring">Security Monitoring</a></h1>
+<p>Security Monitoring allow to send notifications when found a security problem in your <code>composer.lock</code>. By default, used packagist.org database.</p>
+<p>Packeton is automatically check the main branch of every repository if the <code>composer.lock</code> is exists. 
+You need to configure notifications webhook to receive notification if found a new security issue. 
+Also, you may see list of security advisories in the package page.</p>
+<p><a href="usage/../img/security.png"><img src="usage/../img/security.png" alt="logo" /></a></p>
+<h2 id="configure-webhook-notifications"><a class="header" href="#configure-webhook-notifications">Configure Webhook Notifications</a></h2>
+<p>Go to Webhook page and click the &quot;Add Webhook&quot;. Please fill the form.</p>
+<div class="table-wrapper"><table><thead><tr><th><em>Form</em></th><th><em>Description</em></th></tr></thead><tbody>
+<tr><td>Name</td><td>Any name</td></tr>
+<tr><td>Url</td><td>Target url address. For example https://api.telegram.org/bot${secrets.TOKEN}/sendMessage</td></tr>
+<tr><td>Method</td><td>POST</td></tr>
+<tr><td>Request options</td><td>Symfony HTTP client options (like custom headers, auth) JSON</td></tr>
+<tr><td>Payload</td><td>Twig render payload</td></tr>
+</tbody></table>
+</div>
+<p>For example request payload for telegram. It will send JSON request, because <code>response</code> is array</p>
+<pre><code class="language-twig">{% set text = &quot;New security issue *#{package.name}*\n\n&quot; %}
+{% for advisory in advisories %}
+    {% set text = text ~ &quot;#{advisory.title}\nPackage: *#{advisory.packageName}* #{advisory.version}\n&quot; %}
+    {% set text = text ~ (advisory.cve and advisory.link ? &quot;[#{advisory.cve}](#{advisory.link})\n&quot; : &quot;Advisory: #{advisory.advisoryId}\n&quot;) %}
+    {% set text = text ~ &quot;Reported at: #{advisory.reportedAt}\n\n&quot; %}
+{% endfor %}
+
+{% set response = {
+    'chat_id': '${secrets.CHART_ID}',
+    'text': text,
+    'parse_mode': 'Markdown'
+} %}
+
+{% return response %}
+</code></pre>
+<p>Twig vars:
+<code>advisories</code> - list of advisories <code>Composer\Advisory\SecurityAdvisory</code>
+<code>package</code> - package object.</p>
+<p>Where <code>${secrets.CHART_ID}</code> <code>${secrets.TOKEN}</code> replace with secrets or hardcode this params. See <a href="usage/../webhook.html">webhooks</a> docs.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="oauth2-and-sync-integrations"><a class="header" href="#oauth2-and-sync-integrations">OAuth2 and Sync integrations</a></h1>
 <h2 id="table-of-content-1"><a class="header" href="#table-of-content-1">Table of content</a></h2>
 <ul>
