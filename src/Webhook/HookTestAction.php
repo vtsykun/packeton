@@ -60,6 +60,15 @@ class HookTestAction
                     'package' => $data['package'],
                 ];
                 break;
+            case Webhook::HOOK_SECURITY_AUDIT:
+                $audit = '[{"advisoryId":"PKSA-hr4y-jwk2-1yb9","packageName":"symfony/http-kernel","version": "3.4.10", "affectedVersions":">=2.0.0,<2.1.0|>=2.1.0,<2.2.0|>=2.2.0,<2.3.0|>=2.3.0,<2.4.0|>=2.4.0,<2.5.0|>=2.5.0,<2.6.0|>=2.6.0,<2.7.0|>=2.7.0,<2.8.0|>=2.8.0,<3.0.0|>=3.0.0,<3.1.0|>=3.1.0,<3.2.0|>=3.2.0,<3.3.0|>=3.3.0,<3.4.0|>=3.4.0,<4.0.0|>=4.0.0,<4.1.0|>=4.1.0,<4.2.0|>=4.2.0,<4.3.0|>=4.3.0,<4.4.0|>=4.4.0,<4.4.50|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2.0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.20|>=6.0.0,<6.0.20|>=6.1.0,<6.1.12|>=6.2.0,<6.2.6","title":"CVE-2022-24894: Prevent storing cookie headers in HttpCache","cve":"CVE-2022-24894","link":"https://symfony.com/cve-2022-24894","reportedAt":"2023-02-01T08:00:00+00:00","sources":[{"name":"GitHub","remoteId":"GHSA-h7vf-5wrv-9fhv"},{"name":"FriendsOfPHP/security-advisories","remoteId":"symfony/http-kernel/CVE-2022-24894.yaml"}]}]';
+                $audit = json_decode($audit, true);
+                $context = [
+                    'package' => $data['package'],
+                    'advisories' => $audit,
+                    'all_advisories' => $audit,
+                ];
+                break;
             case Webhook::HOOK_RL_DELETE:
                 $versions = array_map(function (Version $version) {
                     return $version->toArray();

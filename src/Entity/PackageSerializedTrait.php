@@ -165,6 +165,20 @@ trait PackageSerializedTrait
         return null;
     }
 
+    public function getSecurityAudit(): array
+    {
+        return $this->serializedData['security_audit'] ?? [];
+    }
+
+    public function setSecurityAudit(array $audit): void
+    {
+        if (false === ($audit['enabled'] ?? false) && count($audit) === 1) {
+            $audit = null;
+        }
+
+        $this->setSerializedField('security_audit', $audit);
+    }
+
     public function getCustomVersions(): array
     {
         return $this->serializedData['custom_versions'] ?? [];

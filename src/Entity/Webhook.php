@@ -20,6 +20,7 @@ class Webhook implements OwnerAwareInterface
     public const HOOK_REPO_FAILED = 'update_repo_failed';
     public const HOOK_REPO_NEW = 'new_repo';
     public const HOOK_REPO_DELETE = 'delete_repo';
+    public const HOOK_SECURITY_AUDIT = 'security_audit';
 
     #[ORM\Id]
     #[ORM\Column(type: 'integer')]

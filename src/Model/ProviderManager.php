@@ -89,6 +89,18 @@ class ProviderManager
         return \DateTime::createFromFormat('U', (int)$unix);
     }
 
+    public function setSecurityAdvisory(string $id, array $advisory)
+    {
+        unset($advisory['version']);
+        $this->hSet("security-advisory", $id, json_encode($advisory, \JSON_UNESCAPED_SLASHES));
+    }
+
+    public function getSecurityAdvisory(string $id): ?array
+    {
+        $advisory = $this->redis->hGet("security-advisory", $id);
+        return $advisory ? json_decode($advisory, true) : null;
+    }
+
     public function setLastModify(string $package, int $flags = null, int $unix = null): void
     {
         try {
@@ -103,20 +115,17 @@ class ProviderManager
             }
 
             foreach ($keys as $key) {
-                $this->redis->set('lm:'.$key, $unix);
+                $this->hSet('packages-lm-all', $key, $unix);
             }
-        } catch (\Exception) {}
+        } catch (\Exception) {
+        }
     }
 
     public function getLastModify(string $package, bool $isDev = null): \DateTimeInterface
     {
-        $key = match ($isDev) {
-            $isDev === true => $package . '~dev',
-            default => $package,
-        };
+        $key = $isDev && !str_ends_with($package, '~dev') ? $package.'~dev' : $package;
 
-        $key = 'lm:'.$key;
-        $unix = $this->redis->get($key);
+        $unix = $this->redis->hGet('packages-lm-all', $key);
         if (empty($unix) || !is_numeric($unix)) {
             if (!$this->packageExists(preg_replace('/~dev$/', '', $package))) {
                 $unix = time();
@@ -136,8 +145,12 @@ class ProviderManager
     public function deletePackage(Package $package)
     {
         $this->redis->srem('set:packages', strtolower($package->getName()));
-        $this->redis->del('lm:'.$package->getName());
-        $this->redis->del('lm:'.$package->getName().'~dev');
+        $keys = ['lm:'.$package->getName(), 'lm:'.$package->getName().'~dev'];
+        $this->redis->del($keys[0]);
+        $this->redis->del($keys[1]);
+
+        $this->redis->hDel('packages-lm-all', $keys[0]);
+        $this->redis->hDel('packages-lm-all', $keys[1]);
     }
 
     private function populateProviders()
@@ -157,5 +170,17 @@ class ProviderManager
     private function getRepo()
     {
         return $this->registry->getRepository(Package::class);
+    }
+
+    private function hSet(string $key, string $hashKey, mixed $value)
+    {
+        if (($result = $this->redis->hSet($key, $hashKey, $value)) === false) {
+            if (false !== $this->redis->get($key)) {
+                $this->redis->del($key);
+                $result = $this->redis->hSet($key, $hashKey, $value);
+            }
+        }
+
+        $result;
     }
 }
