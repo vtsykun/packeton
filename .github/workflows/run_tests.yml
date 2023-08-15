@@ -5,9 +5,11 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - 'templates/**'
     branches:
       - master
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -38,7 +40,7 @@ jobs:
           composer-options: "--ansi --no-interaction"
       
       - name: Start Redis
-        uses: supercharge/redis-github-action@1.2.0
+        uses: "supercharge/redis-github-action@1.6.0"
         with:
           redis-version: 6
       
