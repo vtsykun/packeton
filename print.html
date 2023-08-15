@@ -159,24 +159,29 @@ We began development in <strong>2018</strong>, bases on Packagist and Satis fork
 <li>Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.</li>
 <li>Support update webhook for GitHub, Bitbucket and GitLab or custom format.</li>
 </ul>
-<h2 id="demo"><a class="header" href="#demo">Demo</a></h2>
-<p>See our <a href="https://demo.packeton.org">Administration Demo</a>. Username/password (admin/123456)</p>
-<p><a href="img/intro1.png"><img src="img/intro1.png" alt="Demo" /></a></p>
-<h4 id="create-webhooks"><a class="header" href="#create-webhooks">Create Webhooks</a></h4>
-<p><a href="img/intro2.png"><img src="img/intro2.png" alt="Webhooks" /></a></p>
-<h4 id="webhooks-status"><a class="header" href="#webhooks-status">Webhooks status</a></h4>
-<p><a href="img/intro3.png"><img src="img/intro3.png" alt="Webhooks Status" /></a></p>
-<h4 id="ssh-keys"><a class="header" href="#ssh-keys">SSH Keys</a></h4>
-<p><a href="img/intro4.png"><img src="img/intro4.png" alt="SSH Keys" /></a></p>
-<h4 id="submit"><a class="header" href="#submit">Submit</a></h4>
-<p><a href="img/intro5.png"><img src="img/intro5.png" alt="Submit" /></a></p>
-<h4 id="groups"><a class="header" href="#groups">Groups</a></h4>
-<p><a href="img/intro6.png"><img src="img/intro6.png" alt="Groups" /></a></p>
-<h4 id="users-view"><a class="header" href="#users-view">Users view</a></h4>
-<p><a href="img/intro7.png"><img src="img/intro7.png" alt="Users view" /></a></p>
-<h4 id="package-view"><a class="header" href="#package-view">Package view</a></h4>
-<p><a href="img/intro8.png"><img src="img/intro8.png" alt="Package view" /></a></p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="install-and-run"><a class="header" href="#install-and-run">Install and Run</a></h2>
+<h2 id="compare-private-packagist-with-packeton"><a class="header" href="#compare-private-packagist-with-packeton">Compare Private Packagist with Packeton</a></h2>
+<div class="table-wrapper"><table><thead><tr><th><em>Feature</em></th><th><em>Packeton</em></th><th><em>Packagist.com</em></th></tr></thead><tbody>
+<tr><td>Composer API</td><td>v1, v2</td><td>v1, v2</td></tr>
+<tr><td>REST API</td><td>Partial covered. Only main CRUD feature</td><td>Full covered. +PHP SDK private-packagist-api-client</td></tr>
+<tr><td>Custom User/Vendors</td><td>Limit access by versions, packages, release date. Customer users and groups</td><td>Limit access by versions, packages, stability. Users and Vendors bundles</td></tr>
+<tr><td>Statistics</td><td>Default by versions, packages</td><td>By versions, packages and customer usage</td></tr>
+<tr><td>Integrations</td><td>GitHub, GitLab, Gitea, Bitbucket</td><td>GitHub, GitLab, Bitbucket (cloud/ server), AWS CodeCommit, Azure DevOps</td></tr>
+<tr><td>Synchronization</td><td>Only Repositories</td><td>Teams, Permissions and Repositories</td></tr>
+<tr><td>Pull request review</td><td>GitHub, GitLab, Gitea, Bitbucket</td><td>Integrations - GitHub, GitLab, Bitbucket (cloud/ server)</td></tr>
+<tr><td>Fine-grained API Token</td><td>Support</td><td>-</td></tr>
+<tr><td>Mirroring</td><td>Full Support. Separate URL path to access the repo</td><td>Full Support. Automatically setup</td></tr>
+<tr><td>Patch Mirroring metadata</td><td>Support. UI metadata manager</td><td>-</td></tr>
+<tr><td>Incoming webhooks</td><td>Support. Full compatibility with packagist.org and its integrations</td><td>Support. Used unique uuid address</td></tr>
+<tr><td>Outgoing webhooks</td><td>Full Support. Custom UI request builder with expressions</td><td>Support. Request payload format is not configurable</td></tr>
+<tr><td>Subrepositories</td><td>Support</td><td>Support</td></tr>
+<tr><td>Dependency License Review</td><td>-</td><td>Support</td></tr>
+<tr><td>Security Monitoring</td><td>Support. Webhook notifications</td><td>Support. Webhook/email notifications</td></tr>
+<tr><td>Patch requires/metadata</td><td>Support. UI metadata manager</td><td>-</td></tr>
+<tr><td>Repos type</td><td>VCS (auto), Mono-repo, Custom JSON, Artifacts</td><td>VCS, Githib/GitLab/Bitbucket, Custom JSON, Artifacts, Import Satis</td></tr>
+<tr><td>Mono-repo support</td><td>Support</td><td>Support</td></tr>
+<tr><td>Pricing</td><td>Open Source. Free</td><td>€5900 or €49/user/month</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h2 id="install-and-run"><a class="header" href="#install-and-run">Install and Run</a></h2>
 <p>There is an official packeton image available at <a href="https://hub.docker.com/r/packeton/packeton">https://hub.docker.com/r/packeton/packeton</a>
 which can be used with the docker-compose file, see <a href="installation-docker.html">docker installation</a></p>
 <h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
