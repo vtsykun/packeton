@@ -153,11 +153,18 @@ We began development in <strong>2018</strong>, bases on Packagist and Satis fork
 <h2 id="main-features"><a class="header" href="#main-features">Main Features</a></h2>
 <ul>
 <li>Compatible with Composer API v2, bases on Symfony 6.</li>
+<li>Support update webhook for GitHub, Gitea, Bitbucket and GitLab or custom format.</li>
 <li>Customers user and ACL groups and limit access by vendor and versions.</li>
-<li>Generic Packeton webhooks.</li>
+<li>Composer Proxies and Mirroring.</li>
+<li>Generic Packeton <a href="webhook.html">webhooks</a></li>
 <li>Allow to freeze updates for the new releases after expire a customers license.</li>
-<li>Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.</li>
-<li>Support update webhook for GitHub, Bitbucket and GitLab or custom format.</li>
+<li>Mirroring for packages zip files and downloads it's from your host.</li>
+<li>Credentials and Authentication http-basic config or ssh keys.</li>
+<li>Support monolithic repositories, like <code>symfony/symfony</code></li>
+<li>Pull Request <code>composer.lock</code> change review.</li>
+<li>OAuth2 GitHub, Bitbucket, GitLab/Gitea and Other Integrations.</li>
+<li>Security Monitoring.</li>
+<li>Milty sub repositories.</li>
 </ul>
 <h2 id="compare-private-packagist-with-packeton"><a class="header" href="#compare-private-packagist-with-packeton">Compare Private Packagist with Packeton</a></h2>
 <div class="table-wrapper"><table><thead><tr><th><em>Feature</em></th><th><em>Packeton</em></th><th><em>Packagist.com</em></th></tr></thead><tbody>
@@ -595,7 +602,7 @@ docker-compose up -f docker-compose-prod.yml -d # Or split
     }
 }
 </code></pre>
-<h4 id="nginx-with-cloudfront"><a class="header" href="#nginx-with-cloudfront">nginx with cloudfront</a></h4>
+<h4 id="nginx-with-cloudflare"><a class="header" href="#nginx-with-cloudflare">nginx with cloudflare</a></h4>
 <pre><code>server {
     listen *:80;
 
@@ -2751,6 +2758,88 @@ packeton:
         private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem'
         public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem'
         passphrase: ~
+
+    metadata:
+        format: auto # Default, see about metadata.
+        info_cmd_message: ~ # Bash logo, example - \u001b[37;44m#StandWith\u001b[30;43mUkraine\u001b[0m
+
+    artifacts:
+        support_types: ['gz', 'tar', 'tgz', 'zip']
+        allowed_paths:
+            - '/data/hdd1/composer'
+        # Default path to storage/(local cache for S3) of uploaded artifacts
+        artifact_storage: '%composer_home_dir%/artifact_storage'
+
+    integrations: # See oauth2 integrations
+        alias_name: # Alias name ()
+            allow_login: true # default false 
+            allow_register: false # default false 
+            default_roles: ['ROLE_USER', 'ROLE_MAINTAINER', 'ROLE_GITLAB']
+        
+            clone_preference: 'api'
+            repos_synchronization: true
+        
+            disable_hook_repos: false # disabled auto setup webhook
+            disable_hook_org: false
+            svg_logo: ~ # &lt;svg xmlns= logo
+            logo: ~ # png logo
+            login_title: Login or Register with GitHub
+            description: ~
+        
+            login_control_expression: &quot;data['email'] ends with '@packeton.org'&quot; # Restrict logic/register by custom condition.
+            login_control_expression_debug: false # help debugging    
+        
+            pull_request_review: true # Enable pull request composer.lock review. Default false
+            webhook_url: ~ #overwrite host when setup webhooks
+        
+            github:
+                client_id: 'xxx'
+                client_secret: 'xxx'
+    
+            gitlab:
+                client_id: 'xxx'
+                client_secret: 'xxx'
+                api_version: 'v4'
+    
+            githubapp:
+                private_key: '%kernel.project_dir%/var/packeton-private-key.pem'
+                passphrase: ~ # private key pass
+                app_id: 345472
+
+            gitea:
+                client_id: '44000000-0000-0000-0000-00000000000'
+                client_secret: 'gto_acxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+            bitbucket:
+                key: GA7000000000000000
+                secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
+                api_version: ~ # '/example/rest/v2/' custom api prefix
+
+    # See mirrors section
+    mirrors:
+        packagist:
+            url: https://repo.packagist.org
+        orocrm:
+            url: https://satis.oroinc.com/
+            git_ssh_keys:
+                git@github.com:oroinc: '/var/www/.ssh/private_key1'
+                git@github.com:org2: '/var/www/.ssh/private_key2'
+        example:
+            url: https://satis.example.com/
+            logo: 'https://example.com/logo.png'
+            http_basic:
+                username: 123
+                password: 123
+            public_access: true # Allow public access, default false
+            sync_lazy: true # default false 
+            enable_dist_mirror: false # default true
+            available_package_patterns: # Additional restriction, but you can restrict it in UI
+                - 'vend1/*'
+            available_packages:
+                - 'pack1/name1' # but you can restrict it in UI
+            composer_auth: '{&quot;auth.json...&quot;}' # JSON. auth.json to pass composer opts.
+            sync_interval: 3600 # default auto.
+            info_cmd_message: &quot;\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m&quot; # Info message
 
 </code></pre>
 
