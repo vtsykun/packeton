@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Overview - Packeton Docs</title>
+        <title>Using a reverse proxy - Packeton Docs</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html" class="active">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded "><a href="reverse-proxy.html">Using a reverse proxy</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded "><a href="reverse-proxy.html" class="active">Using a reverse proxy</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -118,7 +118,7 @@
                         <a href="https://github.com/vtsykun/packeton" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/readme.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/reverse-proxy.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -147,50 +147,113 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Packeton - Private PHP package repository for vendors. <a href="https://github.com/vtsykun/packeton">GitHub Source Code</a></p>
-<p>Packeton is an open-source Composer repository homeserver for PHP private packages.
-We began development in <strong>2018</strong>, bases on Packagist and Satis fork.</p>
-<p><strong>Documentation</strong> <a href="https://docs.packeton.org">docs.packeton.org</a></p>
-<h2 id="main-features"><a class="header" href="#main-features">Main Features</a></h2>
-<ul>
-<li>Compatible with Composer API v2, bases on Symfony 6.</li>
-<li>Customers user and ACL groups and limit access by vendor and versions.</li>
-<li>Generic Packeton webhooks.</li>
-<li>Allow to freeze updates for the new releases after expire a customers license.</li>
-<li>Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.</li>
-<li>Support update webhook for GitHub, Bitbucket and GitLab or custom format.</li>
-</ul>
-<h2 id="compare-private-packagist-with-packeton"><a class="header" href="#compare-private-packagist-with-packeton">Compare Private Packagist with Packeton</a></h2>
-<div class="table-wrapper"><table><thead><tr><th><em>Feature</em></th><th><em>Packeton</em></th><th><em>Packagist.com</em></th></tr></thead><tbody>
-<tr><td>Composer API</td><td>v1, v2</td><td>v1, v2</td></tr>
-<tr><td>REST API</td><td>Partial covered. Only main CRUD feature</td><td>Full covered. +PHP SDK private-packagist-api-client</td></tr>
-<tr><td>Custom User/Vendors</td><td>Limit access by versions, packages, release date. Customer users and groups</td><td>Limit access by versions, packages, stability. Users and Vendors bundles</td></tr>
-<tr><td>Statistics</td><td>Default by versions, packages</td><td>By versions, packages and customer usage</td></tr>
-<tr><td>Integrations</td><td>GitHub, GitLab, Gitea, Bitbucket</td><td>GitHub, GitLab, Bitbucket (cloud/ server), AWS CodeCommit, Azure DevOps</td></tr>
-<tr><td>Synchronization</td><td>Only Repositories</td><td>Teams, Permissions and Repositories</td></tr>
-<tr><td>Pull request review</td><td>GitHub, GitLab, Gitea, Bitbucket</td><td>Integrations - GitHub, GitLab, Bitbucket (cloud/ server)</td></tr>
-<tr><td>Fine-grained API Token</td><td>Support</td><td>-</td></tr>
-<tr><td>Mirroring</td><td>Full Support. Separate URL path to access the repo</td><td>Full Support. Automatically setup</td></tr>
-<tr><td>Patch Mirroring metadata</td><td>Support. UI metadata manager</td><td>-</td></tr>
-<tr><td>Incoming webhooks</td><td>Support. Full compatibility with packagist.org and its integrations</td><td>Support. Used unique uuid address</td></tr>
-<tr><td>Outgoing webhooks</td><td>Full Support. Custom UI request builder with expressions</td><td>Support. Request payload format is not configurable</td></tr>
-<tr><td>Subrepositories</td><td>Support</td><td>Support</td></tr>
-<tr><td>LDAP</td><td>Support. On config level</td><td>Support</td></tr>
-<tr><td>Dependency License Review</td><td>-</td><td>Support</td></tr>
-<tr><td>Security Monitoring</td><td>Support. Webhook notifications</td><td>Support. Webhook/email notifications</td></tr>
-<tr><td>Patch requires/metadata</td><td>Support. UI metadata manager</td><td>-</td></tr>
-<tr><td>Repos type</td><td>VCS (auto), Mono-repo, Custom JSON, Artifacts</td><td>VCS, Githib/GitLab/Bitbucket, Custom JSON, Artifacts, Import Satis</td></tr>
-<tr><td>Mono-repo support</td><td>Support</td><td>Support</td></tr>
-<tr><td>Pricing</td><td>Open Source. Free</td><td>€5900 or €49/user/month</td></tr>
-</tbody></table>
-</div>
+                        <h1 id="using-a-reverse-proxy"><a class="header" href="#using-a-reverse-proxy">Using a reverse proxy</a></h1>
+<p>It is recommended to put a reverse proxy such as nginx, Apache for docker installation.</p>
+<h3 id="reverse-proxy-configuration-examples"><a class="header" href="#reverse-proxy-configuration-examples">Reverse-proxy configuration examples</a></h3>
+<h4 id="nginx"><a class="header" href="#nginx">nginx</a></h4>
+<pre><code>server {
+    listen *:443 ssl http2;
+
+    server_name pkg.example.gob.ar;
+
+    ssl_certificate /etc/nginx/ssl/gob.ar.crt;
+    ssl_certificate_key /etc/nginx/ssl/gob.ar.key;
+    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
+
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_buffers 16 16k;
+    gzip_http_version 1.1;
+    gzip_min_length 2048;
+    gzip_types text/css application/javascript text/javascript application/json;
+    access_log  off;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://127.0.0.1:8082/;
+    }
+}
+</code></pre>
+<h4 id="nginx-with-cloudfront"><a class="header" href="#nginx-with-cloudfront">nginx with cloudfront</a></h4>
+<pre><code>server {
+    listen *:80;
+
+    server_name demo.packeton.org;
+
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_buffers 16 16k;
+    gzip_http_version 1.1;
+    gzip_min_length 2048;
+    gzip_types text/css application/javascript text/javascript application/json;
+
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 104.16.0.0/13;
+    set_real_ip_from 104.24.0.0/14;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 131.0.72.0/22;
+    real_ip_header CF-Connecting-IP;
+    add_header Access-Control-Allow-Origin *;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_set_header Host $http_host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass http://127.0.0.1:8082/;
+    }
+}
+</code></pre>
+<h4 id="apache"><a class="header" href="#apache">Apache</a></h4>
+<pre><code>&lt;VirtualHost *:443&gt;
+    ServerName pack1.loc.example.ovh
+    SSLEngine on
+    SSLCertificateFile /etc/nginx/ssl/example.crt
+    SSLCertificateKeyFile /etc/nginx/ssl/example.key
+
+    Protocols h2 http/1.1
+    ProxyRequests on
+    ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:8082/
+    ProxyPassReverse / http://127.0.0.1:8082/
+
+    SSLProxyEngine On
+    SSLProxyVerify none
+    SSLProxyCheckPeerCN off
+    SSLProxyCheckPeerName off
+    SSLProxyCheckPeerExpire off
+
+    RequestHeader set &quot;X-Forwarded-Proto&quot; expr=%{REQUEST_SCHEME}
+&lt;/VirtualHost&gt;
+</code></pre>
+
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="installation-docker.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
-                            <a rel="next" href="installation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="usage/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -200,8 +263,11 @@ We began development in <strong>2018</strong>, bases on Packagist and Satis fork
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="installation-docker.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
-                    <a rel="next" href="installation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="usage/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

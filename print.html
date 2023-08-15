@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded "><a href="reverse-proxy.html">Using a reverse proxy</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -563,6 +563,103 @@ cd /var/www/packeton/
 # start container.
 docker-compose up -d # Run with single supervisor container 
 docker-compose up -f docker-compose-prod.yml -d # Or split 
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="using-a-reverse-proxy"><a class="header" href="#using-a-reverse-proxy">Using a reverse proxy</a></h1>
+<p>It is recommended to put a reverse proxy such as nginx, Apache for docker installation.</p>
+<h3 id="reverse-proxy-configuration-examples"><a class="header" href="#reverse-proxy-configuration-examples">Reverse-proxy configuration examples</a></h3>
+<h4 id="nginx"><a class="header" href="#nginx">nginx</a></h4>
+<pre><code>server {
+    listen *:443 ssl http2;
+
+    server_name pkg.example.gob.ar;
+
+    ssl_certificate /etc/nginx/ssl/gob.ar.crt;
+    ssl_certificate_key /etc/nginx/ssl/gob.ar.key;
+    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
+
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_buffers 16 16k;
+    gzip_http_version 1.1;
+    gzip_min_length 2048;
+    gzip_types text/css application/javascript text/javascript application/json;
+    access_log  off;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://127.0.0.1:8082/;
+    }
+}
+</code></pre>
+<h4 id="nginx-with-cloudfront"><a class="header" href="#nginx-with-cloudfront">nginx with cloudfront</a></h4>
+<pre><code>server {
+    listen *:80;
+
+    server_name demo.packeton.org;
+
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_buffers 16 16k;
+    gzip_http_version 1.1;
+    gzip_min_length 2048;
+    gzip_types text/css application/javascript text/javascript application/json;
+
+    set_real_ip_from 173.245.48.0/20;
+    set_real_ip_from 103.21.244.0/22;
+    set_real_ip_from 103.22.200.0/22;
+    set_real_ip_from 103.31.4.0/22;
+    set_real_ip_from 141.101.64.0/18;
+    set_real_ip_from 108.162.192.0/18;
+    set_real_ip_from 190.93.240.0/20;
+    set_real_ip_from 188.114.96.0/20;
+    set_real_ip_from 197.234.240.0/22;
+    set_real_ip_from 198.41.128.0/17;
+    set_real_ip_from 162.158.0.0/15;
+    set_real_ip_from 104.16.0.0/13;
+    set_real_ip_from 104.24.0.0/14;
+    set_real_ip_from 172.64.0.0/13;
+    set_real_ip_from 131.0.72.0/22;
+    real_ip_header CF-Connecting-IP;
+    add_header Access-Control-Allow-Origin *;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_buffering off;
+        proxy_set_header Host $http_host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass http://127.0.0.1:8082/;
+    }
+}
+</code></pre>
+<h4 id="apache"><a class="header" href="#apache">Apache</a></h4>
+<pre><code>&lt;VirtualHost *:443&gt;
+    ServerName pack1.loc.example.ovh
+    SSLEngine on
+    SSLCertificateFile /etc/nginx/ssl/example.crt
+    SSLCertificateKeyFile /etc/nginx/ssl/example.key
+
+    Protocols h2 http/1.1
+    ProxyRequests on
+    ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:8082/
+    ProxyPassReverse / http://127.0.0.1:8082/
+
+    SSLProxyEngine On
+    SSLProxyVerify none
+    SSLProxyCheckPeerCN off
+    SSLProxyCheckPeerName off
+    SSLProxyCheckPeerExpire off
+
+    RequestHeader set &quot;X-Forwarded-Proto&quot; expr=%{REQUEST_SCHEME}
+&lt;/VirtualHost&gt;
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="administration"><a class="header" href="#administration">Administration</a></h1>
 <p>This section contains information on managing your Packeton application. </p>
