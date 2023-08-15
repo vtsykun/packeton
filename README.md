@@ -62,6 +62,7 @@ Table of content
     - [Manual hook](#manual-hook-setup)
     - [Custom webhook format](#custom-webhook-format-transformer)
 - [Mirroring Composer repos](docs/usage/mirroring.md)
+- [S3 Storage Provider](docs/usage/storage.md)
 - [Security Monitoring](docs/usage/security-monitoring.md)
 - [Usage](#usage-and-authentication)
     - [Create admin user](#create-admin-and-maintainer-users)

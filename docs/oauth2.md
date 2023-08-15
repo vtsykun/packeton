@@ -10,7 +10,7 @@ Table of content
 - [Gitea Setup](oauth2/gitea.md)
 - [Bitbucket Setup](oauth2/bitbucket.md)
 
-## Base configuration
+## Base configuration reference
 
 To enable OAuth2 integrations you need to add following configuration 
 ```yml
@@ -18,16 +18,25 @@ packeton:
     integrations:
         github: # Alias name 
             allow_login: true # default false 
-            allow_register: true # default false 
+            allow_register: false # default false 
             default_roles: ['ROLE_USER', 'ROLE_MAINTAINER', 'ROLE_GITLAB']
-            login_title: Login or Register with GitHub
+            
             clone_preference: 'api'
             repos_synchronization: true
+            
+            disable_hook_repos: false # disabled auto setup webhook
+            disable_hook_org: false
+            svg_logo: ~ # <svg xmlns= logo
+            logo: ~ # png logo
+            login_title: Login or Register with GitHub
+            description: ~
+
             login_control_expression: "data['email'] ends with '@packeton.org'" # Restrict logic/register by custom condition.
+            login_control_expression_debug: false # help debugging    
 
-            pull_request_review: true # Enable pull request composer.lock review. Default false 
+            pull_request_review: true # Enable pull request composer.lock review. Default false
+            webhook_url: ~ #overwrite host when setup webhooks
 
-#            webhook_url: 'https://packeton.google.dev/' - overwrite host when setup webhooks
             github:
                 client_id: 'xxx'
                 client_secret: 'xxx'
@@ -65,7 +74,7 @@ packeton:
             bitbucket:
                 key: GA7000000000000000
                 secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
-                api_version: '/example/rest/v2/'  # custom api prefix
+                api_version: ~ # '/example/rest/v2/' custom api prefix
 
 ```
 

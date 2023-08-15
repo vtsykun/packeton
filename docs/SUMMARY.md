@@ -25,12 +25,14 @@
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
     - [LDAP Configuration](authentication-ldap.md)
+  - [S3 Storage Provider](usage/storage.md)
   - [Security Monitoring](usage/security-monitoring.md)
   - [OAuth2 Integrations](oauth2.md)
     - [Pull Request review](pull-request-review.md)
     - [GitHub Setup](oauth2/github-oauth.md)
     - [GitLab Setup](oauth2/gitlab-integration.md)
     - [Gitea Setup](oauth2/gitea.md)
+    - [Bitbucket Setup](oauth2/bitbucket.md)
 
 # Development
   - [Contributing](dev/CONTRIBUTING.md)
