@@ -10,11 +10,18 @@ We began development in **2018**, bases on Packagist and Satis fork.
 ## Main Features
 
 - Compatible with Composer API v2, bases on Symfony 6.
+- Support update webhook for GitHub, Gitea, Bitbucket and GitLab or custom format.
 - Customers user and ACL groups and limit access by vendor and versions.
-- Generic Packeton webhooks.
+- Composer Proxies and Mirroring.
+- Generic Packeton [webhooks](webhook.md)
 - Allow to freeze updates for the new releases after expire a customers license.
-- Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.
-- Support update webhook for GitHub, Bitbucket and GitLab or custom format.
+- Mirroring for packages zip files and downloads it's from your host.
+- Credentials and Authentication http-basic config or ssh keys.
+- Support monolithic repositories, like `symfony/symfony`
+- Pull Request `composer.lock` change review.
+- OAuth2 GitHub, Bitbucket, GitLab/Gitea and Other Integrations.
+- Security Monitoring.
+- Milty sub repositories.
 
 ## Compare Private Packagist with Packeton
 

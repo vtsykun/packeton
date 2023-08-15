@@ -35,7 +35,7 @@ server {
 }
 ```
 
-#### nginx with cloudfront
+#### nginx with cloudflare
 
 ```
 server {
