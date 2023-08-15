@@ -16,28 +16,26 @@ We began development in **2018**, bases on Packagist and Satis fork.
 - Credentials and Authentication for privately hosted packages by oauth/http-basic config or ssh keys.
 - Support update webhook for GitHub, Bitbucket and GitLab or custom format.
 
-## Demo
-See our [Administration Demo](https://demo.packeton.org). Username/password (admin/123456)
+## Compare Private Packagist with Packeton
 
-[![Demo](img/intro1.png)](img/intro1.png)
-
-#### Create Webhooks
-[![Webhooks](img/intro2.png)](img/intro2.png)
-
-#### Webhooks status
-[![Webhooks Status](img/intro3.png)](img/intro3.png)
-
-#### SSH Keys
-[![SSH Keys](img/intro4.png)](img/intro4.png)
-
-#### Submit
-[![Submit](img/intro5.png)](img/intro5.png)
-
-#### Groups
-[![Groups](img/intro6.png)](img/intro6.png)
-
-#### Users view
-[![Users view](img/intro7.png)](img/intro7.png)
-
-#### Package view
-[![Package view](img/intro8.png)](img/intro8.png)
+| *Feature*                 | *Packeton*                                                                  | *Packagist.com*                                                          |
+|---------------------------|-----------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| Composer API              | v1, v2                                                                      | v1, v2                                                                   |
+| REST API                  | Partial covered. Only main CRUD feature                                     | Full covered. +PHP SDK private-packagist-api-client                      |
+| Custom User/Vendors       | Limit access by versions, packages, release date. Customer users and groups | Limit access by versions, packages, stability. Users and Vendors bundles |
+| Statistics                | Default by versions, packages                                               | By versions, packages and customer usage                                 |
+| Integrations              | GitHub, GitLab, Gitea, Bitbucket                                            | GitHub, GitLab, Bitbucket (cloud/ server), AWS CodeCommit, Azure DevOps  |
+| Synchronization           | Only Repositories                                                           | Teams, Permissions and Repositories                                      |
+| Pull request review       | GitHub, GitLab, Gitea, Bitbucket                                            | Integrations - GitHub, GitLab, Bitbucket (cloud/ server)                 |
+| Fine-grained API Token    | Support                                                                     | -                                                                        |
+| Mirroring                 | Full Support. Separate URL path to access the repo                          | Full Support. Automatically setup                                        |
+| Patch Mirroring metadata  | Support. UI metadata manager                                                | -                                                                        |
+| Incoming webhooks         | Support. Full compatibility with packagist.org and its integrations         | Support. Used unique uuid address                                        |
+| Outgoing webhooks         | Full Support. Custom UI request builder with expressions                    | Support. Request payload format is not configurable                      |
+| Subrepositories           | Support                                                                     | Support                                                                  |
+| Dependency License Review | -                                                                           | Support                                                                  |
+| Security Monitoring       | Support. Webhook notifications                                              | Support. Webhook/email notifications                                     |
+| Patch requires/metadata   | Support. UI metadata manager                                                | -                                                                        |
+| Repos type                | VCS (auto), Mono-repo, Custom JSON, Artifacts                               | VCS, Githib/GitLab/Bitbucket, Custom JSON, Artifacts, Import Satis       |
+| Mono-repo support         | Support                                                                     | Support                                                                  |
+| Pricing                   | Open Source. Free                                                           | €5900 or €49/user/month                                                  |
