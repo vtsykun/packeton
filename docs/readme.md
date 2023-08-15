@@ -9,7 +9,7 @@ We began development in **2018**, bases on Packagist and Satis fork.
 
 ## Main Features
 
-- Compatible with Composer API v2, bases on Symfony 5.4.
+- Compatible with Composer API v2, bases on Symfony 6.
 - Customers user and ACL groups and limit access by vendor and versions.
 - Generic Packeton webhooks.
 - Allow to freeze updates for the new releases after expire a customers license.
@@ -33,6 +33,7 @@ We began development in **2018**, bases on Packagist and Satis fork.
 | Incoming webhooks         | Support. Full compatibility with packagist.org and its integrations         | Support. Used unique uuid address                                        |
 | Outgoing webhooks         | Full Support. Custom UI request builder with expressions                    | Support. Request payload format is not configurable                      |
 | Subrepositories           | Support                                                                     | Support                                                                  |
+| LDAP                      | Support. On config level                                                    | Support                                                                  |
 | Dependency License Review | -                                                                           | Support                                                                  |
 | Security Monitoring       | Support. Webhook notifications                                              | Support. Webhook/email notifications                                     |
 | Patch requires/metadata   | Support. UI metadata manager                                                | -                                                                        |
