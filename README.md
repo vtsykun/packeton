@@ -41,6 +41,7 @@ Table of content
 - [Run as Docker container](#install-and-run-in-docker)
 - [Demo](#demo)
 - [Installation from code](#installation)
+- [Using a reverse proxy](/docs/reverse-proxy.md)
 - [Outgoing Webhook](/docs/webhook.md)
     - [Intro](/docs/webhook.md#introduction)
     - [Examples](/docs/webhook.md#examples)

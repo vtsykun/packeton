@@ -6,6 +6,7 @@
 # Setup
   - [Installation](installation.md)
   - [Using docker](installation-docker.md)
+  - [Using a reverse proxy](reverse-proxy.md)
 
 # Usage
   - [Administration](usage/README.md)
