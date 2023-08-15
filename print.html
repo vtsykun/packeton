@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -2248,6 +2248,72 @@ See <a href="authentication-jwt.html">JWT Configuration</a></p>
             - .docker:/data
             - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
 </code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="s3-storage-provider"><a class="header" href="#s3-storage-provider">S3 Storage Provider</a></h1>
+<p>By default, Packeton stores packages archives on the local filesystem. But you can easily configure 
+the S3 using <code>league/flysystem-bundle</code>.</p>
+<p>For docker env, please set env vars. </p>
+<pre><code>STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=packeton-bucket
+STORAGE_AWS_PREFIX=packeton
+STORAGE_AWS_ARTIFACT_PREFIX=artifact
+
+STORAGE_AWS_ARGS='{&quot;endpoint&quot;: &quot;https://s3.waw.io.cloud.ovh.net&quot;, &quot;accessKeyId&quot;: &quot;xxx&quot;, &quot;accessKeySecret&quot;: &quot;xxx&quot;, &quot;region&quot;: &quot;waw&quot;}'
+</code></pre>
+<p>Sometimes for Artifact Repository requires direct access to files from the archive, so to 
+improve performance and reduces count of S3 API requests, the all archives are cached on the local filesystem too. </p>
+<p>If you need to use the other provider, like Google Cloud, you may add config file to <code>config/packages</code> or use <code>config.yaml</code> in data docker dir.</p>
+<pre><code class="language-yaml">flysystem:
+    storages:
+        s3_v2.storage:
+            adapter: 'asyncaws'
+            options:
+                client: 'packeton.s3.storage'
+                bucket: '%env(STORAGE_AWS_BUCKET)%'
+                prefix: '%env(STORAGE_AWS_PREFIX)%'
+
+        s3_v2.artifact:
+            adapter: 'asyncaws'
+            options:
+                client: 'packeton.s3.storage'
+                bucket: '%env(STORAGE_AWS_BUCKET)%'
+                prefix: '%env(STORAGE_AWS_ARTIFACT_PREFIX)%'
+
+        gcloud.storage:
+            adapter: 'gcloud'
+            options:
+                client: 'gcloud_client_service' 
+                bucket: 'bucket_name'
+                prefix: 'optional/path/prefix'
+
+        gcloud.artifact:
+            adapter: 'gcloud'
+            options:
+                client: 'gcloud_client_service' 
+                bucket: 'bucket_name'
+                prefix: 'optional/path/artifact'
+
+parameters:
+    env(STORAGE_AWS_BUCKET): 'packeton-bucket'
+    env(STORAGE_AWS_PREFIX): 'packeton'
+    env(STORAGE_AWS_ARGS): '[]'
+    env(STORAGE_AWS_ARTIFACT_PREFIX): 'artifact'
+
+services:
+    packeton.s3.storage:
+        class: AsyncAws\S3\S3Client
+        arguments:
+            $configuration: '%env(json:STORAGE_AWS_ARGS)%'
+            $httpClient: '@Symfony\Contracts\HttpClient\HttpClientInterface'
+            $logger: '@logger'
+    
+    gcloud_client_service:
+        class: Google\Cloud\Storage\StorageClient
+        arguments:
+            - { keyFilePath: 'path/to/keyfile.json' }
+</code></pre>
+<pre><code>STORAGE_SOURCE=s3_v2
+STORAGE_SOURCE=gcloud
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="security-monitoring"><a class="header" href="#security-monitoring">Security Monitoring</a></h1>
 <p>Security Monitoring allow to send notifications when found a security problem in your <code>composer.lock</code>. By default, used packagist.org database.</p>
 <p>Packeton is automatically check the main branch of every repository if the <code>composer.lock</code> is exists. 
@@ -2295,22 +2361,31 @@ Also, you may see list of security advisories in the package page.</p>
 <li><a href="oauth2/gitea.html">Gitea Setup</a></li>
 <li><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li>
 </ul>
-<h2 id="base-configuration"><a class="header" href="#base-configuration">Base configuration</a></h2>
+<h2 id="base-configuration-reference"><a class="header" href="#base-configuration-reference">Base configuration reference</a></h2>
 <p>To enable OAuth2 integrations you need to add following configuration </p>
 <pre><code class="language-yml">packeton:
     integrations:
         github: # Alias name 
             allow_login: true # default false 
-            allow_register: true # default false 
+            allow_register: false # default false 
             default_roles: ['ROLE_USER', 'ROLE_MAINTAINER', 'ROLE_GITLAB']
-            login_title: Login or Register with GitHub
+            
             clone_preference: 'api'
             repos_synchronization: true
+            
+            disable_hook_repos: false # disabled auto setup webhook
+            disable_hook_org: false
+            svg_logo: ~ # &lt;svg xmlns= logo
+            logo: ~ # png logo
+            login_title: Login or Register with GitHub
+            description: ~
+
             login_control_expression: &quot;data['email'] ends with '@packeton.org'&quot; # Restrict logic/register by custom condition.
+            login_control_expression_debug: false # help debugging    
 
-            pull_request_review: true # Enable pull request composer.lock review. Default false 
+            pull_request_review: true # Enable pull request composer.lock review. Default false
+            webhook_url: ~ #overwrite host when setup webhooks
 
-#            webhook_url: 'https://packeton.google.dev/' - overwrite host when setup webhooks
             github:
                 client_id: 'xxx'
                 client_secret: 'xxx'
@@ -2348,7 +2423,7 @@ Also, you may see list of security advisories in the package page.</p>
             bitbucket:
                 key: GA7000000000000000
                 secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
-                api_version: '/example/rest/v2/'  # custom api prefix
+                api_version: ~ # '/example/rest/v2/' custom api prefix
 
 </code></pre>
 <p>Where <code>clone_preference</code>:</p>
@@ -2494,6 +2569,25 @@ For docker installation you may use <code>config.yaml</code> file in docker volu
 You will see list of available integrations and its Redirect Urls. Click to Connect to set up oauth2 credentials</p>
 <h4 id="example-of-pull-request-review"><a class="header" href="#example-of-pull-request-review">Example of pull request review</a></h4>
 <p><a href="oauth2/../img/gitea2.png"><img src="oauth2/../img/gitea2.png" alt="Gitea2" /></a></p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="bitbucket-integration-setup"><a class="header" href="#bitbucket-integration-setup">Bitbucket Integration Setup</a></h1>
+<p>Go to you Bitbucket workspace settings (<code>https://bitbucket.org/{name}/workspace/settings/api</code>) and select &quot;Add OAuth consumer&quot;.</p>
+<p><a href="oauth2/../img/bitbucket.png"><img src="oauth2/../img/bitbucket.png" alt="Bitbucket" /></a></p>
+<p>Redirect Urls:</p>
+<pre><code>https://example.com/oauth2/{alias}/auto
+</code></pre>
+<p>The next step is obtain <code>Key</code>, <code>Secret</code> to creating a configuration in the yaml.
+For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        bitbucket:
+            repos_synchronization: true
+            pull_request_review: true
+            bitbucket:
+                key: GA7000000000000000
+                secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
+</code></pre>
+<p>Now you can go to the Packeton integration page and click &quot;Install Integration&quot;.
+You will see list of available integrations and its Redirect Urls. Click to Connect to set up oauth2 credentials.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
 <p>Everyone is welcome to contribute code to <a href="https://github.com/vtsykun/packeton.git">https://github.com/vtsykun/packeton.git</a></p>
 <h3 id="1-development-environment"><a class="header" href="#1-development-environment">1. Development environment.</a></h3>

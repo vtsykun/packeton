@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html" class="active">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="installation.html">Installation</a></li><li class="chapter-item expanded "><a href="installation-docker.html">Using docker</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="oauth2.html" class="active">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -158,22 +158,31 @@
 <li><a href="oauth2/gitea.html">Gitea Setup</a></li>
 <li><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li>
 </ul>
-<h2 id="base-configuration"><a class="header" href="#base-configuration">Base configuration</a></h2>
+<h2 id="base-configuration-reference"><a class="header" href="#base-configuration-reference">Base configuration reference</a></h2>
 <p>To enable OAuth2 integrations you need to add following configuration </p>
 <pre><code class="language-yml">packeton:
     integrations:
         github: # Alias name 
             allow_login: true # default false 
-            allow_register: true # default false 
+            allow_register: false # default false 
             default_roles: ['ROLE_USER', 'ROLE_MAINTAINER', 'ROLE_GITLAB']
-            login_title: Login or Register with GitHub
+            
             clone_preference: 'api'
             repos_synchronization: true
+            
+            disable_hook_repos: false # disabled auto setup webhook
+            disable_hook_org: false
+            svg_logo: ~ # &lt;svg xmlns= logo
+            logo: ~ # png logo
+            login_title: Login or Register with GitHub
+            description: ~
+
             login_control_expression: &quot;data['email'] ends with '@packeton.org'&quot; # Restrict logic/register by custom condition.
+            login_control_expression_debug: false # help debugging    
 
-            pull_request_review: true # Enable pull request composer.lock review. Default false 
+            pull_request_review: true # Enable pull request composer.lock review. Default false
+            webhook_url: ~ #overwrite host when setup webhooks
 
-#            webhook_url: 'https://packeton.google.dev/' - overwrite host when setup webhooks
             github:
                 client_id: 'xxx'
                 client_secret: 'xxx'
@@ -211,7 +220,7 @@
             bitbucket:
                 key: GA7000000000000000
                 secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
-                api_version: '/example/rest/v2/'  # custom api prefix
+                api_version: ~ # '/example/rest/v2/' custom api prefix
 
 </code></pre>
 <p>Where <code>clone_preference</code>:</p>
