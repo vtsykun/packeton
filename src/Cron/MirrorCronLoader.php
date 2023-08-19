@@ -40,7 +40,7 @@ class MirrorCronLoader implements ScheduleLoaderInterface
                     'sync:mirrors',
                     new Model\ScheduleStamp($expr),
                     new WorkerStamp(asJob: true, hash: $config->reference()),
-                    new Model\ArgumentsStamp(['mirror' => $name,])
+                    new Model\ArgumentsStamp(['mirror' => $name])
                 );
             }
         }
@@ -49,7 +49,7 @@ class MirrorCronLoader implements ScheduleLoaderInterface
     private function getSyncInterval(ProxyOptions $config): int
     {
         return $config->getSyncInterval() ?? match (true) {
-            $config->isLazy() && $config->getV2SyncApi() => 900,
+            $config->isLazy() && $config->getV2SyncApi() => 300,
             $config->isLazy() && $config->hasV2Api() => 1800,
             $config->isLazy() => 7200,
             default => 86400,
