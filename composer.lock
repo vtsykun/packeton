@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "11df63c9e6c3eda5de77df893054b95a",
+    "content-hash": "5006c08cd617f0407e9d6ca441da5451",
     "packages": [
         {
             "name": "async-aws/core",
@@ -3495,16 +3495,16 @@
         },
         {
             "name": "okvpn/cron-bundle",
-            "version": "1.0.2",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vtsykun/cron-bundle.git",
-                "reference": "647c18f51aae0f7911b303320e29b2c4f83a1127"
+                "reference": "e8685500d4ec573e4e182e82d7be30873525373c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vtsykun/cron-bundle/zipball/647c18f51aae0f7911b303320e29b2c4f83a1127",
-                "reference": "647c18f51aae0f7911b303320e29b2c4f83a1127",
+                "url": "https://api.github.com/repos/vtsykun/cron-bundle/zipball/e8685500d4ec573e4e182e82d7be30873525373c",
+                "reference": "e8685500d4ec573e4e182e82d7be30873525373c",
                 "shasum": ""
             },
             "require": {
@@ -3517,10 +3517,11 @@
                 "symfony/messenger": "For handle cron jobs in the message queue.",
                 "symfony/process": "For using shell commands"
             },
+            "default-branch": true,
             "type": "symfony-bundle",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.0-dev"
+                    "dev-master": "1.1-dev"
                 }
             },
             "autoload": {
@@ -3558,7 +3559,7 @@
                 "issues": "https://github.com/vtsykun/cron-bundle/issues",
                 "source": "https://github.com/vtsykun/cron-bundle/releases"
             },
-            "time": "2023-08-09T14:59:45+00:00"
+            "time": "2023-08-19T13:16:28+00:00"
         },
         {
             "name": "okvpn/expression-language",
