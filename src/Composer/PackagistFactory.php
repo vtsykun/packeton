@@ -16,6 +16,7 @@ use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Composer\Util\ProcessExecutor;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Integrations\IntegrationRegistry;
+use Packeton\Integrations\Model\AppUtils;
 use Packeton\Model\CredentialsInterface;
 use Packeton\Package\RepTypes;
 
@@ -146,7 +147,13 @@ class PackagistFactory
         $oauth2 = $repoConfig['oauth2'] ?? null;
         if ($oauth2 instanceof OAuthIntegration && $this->integrations->has($oauth2->getAlias())) {
             $app = $this->integrations->get($oauth2->getAlias());
-            $app->authenticateIO($oauth2, $io, $config, $url);
+
+            try {
+                $app->authenticateIO($oauth2, $io, $config, $url);
+            } catch (\Throwable $e) {
+                $msg = AppUtils::castError($e, $oauth2, true);
+                throw new \RuntimeException("Unable to Composer authenticate. \n$msg", $e->getCode(), $e);
+            }
         }
 
         $repoConfig['url'] = $url;

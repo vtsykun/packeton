@@ -257,7 +257,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
                 return ['status' => true, 'id' => $response['uuid'], 'owner_id' => $orgId];
             }
         } catch (\Exception $e) {
-            return ['status' => false, 'error' => AppUtils::castError($e), 'status_message' => $statusMessage ?? null];
+            return ['status' => false, 'error' => AppUtils::castError($e, $app), 'status_message' => $statusMessage ?? null];
         }
 
         if ($hook = $this->findHooks($accessToken, $orgId, $isRepo, $url)) {
@@ -307,7 +307,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
             $this->makeApiRequest($accessToken, 'DELETE', $apiEndpoint . $hook['id']);
             return [];
         } catch (\Exception $e) {
-            return ['status' => false, 'error' => AppUtils::castError($e), 'id' => $hook['id'] ?? null];
+            return ['status' => false, 'error' => AppUtils::castError($e, $app), 'id' => $hook['id'] ?? null];
         }
     }
 

@@ -26,20 +26,22 @@ class AppUtils
         return self::clonePref($client->getConfig(), $app) === 'clone_ssh' && isset($repo['ssh_url']) ? $repo['ssh_url'] : $repo['url'];
     }
 
-    public static function castError(\Throwable $e, App|array $app = null): string
+    public static function castError(\Throwable $e, App|array $app = null, bool $moreInfo = false): string
     {
         $msg = '';
         $app = $app instanceof App ? $app->getAccessToken() : $app;
         if ($e instanceof HttpExceptionInterface) {
             try {
                 $msg = $e->getResponse()->getContent(false);
-                $msg = trim(substr($msg, 0, 512));
+                $msg = trim(substr($msg, 0, 1024));
             } catch (\Throwable) {
             }
         }
 
         if (empty($msg)) {
             $msg = $e->getMessage();
+        } else if (true === $moreInfo) {
+            $msg = $e->getMessage() . " \n" . $msg;
         }
 
         if (isset($app['access_token']) && is_string($app['access_token'])) {
@@ -48,6 +50,11 @@ class AppUtils
         if (isset($app['refresh_token']) && is_string($app['refresh_token'])) {
             $msg = str_replace($app['refresh_token'], '***', $msg);
         }
+
+        $msg = preg_replace('/client_id=(\w+)/i', 'client_id=***', $msg);
+        $msg = preg_replace('/client_secret=(\w+)/i', 'client_secret=***', $msg);
+        $msg = preg_replace('/([a-f0-9]{30,})/i', '****', $msg);
+
         return $msg;
     }
 
