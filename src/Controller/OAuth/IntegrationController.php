@@ -58,8 +58,8 @@ class IntegrationController extends AbstractController
         try {
             $orgs = $client->organizations($oauth);
         } catch (\Throwable $e) {
-            $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($e->getMessage(), ['e' => $e]) : $this->logger->error($e->getMessage(), ['e' => $e]);
-            $errorMsg = $e->getMessage();
+            $errorMsg = AppUtils::castError($e, $oauth, true);
+            $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($errorMsg, ['e' => $e]) : $this->logger->error($errorMsg, ['e' => $e]);
         }
 
         $config = $client->getConfig($oauth);
@@ -80,6 +80,7 @@ class IntegrationController extends AbstractController
     public function repos(#[Vars] OAuthIntegration $oauth): Response
     {
         $client = $this->getClient($oauth->getAlias(), $oauth);
+
         $repos = $client->repositories($oauth);
 
         return new JsonResponse($oauth->filteredRepos($repos, true));
@@ -94,8 +95,8 @@ class IntegrationController extends AbstractController
         try {
             $repos = $client->repositories($oauth);
         } catch (\Throwable $e) {
-            $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($e->getMessage(), ['e' => $e]) : $this->logger->error($e->getMessage(), ['e' => $e]);
-            $errorMsg = $e->getMessage();
+            $errorMsg = AppUtils::castError($e, $oauth, true);
+            $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($errorMsg, ['e' => $e]) : $this->logger->error($errorMsg, ['e' => $e]);
         }
 
         [$formType, $formData] = $client instanceof FormSettingsInterface ? $client->getFormSettings($oauth) : [IntegrationSettingsType::class, []];
