@@ -105,4 +105,22 @@ packeton:
             sync_interval: 3600 # default auto.
             info_cmd_message: "\n\u001b[37;44m#Слава\u001b[30;43mУкраїні!\u001b[0m\n\u001b[40;31m#Смерть\u001b[30;41mворогам\u001b[0m" # Info message
 
+    web_protection:
+        ## Multi host protection, disable web-ui if host !== app.example.com and ips != 127.0.0.1, 10.9.1.0/24
+        ## But the repo metadata will be available for all hosts and ips.
+        repo_hosts: ['*', '!app.example.com']
+        allow_ips: '127.0.0.1, 10.9.1.0/24'
+        status_code: 402
+        custom_page: > # Custom landing non-auth page. Path or HTML
+            <html>
+            <head><title>402 Payment Required</title></head>
+            <body>
+            <center><h1>402 Payment Required</h1></center>
+            <hr><center>nginx</center>
+            </body>
+            </html>
+
+    web_protection:
+        ## Disable web-ui for host = repo.example.com
+        repo_hosts: ['repo.example.com']
 ```
