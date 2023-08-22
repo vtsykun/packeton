@@ -73,6 +73,7 @@ class PacketonExtension extends Extension
         $container->setParameter('packeton_artifact_paths', $config['artifacts']['allowed_paths'] ?? []);
         $container->setParameter('packeton_artifact_storage', $config['artifacts']['artifact_storage'] ?? null);
         $container->setParameter('packeton_artifact_types', $config['artifacts']['support_types'] ?? []);
+        $container->setParameter('packeton_web_protection', $config['web_protection'] ?? null);
 
         $container->registerAttributeForAutoconfiguration(AsWorker::class, static function (ChildDefinition $definition, AsWorker $attribute) {
             $attributes = get_object_vars($attribute);

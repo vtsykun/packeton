@@ -322,6 +322,12 @@ packeton:
             - '/data/hdd1/composer'
         # Default path to storage/(local cache for S3) of uploaded artifacts
         artifact_storage: '%composer_home_dir%/artifact_storage'
+
+    web_protection: 
+        ## Multi host protection, disable web-ui if host !== app.example.com and ips != 127.0.0.1, 10.9.1.0/24
+        ## But the repo metadata will be available for all hosts and ips.
+        repo_hosts: ['*', '!app.example.com'] 
+        allow_ips: '127.0.0.1, 10.9.1.0/24'
 ```
 
 ### Metadata format.
