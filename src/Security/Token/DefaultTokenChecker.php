@@ -3,6 +3,7 @@
 namespace Packeton\Security\Token;
 
 use Packeton\Entity\User;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -16,7 +17,7 @@ class DefaultTokenChecker implements TokenCheckerInterface
         return true;
     }
 
-    public function loadUserByToken(string $username, string $token, callable $userLoader): UserInterface
+    public function loadUserByToken(string $username, string $token, Request $request, callable $userLoader): UserInterface
     {
         $user = $userLoader($username);
 

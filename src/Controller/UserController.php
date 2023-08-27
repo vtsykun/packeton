@@ -30,6 +30,7 @@ use Packeton\Form\Type\SshKeyCredentialType;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
 use Packeton\Model\RedisAdapter;
+use Packeton\Security\Provider\AuditSessionProvider;
 use Packeton\Security\Token\PatTokenManager;
 use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\SshKeyHelper;
@@ -46,6 +47,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -60,6 +62,7 @@ class UserController extends AbstractController
         protected DownloadManager $downloadManager,
         protected UserFormHandler $formHandler,
         protected SubRepositoryHelper $subRepositoryHelper,
+        protected AuditSessionProvider $auditSessionProvider,
     ){
     }
 
@@ -207,6 +210,37 @@ class UserController extends AbstractController
         }
 
         return $this->render('user/token_list.html.twig', ['tokens' => $tokens]);
+    }
+
+    #[Route('/users/sessions/list', name: 'users_login_attempts_all')]
+    public function userSessionsAction(): Response
+    {
+        $admins = $this->registry->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->resetDQLPart('select')
+            ->select('u.usernameCanonical')
+            ->andWhere("u.roles LIKE '%ADMIN%'")
+            ->getQuery()->getSingleColumnResult();
+
+
+        $sessions = $this->auditSessionProvider->allSessions($admins);
+
+        return $this->render('user/login_attempts.html.twig', ['sessions' => $sessions]);
+    }
+
+    #[Route('/users/{name}/login-attempts', name: 'users_login_attempts')]
+    #[Route('/profile/login-attempts', name: 'profile_login_attempts')]
+    public function loginAttemptsAction(#[Vars(['name' => 'username'])] User $user = null): Response
+    {
+        $currentUser = $this->getUser();
+        if (null !== $user && true === $user->isAdmin() && $currentUser->getUserIdentifier() !== $user->getUserIdentifier()) {
+            throw new AccessDeniedHttpException('You can not see audit login for other admin user');
+        }
+
+        $user ??= $currentUser;
+        $sessions = $this->auditSessionProvider->getSessions($user->getUserIdentifier());
+
+        return $this->render('user/login_attempts.html.twig', ['sessions' => $sessions, 'username' => $user->getUserIdentifier()]);
     }
 
     #[Route('/profile/tokens/{id}/delete', name: 'profile_remove_tokens', methods: ['POST'])]

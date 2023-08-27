@@ -23,6 +23,7 @@ menu:
     my_packages: My packages
     my_favorites: My favorites
     my_tokens: Personal access tokens
+    my_login_attempts: Login attempts
     my_users: My users
     my_groups: My groups
     ssh_keys: Credentials
@@ -39,6 +40,7 @@ menu:
     my_tokens_icon: '<span class="fa fa-key"></span>Personal access tokens'
     my_users_icon: '<span class="fa fa-user"></span>My users'
     my_groups_icon: '<span class="fa fa-users"></span>My groups'
+    my_login_icon: '<span class="fa fa-desktop"></span>Login attempts'
     ssh_keys_icon: '<span class="fa fa-key"></span>Credentials'
     webhooks_icon: '<span class="fa fa-bell"></span>Webhooks'
     subrepository_icon: '<span class="fa fa-floppy-o"></span>SubRepositories'

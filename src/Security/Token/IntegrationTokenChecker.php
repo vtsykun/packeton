@@ -33,11 +33,9 @@ class IntegrationTokenChecker implements TokenCheckerInterface, PatTokenCheckerI
     /**
      * {@inheritdoc}
      */
-    public function loadUserByToken(string $username, string $token, callable $userLoader, Request $request = null): UserInterface
+    public function loadUserByToken(string $username, string $token, Request $request, callable $userLoader): UserInterface
     {
-        if (null !== $request) {
-            $this->checkAccess($request);
-        }
+        $this->checkAccess($request);
 
         $token = substr($token, strlen(self::TOKEN_PREFIX));
 

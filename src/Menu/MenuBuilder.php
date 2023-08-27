@@ -71,6 +71,7 @@ class MenuBuilder
             $menu->addChild($this->translator->trans('menu.settings'), ['label' => 'menu.settings_icon', 'route' => 'profile_edit', 'extras' => ['safe_label' => true]]);
             $menu->addChild($this->translator->trans('menu.change_password'), ['label' => 'menu.change_password_icon', 'route' => 'change_password', 'extras' => ['safe_label' => true]]);
             $menu->addChild($this->translator->trans('menu.my_tokens'), ['label' => 'menu.my_tokens_icon', 'route' => 'profile_list_tokens', 'extras' => ['safe_label' => true]]);
+            $menu->addChild($this->translator->trans('menu.my_login_attempts'), ['label' => 'menu.my_login_icon', 'route' => 'profile_login_attempts', 'extras' => ['safe_label' => true]]);
 
             if ($this->checker->isGranted('ROLE_MAINTAINER')) {
                 $menu->addChild($this->translator->trans('menu.my_packages'), ['label' => 'menu.my_packages_icon', 'route' => 'user_packages', 'routeParameters' => ['name' => $this->getUsername()], 'extras' => ['safe_label' => true]]);
