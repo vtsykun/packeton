@@ -12,6 +12,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class AuditSessionProvider
 {
     use RedisTrait;
+    public const KEEP_COUNT = 50;
 
     public function __construct(protected \Redis $redis)
     {
@@ -133,9 +134,9 @@ class AuditSessionProvider
             $sessions[] = $session;
         }
 
-        if (count($sessions) > 150) {
+        if (count($sessions) > self::KEEP_COUNT + 5) {
             usort($sessions, fn($s1, $s2) => $s1['last_usage'] <=> $s2['last_usage']);
-            $sessions = array_slice($sessions, count($sessions)-50);
+            $sessions = array_slice($sessions, count($sessions) - 5);
         }
 
         $this->hSet("user_session", $identity, json_encode($sessions));
