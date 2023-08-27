@@ -15,6 +15,7 @@ use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Model\AutoHookUser;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
+use Packeton\Security\Provider\AuditSessionProvider;
 use Packeton\Service\Scheduler;
 use Packeton\Util\PacketonUtils;
 use Packeton\Webhook\HookBus;
@@ -38,7 +39,8 @@ class ApiController extends AbstractController
         protected DownloadManager $downloadManager,
         protected LoggerInterface $logger,
         protected ValidatorInterface $validator,
-        protected IntegrationRegistry $integrations
+        protected IntegrationRegistry $integrations,
+        protected AuditSessionProvider $auditSessionProvider,
     ) {
     }
 
@@ -219,7 +221,7 @@ class ApiController extends AbstractController
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid request format, must be a json object containing a downloads key filled with an array of name/version objects'], 200);
         }
 
-        $failed = [];
+        $audit = $failed = [];
         $ip = $request->getClientIp();
 
         $jobs = [];
@@ -231,9 +233,15 @@ class ApiController extends AbstractController
                 continue;
             }
 
+            $audit[] = "{$package['name']}: {$package['version']}";
             $jobs[] = ['id' => $result['id'], 'vid' => $result['vid'], 'ip' => $ip];
         }
+
         $this->downloadManager->addDownloads($jobs);
+
+        if (null !== ($user = $this->getUser())) {
+            $this->auditSessionProvider->logDownload($request, $user, $audit);
+        }
 
         if ($failed) {
             return new JsonResponse(['status' => 'partial', 'message' => 'Packages '.json_encode($failed).' not found'], 200);

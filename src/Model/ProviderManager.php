@@ -15,9 +15,12 @@ namespace Packeton\Model;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Repository\PackageRepository;
+use Packeton\Util\RedisTrait;
 
 class ProviderManager
 {
+    use RedisTrait;
+
     public const DEV_UPDATED = 1;
     public const STAB_UPDATED = 2;
 
@@ -170,17 +173,5 @@ class ProviderManager
     private function getRepo()
     {
         return $this->registry->getRepository(Package::class);
-    }
-
-    private function hSet(string $key, string $hashKey, mixed $value)
-    {
-        if (($result = $this->redis->hSet($key, $hashKey, $value)) === false) {
-            if (false !== $this->redis->get($key)) {
-                $this->redis->del($key);
-                $result = $this->redis->hSet($key, $hashKey, $value);
-            }
-        }
-
-        $result;
     }
 }

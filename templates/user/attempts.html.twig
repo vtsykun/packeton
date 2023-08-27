@@ -1,0 +1,51 @@
+{% set youself = username is defined and username == app.user.userIdentifier %}
+
+{% extends noLayout|default(false) ? "base_nolayout.html.twig" : "layout.html.twig" %}
+
+{% block content %}
+    {% block content_title %} <h2 class="title">{{ youself ? 'Your Login attempts' : username|default('All') ~ ' login attempts' }}</h2>{% endblock %}
+
+    {% block list %}
+        <b style="font-size: 1.3em">All Login attempts</b>
+        <table class="table table-bordered">
+            <thead style="background: #dddddd">
+            <tr class="table-token-tr">
+                <th>SOURCE</th>
+                <th>ATTEMPT AT</th>
+                <th>COUNT</th>
+                <th>SUCCESS</th>
+                <th>USERNAME</th>
+                <th>IP</th>
+                <th>Info</th>
+            </tr>
+            </thead>
+            <tbody class="table-token-body">
+            {% for key, session in sessions %}
+                <tr>
+                    <th scope="row">{{ session.source }}</th>
+                    <td>{{ session.lastUsage|date('Y-m-d H:i:s') ~ ' UTC' }}</td>
+                    <td>{{ session.usage }}</td>
+                    <td>{{ session.success ? 'Yes' : 'No' }}</td>
+                    <td>{{ session.userIdentity }}</td>
+                    <td>{{ session.ip }}</td>
+
+                    <td>
+                        {% if session.info %}
+                            <a data-toggle="collapse" href="#tok2{{ key }}">{{ session.info|truncate(48) }}</a>
+                        {%- else -%}
+                            N/A
+                        {%- endif -%}
+                    </td>
+                </tr>
+
+                <tr class="collapse" id="tok2{{ key }}">
+                    <td colspan="7">
+                        {{ session.info|nl2br }}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endblock %}
+{% endblock %}
+

@@ -1,0 +1,23 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Login attempts{% endblock %}
+
+{% block content %}
+    {% set youself = username is defined and username == app.user.userIdentifier %}
+
+    {% if youself %}
+        <h2 class="title">{{ username }}</h2>
+    {% endif %}
+
+    {% if youself %}
+        <section class="col-md-3 nav-user-menu">
+            {{ knp_menu_render('profile_menu', {currentClass: 'active', allow_safe_labels: true}) }}
+        </section>
+    {% endif %}
+
+    <section class="{{ youself ? 'col-md-9' : 'col-md-12' }}">
+        {% embed "user/attempts.html.twig" with {noLayout: 'true'} %}
+        {% endembed %}
+    </section>
+
+{% endblock %}

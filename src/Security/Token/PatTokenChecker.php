@@ -35,7 +35,7 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
     /**
      * {@inheritdoc}
      */
-    public function loadUserByToken(string $username, string $token, callable $userLoader, Request $request = null): UserInterface
+    public function loadUserByToken(string $username, string $token, Request $request, callable $userLoader): UserInterface
     {
         $token = substr($token, strlen(ApiToken::PREFIX));
         if ($user = $this->cache->hit($username, $token)) {
@@ -73,7 +73,7 @@ class PatTokenChecker implements TokenCheckerInterface, PatTokenCheckerInterface
         );
 
         $this->cache->save($user, $username, $token);
-        $this->patTokenManager->setLastUsage($apiToken->getId(), $request ? $this->getRequestInfo($request) : []);
+        $this->patTokenManager->setLastUsage($apiToken->getId(), $this->getRequestInfo($request));
         return $user;
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Security\Token;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -25,12 +26,11 @@ interface TokenCheckerInterface
      *
      * @param callable $userLoader
      * @param string $username
+     * @param Request $request
      * @param string $token
      *
      * @throws UserNotFoundException
      * @throws BadCredentialsException
-     *
-     * @return UserInterface
      */
-    public function loadUserByToken(string $username, string $token, callable $userLoader): UserInterface;
+    public function loadUserByToken(string $username, string $token, Request $request, callable $userLoader): UserInterface;
 }

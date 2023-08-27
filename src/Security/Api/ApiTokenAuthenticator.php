@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Security\Api;
 
 use Packeton\Entity\User;
+use Packeton\Security\Provider\AuditSessionProvider;
 use Packeton\Security\Token\PatTokenCheckerInterface;
 use Packeton\Security\Token\TokenCheckerRegistry;
 use Psr\Log\LoggerInterface;
@@ -32,6 +33,7 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
         private readonly UserProviderInterface $userProvider,
         private readonly UserCheckerInterface $userChecker,
         private readonly TokenCheckerRegistry $tokenCheckerRegistry,
+        private readonly AuditSessionProvider $auditSessionProvider,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -70,27 +72,40 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
     public function validateAndLoadUser(string $username, string $token, Request $request): UserInterface|User
     {
         $checker = $this->tokenCheckerRegistry->getTokenChecker($username, $token);
+        $auditUsername = null;
+        $errorMsg = null;
 
         try {
-            $user = $checker->loadUserByToken($username, $token, function (string|null $username) {
+            $user = $checker->loadUserByToken($username, $token, $request, function (string|null $username) use (&$auditUsername) {
                 if (empty($username)) {
                     return null;
                 }
 
                 $user = $this->userProvider->loadUserByIdentifier($username);
+                $auditUsername = $username;
+
                 $this->userChecker->checkPreAuth($user);
                 return $user;
-            }, $request);
+            });
 
             if ($checker instanceof PatTokenCheckerInterface) {
                 $checker->checkAccess($request, $user);
             }
         } catch (UserNotFoundException $e) {
+            $errorMsg = $e->getMessage();
             throw new BadCredentialsException('Bad credentials.', 0, $e);
         } catch (AuthenticationException $e) {
+            $errorMsg = $e->getMessage();
             throw $e;
         } catch (\Exception $e) {
+            $errorMsg = $e->getMessage();
             throw new AuthenticationServiceException($e->getMessage(), 0, $e);
+        } finally {
+            try {
+                if (null !== $auditUsername) {
+                    $this->auditSessionProvider->logApi($request, $auditUsername, $token, $errorMsg);
+                }
+            } catch (\Throwable $e) {}
         }
 
         return $user;
