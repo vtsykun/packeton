@@ -67,9 +67,9 @@ RUN set -eux; \
     echo "dir /data/redis" >> /etc/redis.conf; \
     chown www-data:www-data /var/lib/nginx /var/lib/nginx/tmp /data
 
-ENV DATABASE_URL sqlite:////data/app.db
-ENV APP_COMPOSER_HOME /data/composer
-ENV PACKAGIST_DIST_PATH /data/zipball
+RUN echo 'DATABASE_URL=sqlite:////data/app.db' >> .env; \
+    echo 'APP_COMPOSER_HOME=/data/composer' >> .env; \
+    echo 'PACKAGIST_DIST_PATH=/data/zipball' >> .env;
 
 VOLUME ["/data"]
 
