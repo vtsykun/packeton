@@ -7,8 +7,11 @@ on:
             - 'public/**'
             - 'config/**'
             - 'templates/**'
+            - 'Dockerfile'
+            - 'docker/**'
         branches:
             - master
+        workflow_dispatch:
 
 jobs:
     build-and-publish:
