@@ -67,7 +67,8 @@ RUN set -eux; \
     echo "dir /data/redis" >> /etc/redis.conf; \
     chown www-data:www-data /var/lib/nginx /var/lib/nginx/tmp /data
 
-RUN echo 'DATABASE_URL=sqlite:////data/app.db' >> .env; \
+RUN echo '# Added by docker build' >> .env;\
+    echo 'DATABASE_URL=sqlite:////data/app.db' >> .env; \
     echo 'APP_COMPOSER_HOME=/data/composer' >> .env; \
     echo 'PACKAGIST_DIST_PATH=/data/zipball' >> .env;
 
