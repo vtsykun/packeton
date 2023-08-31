@@ -6,7 +6,6 @@ namespace Packeton\Controller\Api;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
-use Packeton\Controller\ControllerTrait;
 use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
@@ -17,6 +16,7 @@ use Packeton\Integrations\Model\AppUtils;
 use Packeton\Model\AutoHookUser;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
+use Packeton\Package\RepTypes;
 use Packeton\Security\Provider\AuditSessionProvider;
 use Packeton\Service\JobPersister;
 use Packeton\Service\Scheduler;
@@ -27,7 +27,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -35,7 +34,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route(defaults: ['_format' => 'json'])]
 class ApiController extends AbstractController
 {
-    use ControllerTrait;
+    use ApiControllerTrait;
 
     public function __construct(
         protected ManagerRegistry $registry,
@@ -52,39 +51,44 @@ class ApiController extends AbstractController
     {
         $payload = $this->getJsonPayload($request);
 
-        if (!$payload || empty($url = $payload['repository']['url'] ?? null)) {
+        if (!$payload) {
             return new JsonResponse(['status' => 'error', 'message' => 'Missing payload repository->url parameter'], 406);
         }
 
-        $package = new Package;
+        // For BC layer
+        if (isset($payload['repository']['url'])) {
+            $payload['repository'] = $payload['repository']['url'];
+        }
+
+        $package = new Package();
         if ($this->getUser() instanceof User) {
             $package->addMaintainer($this->getUser());
         }
 
-        $package->setRepository($url);
-        $this->container->get(PackageManager::class)->updatePackageUrl($package);
-        $errors = $this->validator->validate($package, null, ['Create']);
-        if (\count($errors) > 0) {
-            $errorArray = [];
-            foreach ($errors as $error) {
-                $errorArray[$error->getPropertyPath()] =  $error->getMessage();
-            }
-            return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
-        }
-        try {
+        $type = $payload['repoType'] ?? null;
+        $formType = RepTypes::getFormType($type);
+
+        $form = $this->createForm($formType, $package, [
+            'csrf_protection' => false,
+            'validation_groups' => ['Create', 'Default'],
+            'is_created' => true
+        ]);
+
+        $form->submit($payload);
+
+        if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->registry->getManager();
             $em->persist($package);
             $em->flush();
 
             $this->container->get(PackageManager::class)->insetPackage($package);
-        } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage(), ['exception', $e]);
-            return new JsonResponse(['status' => 'error', 'message' => 'Error saving package'], 500);
+            $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
+
+            return new JsonResponse(['status' => 'success', 'name' => $package->getName(), 'job' => $job->getId()], 202);
         }
 
-        $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
-
-        return new JsonResponse(['status' => 'success', 'job' => $job->getId()], 202);
+        $errorArray = $this->getErrors($form);
+        return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
     }
 
     #[Route('/api/hooks/{alias}/{id}', name: 'api_integration_postreceive')]
@@ -161,24 +165,24 @@ class ApiController extends AbstractController
 
         $payload = $this->getJsonPayload($request);
 
-        $package->setRepository($payload['repository']);
-        $this->container->get(PackageManager::class)->updatePackageUrl($package);
-        $errors = $this->validator->validate($package, null, ["Update"]);
-        if (\count($errors) > 0) {
-            $errorArray = [];
-            foreach ($errors as $error) {
-                $errorArray[$error->getPropertyPath()] =  $error->getMessage();
-            }
-            return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
+        $formType = RepTypes::getFormType($package->getRepoType());
+        $form = $this->createForm($formType, $package, [
+            'csrf_protection' => false,
+            'validation_groups' => ['Update', 'Default'],
+            'is_created' => false
+        ]);
+
+        $form->submit($payload, false);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em = $this->registry->getManager();
+            $em->flush();
+
+            $job = $this->container->get(Scheduler::class)->scheduleUpdate($package);
+            return new JsonResponse(['status' => 'success', 'name' => $package->getName(), 'job' => $job->getId()], 200);
         }
 
-        $package->setCrawledAt(null);
-
-        $em = $this->registry->getManager();
-        $em->persist($package);
-        $em->flush();
-
-        return new JsonResponse(['status' => 'success'], 200);
+        $errorArray = $this->getErrors($form);
+        return new JsonResponse(['status' => 'error', 'message' => $errorArray], 406);
     }
 
 

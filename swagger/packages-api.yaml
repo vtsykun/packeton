@@ -9,7 +9,6 @@ x-pkg-param: &pkg-param
             required: true
             type: "string"
 
-
 paths:
     '/api/webhook-invoke/{name}':
         post:
@@ -47,7 +46,7 @@ paths:
         post:
             tags: [ Packages ]
             summary: 'Create a package'
-            example: $Package
+            example: $PackageCreate
     
     '/api/packages':
         get:
@@ -78,7 +77,7 @@ paths:
         put:
             tags: [ Packages ]
             summary: 'Update a package'
-            example: $Package
+            example: $PackageUpdate
             <<: *pkg-param
     
     '/api/packages/{name}/changelog':
@@ -98,9 +97,12 @@ paths:
                     in: query
 
 examples:
-    Package: |
+    PackageCreate: |
         {
-          "repository": {
-            "url": "git@github.com:sonata-project/SonataSeoBundle.git"
-          }
+          "repository": "git@github.com:sonata-project/SonataSeoBundle.git",
+          "credentials": 1
+        }
+    PackageUpdate: |
+        {
+          "repository": "git@github.com:sonata-project/SonataSeoBundle.git"
         }
