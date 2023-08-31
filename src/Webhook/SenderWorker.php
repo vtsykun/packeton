@@ -67,10 +67,7 @@ class SenderWorker
             $parentJob = $this->registry->getRepository(Job::class)->find($payload['parentJob']);
             if ($parentJob instanceof Job) {
                 try {
-                    $response = array_map(
-                        HookResponse::class . '::fromArray',
-                        $parentJob->getResult()['response'] ?? []
-                    );
+                    $response = array_map(HookResponse::fromArray(...), $parentJob->getResult()['response'] ?? []);
                     $context['parentResponse'] = reset($response);
                 } catch (\Throwable $e) {}
             }

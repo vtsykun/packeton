@@ -48,6 +48,7 @@ class PackagistExtension extends AbstractExtension
             new TwigFunction('get_group_data', [$this, 'getGroupData']),
             new TwigFunction('get_packages_choice_form_data', [$this, 'buildPackagesExpandedList']),
             new TwigFunction('get_api_token', [$this, 'getApiToken']),
+            new TwigFunction('cast_string', [$this, 'castString']),
             new TwigFunction('get_sub_repos_data', [$this, 'getSubReposData']),
             new TwigFunction('get_free_zipballs', [$this, 'getZipballs']),
             new TwigFunction('show_api_token', [$this, 'showApiTokenButton'], ['is_safe' => ['html']]),
@@ -62,6 +63,15 @@ class PackagistExtension extends AbstractExtension
             new TwigFilter('gravatar_hash', [$this, 'generateGravatarHash']),
             new TwigFilter('truncate', [$this, 'truncate']),
         ];
+    }
+
+    public function castString(mixed $value)
+    {
+        if (is_array($value)) {
+            return json_encode($value, 448);
+        }
+
+        return $value;
     }
 
     public function getSubReposData(UserInterface $user = null)
