@@ -109,7 +109,7 @@ class WebhookController extends AbstractController
 
         $result = $entity->getResult() ?: [];
         try {
-            $response = array_map(HookResponse::class.'::fromArray', $result['response'] ?? []);
+            $response = array_map(HookResponse::fromArray(...), $result['response'] ?? []);
         } catch (\Throwable $e) {
             $response = null;
         }

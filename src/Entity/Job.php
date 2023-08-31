@@ -4,8 +4,9 @@ namespace Packeton\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use DateTimeInterface;
+use Packeton\Repository\JobRepository;
 
-#[ORM\Entity(repositoryClass: 'Packeton\Repository\JobRepository')]
+#[ORM\Entity(repositoryClass: JobRepository::class)]
 #[ORM\Table(name: 'job')]
 #[ORM\Index(columns: ['type'], name: 'type_idx')]
 #[ORM\Index(columns: ['status'], name: 'status_idx')]
@@ -56,6 +57,11 @@ class Job
 
     #[ORM\Column(name: 'packageid', type: 'integer', nullable: true)]
     private ?int $packageId = null;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime('now', new \DateTimeZone('UTC'));
+    }
 
     public function start()
     {
@@ -135,6 +141,23 @@ class Job
     public function getResult(?string $property = null)
     {
         return $property ? ($this->result[$property] ?? null) : $this->result;
+    }
+
+    public function setResult(array $result): void
+    {
+        $this->result = $result;
+    }
+
+    public function addResult(array|string $keyOfValue, mixed $value = null): void
+    {
+        $this->result ??= [];
+
+        if (is_array($keyOfValue)) {
+            $this->result = array_merge($this->result, $keyOfValue);
+            return;
+        }
+
+        $this->result[$keyOfValue] = $value;
     }
 
     public function setCreatedAt(DateTimeInterface $createdAt)

@@ -173,6 +173,52 @@ If a different account is used, you may lose access to the current organization 
                 </div>
             </div>
             {% endif %}
+
+            {% if jobs is defined and jobs|length > 0 %}
+            <section class="row">
+                <div class="col-md-8" style="padding-top: 35px">
+                    <h3 class="title" style="font-size: 1.8em">Webhooks Deliveries</h3>
+                    {% for job in jobs %}
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                {% if job.status == 'completed' %}
+                                    <i class="fa fa-check" style="color: #28a745" title="Success"></i>
+                                {% else %}
+                                    <i class="fa fa-times" style="color: #ba140d" title="Failed"></i>
+                                {% endif %}
+                                <span class="hook-delivery-guid"
+                                   data-toggle="collapse"
+                                   aria-expanded="true"
+                                   href="#collapse-{{ job.id }}"
+                                   aria-controls="collapse-{{ job.id }}"
+                                >
+                                    <i class="fa fa-cube"></i> {{ job.id }}
+                                </span>
+                                <span style="float: right;font-size: 0.85em; color: #7b7b7d">{{ job.completedAt|date('Y-m-d H:i:s') ~ ' UTC' }}</span>
+                            </div>
+
+                            <div class="hook-delivery-content collapse" id="collapse-{{ job.id }}">
+                                <div style="margin: 8px">
+                                    {% if job.getResult('error') %}
+                                        <b>Error</b>
+                                        <pre class="github">{{ cast_string(job.getResult('error')) }}</pre>
+                                    {% endif %}
+                                    <b>Result:</b>
+                                    <pre class="github">{{ cast_string(job.getResult('response')) }}</pre>
+                                    <b>Headers:</b>
+                                    <pre class="github">{{ cast_string(job.getResult('request_headers')) }}</pre>
+                                    <b>Body:</b>
+                                    <pre class="github">{{ cast_string(job.getResult('request_body')) }}</pre>
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+            </section>
+            {% endif %}
+
         </div>
     </div>
 {% endblock %}

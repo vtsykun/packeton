@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Model;
 
+use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration as App;
 use Packeton\Integrations\AppInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 
 class AppUtils
@@ -24,6 +26,35 @@ class AppUtils
         }
 
         return self::clonePref($client->getConfig(), $app) === 'clone_ssh' && isset($repo['ssh_url']) ? $repo['ssh_url'] : $repo['url'];
+    }
+
+    public static function createLogJob(Request $request, App $app): Job
+    {
+        $job = new Job();
+        $job->setType('webhook:integration');
+        $job->setPackageId($app->getId());
+        $headers = [];
+
+        foreach ($request->headers->all() as $name => $value) {
+            if (is_array($value)) {
+                $value = reset($value);
+            }
+
+            if (is_scalar($value)) {
+                $headers[] = "$name: $value";
+            }
+        }
+
+        $result = [
+            'request_headers' =>  implode("\n", $headers),
+            'request_body' => substr($request->getContent(),0, 65536),
+            'status' => Job::STATUS_COMPLETED,
+        ];
+
+        $job->start();
+        $job->complete($result);
+        $job->setResult($result);
+        return $job;
     }
 
     public static function castError(\Throwable $e, App|array $app = null, bool $moreInfo = false): string

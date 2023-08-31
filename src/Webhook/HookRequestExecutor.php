@@ -189,7 +189,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
             $headers[strtolower($name)] = $value;
         }
 
-        list($debug) = explode("\r\n\r\n", $info['debug']);
+        [$debug] = explode("\r\n\r\n", $info['debug']);
         $debug = explode("\r\n", $debug);
         array_shift($debug);
         foreach ($debug as $header) {

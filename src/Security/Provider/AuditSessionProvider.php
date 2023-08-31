@@ -106,15 +106,22 @@ class AuditSessionProvider
         $sessions = $this->redis->hGet("user_session", $identity);
         $sessions = $sessions ? json_decode($sessions, true) : [];
 
+        if (is_string($session['ua'] ?? null)) {
+            $session['ua'] = substr($session['ua'], 512);
+        }
+        if (is_string($session['error'] ?? null)) {
+            $session['error'] = substr($session['error'], 512);
+        }
+
         $unix = time();
         $len = count($sessions);
         $probe = $session;
-        unset($probe['usage'], $probe['last_usage']);
+        unset($probe['usage'], $probe['last_usage'], $probe['error'], $probe['ua']);
 
         $exists = false;
         for ($i = $len - 4; $i < $len; $i++) {
             $probe1 = $sessions[$i] ?? null;
-            unset($probe1['usage'], $probe1['last_usage']);
+            unset($probe1['usage'], $probe1['last_usage'], $probe1['error'], $probe1['ua']);
 
             if ($probe1 === $probe) {
                 $probe = $sessions[$i];

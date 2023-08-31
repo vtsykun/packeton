@@ -7,6 +7,7 @@ namespace Packeton\Controller\OAuth;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Composer\JsonResponse;
+use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
 use Packeton\Exception\SkipLoggerExceptionInterface;
@@ -62,6 +63,8 @@ class IntegrationController extends AbstractController
             $e instanceof SkipLoggerExceptionInterface ? $this->logger->info($errorMsg, ['e' => $e]) : $this->logger->error($errorMsg, ['e' => $e]);
         }
 
+        $jobs = $this->registry->getRepository(Job::class)->findJobsByType('webhook:integration', $oauth->getId());
+
         $config = $client->getConfig($oauth);
 
         return $this->render('integration/index.html.twig', [
@@ -73,6 +76,7 @@ class IntegrationController extends AbstractController
             'config' => $config,
             'oauth' => $oauth,
             'errorMsg' => $errorMsg,
+            'jobs' => $jobs,
         ]);
     }
 

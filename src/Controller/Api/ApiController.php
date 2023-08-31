@@ -7,15 +7,18 @@ namespace Packeton\Controller\Api;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Controller\ControllerTrait;
+use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
 use Packeton\Integrations\IntegrationRegistry;
+use Packeton\Integrations\Model\AppUtils;
 use Packeton\Model\AutoHookUser;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\PackageManager;
 use Packeton\Security\Provider\AuditSessionProvider;
+use Packeton\Service\JobPersister;
 use Packeton\Service\Scheduler;
 use Packeton\Util\PacketonUtils;
 use Packeton\Webhook\HookBus;
@@ -244,7 +247,7 @@ class ApiController extends AbstractController
         }
 
         if ($failed) {
-            return new JsonResponse(['status' => 'partial', 'message' => 'Packages '.json_encode($failed).' not found'], 200);
+            return new JsonResponse(['status' => 'partial', 'message' => 'Packages '. json_encode($failed).' not found'], 200);
         }
 
         return new JsonResponse(['status' => 'success'], 201);
@@ -311,19 +314,32 @@ class ApiController extends AbstractController
         $user = $this->getUser();
         if (null === $oauth && $user instanceof AutoHookUser) {
             $oauth = $this->registry->getRepository(OAuthIntegration::class)->find((int) $user->getHookIdentifier());
-            if (null === $oauth) {
-                return null;
-            }
         }
 
+        if (null === $oauth) {
+            return null;
+        }
+
+        $job = AppUtils::createLogJob($request, $oauth);
+        $response = $app = null;
         try {
             $app = $this->integrations->findApp($oauth->getAlias());
-            return $app->receiveHooks($oauth, $request, $this->getJsonPayload($request));
+            $response = $app->receiveHooks($oauth, $request, $this->getJsonPayload($request));
+            $job->setStatus(Job::STATUS_COMPLETED);
         } catch (\Throwable $e) {
-            $this->logger->error($e->getMessage(), ['e' => $e]);
+            $error = AppUtils::castError($e, $app, true);
+            $this->logger->error($error, ['e' => $e]);
+
+            $job->setStatus(Job::STATUS_ERRORED);
+            $job->addResult('error', $error);
         }
 
-        return null;
+        $job->addResult('response', $response);
+        try {
+            $this->container->get(JobPersister::class)->persist($job, false);
+        } catch (\Throwable $e) {}
+
+        return $response;
     }
 
     /**
@@ -364,6 +380,7 @@ class ApiController extends AbstractController
                 PackageManager::class,
                 Scheduler::class,
                 HookBus::class,
+                JobPersister::class,
             ]
         );
     }
