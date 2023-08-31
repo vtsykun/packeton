@@ -142,7 +142,9 @@ Installation
 php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
 ```
 
-6. Enable cron tabs and background jobs.
+6. (optional) If you changed the configuration files, then you need to clear the cache `rm -rf var/cache/*` or `php bin/console cache:clear`
+
+7. Enable cron tabs and background jobs.
 Enable crontab `crontab -e -u www-data` or use Docker friendly build-in cron demand runner.
 
 ```
@@ -183,13 +185,13 @@ priority=1
 user=www-data
 ```
 
-7. **IMPORTANT** Make sure that web-server, cron and supervisor run under the same user, that should have an ssh key 
+8. **IMPORTANT** Make sure that web-server, cron and supervisor run under the same user, that should have an ssh key 
 that gives it read (clone) access to your git/svn/hg repositories. If you run application under `www-data` 
 you can add your ssh keys to /var/www/.ssh/
 
 You should now be able to access the site, create a user, etc.
 
-8. Make a VirtualHost with DocumentRoot pointing to public/
+9. Make a VirtualHost with DocumentRoot pointing to public/
 
 Ssh key access and composer oauth token.
 -----------------------
