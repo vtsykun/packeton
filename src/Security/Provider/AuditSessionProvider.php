@@ -112,10 +112,10 @@ class AuditSessionProvider
         $sessions = $sessions ? json_decode($sessions, true) : [];
 
         if (is_string($session['ua'] ?? null)) {
-            $session['ua'] = substr($session['ua'], 512);
+            $session['ua'] = substr($session['ua'], 0, 512);
         }
         if (is_string($session['error'] ?? null)) {
-            $session['error'] = substr($session['error'], 512);
+            $session['error'] = substr($session['error'], 0, 512);
         }
 
         $unix = time();
