@@ -211,7 +211,7 @@ trait AppIntegrationTrait
                 return false;
             }
 
-            if ($pkg = $repo->findOneByName($name)) {
+            if ($pkg = $repo->findOneByName(strtolower($name))) {
                 foreach (($payload['urls'] ?? []) as $url) {
                     if ($url && $pkg->getRepository() === $url) {
                         $pkg->setExternalRef($payload['external_ref']);
@@ -239,12 +239,19 @@ trait AppIntegrationTrait
         }
 
         $job = null;
-        $this->getCached($app, "sync:{$payload['name']}", false === $newAdded, function (CacheItem $item) use ($payload, $app, &$job) {
-            $item->expiresAfter(86400);
+        $this->getCached($app, "sync:{$payload['name']}", false === $newAdded, function (CacheItem $item) use ($payload, $useCache, $app, &$job) {
+            $item->expiresAfter($useCache ? 86400 : 40);
             $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $payload['external_ref'], 'app' => $app->getId()], $app->getId());
             $job = ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
             return [];
         });
+
+        if ($job !== null && ($pkg = PacketonUtils::findPackagesByPayload($payload, $repo))) {
+            $job2 = $this->scheduler->scheduleUpdate($pkg);
+            $jobs = array_values(array_filter([$job['job'] ?? null, $job2->getId()]));
+            $status = implode(',', array_filter([$job['status'] ?? null, 'success']));
+            return ['status' => $status, 'code' => 202, 'job' => $jobs];
+        }
 
         return $job;
     }
