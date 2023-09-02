@@ -19,9 +19,9 @@
     {{ form_start(form, { attr: {'data-check-url': path('package_import_check'), 'data-submit-url': path('package_import'), id: 'submit-package-form' } }) }}
     {% set options %}
         {{ form_row(form.clone) }}
-        {{ form_row(form.filter) }}
         {{ form_row(form.credentials) }}
         {{ form_row(form.limit) }}
+        {{ form_row(form.filter) }}
     {% endset %}
     <div class="col-md-6">
         {{ form_widget(form) }}
