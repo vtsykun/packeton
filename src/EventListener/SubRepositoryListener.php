@@ -25,6 +25,7 @@ class SubRepositoryListener
         'logout' => 1,
         'subrepository_switch' => 1,
         'subrepository_switch_root' => 1,
+        'api_health' => 1,
     ];
 
     public function __construct(

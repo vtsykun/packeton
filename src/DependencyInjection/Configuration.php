@@ -55,7 +55,7 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('content_type')->end()
                     ->end()
                 ->end()
-
+                ->booleanNode('health_check')->defaultTrue()->end()
                 ->booleanNode('archive')
                     ->defaultFalse()
                 ->end()
