@@ -66,6 +66,9 @@ class ApiHealthController extends AbstractController
             $result += ['observedValue' => (float)round(1000*$ping, 2), 'observedUnit' => 'ms'];
         } catch (\Throwable $e) {
             $result['status'] = 'fail';
+            if ($this->isGranted('ROLE_MAINTAINER')) {
+                $result['output'] = '[' . $e::class . '] ' . $e->getMessage();
+            }
         }
 
         return $result;
