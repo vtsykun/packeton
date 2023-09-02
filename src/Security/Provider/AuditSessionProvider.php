@@ -103,7 +103,12 @@ class AuditSessionProvider
 
     private function log(array $session, string $identity): void
     {
-        $sessions = $this->redis->hGet("user_session", $identity);
+        try {
+            $sessions = $this->redis->hGet("user_session", $identity);
+        } catch (\Exception $e) {
+            return;
+        }
+
         $sessions = $sessions ? json_decode($sessions, true) : [];
 
         if (is_string($session['ua'] ?? null)) {

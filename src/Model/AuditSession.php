@@ -6,7 +6,7 @@ namespace Packeton\Model;
 
 class AuditSession
 {
-    public function __construct(private readonly array $session)
+    public function __construct(private array $session)
     {
     }
 
