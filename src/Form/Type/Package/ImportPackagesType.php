@@ -6,6 +6,7 @@ namespace Packeton\Form\Type\Package;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Form\Model\ImportRequest;
 use Packeton\Form\Type\CredentialType;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Util\PacketonUtils;
@@ -18,6 +19,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ImportPackagesType extends AbstractType
 {
@@ -50,8 +52,8 @@ class ImportPackagesType extends AbstractType
                 ]
             ])
             ->add('filter', TextareaType::class, [
-                'label' => 'Glob filter',
-                'tooltip' => 'Applied to repo name',
+                'label' => 'Glob repository filter',
+                'tooltip' => 'Applied to repository name',
                 'required' => false,
                 'attr' => ['placeholder' => "thephpleague/flysystem\nsymfony/*\norg1/subgroup1/*", 'rows' => 6]
             ])
@@ -71,13 +73,24 @@ class ImportPackagesType extends AbstractType
                 'required' => false,
                 'attr' => ['class' => 'jselect2 type-hide integration integration-repo package-repo-info']
             ])
+            ->add('composerUrl', TextType::class, [
+                'required' => false,
+                'attr' => ['class' => 'type-hide composer package-repo-info', 'placeholder' => 'e.g. https://packagist.com/org1'],
+            ])
             ->add('username', TextType::class, [
                 'required' => false,
                 'attr' => ['class' => 'type-hide composer package-repo-info']
             ])
             ->add('password', TextType::class, [
                 'required' => false,
+                'label' => 'Password (token)',
                 'attr' => ['class' => 'type-hide composer package-repo-info']
+            ])
+            ->add('packageFilter', TextareaType::class, [
+                'label' => 'Glob package filter',
+                'tooltip' => 'Applied to composer package name',
+                'required' => false,
+                'attr' => ['placeholder' => "phpunit/phpunit\nsymfony/*\nseld/*", 'rows' => 6, 'class' => 'type-hide composer package-repo-info']
             ])
             ->add('list', TextareaType::class, [
                 'label' => 'List of VCS repos',
@@ -121,5 +134,10 @@ class ImportPackagesType extends AbstractType
 
         $repos = $oauth->filteredRepos($repos, true);
         return PacketonUtils::buildChoices($repos, 'text', 'id');
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults(['data_class' => ImportRequest::class]);
     }
 }
