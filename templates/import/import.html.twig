@@ -1,0 +1,37 @@
+{% extends "layout.html.twig" %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+    <script src="{{ asset('packeton/js/import.js')}}"></script>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
+{% endblock %}
+
+{% set showSearchDesc = 'hide' %}
+
+{% block content %}
+<h2 class="title">{{ 'submit.import'|trans }}</h2>
+
+<section class="row">
+    {{ form_start(form, { attr: {'data-check-url': path('package_import_check'), 'data-submit-url': path('package_import'), id: 'submit-package-form' } }) }}
+    {% set options %}
+        {{ form_row(form.clone) }}
+        {{ form_row(form.filter) }}
+        {{ form_row(form.credentials) }}
+        {{ form_row(form.limit) }}
+    {% endset %}
+    <div class="col-md-6">
+        {{ form_widget(form) }}
+        {{ form_rest(form) }}
+        <input class="btn btn-block btn-success btn-lg" id="submit" type="submit" value="{{ 'submit.submit'|trans }}" />
+    </div>
+
+    <div class="col-md-6">
+        {{ options }}
+    </div>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

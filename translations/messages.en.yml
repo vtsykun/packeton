@@ -110,6 +110,7 @@ integration:
 
 submit:
     title: Submit package
+    import: Import packages
     submit: Submit
     guide: |
         <p>Please make sure you have read the package <a href="%path_about%#naming-your-package">naming conventions</a>
