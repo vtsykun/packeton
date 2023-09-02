@@ -51,8 +51,14 @@ class RemoteReposSyncWorker
 
         $package->setExternalRef($payload['external_id']);
         $package->setRepository($url);
-        $package->setIntegration($app);
-        $package->setRepoType(RepTypes::INTEGRATION);
+        $package->setAutoUpdated(true);
+
+        if (AppUtils::clonePref($client->getConfig(), $app) === 'clone_ssh') {
+            $package->setRepoType(RepTypes::VCS);
+        } else {
+            $package->setIntegration($app);
+            $package->setRepoType(RepTypes::INTEGRATION);
+        }
 
         $this->packageManager->updatePackageUrl($package);
         $errors = $this->validator->validate($package, null, ['Create']);
@@ -73,6 +79,7 @@ class RemoteReposSyncWorker
 
         $this->packageManager->insetPackage($package);
         $this->scheduler->scheduleUpdate($package);
+
         return [
             'status' => Job::STATUS_COMPLETED,
             'message' => "A new package {$package->getName()} was created successfully",
