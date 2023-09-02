@@ -34,7 +34,7 @@ class ApiHealthController extends AbstractController
                 $redis->get('packages-last-modify');
             },
             'cache:ping' => function() {
-                $this->container->get(CacheInterface::class)->get('cache:ping', fn () => []);
+                $this->container->get(CacheInterface::class)->get('cache_ping', fn () => []);
             },
         ];
 
