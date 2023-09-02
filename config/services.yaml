@@ -57,6 +57,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $redis: '@snc_redis.default'
+            Redis: '@snc_redis.default'
             $jwtTokenConfig: '%packeton_jws_config%'
             $jwtSignAlgorithm: '%packeton_jws_algo%'
             $mirrorRepoMetaDir: '%mirror_repos_meta_dir%'

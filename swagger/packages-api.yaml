@@ -27,6 +27,10 @@ paths:
                     required: true
                     type: "string"
 
+    '/api/healthz':
+        get:
+            summary: 'Health check'
+
     '/api/update-package':
         post:
             tags: [ Packages ]

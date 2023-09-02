@@ -57,6 +57,7 @@ security:
         - { path: ^/login$, roles: PUBLIC_ACCESS }
         - { path: (^(/login/|/oauth2/))+, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+        - { path: ^/api/healthz, roles: PUBLIC_ACCESS }
 
         # Packagist
         - { path: (^(/change-password|/profile|/logout|/subrepository/))+, roles: ROLE_USER }
