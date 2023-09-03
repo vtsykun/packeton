@@ -59,7 +59,12 @@
 
                     <div class="hook-delivery-content collapse" id="collapse-{{ job.id }}">
                         <div style="margin: 8px">
-
+                            <b>Output:</b>
+                            <pre class="github">{{ job.getResult('output') }}</pre>
+                            {% if job.getResult('exceptionMsg') %}
+                                <b>Error:</b>
+                                <pre class="github">{{ job.getResult('exceptionMsg') }}</pre>
+                            {% endif %}
                         </div>
                     </div>
 

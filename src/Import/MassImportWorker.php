@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Packeton\Import;
 
 use Composer\IO\IOInterface;
-use Composer\IO\NullIO;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\AsWorker;
+use Packeton\Composer\IO\DatabaseJobOutput;
+use Packeton\Composer\IO\DebugIO;
 use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
@@ -42,7 +43,8 @@ class MassImportWorker
 
         /** @var EntityManagerInterface $em */
         $em = $this->registry->getManager();
-        $io = new NullIO();
+        $output = new DatabaseJobOutput($job, $em->getConnection());
+        $io = new DebugIO(output: $output);
         foreach ($repos as $id => $repo) {
             $package = $payload['type'] === 'integration' ? $this->integrationImport($io, $payload, $repo, $id) :
                 $this->standaloneImport($io, $payload, $repo);
@@ -71,7 +73,9 @@ class MassImportWorker
             $em->clear();
         }
 
-        return [];
+        return [
+            'output' => $job->getResult('output')
+        ];
     }
 
     protected function integrationImport(IOInterface $io, array $payload, string $repoUrl, string|int $externalId): ?Package
