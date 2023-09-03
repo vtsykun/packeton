@@ -7,6 +7,7 @@ namespace Packeton\Import;
 use Composer\IO\IOInterface;
 use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Entity\User;
 use Packeton\Form\Model\ImportRequest;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Mirror\Model\ProxyOptions;
@@ -16,6 +17,7 @@ use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Packeton\Service\JobScheduler;
 use Packeton\Util\PacketonUtils;
 use Symfony\Component\Finder\Glob;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class MassImportHandler
 {
@@ -36,7 +38,7 @@ class MassImportHandler
         $this->io = $io;
     }
 
-    public function createImportJob(ImportRequest $request): Job
+    public function createImportJob(ImportRequest $request, UserInterface $user = null): Job
     {
         $repos = $this->getRepoUrls($request);
 
@@ -46,6 +48,7 @@ class MassImportHandler
             'type' => $request->type,
             'credentials' => $request->credentials?->getId(),
             'repos' => $repos,
+            'user' => $user instanceof User ? $user->getId() : null,
         ]);
     }
 

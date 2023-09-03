@@ -29,7 +29,7 @@ class ImportController extends AbstractController
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
                 $import = $form->getData();
-                $this->importHandler->createImportJob($import);
+                $this->importHandler->createImportJob($import, $this->getUser());
                 $this->addFlash('success', 'Import job was schedule');
                 return $this->redirect($this->generateUrl('package_import'));
             }
