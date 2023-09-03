@@ -6,6 +6,15 @@
         let handler = (data) => {
             btn.removeClass('loading');
             let html = '';
+
+            data.reason = typeof data.reason !== 'object' || null === data.reason ?
+                (data.reason ?  [data.reason] : []) : data.reason;
+
+            if (!data['repos'] && data.status !== 'error') {
+                data.reason.push("Repos not found");
+                data['status'] = 'error';
+            }
+
             if (data.status === 'error') {
                 data.reason = typeof data.reason === 'string' ? [data.reason] : data.reason;
 
@@ -18,7 +27,7 @@
 
             let repos = data['repos'] || [];
             repos = repos.join("\n");
-            $('#submit-package-form input[type="submit"]').before($('<div class="repo-result">').append('<pre>' + repos + '</pre>'));
+            $('#submit-package-form input[type="submit"]').before($('<div class="repo-result">').append('<b>Found repos:</b><pre>' + repos + '</pre>'));
 
             form.unbind('submit');
             btn.val('Submit');

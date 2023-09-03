@@ -48,7 +48,7 @@ class ImportController extends AbstractController
                 return new JsonResponse(['status' => 'error', 'reason' => $e->getMessage()]);
             }
 
-            return new JsonResponse(['repos' => $repos]);
+            return new JsonResponse(['repos' => array_values($repos)]);
         }
 
         if ($form->isSubmitted()) {

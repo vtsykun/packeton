@@ -27,6 +27,7 @@ class BasePackageType extends AbstractType
                 'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
                 'Artifacts' => RepTypes::ARTIFACT,
                 'Custom (JSON)' => RepTypes::CUSTOM,
+                'Satis / Packagist.com / VCS Import' => 'import'
             ];
 
             if ($options['has_active_integration']) {

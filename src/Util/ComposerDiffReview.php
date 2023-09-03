@@ -116,6 +116,13 @@ TXT;
                     0 => $v2 === $v1 ? 'Reference' : 'Upgraded',
                     default => 'Upgraded'
                 };
+
+                $stab1 = VersionParser::parseStability($v1);
+                $stab2 = VersionParser::parseStability($v2);
+                if ($stab1 === 'dev' || $stab2 === 'dev') {
+                    $op = 'Upgraded';
+                }
+
                 $ref1 = substr((string)$ref1, 0, 7);
                 $ref2 = substr((string)$ref2, 0, 7);
                 if ($v1 === $v2) {

@@ -83,9 +83,12 @@ class IntegrationController extends AbstractController
     #[Route('/all/{id}/repos', name: 'integration_repos', requirements: ['id' => '\d+'], format: "json")]
     public function repos(#[Vars] OAuthIntegration $oauth): Response
     {
-        $client = $this->getClient($oauth->getAlias(), $oauth);
-
-        $repos = $client->repositories($oauth);
+        try {
+            $client = $this->getClient($oauth->getAlias(), $oauth);
+            $repos = $client->repositories($oauth);
+        } catch (\Exception $e) {
+            $repos = [];
+        }
 
         return new JsonResponse($oauth->filteredRepos($repos, true));
     }

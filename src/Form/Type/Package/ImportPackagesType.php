@@ -36,6 +36,7 @@ class ImportPackagesType extends AbstractType
     {
         $builder
             ->add('type', ChoiceType::class, [
+                'label' => 'Import source',
                 'choices' => [
                     'Packagist.com/Satis/Composer repo' => 'composer',
                     'VCS repos' => 'vcs',
@@ -50,7 +51,8 @@ class ImportPackagesType extends AbstractType
                     'Use HTTP URL' => 'http',
                     'Keep default' => 'default',
                     'Use OAuth2 API (only for integration)' => 'api'
-                ]
+                ],
+                'attr' => ['class' => 'package-repo-info']
             ])
             ->add('filter', TextareaType::class, [
                 'label' => 'Glob repository filter',
@@ -74,7 +76,7 @@ class ImportPackagesType extends AbstractType
                     'Include' => true,
                     'Exclude' => false,
                 ],
-                'attr' => ['class' => 'type-hide integration']
+                'attr' => ['class' => 'type-hide integration package-repo-info']
             ])
             ->add('integrationRepos', ChoiceType::class, [
                 'label' => 'Import only these repos (default all)',

@@ -24,12 +24,14 @@
         {{ form_row(form.filter) }}
     {% endset %}
     <div class="col-md-6">
+        <h4 style="font-weight: bold">Import source settings</h4>
         {{ form_widget(form) }}
         {{ form_rest(form) }}
         <input class="btn btn-block btn-success btn-lg" id="submit" type="submit" value="{{ 'submit.submit'|trans }}" />
     </div>
 
     <div class="col-md-6">
+        <h4 style="font-weight: bold">Repository settings</h4>
         {{ options }}
     </div>
     {{ form_end(form) }}

@@ -8,6 +8,7 @@ use Composer\IO\IOInterface;
 use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Form\Model\ImportRequest;
+use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\Service\FetchPackageMetadataService;
 use Packeton\Mirror\Service\ProxyHttpDownloader;
@@ -25,7 +26,8 @@ class MassImportHandler
         protected FetchPackageMetadataService $metadataService,
         protected JobScheduler $jobScheduler,
         protected MirrorTextareaParser $textareaParser,
-        protected int $maxLimit = 5000,
+        protected IntegrationRegistry $integrationRegistry,
+        protected int $maxLimit = 10000,
     ) {
     }
 
@@ -52,7 +54,7 @@ class MassImportHandler
         $repos = match ($request->type) {
             'composer' => $this->fetchComposerRepos($request->composerUrl, $request->username, $request->password, $request->limit, $request->packageList, $request->packageFilter),
             'vcs' => $this->getVCSRepos($request->repoList),
-            'integration' => $this->fetchIntegrations($request->integration),
+            'integration' => $this->fetchIntegrations($request->integration, (bool)$request->integrationInclude, $request->integrationRepos, $request->clone),
             default => [],
         };
 
@@ -72,6 +74,11 @@ class MassImportHandler
             }
         }
 
+        $limit = (int) min($this->maxLimit, $request->limit ?? $this->maxLimit);
+        if (count($repos) > $limit) {
+            $repos = array_slice($repos, 0, $limit);
+        }
+
         return $repos;
     }
 
@@ -84,13 +91,27 @@ class MassImportHandler
         return array_values(array_filter(array_map('trim', explode("\n", $list))));
     }
 
-    protected function fetchIntegrations(?OAuthIntegration $integration): array
+    protected function fetchIntegrations(?OAuthIntegration $integration, bool $isInclude, ?array $repoIds, ?string $clone): array
     {
         if (null === $integration) {
             return [];
         }
 
+        $repoIds ??= [];
+        $app = $this->integrationRegistry->findApp($integration->getAlias());
+        $repos = $app->repositories($integration);
 
+        $result = [];
+        foreach ($repos as $repo) {
+            if (
+                ($isInclude && in_array($repo['ext_ref'], $repoIds, true))
+                || (!$isInclude && !in_array($repo['ext_ref'], $repoIds, true))
+            ) {
+                $result[$repo['ext_ref']] = $clone === 'ssh' && ($repo['ssh_url']) ? $repo['ssh_url'] : $repo['url'];
+            }
+        }
+
+        return $result;
     }
 
     protected function fetchComposerRepos(string $url, string $username = null, string $password = null, int $limit = null, string $packageList = null, string $filter = null): array
