@@ -36,14 +36,12 @@ class MassImportWorker
     public function __invoke(Job $job): array
     {
         $payload = $job->getPayload();
-
-        if ($repos = $payload['repos'] ?? null) {
+        if (!$repos = $payload['repos'] ?? null) {
             return [];
         }
 
         /** @var EntityManagerInterface $em */
         $em = $this->registry->getManager();
-
         $io = new NullIO();
         foreach ($repos as $id => $repo) {
             $package = $payload['type'] === 'integration' ? $this->integrationImport($io, $payload, $repo, $id) :
