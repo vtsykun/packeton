@@ -56,6 +56,7 @@ class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
                 ->booleanNode('health_check')->defaultTrue()->end()
+                ->integerNode('max_import')->end()
                 ->booleanNode('archive')
                     ->defaultFalse()
                 ->end()

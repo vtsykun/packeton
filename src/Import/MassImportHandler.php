@@ -16,6 +16,7 @@ use Packeton\Mirror\Service\ProxyHttpDownloader;
 use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Packeton\Service\JobScheduler;
 use Packeton\Util\PacketonUtils;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Finder\Glob;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -29,8 +30,9 @@ class MassImportHandler
         protected JobScheduler $jobScheduler,
         protected MirrorTextareaParser $textareaParser,
         protected IntegrationRegistry $integrationRegistry,
-        protected int $maxLimit = 10000,
+        #[Autowire(param: 'packeton_max_import')] protected ?int $maxLimit = 10000,
     ) {
+        $this->maxLimit ??= 10000;
     }
 
     public function setIO(?IOInterface $io): void
