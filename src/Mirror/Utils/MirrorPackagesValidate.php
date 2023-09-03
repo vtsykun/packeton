@@ -29,7 +29,7 @@ class MirrorPackagesValidate
         }
 
         if ($waiting) {
-            $resolved = $this->fetchMetadataService->fetchPackageMetadata($waiting, $repo);
+            $resolved = $this->fetchMetadataService->fetchPackageMetadata($waiting, $repo, providers: $repo->lookupAllProviders());
             foreach ($resolved as $package => $meta) {
                 if ($meta = $this->getData($meta, $package)) {
                     $valid[$package] = $meta;
@@ -65,9 +65,12 @@ class MirrorPackagesValidate
         ];
     }
 
-    private function getData(?array $meta, string $package): ?array
+    private function getData(?array $data, string $package): ?array
     {
-        if (!$data = ($meta['packages'][$package] ?? null)) {
+        if (isset($data['packages'][$package])) {
+            $data = $data['packages'][$package];
+        }
+        if (!is_array($data)) {
             return null;
         }
 
