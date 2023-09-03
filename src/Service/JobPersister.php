@@ -9,11 +9,8 @@ use Packeton\Entity\Job;
 
 class JobPersister
 {
-    private $registry;
-
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(private ManagerRegistry $registry)
     {
-        $this->registry = $registry;
     }
 
     public function persist(Job $job, bool $checkIfExists = true): void

@@ -119,4 +119,12 @@ class AppConfig
     {
         return $this->config['hook_url'] ?? null;
     }
+
+    public function withOptions(array $options): self
+    {
+        $clone = clone $this;
+
+        $clone->config = array_merge($this->config, $options);
+        return $clone;
+    }
 }

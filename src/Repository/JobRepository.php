@@ -58,10 +58,10 @@ class JobRepository extends EntityRepository
             ->resetDQLPart('select')
             ->select('j.id')
             ->where('j.type = :type')
-            ->andWhere('j.completedAt IS NOT NULL')
+            ->andWhere('j.createdAt IS NOT NULL')
             ->setMaxResults($limit)
             ->setParameter('type', $type)
-            ->orderBy('j.completedAt', 'DESC');
+            ->orderBy('j.createdAt', 'DESC');
 
         if ($packageId) {
             $qb->andWhere('j.packageId = :packageId')

@@ -45,12 +45,12 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
         LogLevel::INFO => 100,
     ];
 
-    public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null, protected ?int $maxBufferSize = null)
+    public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null, protected ?int $maxBufferSize = null, OutputInterface $output = null)
     {
         $input = new StringInput($input);
         $input->setInteractive(false);
 
-        $this->output = $output = new BufferedOutput($verbosity, $formatter && $formatter->isDecorated(), $formatter);
+        $this->output = $output ??= new BufferedOutput($verbosity, $formatter && $formatter->isDecorated(), $formatter);
         $output->setMaxSize($this->maxBufferSize);
 
         parent::__construct($input, $output, new HelperSet([

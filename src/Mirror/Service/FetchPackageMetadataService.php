@@ -21,7 +21,7 @@ class FetchPackageMetadataService
     ) {
     }
 
-    public function fetchPackageMetadata(iterable $packages, ProxyOptions|RemoteProxyRepository $config, bool $writeStorage = true): array
+    public function fetchPackageMetadata(iterable $packages, ProxyOptions|RemoteProxyRepository $config, bool $writeStorage = true, iterable $providers = []): array
     {
         $repo = null;
         if ($config instanceof RemoteProxyRepository) {
@@ -58,7 +58,7 @@ class FetchPackageMetadataService
         if ($apiUrl = $config->getMetadataV2Url()) {
             $this->requestMetadataVia2($http, $packages, $apiUrl, $onFulfilled);
         } else if ($apiUrl = $config->getMetadataV1Url()) {
-            $this->requestMetadataVia1($http, $packages, $apiUrl, $onFulfilled, null, $repo->lookupAllProviders());
+            $this->requestMetadataVia1($http, $packages, $apiUrl, $onFulfilled, null, $providers);
         }
 
         $result = [];
@@ -66,6 +66,14 @@ class FetchPackageMetadataService
             $result[$package] = $meta;
         }
 
-        return $result;
+        $output = [];
+        foreach ($result as $package => $meta) {
+            if (!$data = ($meta['packages'][$package] ?? null)) {
+                continue;
+            }
+            $output[$package] = $data;
+        }
+
+        return $output;
     }
 }

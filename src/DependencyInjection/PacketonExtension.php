@@ -75,6 +75,7 @@ class PacketonExtension extends Extension
         $container->setParameter('packeton_artifact_types', $config['artifacts']['support_types'] ?? []);
         $container->setParameter('packeton_web_protection', $config['web_protection'] ?? null);
         $container->setParameter('packeton_health_check', $config['health_check'] ?? true);
+        $container->setParameter('packeton_max_import', $config['max_import'] ?? null);
 
         $container->registerAttributeForAutoconfiguration(AsWorker::class, static function (ChildDefinition $definition, AsWorker $attribute) {
             $attributes = get_object_vars($attribute);

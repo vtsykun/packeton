@@ -67,6 +67,9 @@
         }
 
         let url = form.data('submit-url') + '/' + repoType;
+        if (repoType === 'import') {
+            url = '/import';
+        }
         window.location.href = url;
     });
 })(jQuery);

@@ -37,3 +37,7 @@
     width: 100%;
     text-align: center !important;
 }
+
+#import_packages span.select2-container {
+    width: 100% !important;
+}

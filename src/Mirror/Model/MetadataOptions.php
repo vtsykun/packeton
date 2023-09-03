@@ -86,4 +86,9 @@ class MetadataOptions
 
         return $clone;
     }
+
+    public function getRoot(): ?array
+    {
+        return $this->config['root'] ?? null;
+    }
 }
