@@ -23,10 +23,18 @@ class ImportController extends AbstractController
     {
         $form = $this->createForm(ImportPackagesType::class);
 
+        if ($request->getMethod() === 'POST') {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $import = $form->getData();
+                $repos = $this->importHandler->getRepoUrls($import);
+            }
+        }
+
         return $this->render('import/import.html.twig', ['form' => $form->createView()]);
     }
 
-    #[Route('/import/fetch-info', name: 'package_import_check')]
+    #[Route('/import/fetch-info', name: 'package_import_check', methods: ['POST'])]
     public function fetchImportInfo(Request $request)
     {
         $form = $this->createForm(ImportPackagesType::class);
@@ -34,7 +42,13 @@ class ImportController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $import = $form->getData();
-            $repos = $this->importHandler->getRepoUrls($import);
+            try {
+                $repos = $this->importHandler->getRepoUrls($import);
+            } catch (\Exception $e) {
+                return new JsonResponse(['status' => 'error', 'reason' => $e->getMessage()]);
+            }
+
+            return new JsonResponse(['repos' => $repos]);
         }
 
         if ($form->isSubmitted()) {

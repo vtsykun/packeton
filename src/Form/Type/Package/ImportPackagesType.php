@@ -48,6 +48,7 @@ class ImportPackagesType extends AbstractType
                 'choices' => [
                     'Use SSH URL' => 'ssh',
                     'Use HTTP URL' => 'http',
+                    'Keep default' => 'default',
                     'Use OAuth2 API (only for integration)' => 'api'
                 ]
             ])
@@ -55,7 +56,7 @@ class ImportPackagesType extends AbstractType
                 'label' => 'Glob repository filter',
                 'tooltip' => 'Applied to repository name',
                 'required' => false,
-                'attr' => ['placeholder' => "thephpleague/flysystem\nsymfony/*\norg1/subgroup1/*", 'rows' => 6]
+                'attr' => ['placeholder' => "thephpleague/flysystem\nsymfony/*\norg1/subgroup1/*", 'rows' => 6, 'class' => 'package-repo-info']
             ])
             ->add('limit', IntegerType::class, [
                 'required' => false,
@@ -66,6 +67,14 @@ class ImportPackagesType extends AbstractType
                 'class' => OAuthIntegration::class,
                 'required' => false,
                 'attr' => ['class' => 'type-hide integration package-repo-info integration-select']
+            ])
+            ->add('integrationInclude', ChoiceType::class, [
+                'label' => 'Include / Exclude those repos',
+                'choices' => [
+                    'Include' => true,
+                    'Exclude' => false,
+                ],
+                'attr' => ['class' => 'type-hide integration']
             ])
             ->add('integrationRepos', ChoiceType::class, [
                 'label' => 'Import only these repos (default all)',
@@ -92,7 +101,7 @@ class ImportPackagesType extends AbstractType
                 'required' => false,
                 'attr' => ['placeholder' => "phpunit/phpunit\nsymfony/*\nseld/*", 'rows' => 6, 'class' => 'type-hide composer package-repo-info']
             ])
-            ->add('list', TextareaType::class, [
+            ->add('repoList', TextareaType::class, [
                 'label' => 'List of VCS repos',
                 'required' => false,
                 'attr' => ['class' => 'type-hide vcs', 'placeholder' => "git@github.com:thephpleague/flysystem.git\ngit@github.com:vtsykun/packeton.git", 'rows' => 8],

@@ -16,9 +16,10 @@ class ImportRequest
     public ?SshCredentials $credentials = null;
     public ?OAuthIntegration $integration = null;
     public ?array $integrationRepos = [];
+    public ?bool $integrationInclude = null;
     public ?string $composerUrl = null;
     public ?string $username = null;
     public ?string $password = null;
     public ?string $packageFilter = null;
-    public ?string $list = null;
+    public ?string $repoList = null;
 }

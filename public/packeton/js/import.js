@@ -1,16 +1,33 @@
 (function ($) {
     let form = $('#submit-package-form');
     let onSubmit = function(e) {
+        let btn = $('#submit');
+        $('ul.package-errors, .repo-result, div.confirmation', this).remove();
         let handler = (data) => {
+            btn.removeClass('loading');
+            let html = '';
+            if (data.status === 'error') {
+                data.reason = typeof data.reason === 'string' ? [data.reason] : data.reason;
 
+                $.each(data.reason, function (k, v) {
+                    html += '<li><div class="alert alert-warning">'+v+'</div></li>';
+                });
+                form.prepend('<ul class="list-unstyled package-errors">'+html+'</ul>');
+                return;
+            }
+
+            let repos = data['repos'] || [];
+            repos = repos.join("\n");
+            $('#submit-package-form input[type="submit"]').before($('<div class="repo-result">').append('<pre>' + repos + '</pre>'));
+
+            form.unbind('submit');
+            btn.val('Submit');
+            btn.unbind('submit');
         };
-
-        $('#submit').val('Submit');
-        form.unbind('submit');
 
         let url = $(this).data('check-url');
         $.post(url, $(this).serializeArray(), handler);
-        $('#submit').addClass('loading');
+        btn.addClass('loading');
         e.preventDefault();
     };
 

@@ -314,4 +314,58 @@ class PacketonUtils
             $container->extensions = $result;
         }, null, ContainerBuilder::class)();
     }
+
+    public static function parserRepositoryUrl(string $url): array
+    {
+        $namespace = $httpUrl = $sshUrl = $hostname = null;
+
+        if (preg_match('#^https?://bitbucket\.org/([^/]+)/([^/]+?)(?:\.git|/?)?$#i', $url, $match, PREG_UNMATCHED_AS_NULL)) {
+            $namespace = $match[1] . $match[2];
+            $hostname = 'bitbucket.org';
+
+            $sshUrl = 'git@' . $hostname . ':'.$namespace.'.git';
+            $httpUrl = 'https://' . $hostname . '/'.$namespace.'.git';
+        } else if (str_contains($url, 'github.com')
+            && preg_match('#^(?:(?:https?|git)://([^/]+)/|git@([^:]+):/?)([^/]+)/([^/]+?)(?:\.git|/)?$#', $url, $match, PREG_UNMATCHED_AS_NULL)
+            && is_string($match[3] ?? null)
+            && is_string($match[4] ?? null)
+        ) { // GitHub
+            $namespace = $match[3] . '/' . $match[4];
+            $hostname =  strtolower($match[1] ?? (string) $match[2]);
+            if ($hostname === 'www.github.com') {
+                $hostname = 'github.com';
+            }
+
+            $sshUrl = 'git@' . $hostname . ':'.$namespace.'.git';
+            if (str_contains($hostname, ':')) {
+                $sshUrl = 'ssh://git@' . $hostname . '/'.$namespace.'.git';
+            }
+            $httpUrl = 'https://' . $hostname . '/'.$namespace.'.git';
+        } else if (preg_match('#^(?:(?P<scheme>https?)://(?P<domain>.+?)(?::(?P<port>[0-9]+))?/|git@(?P<domain2>[^:]+):)(?P<parts>.+)/(?P<repo>[^/]+?)(?:\.git|/)?$#', $url, $match, PREG_UNMATCHED_AS_NULL)
+            && is_string($match['parts'] ?? null)
+            && is_string($match['repo'] ?? null)
+        ) { // GitLab
+
+            $origin = $hostname = $match['domain'] ?? (string) $match['domain2'];
+            if ($match['port'] ?? null) {
+                $origin .= ':'.$match['port'];
+            }
+
+            $namespace = $match['parts'] . '/' . preg_replace('#(\.git)$#', '', $match['repo']);
+
+            $httpUrl = ($match['scheme'] ?? 'https') . '://' . $origin . '/'. $namespace .'.git';
+            $sshUrl = 'git@' . $hostname . ':'.$namespace.'.git';
+            if (str_contains($origin, ':')) {
+                $sshUrl = 'ssh://git@' . $origin . '/'.$namespace.'.git';
+            }
+        }
+
+        return [
+            'namespace' => $namespace,
+            'http_url' => $httpUrl,
+            'ssh_url' => $sshUrl,
+            'origin_url' => $url,
+            'hostname' => $hostname,
+        ];
+    }
 }
