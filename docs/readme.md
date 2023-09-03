@@ -46,4 +46,5 @@ We began development in **2018**, bases on Packagist and Satis fork.
 | Patch requires/metadata   | Support. UI metadata manager                                                | -                                                                        |
 | Repos type                | VCS (auto), Mono-repo, Custom JSON, Artifacts                               | VCS, Githib/GitLab/Bitbucket, Custom JSON, Artifacts, Import Satis       |
 | Mono-repo support         | Support                                                                     | Support                                                                  |
-| Pricing                   | Open Source. Free                                                           | €5900 or €49/user/month                                                  |
+| Import                    | VCS Integration / Satis / Packagist.com  / List repos                       | Satis                                                                    |
+ | Pricing                   | Open Source. Free                                                           | €5900 or €49/user/month                                                  |
