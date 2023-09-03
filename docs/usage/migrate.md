@@ -1,6 +1,6 @@
-# Migrate from Packagist.com Satis
+# Migrate from Packagist.com / Satis
 
-Packeton import provide interface to fast mass import all private packages from your onw composer repository, 
+Packeton import provide interface to fast mass import all private packages from your own composer repository, 
 like Satis/Packagist. also you may use oauth2 integration to import all packages from your VCS hosting
 
 [![import](../img/import.png)](../img/import.png)

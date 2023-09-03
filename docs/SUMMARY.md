@@ -29,7 +29,7 @@
   - [S3 Storage Provider](usage/storage.md)
   - [Custom landing page](usage/custom-page.md)
   - [Security Monitoring](usage/security-monitoring.md)
-  - [Migrate from Satis/Packagist.com](usage/migrate.md)
+  - [Migrate from Satis](usage/migrate.md)
   - [OAuth2 Integrations](oauth2.md)
     - [Pull Request review](pull-request-review.md)
     - [GitHub Setup](oauth2/github-oauth.md)
