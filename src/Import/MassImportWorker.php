@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Import;
 
+use Composer\IO\IOInterface;
 use Composer\IO\NullIO;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -45,13 +46,10 @@ class MassImportWorker
 
         $io = new NullIO();
         foreach ($repos as $id => $repo) {
-            $package = $payload['type'] === 'integration' ? $this->integrationImport($payload, $repo, $id) :
-                $this->standaloneImport($payload, $repo);
+            $package = $payload['type'] === 'integration' ? $this->integrationImport($io, $payload, $repo, $id) :
+                $this->standaloneImport($io, $payload, $repo);
 
-            try {
-                $this->packageManager->updatePackageUrl($package);
-            } catch (\Throwable $e) {
-                $io->error("Update $repo failed: " . $e->getMessage());
+            if (null === $package) {
                 continue;
             }
 
@@ -78,7 +76,7 @@ class MassImportWorker
         return [];
     }
 
-    protected function integrationImport(array $payload, string $repoUrl, string|int $externalId): Package
+    protected function integrationImport(IOInterface $io, array $payload, string $repoUrl, string|int $externalId): ?Package
     {
         $integration = $this->registry->getRepository(OAuthIntegration::class)->find($payload['integration']);
         $app = $this->integrations->findApp($integration->getAlias());
@@ -114,10 +112,18 @@ class MassImportWorker
             $package->setRepoType(RepTypes::INTEGRATION);
         }
 
+        try {
+            $this->packageManager->updatePackageUrl($package);
+        } catch (\Throwable $e) {
+            $msg = AppUtils::castError($e, $integration, true);
+            $io->error("Update $repoUrl failed: " . $msg);
+            return null;
+        }
+
         return $package;
     }
 
-    protected function standaloneImport(array $payload, string $repoUrl): Package
+    protected function standaloneImport(IOInterface $io, array $payload, string $repoUrl): ?Package
     {
         $credential = ($payload['credentials'] ?? null) ? $this->registry->getRepository(SshCredentials::class)->find($payload['credentials']) : null;
         $user = ($payload['user'] ?? null) ? $this->registry->getRepository(User::class)->find($payload['user']) : null;
@@ -130,6 +136,13 @@ class MassImportWorker
         }
 
         $package->setRepository($repoUrl);
+
+        try {
+            $this->packageManager->updatePackageUrl($package);
+        } catch (\Throwable $e) {
+            $io->error("Update $repoUrl failed: " . $e->getMessage());
+            return null;
+        }
 
         return $package;
     }
