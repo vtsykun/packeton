@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packeton\Controller;
 
+use Doctrine\Persistence\ManagerRegistry;
+use Packeton\Entity\Job;
 use Packeton\Form\Type\Package\ImportPackagesType;
 use Packeton\Import\MassImportHandler;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,7 +16,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class ImportController extends AbstractController
 {
     public function __construct(
-        protected MassImportHandler $importHandler
+        protected MassImportHandler $importHandler,
+        protected ManagerRegistry $registry,
     ){
     }
 
@@ -22,7 +25,6 @@ class ImportController extends AbstractController
     public function importAction(Request $request)
     {
         $form = $this->createForm(ImportPackagesType::class);
-
         if ($request->getMethod() === 'POST') {
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
@@ -35,7 +37,9 @@ class ImportController extends AbstractController
             }
         }
 
-        return $this->render('import/import.html.twig', ['form' => $form->createView()]);
+        $jobs = $this->registry->getRepository(Job::class)->findJobsByType('mass:import', limit: 10);
+
+        return $this->render('import/import.html.twig', ['form' => $form->createView(), 'jobs' => $jobs]);
     }
 
     #[Route('/import/fetch-info', name: 'package_import_check', methods: ['POST'])]

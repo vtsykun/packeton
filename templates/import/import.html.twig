@@ -36,4 +36,37 @@
     </div>
     {{ form_end(form) }}
 </section>
+
+{% if jobs is defined and jobs|length > 0 %}
+    <section class="row">
+        <div class="col-md-8" style="padding-top: 35px">
+            <h3 class="title" style="font-size: 1.8em">Scheduled Import Jobs</h3>
+            {% for job in jobs %}
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        {% if job.status == 'completed' %}
+                            <i class="fa fa-check" style="color: #28a745" title="Success"></i>
+                        {% elseif job.errored %}
+                            <i class="fa fa-times" style="color: #ba140d" title="Failed"></i>
+                        {% else %}
+                            <i class="fa fa-bullseye" style="color: #ceb034" title="Pending"></i>
+                        {% endif %}
+                        <span class="hook-delivery-guid" data-toggle="collapse" aria-expanded="true" href="#collapse-{{ job.id }}" aria-controls="collapse-{{ job.id }}">
+                            <i class="fa fa-cube"></i> {{ job.id }}
+                        </span>
+                        <span style="float: right;font-size: 0.85em; color: #7b7b7d">{{ job.completedAt|date('Y-m-d H:i:s') ~ ' UTC' }}</span>
+                    </div>
+
+                    <div class="hook-delivery-content collapse" id="collapse-{{ job.id }}">
+                        <div style="margin: 8px">
+
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+
+        </div>
+    </section>
+{% endif %}
 {% endblock %}
