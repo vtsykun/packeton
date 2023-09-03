@@ -11,6 +11,7 @@ use Packeton\Form\Model\ImportRequest;
 use Packeton\Mirror\Model\ProxyOptions;
 use Packeton\Mirror\Service\FetchPackageMetadataService;
 use Packeton\Mirror\Service\ProxyHttpDownloader;
+use Packeton\Mirror\Utils\MirrorTextareaParser;
 use Packeton\Service\JobScheduler;
 use Packeton\Util\PacketonUtils;
 use Symfony\Component\Finder\Glob;
@@ -23,6 +24,8 @@ class MassImportHandler
         protected ProxyHttpDownloader $downloader,
         protected FetchPackageMetadataService $metadataService,
         protected JobScheduler $jobScheduler,
+        protected MirrorTextareaParser $textareaParser,
+        protected int $maxLimit = 5000,
     ) {
     }
 
@@ -47,7 +50,7 @@ class MassImportHandler
     public function getRepoUrls(ImportRequest $request): array
     {
         $repos = match ($request->type) {
-            'composer' => $this->fetchComposerRepos($request->composerUrl, $request->username, $request->password, $request->limit, $request->packageFilter),
+            'composer' => $this->fetchComposerRepos($request->composerUrl, $request->username, $request->password, $request->limit, $request->packageList, $request->packageFilter),
             'vcs' => $this->getVCSRepos($request->repoList),
             'integration' => $this->fetchIntegrations($request->integration),
             default => [],
@@ -90,15 +93,26 @@ class MassImportHandler
 
     }
 
-    protected function fetchComposerRepos(string $url, string $username = null, string $password = null, int $limit = null, string $filter = null): array
+    protected function fetchComposerRepos(string $url, string $username = null, string $password = null, int $limit = null, string $packageList = null, string $filter = null): array
     {
+        if (preg_match('{^(\.|[a-z]:|/)}i', $url)) {
+            throw new \RuntimeException("local filesystem URLs is not allowed");
+        }
+        if (!str_starts_with($url, 'http')) {
+            $url = 'https://' . $url;
+        }
+
+        $filter = $this->toRegex($filter);
+        $packageNames = $this->textareaParser->parser($packageList);
+
         $options = $this->createComposerProxyOptions($url, $username, $password);
         $http = $this->downloader->getHttpClient($options, $this->io);
 
-        $filter = $this->toRegex($filter);
-        $repository = new ImportComposerRepository($http, $options, $this->metadataService, $limit, $filter);
+        $limit ??= $this->maxLimit;
+        $limit = (int)min($limit, $this->maxLimit);
 
-        $packages = $repository->getPackages();
+        $repository = new ImportComposerRepository($http, $options, $this->metadataService, $limit, $filter);
+        $packages = $repository->getPackages($packageList ? $packageNames : null);
 
         return array_keys($packages);
     }

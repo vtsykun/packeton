@@ -22,4 +22,5 @@ class ImportRequest
     public ?string $password = null;
     public ?string $packageFilter = null;
     public ?string $repoList = null;
+    public ?string $packageList = null;
 }

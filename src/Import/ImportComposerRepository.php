@@ -12,8 +12,6 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
 #[Exclude]
 class ImportComposerRepository
 {
-    public const LIMIT_SIZE = 5000;
-
     public function __construct(
         protected HttpDownloader $http,
         protected ProxyOptions $option,
@@ -25,7 +23,7 @@ class ImportComposerRepository
             $this->option = $this->initComposer();
         }
 
-        $this->limitSize = (int) min(self::LIMIT_SIZE, $limitSize ?: self::LIMIT_SIZE);
+        $this->limitSize ??= 5000;
     }
 
     public function getOptions(): ProxyOptions
@@ -38,32 +36,38 @@ class ImportComposerRepository
         $this->option = $option;
     }
 
-    public function getPackages(): array
+    public function getPackages(array $packageNames = null): array
     {
-        $packages = $this->loadIncludes($this->option->getRoot());
+        $packages = [];
+        $allProviders = null;
+        if ($packageNames === null) {
+            $packages = $this->loadIncludes($root = $this->option->getRoot());
 
-        $allProviders = [];
-        $packageNames = $this->option->getAvailablePackages();
-        foreach ($packageNames as $i => $packageName) {
-            if (null !== $this->filter && !preg_match($this->filter, $packageName)) {
-                unset($packageNames[$i]);
+            $allProviders = [];
+            $packageNames = $root['available-packages'] ?? [];
+            foreach ($packageNames as $i => $packageName) {
+                if (null !== $this->filter && !preg_match($this->filter, $packageName)) {
+                    unset($packageNames[$i]);
+                }
+            }
+
+            foreach ($this->lookupAllProviders() as $provider) {
+                if (!$provider) {
+                    continue;
+                }
+
+                $allProviders[] = $provider;
+                $packageNames = array_merge($packageNames, array_keys($provider));
             }
         }
 
-        foreach ($this->lookupAllProviders() as $provider) {
-            if (!$provider) {
-                continue;
-            }
-
-            $allProviders[] = $provider;
-            $packageNames = array_merge($packageNames, array_keys($provider));
-        }
+        $packageNames = array_filter($packageNames, $this->isMatch(...));
 
         $packageNames = array_values(array_unique($packageNames));
         $packageNames = array_slice($packageNames, 0, $this->limitSize);
 
         if ($packageNames) {
-            $result = $this->metadataService->fetchPackageMetadata($packageNames, $this->option, false, $allProviders);
+            $result = $this->metadataService->fetchPackageMetadata($packageNames, $this->option, false, $allProviders ?? $this->lookupAllProviders(true));
             $packages += $this->loadIncludes(['packages' => $result]);
         }
 
@@ -86,7 +90,7 @@ class ImportComposerRepository
             foreach ($data as $pkg) {
                 if (isset($pkg['versions']) && is_array($pkg['versions'])) {
                     foreach ($pkg['versions'] as $metadata) {
-                        if (isset($metadata['name'], $metadata['source']) && ($this->filter === null || \preg_match($this->filter, $metadata['name']))) {
+                        if (isset($metadata['name'], $metadata['source']) && $this->isMatch($metadata['name'])) {
                             $packages[$metadata['name']] = $metadata;
                         }
                     }
@@ -99,7 +103,7 @@ class ImportComposerRepository
         if (isset($data['packages'])) {
             foreach ($data['packages'] as $package => $versions) {
                 foreach ($versions as $version => $metadata) {
-                    if (isset($metadata['name'], $metadata['source']) && ($this->filter === null || \preg_match($this->filter, $metadata['name']))) {
+                    if (isset($metadata['name'], $metadata['source']) && $this->isMatch($metadata['name'])) {
                         $packages[$metadata['name']] = $metadata;
                     }
                 }
@@ -119,13 +123,13 @@ class ImportComposerRepository
         return $packages;
     }
 
-    public function lookupAllProviders(): iterable
+    public function lookupAllProviders(bool $all = false): iterable
     {
         $sum = 0;
         if ($this->option->getRootProviders()) {
             $providers = $this->option->getRootProviders();
             foreach ($providers as $packageName => $data) {
-                if (null !== $this->filter && !preg_match($this->filter, $packageName)) {
+                if (!$this->isMatch($packageName)) {
                     unset($providers[$packageName]);
                 }
             }
@@ -136,13 +140,14 @@ class ImportComposerRepository
         }
 
         foreach ($this->option->getProviderIncludes(true) as $provider) {
-            if ($sum > $this->limitSize) {
+            if ($sum > $this->limitSize && false === $all) {
                 break;
             }
+
             $content = $this->fetchFile($provider);
             $providers = $content['providers'] ?? [];
             foreach ($providers as $packageName => $data) {
-                if (null !== $this->filter && !preg_match($this->filter, $packageName)) {
+                if (!$this->isMatch($packageName)) {
                     unset($providers[$packageName]);
                 }
             }
@@ -165,5 +170,10 @@ class ImportComposerRepository
         }
 
         return $response->decodeJson();
+    }
+
+    protected function isMatch(mixed $name): bool
+    {
+        return is_string($name) && (null === $this->filter || preg_match($this->filter, $name));
     }
 }

@@ -99,7 +99,13 @@ class ImportPackagesType extends AbstractType
                 'label' => 'Glob package filter',
                 'tooltip' => 'Applied to composer package name',
                 'required' => false,
-                'attr' => ['placeholder' => "phpunit/phpunit\nsymfony/*\nseld/*", 'rows' => 6, 'class' => 'type-hide composer package-repo-info']
+                'attr' => ['placeholder' => "phpunit/phpunit\nsymfony/*\nseld/*", 'rows' => 3, 'class' => 'type-hide composer package-repo-info']
+            ])
+            ->add('packageList', TextareaType::class, [
+                'label' => 'Select only packages (default all packages in the repository)',
+                'tooltip' => 'Put your composer.json, composer.lock, composer info output or packages names separated by spaces or comma',
+                'required' => false,
+                'attr' => ['rows' => 6, 'class' => 'type-hide composer package-repo-info']
             ])
             ->add('repoList', TextareaType::class, [
                 'label' => 'List of VCS repos',
