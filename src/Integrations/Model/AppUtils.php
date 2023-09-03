@@ -16,16 +16,17 @@ class AppUtils
         'api', 'clone_https', 'clone_ssh'
     ];
 
-    public static function findUrl(string $externalId, App $app, AppInterface $client): string
+    public static function findUrl(string $externalId, App $app, AppInterface $client, AppConfig $config = null): string
     {
         $repos = $client->repositories($app);
 
+        $config ??= $client->getConfig();
         $repos = array_filter($repos, fn($r) => $r['ext_ref'] === $externalId || $r['name'] === $externalId);
         if (!$repo = reset($repos)) {
             throw new \InvalidArgumentException(sprintf("Not possible found repository URL, looking in %s repos", count($repos)));
         }
 
-        return self::clonePref($client->getConfig(), $app) === 'clone_ssh' && isset($repo['ssh_url']) ? $repo['ssh_url'] : $repo['url'];
+        return self::clonePref($config, $app) === 'clone_ssh' && isset($repo['ssh_url']) ? $repo['ssh_url'] : $repo['url'];
     }
 
     public static function createLogJob(Request $request, App $app): Job
@@ -84,9 +85,7 @@ class AppUtils
 
         $msg = preg_replace('/client_id=(\w+)/i', 'client_id=***', $msg);
         $msg = preg_replace('/client_secret=(\w+)/i', 'client_secret=***', $msg);
-        $msg = preg_replace('/([a-f0-9]{30,})/i', '****', $msg);
-
-        return $msg;
+        return preg_replace('/([a-f0-9]{30,})/i', '****', $msg);
     }
 
     public static function clonePref(AppConfig $config, App $oauth): string

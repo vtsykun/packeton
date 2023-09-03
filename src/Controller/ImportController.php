@@ -27,7 +27,11 @@ class ImportController extends AbstractController
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
                 $import = $form->getData();
-                $repos = $this->importHandler->getRepoUrls($import);
+
+                $this->importHandler->createImportJob($import);
+
+                $this->addFlash('success', 'Import job was schedule');
+                return $this->redirect($this->generateUrl('package_import'));
             }
         }
 

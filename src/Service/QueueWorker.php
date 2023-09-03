@@ -200,7 +200,7 @@ class QueueWorker implements ConsoleAwareInterface
         $job = $repo->find($jobId);
         $job->complete($result);
 
-        $this->redis->setex('job-'.$job->getId(), 600, json_encode($result));
+        $this->redis->setex('job-'.$job->getId(), 300, substr(json_encode($result), 0, 4096));
 
         $this->persister->persist($job);
         $em->clear();
