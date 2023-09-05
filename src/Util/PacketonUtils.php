@@ -13,6 +13,11 @@ use Symfony\Component\Finder\Glob;
 
 class PacketonUtils
 {
+
+    /**
+     * @param array $packages
+     * @return PackageInterface[]
+     */
     public static function sort(array $packages): array
     {
         usort($packages, function (PackageInterface $a, PackageInterface $b) {

@@ -131,7 +131,7 @@ class Updater implements UpdaterInterface
         /** @var VersionRepository $versionRepository */
         $versionRepository = $this->doctrine->getRepository(Version::class);
         if (null === $rootIdentifier && ($probe = end($versions))) {
-            $rootIdentifier = preg_replace('{dev-|-dev}', '', $probe->getVersion());
+            $rootIdentifier = preg_replace('{dev-|-dev}', '', $probe->getPrettyVersion());
         }
 
         if ($flags & self::DELETE_BEFORE) {
@@ -634,7 +634,8 @@ class Updater implements UpdaterInterface
             $versionParser = new VersionParser();
             $driver = $repository->getDriver();
             $root = $driver->getComposerInformation($driver->getRootIdentifier());
-            $ignored = (array)($root['config']['audit']['ignored'] ?? []);
+
+            $ignored = (array)($root['config']['audit']['ignore'] ?? ($root['config']['audit']['ignored'] ?? []));
 
             try {
                 $lockInfo = $driver->getFileContent('composer.lock', $driver->getRootIdentifier());
@@ -684,6 +685,8 @@ class Updater implements UpdaterInterface
                 if (!$advisory instanceof SecurityAdvisory
                     || in_array($advisory->advisoryId, $ignored, true)
                     || in_array($advisory->cve, $ignored, true)
+                    || isset($ignored[$advisory->advisoryId])
+                    || isset($ignored[$advisory->cve])
                 ) {
                     continue;
                 }
