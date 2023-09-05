@@ -2,6 +2,7 @@
 
 namespace Packeton\Service;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\Job;
@@ -73,7 +74,7 @@ class Scheduler
 
     private function getPendingUpdateJob(int $packageId, $updateEqualRefs = false, $deleteBefore = false)
     {
-        $result = $this->doctrine->getManager()->getConnection()->fetchAssociative(
+        $result = $this->getConn()->fetchAssociative(
             'SELECT id, payload FROM job WHERE packageId = :package AND status = :status AND type = :type LIMIT 1',
             [
                 'package' => $packageId,
@@ -98,10 +99,14 @@ class Scheduler
         $data = $this->redis->get('job-'.$jobId);
 
         if ($data) {
-            return json_decode($data, true);
+            $data = json_decode($data, true);
+            if (null === $data) {
+                $result = $this->getConn()->fetchAssociative('SELECT id, result FROM job WHERE id = :id', ['id' => $jobId]);
+                $data = $result ? json_decode($result['result'], true) : null;
+            }
         }
 
-        return ['status' => 'running', 'message' => ''];
+        return $data ?: ['status' => 'running', 'message' => ''];
     }
 
     /**
@@ -150,5 +155,10 @@ class Scheduler
         }
 
         return $job;
+    }
+
+    private function getConn(): Connection
+    {
+        return $this->doctrine->getManager()->getConnection();
     }
 }
