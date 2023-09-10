@@ -318,6 +318,10 @@ class Configuration implements ConfigurationInterface
                 'logo' => '/packeton/img/logo/bitbucket.png',
                 'svg_logo' => 'svg/bitbucket.html.twig',
                 'login_title' => 'Login with Bitbucket',
+            ],
+            'google' => [
+                'svg_logo' => 'svg/google.html.twig',
+                'login_title' => 'Login with Google',
             ]
         ];
     }
