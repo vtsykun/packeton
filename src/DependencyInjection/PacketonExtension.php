@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace Packeton\DependencyInjection;
 
+use Packeton\Attribute\AsIntegration;
 use Packeton\Attribute\AsWorker;
 use Packeton\Integrations\Bitbucket\BitbucketOAuth2Factory;
+use Packeton\Integrations\Factory\OAuth2Factory;
 use Packeton\Integrations\Factory\OAuth2FactoryInterface;
 use Packeton\Integrations\Gitea\GiteaOAuth2Factory;
 use Packeton\Integrations\Github\GithubAppFactory;
 use Packeton\Integrations\Github\GithubOAuth2Factory;
 use Packeton\Integrations\Gitlab\GitLabOAuth2Factory;
+use Packeton\Integrations\IntegrationInterface;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-class PacketonExtension extends Extension
+class PacketonExtension extends Extension implements PrependExtensionInterface
 {
     /** @var OAuth2FactoryInterface[]  */
     protected $factories = [];
+
+    protected ?ContainerBuilder $mergeContainer = null;
 
     public function __construct()
     {
@@ -47,7 +53,9 @@ class PacketonExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
+        $this->loadAutoconfigureFactories();
         $configuration = new Configuration($this->factories);
+
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('packagist_web.rss_max_items', $config['rss_max_items']);
@@ -84,10 +92,40 @@ class PacketonExtension extends Extension
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function getAlias(): string
     {
         return 'packeton';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function prepend(ContainerBuilder $container): void
+    {
+        $this->mergeContainer = $container;
+    }
+
+    protected function loadAutoconfigureFactories(): void
+    {
+        if (null === $container = $this->mergeContainer) {
+            return;
+        }
+
+        $definitions = array_keys($container->getDefinitions());
+        $definitions = array_filter($definitions, static fn ($name) => str_starts_with((string)$name, 'Packeton\\') && class_exists($name) && is_subclass_of($name, IntegrationInterface::class));
+        foreach ($definitions as $className) {
+            /** @var AsIntegration $attribute */
+            if (!$attribute = ((new \ReflectionClass($className))->getAttributes(AsIntegration::class)[0] ?? null)?->newInstance()) {
+                continue;
+            }
+
+            if (class_exists($alias = $attribute->nameOrClass)) {
+                $this->addFactories(new $alias);
+            } else {
+                $this->addFactories(new OAuth2Factory($alias, $className));
+            }
+        }
     }
 }

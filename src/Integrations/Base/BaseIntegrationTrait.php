@@ -6,6 +6,7 @@ namespace Packeton\Integrations\Base;
 
 use Okvpn\Expression\TwigLanguage;
 use Packeton\Entity\OAuthIntegration;
+use Packeton\Entity\User;
 use Packeton\Integrations\Model\AppConfig;
 use Packeton\Integrations\Model\OAuth2ExpressionExtension;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -13,7 +14,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 trait BaseIntegrationTrait
 {
-    protected $defaultScopes = [''];
     protected ?TwigLanguage $exprLang = null;
 
     /**
@@ -141,7 +141,7 @@ trait BaseIntegrationTrait
     protected function getAuthorizationParameters(array $options, string $route = 'oauth_check'): array
     {
         if (empty($options['scope'] ?? [])) {
-            $options['scope'] = $this->defaultScopes;
+            $options['scope'] = $this->defaultScopes ?? [];
         }
 
         $options += [
@@ -164,5 +164,22 @@ trait BaseIntegrationTrait
         }
 
         return $options;
+    }
+
+    public function createUser(array $data): User
+    {
+        $username = $data['user_name'] ?? $data['user_identifier'];
+        $username = preg_replace('#[^a-z0-9-_]#i', '_', $username);
+        $email = $data['email'] ?? (str_contains($data['user_identifier'], '@') ? $data['user_identifier'] : $data['user_identifier'] .'@example.com');
+
+        $user = new User();
+        $user->setEnabled(true)
+            ->setRoles($this->getConfig()->roles())
+            ->setEmail($email)
+            ->setUsername($username)
+            ->setGithubId($data['external_id'] ?? null)
+            ->generateApiToken();
+
+        return $user;
     }
 }
