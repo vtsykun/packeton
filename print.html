@@ -147,8 +147,6 @@
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Packeton - Private PHP package repository for vendors. <a href="https://github.com/vtsykun/packeton">GitHub Source Code</a></p>
-<p>Packeton is an open-source Composer repository homeserver for PHP private packages.
-We began development in <strong>2018</strong>, bases on Packagist and Satis fork.</p>
 <p><strong>Documentation</strong> <a href="https://docs.packeton.org">docs.packeton.org</a></p>
 <h2 id="main-features"><a class="header" href="#main-features">Main Features</a></h2>
 <ul>
@@ -2596,6 +2594,12 @@ sebastian/lines-of-code            2.0.1   Library for counting the lines of cod
                 secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
                 api_version: ~ # '/example/rest/v2/' custom api prefix
 
+        google:
+            allow_login: true
+            google:
+                client_id: 'xxxxx.apps.googleusercontent.com'
+                client_secret: 'xxxx'    
+
 </code></pre>
 <p>Where <code>clone_preference</code>:</p>
 <ul>
@@ -2604,6 +2608,39 @@ sebastian/lines-of-code            2.0.1   Library for counting the lines of cod
 <li><code>clone_ssh</code> - clone repo with system ssh key</li>
 </ul>
 <p><code>repos_synchronization</code> - If enabled, a new package will be automatically created when you will push to a new or exists repo that contains <code>composer.json</code> </p>
+<h2 id="docker-env"><a class="header" href="#docker-env">Docker env.</a></h2>
+<p>To make docker usage more easy, you can use env variables to configure basic settings for each integration without editing the <code>*.yaml</code> configs.</p>
+<pre><code># GitLab
+# OAUTH_GITLAB_CLIENT_ID=
+# OAUTH_GITLAB_CLIENT_SECRET=
+# OAUTH_GITLAB_BASE_URL=
+
+# GitHub
+# OAUTH_GITHUB_CLIENT_ID=
+# OAUTH_GITHUB_CLIENT_SECRET=
+# OAUTH_GITHUB_BASE_URL=
+
+# Gitea 
+# OAUTH_GITEA_CLIENT_ID=
+# OAUTH_GITEA_CLIENT_SECRET=
+# OAUTH_GITEA_BASE_URL=
+
+# Bitbucket 
+# OAUTH_BITBUCKET_CLIENT_ID=
+# OAUTH_BITBUCKET_CLIENT_SECRET=
+# OAUTH_BITBUCKET_BASE_URL=
+
+# Google SSO
+# OAUTH_GOOGLE_CLIENT_ID=
+# OAUTH_GOOGLE_CLIENT_SECRET=
+# OAUTH_GOOGLE_ALLOW_REGISTRATION=
+
+# Additinal vars ${NAME} = GITLAB/GITHUB/ .. 
+# OAUTH_*_DISABLE_ORG_HOOK=
+# OAUTH_*_DISABLE_REP_HOOK=
+# OAUTH_*_ALLOW_LOGIN=
+# OAUTH_*_ALLOW_REGISTRATION=
+</code></pre>
 <h2 id="supported-3-d-provider"><a class="header" href="#supported-3-d-provider">Supported 3-d provider</a></h2>
 <h3 id="github"><a class="header" href="#github">GitHub</a></h3>
 <p>Scopes:</p>
