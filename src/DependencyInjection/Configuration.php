@@ -227,7 +227,6 @@ class Configuration implements ConfigurationInterface
         $nodeBuilder = $rootNode
             ->children()
                 ->arrayNode('integrations')
-                    ->disallowNewKeysInSubsequentConfigs()
                     ->useAttributeAsKey('name')
                     ->arrayPrototype();
 

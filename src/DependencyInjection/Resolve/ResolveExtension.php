@@ -41,7 +41,7 @@ class ResolveExtension extends Extension
                             $container->prependExtensionConfig($name, $value);
                         }
                     }
-                    return;
+                    continue;
                 }
 
                 if (is_array($config)) {

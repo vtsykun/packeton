@@ -109,8 +109,9 @@ trait BaseIntegrationTrait
         return [$base];
     }
 
-    protected function getAuthorizationResponse(string $baseUrl, array $options, string $route = 'oauth_check'): RedirectResponse
+    protected function getAuthorizationResponse(string $baseUrl, array $options, string $route = null): RedirectResponse
     {
+        $route ??= 'oauth_check';
         $bag = $this->state->getStateBag();
 
         $bag->set('route', $route);

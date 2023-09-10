@@ -76,6 +76,12 @@ packeton:
                 secret: 9chxxxxxzxxxxxxxxeexxxxxxxxxxxxx
                 api_version: ~ # '/example/rest/v2/' custom api prefix
 
+        google:
+            allow_login: true
+            google:
+                client_id: 'xxxxx.apps.googleusercontent.com'
+                client_secret: 'xxxx'    
+
 ```
 
 Where `clone_preference`:
@@ -85,6 +91,43 @@ Where `clone_preference`:
 - `clone_ssh` - clone repo with system ssh key
 
 `repos_synchronization` - If enabled, a new package will be automatically created when you will push to a new or exists repo that contains `composer.json` 
+
+## Docker env.
+
+To make docker usage more easy, you can use env variables to configure basic settings for each integration without editing the `*.yaml` configs.
+
+```
+# GitLab
+# OAUTH_GITLAB_CLIENT_ID=
+# OAUTH_GITLAB_CLIENT_SECRET=
+# OAUTH_GITLAB_BASE_URL=
+
+# GitHub
+# OAUTH_GITHUB_CLIENT_ID=
+# OAUTH_GITHUB_CLIENT_SECRET=
+# OAUTH_GITHUB_BASE_URL=
+
+# Gitea 
+# OAUTH_GITEA_CLIENT_ID=
+# OAUTH_GITEA_CLIENT_SECRET=
+# OAUTH_GITEA_BASE_URL=
+
+# Bitbucket 
+# OAUTH_BITBUCKET_CLIENT_ID=
+# OAUTH_BITBUCKET_CLIENT_SECRET=
+# OAUTH_BITBUCKET_BASE_URL=
+
+# Google SSO
+# OAUTH_GOOGLE_CLIENT_ID=
+# OAUTH_GOOGLE_CLIENT_SECRET=
+# OAUTH_GOOGLE_ALLOW_REGISTRATION=
+
+# Additinal vars ${NAME} = GITLAB/GITHUB/ .. 
+# OAUTH_*_DISABLE_ORG_HOOK=
+# OAUTH_*_DISABLE_REP_HOOK=
+# OAUTH_*_ALLOW_LOGIN=
+# OAUTH_*_ALLOW_REGISTRATION=
+```
 
 ## Supported 3-d provider
 

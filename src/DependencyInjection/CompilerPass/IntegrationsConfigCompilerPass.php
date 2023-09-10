@@ -65,6 +65,7 @@ final class IntegrationsConfigCompilerPass implements CompilerPassInterface
 
     private function useForLoginCheck(array $config): ?array
     {
+        // allow_login may env placeholder
         if (!($config['allow_login'] ?? false) || !($config['enabled'] ?? true)) {
             return null;
         }
@@ -73,6 +74,7 @@ final class IntegrationsConfigCompilerPass implements CompilerPassInterface
             'name' => $config['name'],
             'logo' => $config['svg_logo'] ?? null,
             'title' => $config['login_title'] ?? $config['name'],
+            'allow_login' => $config['allow_login'] ?? false,
         ];
     }
 }
