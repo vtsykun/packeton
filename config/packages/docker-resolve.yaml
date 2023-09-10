@@ -92,5 +92,5 @@ resolve:
                     disable_hook_repos: '%env(bool:OAUTH_BITBUCKET_DISABLE_ORG_HOOK)%'
                     disable_hook_org: '%env(bool:OAUTH_BITBUCKET_DISABLE_ORG_HOOK)%'
                     bitbucket:
-                        client_id: '%env(OAUTH_BITBUCKET_CLIENT_ID)%'
-                        client_secret: '%env(OAUTH_BITBUCKET_CLIENT_SECRET)%'
+                        key: '%env(OAUTH_BITBUCKET_CLIENT_ID)%'
+                        secret: '%env(OAUTH_BITBUCKET_CLIENT_SECRET)%'

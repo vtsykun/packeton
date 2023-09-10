@@ -33,7 +33,9 @@ class IntegrationRegistry
 
     public function getLoginProviders(): array
     {
-        return $this->loginProviders;
+        $providers = array_filter($this->loginProviders, fn(array $provider) => $provider['allow_login'] ?? false);
+
+        return array_filter($providers);
     }
 
     public function findLogin(string $name, bool $check = true): LoginInterface
