@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Google;
 
-use Okvpn\Expression\TwigLanguage;
 use Packeton\Attribute\AsIntegration;
 use Packeton\Integrations\Base\BaseIntegrationTrait;
 use Packeton\Integrations\LoginInterface;
 use Packeton\Integrations\Model\OAuth2State;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -31,11 +29,8 @@ class GoogleOAuth2Login implements LoginInterface
         protected HttpClientInterface $httpClient,
         protected RouterInterface $router,
         protected OAuth2State $state,
-        protected TwigLanguage $twigLanguage,
-        protected LoggerInterface $logger,
     ) {
         $this->name = $config['name'];
-
         if (empty($this->config['default_roles'])) {
             $this->config['default_roles'] = ['ROLE_MAINTAINER', 'ROLE_SSO_GOOGLE'];
         }
