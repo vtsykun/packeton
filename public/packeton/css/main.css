@@ -235,6 +235,10 @@ strong {
     .navbar .nav > .nav-user > .nav-user-signin:hover > .signin-box {
         display: none;
     }
+    .navbar .nav > .nav-user > section:hover > .nav-user-menu.nav-admin-menu {
+        display: block;
+        width: 100%;
+    }
 }
 
 .navbar .nav > .nav-user > section a {
@@ -1879,4 +1883,17 @@ label.required em {
 }
 .removeRow {
     text-decoration: none !important;
+}
+
+@media (max-width: 576px) {
+    .table-mb {
+        display: block;
+        overflow-x: auto;
+    }
+    .role-name {
+        white-space: normal;
+    }
+    .user-edit-btn {
+        display: none;
+    }
 }
