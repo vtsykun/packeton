@@ -149,7 +149,7 @@ class SubRepositoryHelper
         }
 
         if ($user instanceof PacketonUserInterface) {
-            $allowed = $user->getSubRepos();
+            $allowed = $user->getSubRepos() ?: [];
             $data = array_filter($data, fn ($item) => in_array($item['id'], $allowed, true));
         }
 
