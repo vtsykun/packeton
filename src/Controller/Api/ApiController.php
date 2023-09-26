@@ -325,13 +325,13 @@ class ApiController extends AbstractController
         }
 
         $job = AppUtils::createLogJob($request, $oauth);
-        $response = $app = null;
+        $response = null;
         try {
-            $app = $this->integrations->findApp($oauth->getAlias());
-            $response = $app->receiveHooks($oauth, $request, $this->getJsonPayload($request));
+            $client = $this->integrations->findApp($oauth->getAlias());
+            $response = $client->receiveHooks($oauth, $request, $this->getJsonPayload($request));
             $job->setStatus(Job::STATUS_COMPLETED);
         } catch (\Throwable $e) {
-            $error = AppUtils::castError($e, $app, true);
+            $error = AppUtils::castError($e, $oauth, true);
             $this->logger->error($error, ['e' => $e]);
 
             $job->setStatus(Job::STATUS_ERRORED);
