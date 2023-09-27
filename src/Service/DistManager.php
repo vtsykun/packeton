@@ -197,7 +197,7 @@ class DistManager
 
         $format = $this->config->getArchiveFormat();
         $targetDir = $this->config->generateTargetDir($package->getName());
-        $fileName = $this->config->getFileName($reference, $versionName);
+        $fileName = $this->config->getFileName($reference, $versionName ?: self::EMPTY_VERSION_NAME);
 
         try {
             if ($path = $archiveManager->tryFromGitArchive($reference, $format, $targetDir, $fileName)) {
