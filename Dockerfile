@@ -1,6 +1,6 @@
 FROM php:8.2-fpm-alpine
 
-RUN apk --no-cache add nginx supervisor curl subversion mercurial \
+RUN apk --no-cache add nginx curl subversion  \
     git bash openssh-client zip unzip redis shadow && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     printf "Host *\n    StrictHostKeyChecking no" > /etc/ssh/ssh_config
@@ -36,6 +36,8 @@ RUN set -eux; \
     apk add --no-cache $runDeps; \
     \
     apk del --no-network .build-deps;
+
+COPY --from=ochinchina/supervisord:latest /usr/local/bin/supervisord /usr/bin/supervisord
 
 WORKDIR /var/www/packagist
 
@@ -78,4 +80,4 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
