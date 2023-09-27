@@ -287,13 +287,13 @@ trait AppIntegrationTrait
         $key = "repo:$name:$iid";
 
         $commentId = null;
-        if (false === $this->redis->hSetNx($setId, $key, 0)) {
-            $commentId = $this->redis->hGet($setId, $key);
+        if (false === $this->redis->hSetNx($setId, $key, '0')) {
+            $commentId = (int)$this->redis->hGet($setId, $key);
         }
 
         if ($commentId === null) {
             $review = $request("POST", $diff);
-            $this->redis->hSet($setId, $key, $review['id']);
+            $this->redis->hSet($setId, $key, (string)$review['id']);
             $this->redis->hSet($setId, "$key:diff", sha1($diff));
             return [];
         }
