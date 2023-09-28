@@ -1,6 +1,6 @@
 FROM php:8.2-fpm-alpine
 
-RUN apk --no-cache add nginx supervisor curl subversion mercurial \
+RUN apk --no-cache add nginx curl runit subversion \
     git bash openssh-client zip unzip redis shadow && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     printf "Host *\n    StrictHostKeyChecking no" > /etc/ssh/ssh_config
@@ -9,7 +9,6 @@ RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
         postgresql-dev \
-        icu-dev \
         coreutils \
         linux-headers \
         libxml2-dev openldap-dev \
@@ -24,7 +23,7 @@ RUN set -eux; \
     \
     pecl install -o -f redis; \
     docker-php-ext-enable redis; \
-    docker-php-ext-install sockets ldap xsl zip pdo pdo_pgsql pdo_mysql intl sysvsem opcache \
+    docker-php-ext-install sockets ldap xsl zip pdo pdo_pgsql pdo_mysql sysvsem opcache \
         bz2 mbstring pcntl; \
     runDeps="$( \
         scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
@@ -56,6 +55,7 @@ RUN set -eux; \
     cp docker/php/php.ini /usr/local/etc/php/conf.d/90-php.ini; \
     mkdir /etc/supervisor.d/; cp docker/supervisor/* /etc/supervisor.d/; \
     cp docker/php/supervisord.conf /etc/; \
+    ln -s ${PWD}/docker/supervisor.php /usr/bin/supervisord; \
     cp docker/nginx/nginx.conf /etc/nginx/nginx.conf; \
     cp docker/php/index.php public/index.php; \
     cp docker/php/app /usr/local/bin/app; \
