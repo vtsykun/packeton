@@ -14,7 +14,7 @@ class IntegrationGitHubAppType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('installationId', NumberType::class, [
             'required' => true,

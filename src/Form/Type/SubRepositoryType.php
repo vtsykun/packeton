@@ -35,7 +35,7 @@ class SubRepositoryType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $names = $this->registry->getRepository(Package::class)->getPackageNames();
         $names = array_combine($names, $names);

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Model\PackageManager;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\UserAgentParser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -62,7 +62,7 @@ class ProviderController extends AbstractController
             return $this->createNotFound();
         }
 
-        return new JsonResponse($providers);
+        return $this->createJsonResponse($providers);
     }
 
     /**
@@ -109,7 +109,7 @@ class ProviderController extends AbstractController
         if (\count($package) !== 2) {
             $package = $this->packageManager->getPackageJson($this->getUser(), $package[0]);
             if ($package) {
-                return new JsonResponse($package);
+                return $this->createJsonResponse($package);
             }
             return $this->createNotFound();
         }
@@ -119,7 +119,7 @@ class ProviderController extends AbstractController
             return $this->createNotFound();
         }
 
-        return new JsonResponse($package);
+        return $this->createJsonResponse($package);
     }
 
     #[Route('/p2/{package}.json', name: 'root_package_v2', requirements: ['package' => '%package_name_regex_v2%'])]
@@ -158,5 +158,13 @@ class ProviderController extends AbstractController
     {
         $packages = $this->subRepositoryHelper->allowedPackageNames();
         return $packages === null || in_array($name, $packages, true);
+    }
+
+    protected function createJsonResponse(array $data): JsonResponse
+    {
+        $response = new JsonResponse($data);
+        $response->setEncodingOptions(0);
+
+        return $response;
     }
 }

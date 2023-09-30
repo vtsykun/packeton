@@ -6,7 +6,6 @@ namespace Packeton\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
-use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Package;
 use Packeton\Entity\Zipball;
 use Packeton\Model\UploadZipballStorage;
@@ -15,6 +14,7 @@ use Packeton\Service\DistManager;
 use Packeton\Util\PacketonUtils;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;

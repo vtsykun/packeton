@@ -6,7 +6,6 @@ namespace Packeton\Controller\OAuth;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
-use Packeton\Composer\JsonResponse;
 use Packeton\Entity\Job;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
@@ -21,6 +20,7 @@ use Packeton\Integrations\Model\FormSettingsInterface;
 use Packeton\Integrations\Model\OAuth2State;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
