@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Gitea Setup - Packeton Docs</title>
+        <title>Login Restriction - Packeton Docs</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="../installation.html">Installation</a></li><li class="chapter-item expanded "><a href="../installation-docker.html">Using docker</a></li><li class="chapter-item expanded "><a href="../reverse-proxy.html">Using a reverse proxy</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="../usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="../webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="../webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="../webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="../webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="../webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="../usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="../usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="../usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="../usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="../usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="../authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="../usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="../usage/custom-page.html">Custom landing page</a></li><li class="chapter-item expanded "><a href="../usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="../usage/migrate.html">Migrate from Satis</a></li><li class="chapter-item expanded "><a href="../oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="../oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/githubapp.html">GitHub AppBot</a></li><li class="chapter-item expanded "><a href="../oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/gitea.html" class="active">Gitea Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/bitbucket.html">Bitbucket Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/login-expression.html">Login Restriction</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="../dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="../dev/configuration.html">Configuration Reference</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="../installation.html">Installation</a></li><li class="chapter-item expanded "><a href="../installation-docker.html">Using docker</a></li><li class="chapter-item expanded "><a href="../reverse-proxy.html">Using a reverse proxy</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="../usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="../webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="../webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="../webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="../webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="../webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="../usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="../usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="../usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="../usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="../usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="../authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="../usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="../usage/custom-page.html">Custom landing page</a></li><li class="chapter-item expanded "><a href="../usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="../usage/migrate.html">Migrate from Satis</a></li><li class="chapter-item expanded "><a href="../oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="../oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/githubapp.html">GitHub AppBot</a></li><li class="chapter-item expanded "><a href="../oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/bitbucket.html">Bitbucket Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/login-expression.html" class="active">Login Restriction</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="../dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="../dev/configuration.html">Configuration Reference</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -118,7 +118,7 @@
                         <a href="https://github.com/vtsykun/packeton" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/oauth2/gitea.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/oauth2/login-expression.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -147,40 +147,92 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="gitea-integration-setup"><a class="header" href="#gitea-integration-setup">Gitea Integration Setup</a></h1>
-<p>Go to you Gitea account settings (<code>https://git.example.com/user/settings/applications</code>) and select &quot;Applications&quot;.</p>
-<p><a href="../img/gitea.png"><img src="../img/gitea.png" alt="Gitea" /></a></p>
-<p>Redirect Urls:</p>
-<pre><code>https://example.com/oauth2/{alias}/auto
-</code></pre>
-<p>The next step is obtain <code>clinent_id</code>, <code>client_secret</code> to creating a configuration in the yaml. 
-For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
+                        <h1 id="limit-loginregister-with-using-expression-lang"><a class="header" href="#limit-loginregister-with-using-expression-lang">Limit login/register with using expression lang</a></h1>
+<p>You may limit login with using expression, like symfony expression for access control. For evaluate expression
+used TWIG engine with customization by this lib <a href="https://github.com/okvpn/expression-language">okvpn/expression-language</a>.
+It allows to create a complex expressions where called team/members API to check that user belong to Organization/Repos etc.</p>
+<p>Example usage </p>
 <pre><code class="language-yaml">packeton:
     integrations:
-        gitea:
+        github:
             allow_login: true
-            repos_synchronization: true
-            pull_request_review: true
-            base_url: 'https://git.example.com/'
-            gitea:
-                client_id: '44000000-0000-0000-0000-00000000000'
-                client_secret: 'gto_acxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-#                api_version: 'v1'
+            allow_register: true
+            github:
+                client_id: 'xxx'
+                client_secret: 'xxx'
+            login_control_expression: &quot;data['email'] ends with '@packeton.org'&quot;
 </code></pre>
-<p>Now you can go to the Packeton integration page and click &quot;Install Integration&quot;. 
-You will see list of available integrations and its Redirect Urls. Click to Connect to set up oauth2 credentials</p>
-<h4 id="example-of-pull-request-review"><a class="header" href="#example-of-pull-request-review">Example of pull request review</a></h4>
-<p><a href="../img/gitea2.png"><img src="../img/gitea2.png" alt="Gitea2" /></a></p>
+<p>Example 2. Here check GitLab's groups API.</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        gitlab:
+            allow_login: true
+            allow_register: true
+            gitlab:
+                client_id: 'xx'
+                client_secret: 'xx'
+            login_control_expression: &gt;
+                {% set members = api_cget('/groups/balaba/members') %}
+                {% set found = null %}
+                {% for member in members %}
+                    {% if data['username'] and data['username'] == member['username'] %}
+                        {% set found = member %}
+                    {% endif %}
+                {% endfor %}
+    
+                {% if found['access_level'] &gt;= 50 %}
+                    {% return ['ROLE_ADMIN', 'ROLE_GITLAB'] %}
+                {% elseif found['access_level'] &gt;= 40 %}
+                    {% return ['ROLE_MAINTAINER', 'ROLE_GITLAB'] %}
+                {% elseif found['access_level'] &gt;= 10 %}
+                    {% return ['ROLE_USER', 'ROLE_GITLAB'] %}
+                {% endif %}
+                {% return [] %}
+</code></pre>
+<h3 id="custom-twig-function-for-expression-lang"><a class="header" href="#custom-twig-function-for-expression-lang">Custom Twig function for expression lang</a></h3>
+<ul>
+<li><code>api_get(url, query = [], cache = true, app = null)</code> - Call get method </li>
+<li><code>api_cget(url, query = [], cache = true, app = null)</code> - Call get method with pagination with all pages.</li>
+</ul>
+<p>By default, the API call results are cached, but you may overwrite with <code>cache</code> param.</p>
+<p><code>login_control_expression</code> - may return a bool result or list of roles. If returned result is empty - login/register is not allowed.</p>
+<h2 id="debug-expressions"><a class="header" href="#debug-expressions">Debug expressions</a></h2>
+<p>You may enable debugging by param</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        gitlab:
+            login_control_expression_debug: true
+            login_control_expression: &quot;data['email'] ends with '@packeton.org'&quot;
+</code></pre>
+<p>For localhost, you also can enable symfony dev env. But it's <strong>strongly</strong>  not recommended for prod for security reasons.
+Then you may use <code>dump</code> action.</p>
+<pre><code>APP_ENV=dev
+</code></pre>
+<pre><code class="language-twig">{% set members = api_cget('/groups/balaba/members') %}
+{% set found = null %}
+{% for member in members %}
+    {% if data['username'] and data['username'] == member['username'] %}
+        {% set found = member %}
+    {% endif %}
+{% endfor %}
+{% do dump(members) %}
+{% do dump(found) %}
+
+{% return [] %}
+</code></pre>
+<h4 id="example-debug-panel"><a class="header" href="#example-debug-panel">Example debug panel</a></h4>
+<p>When <code>login_control_expression_debug</code> is enabled you may evaluate script from UI.</p>
+<p><a href="../img/debug-expr.png"><img src="../img/debug-expr.png" alt="Img" /></a></p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../oauth2/gitlab-integration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../oauth2/bitbucket.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../oauth2/bitbucket.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../dev/CONTRIBUTING.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -190,11 +242,11 @@ You will see list of available integrations and its Redirect Urls. Click to Conn
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../oauth2/gitlab-integration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../oauth2/bitbucket.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../oauth2/bitbucket.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../dev/CONTRIBUTING.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
