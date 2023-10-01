@@ -68,7 +68,7 @@ class WebController extends AbstractController
         $form->handleRequest($req);
 
         return $this->render('web/searchForm.html.twig', [
-            'query' => $req->query->get('query'),
+            'query' => $req->query->all('search_query')['query'] ?? null,
         ]);
     }
 

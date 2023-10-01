@@ -118,8 +118,8 @@ docker-compose up -f docker-compose-split.yml -d # Or split
 - `TRUSTED_PROXIES` - Ips for Reverse Proxy. See [Symfony docs](https://symfony.com/doc/current/deployment/proxies.html)
 - `TRUSTED_HOSTS` - Trusted host, set if you've enabled public access and your nginx configuration uses without `server_name`. Otherwise, possible the DDoS attack with generated a big cache size for each host.
 - `PUBLIC_ACCESS` - Allow anonymous users access to read packages metadata, default: `false`
-- `MAILER_DSN` - Mailter for reset password, default disabled
-- `MAILER_FROM` - Mailter from
+- `MAILER_DSN` - Mailer for reset password, default disabled
+- `MAILER_FROM` - Mailer from
 
 Installation
 ------------

@@ -20,7 +20,7 @@ class SubRepoGrantVoter implements CacheableVoterInterface
     /**
      * {@inheritdoc}
      */
-    public function vote(TokenInterface $token, mixed $subject, array $attributes)
+    public function vote(TokenInterface $token, mixed $subject, array $attributes): int
     {
         if ($subject instanceof Request && isset(self::$subRoutes[$subject->attributes->get('_route')])) {
             return $token->getUser() ? self::ACCESS_GRANTED : self::ACCESS_ABSTAIN;

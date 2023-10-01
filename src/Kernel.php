@@ -9,8 +9,7 @@ use Packeton\DependencyInjection\CompilerPass\ApiFirewallCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\IntegrationsConfigCompilerPass;
 use Packeton\DependencyInjection\CompilerPass\LdapServicesPass;
 use Packeton\DependencyInjection\CompilerPass\MirrorsConfigCompilerPass;
-use Packeton\DependencyInjection\CompilerPass\UpdaterLocatorPass;
-use Packeton\DependencyInjection\CompilerPass\WorkerLocatorPass;
+use Packeton\DependencyInjection\CompilerPass\PacketonPass;
 use Packeton\DependencyInjection\PacketonExtension;
 use Packeton\DependencyInjection\Resolve\ResolveExtension;
 use Packeton\DependencyInjection\Security\ApiHttpBasicFactory;
@@ -95,8 +94,7 @@ class Kernel extends BaseKernel
 
         $container->addCompilerPass(new LdapServicesPass());
         $container->addCompilerPass(new ApiFirewallCompilerPass());
-        $container->addCompilerPass(new WorkerLocatorPass());
-        $container->addCompilerPass(new UpdaterLocatorPass());
+        $container->addCompilerPass(new PacketonPass());
         $container->addCompilerPass(new MirrorsConfigCompilerPass());
         $container->addCompilerPass(new IntegrationsConfigCompilerPass($extension));
 
