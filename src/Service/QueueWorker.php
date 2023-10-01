@@ -150,6 +150,7 @@ class QueueWorker implements ConsoleAwareInterface
             ];
             $result = array_filter($result);
         } catch (\Throwable $e) {
+            $this->logger->error('['.$job->getType().'] ' . $e->getMessage(), ['e' => $e]);
             $result = [
                 'status' => Job::STATUS_ERRORED,
                 'message' => 'An unexpected failure occurred',
