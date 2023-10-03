@@ -43,6 +43,7 @@ class TaskManager
 {
     protected $isRunning = false;
     protected $currentUid = null;
+    protected $wait4;
 
     public function __construct(private readonly string $configPath)
     {
@@ -103,6 +104,13 @@ class TaskManager
             $this->reloadTasks($tasks);
         });
 
+        pcntl_signal(SIGCHLD, function () {
+            $this->writeln("[signal-handler] receive signal SIGCHLD");
+            $p = pcntl_waitpid(-1, $status, WNOHANG);
+            $this->writeln("Child process with pid $p exit with status $status");
+            $this->wait4 = 0;
+        });
+
         $priority = 0;
         foreach ($tasks as $task) {
             if ($priority !== $task->priority) {
@@ -119,7 +127,11 @@ class TaskManager
             } catch (\Throwable $e) {
                 $this->writeln((string) $e);
             }
-            usleep(300000);
+
+            $this->wait4 = 9;
+            while (--$this->wait4 > 0) {
+                usleep(300000);
+            }
         }
     }
 
@@ -202,11 +214,11 @@ class TaskManager
         $process = $task->process = Process::fromShellCommandline($cmd, $task->directory, $task->env);
         $process->setTimeout(null);
 
-        $process->start(static function ($type, $buffer) use ($task): void {
+        $process->start(function ($type, $buffer) use ($task): void {
             if (Process::ERR === $type) {
-                echo "[{$task->name}]: " . $buffer;
+                $this->writeln("[{$task->name}]+ $buffer");
             } else if ($task->isOut()) {
-                echo "[{$task->name}]" . $buffer;
+                $this->writeln("[{$task->name}] $buffer");
             }
         });
 
@@ -215,7 +227,7 @@ class TaskManager
 
     protected function writeln(string $msg): void
     {
-        echo "$msg\n";
+        echo (new \DateTime('now'))->format('Y-m-d H:i:s.u') . " $msg\n";
     }
 
     protected function loadConfiguration(string $file = null): array
