@@ -14,6 +14,7 @@ use Packeton\Form\Model\MaintainerRequest;
 use Packeton\Form\Type\EditRequiresMetadataType;
 use Packeton\Form\Type\Package\AbandonedType;
 use Packeton\Form\Type\Package\AddMaintainerRequestType;
+use Packeton\Form\Type\Package\SettingsPackageType;
 use Packeton\Form\Type\RemoveMaintainerRequestType;
 use Packeton\Model\DownloadManager;
 use Packeton\Model\FavoriteManager;
@@ -772,6 +773,28 @@ class PackageController extends AbstractController
         }
 
         return $this->render('package/viewPackage.html.twig', $data);
+    }
+
+    #[Route('/packages/{name}/settings', name: 'settings_package', requirements: ['name' => '%package_name_regex%'])]
+    public function settingsAction(Request $req, #[Vars] Package $package): Response
+    {
+        $this->checkSubrepositoryAccess($package->getName());
+        if (!$this->canEditPackage($package)) {
+            throw new AccessDeniedException();
+        }
+
+        $form = $this->createForm(SettingsPackageType::class, $package);
+        $form->handleRequest($req);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em = $this->registry->getManager();
+            $em->flush();
+
+            $this->addFlash('success', 'The package settings has been updated.');
+            return $this->redirect($this->generateUrl('view_package', ['name' => $package->getName()]));
+        }
+
+        return $this->render('package/settings.html.twig', ['form' => $form->createView(), 'package' => $package]);
     }
 
     #[Route('/packages/{name}/edit', name: 'edit_package', requirements: ['name' => '%package_name_regex%'])]

@@ -124,6 +124,12 @@
                                     <input class="btn btn-primary" type="submit" value="Edit" />
                                 </form>
                             {% endif %}
+
+                            {% if canEdit %}
+                                <form class="action" action="{{ path("settings_package", {name: package.name}) }}">
+                                    <input class="btn btn-default" type="submit" value="Settings" />
+                                </form>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
