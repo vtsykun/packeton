@@ -22,6 +22,7 @@ use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
 use Packeton\Service\SubRepositoryHelper;
+use Packeton\Util\PacketonUtils;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -184,6 +185,30 @@ class PackageRepository extends EntityRepository
 
         sort($names, SORT_STRING | SORT_FLAG_CASE);
         return $names;
+    }
+
+    public function filterByJson(array $packagesIds, callable $filter): array
+    {
+        if (empty($packagesIds)) {
+            return [];
+        }
+
+        $packages = $this->getConn()->fetchAllAssociative(
+            "SELECT p.id, p.serialized_data FROM package p WHERE p.id IN (:ids)",
+            ['ids' => $packagesIds],
+            ['ids' => ArrayParameterType::INTEGER]
+        );
+
+        $packages = PacketonUtils::buildChoices($packages, 'id', 'serialized_data');
+        foreach ($packagesIds as $i => $packageId) {
+            $data = $packages[$packageId] ?? null;
+            $data = is_string($data) ? json_decode($data, true) : null;
+            if (false === $filter(is_array($data) ? $data : [], $packageId)) {
+                unset($packagesIds[$i]);
+            }
+        }
+
+        return array_values($packagesIds);
     }
 
     public function getStalePackages($interval = null)
@@ -604,5 +629,10 @@ class PackageRepository extends EntityRepository
         }
 
         return $updates;
+    }
+
+    private function getConn(): Connection
+    {
+        return $this->getEntityManager()->getConnection();
     }
 }

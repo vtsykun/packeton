@@ -97,6 +97,7 @@ packages:
     suggesters_title: Suggesters Packages
     from: "Packages from %vendor%"
     security_title: 'Security Advisories'
+    settings_title: "Settings Package %name%"
 
 browse:
     packages: Packages

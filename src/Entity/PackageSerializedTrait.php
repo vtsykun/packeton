@@ -199,6 +199,16 @@ trait PackageSerializedTrait
         $this->setSerializedField('custom_versions', $versions);
     }
 
+    public function isDisabledUpdate(): bool
+    {
+        return (bool) ($this->serializedData['disabled_update'] ?? false);
+    }
+
+    public function setDisabledUpdate(?bool $flag): void
+    {
+        $this->setSerializedField('disabled_update', $flag);
+    }
+
     protected function setSerializedField(string $field, mixed $value): void
     {
         if (null === $value) {

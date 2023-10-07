@@ -81,6 +81,7 @@ class UpdatePackagesCommand extends Command
             $updateEqualRefs = true;
         } else {
             $packages = $repo->getStalePackages($interval);
+            $packages = $repo->filterByJson($packages, fn($data) => ($data['disabled_update'] ?? false) !== true);
         }
 
         if ($input->getOption('delete-before')) {
