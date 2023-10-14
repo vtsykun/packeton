@@ -191,6 +191,7 @@ class MonoRepoUpdater implements UpdaterInterface
                 if ($package->getSourceReference() === null
                     || $prevPackage->getSourceReference() === null
                     || !isset($ver1[2], $ver2[2]) || $ver1[1] !== $ver2[1] || $ver1[0] !== $ver2[0]
+                    || $prevPackage->getStability() !== $package->getStability()
                 ) {
                     $prevPackage = $package;
                     continue;
