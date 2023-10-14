@@ -52,6 +52,7 @@ Table of content
 - [Ssh key access](#ssh-key-access-and-composer-oauth-token)
 - [Configuration](#configuration)
 - [LDAP Authenticating](/docs/authentication-ldap.md)
+- [Import from Packagist.com](/docs/usage/migrate.md)
 - [OAuth2 GitHub, GitLab Integrations](/docs/oauth2.md)
     - [Pull Request review](/docs/pull-request-review.md)
     - [GitHub Setup](/docs/oauth2/github-oauth.md)
