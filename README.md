@@ -79,7 +79,7 @@ See our [Administration Demo](https://demo.packeton.org). Username/password (adm
 Install and Run in Docker
 ------------------------
 
-You can use [packeton/packeton](https://hub.docker.com/r/packeton/packeton) image or GCR `ghcr.io/vtsykun/packeton:latest` image
+You can use [packeton/packeton](https://hub.docker.com/r/packeton/packeton) image or GitHub container registry `ghcr.io/vtsykun/packeton:latest` image
 
 ```
 docker run -d --name packeton \
