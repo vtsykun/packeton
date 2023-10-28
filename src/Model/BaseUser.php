@@ -294,7 +294,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
      */
     public function setUsernameCanonical($usernameCanonical)
     {
-        $this->usernameCanonical = $usernameCanonical;
+        $this->usernameCanonical = mb_strtolower($usernameCanonical);
 
         return $this;
     }

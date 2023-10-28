@@ -52,7 +52,7 @@ class UserRepository extends EntityRepository
             }
         }
 
-        return $this->findOneBy(['usernameCanonical' => $usernameOrEmail]);
+        return $this->findOneBy(['usernameCanonical' => mb_strtolower($usernameOrEmail)]);
     }
 
     public function getPackageMaintainersQueryBuilder(Package $package, User $excludeUser=null)
