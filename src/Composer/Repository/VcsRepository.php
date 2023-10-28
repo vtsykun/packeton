@@ -32,6 +32,7 @@ class VcsRepository extends ComposerVcsRepository implements PacketonRepositoryI
 
         // Disable https://github.com/composer/composer/pull/11453
         $this->url = $repoConfig['url'];
+        $this->repoConfig = $repoConfig;
     }
 
     public function setDriver(VcsDriverInterface $driver): void
