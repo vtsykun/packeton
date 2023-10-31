@@ -325,7 +325,7 @@ class PacketonUtils
         $namespace = $httpUrl = $sshUrl = $hostname = null;
 
         if (preg_match('#^https?://bitbucket\.org/([^/]+)/([^/]+?)(?:\.git|/?)?$#i', $url, $match, PREG_UNMATCHED_AS_NULL)) {
-            $namespace = $match[1] . $match[2];
+            $namespace = $match[1] . '/' . $match[2];
             $hostname = 'bitbucket.org';
 
             $sshUrl = 'git@' . $hostname . ':'.$namespace.'.git';
