@@ -1,0 +1,45 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Integration Connect - {{ parent() }}{% endblock %}
+
+{% block content %}
+<section class="row">
+    <div class="col-md-12">
+        <h2 style="text-align: center">Available integrations</h2>
+
+        <p>
+            To use OAuth2 API synchronization with on-premises versions of GitHub, Bitbucket, Gitea or GitLab you need
+            Authorizing Packeton APP with your account remote VCS account.
+            You can also use them to login to Packeton via OAuth2.
+        </p>
+
+        <p>
+            Packeton use Symfony Http client, if you need to change http preference you may configure it globally
+            <a href="https://symfony.com/doc/current/http_client.html">https://symfony.com/doc/current/http_client.html</a>
+        </p>
+        <br>
+
+        {% for integration in integrations %}
+            {% set config = integration.getConfig(null, true) %}
+
+            <div style="padding-bottom: 55px; max-width: 700px; display: flex; justify-content: space-between">
+                <div>
+                    {% if config.logo %}
+                        <img src="{{ config.logo }}" height="40" alt="connect">
+                    {% endif %}
+                    <b>{{ config.title ?? config.name }}</b>
+                    <div class="form-group">
+                        <label class="link-gray">Redirect Urls</label>
+                        <textarea class="form-control" readonly rows="4" style="width: 450px;">{{ config.redirectUrls|join("\n") }}</textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <a class="btn btn-primary" style="margin-top: 5rem" href="{{ path('oauth_integration', {'alias': config.name}) }}">Connect</a>
+                </div>
+            </div>
+        {% endfor %}
+
+    </div>
+</section>
+{% endblock %}

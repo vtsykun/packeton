@@ -1,0 +1,43 @@
+.label-1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed;
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 16px;
+    color: #656d76;
+    background-color: #f6f8fa;
+}
+.attachment-item {
+    margin-top: 10px;
+    color: #656d76;
+    display: flex;
+    align-items: baseline;
+}
+.attachment-item .fa-times {
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 5px;
+}
+.dragover {
+    border: 1px solid;
+    box-shadow: #c9ff00 0 0 3px;
+}
+.file-1 {
+    position: absolute;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    word-wrap: normal;
+    border: 0;
+    padding: 16px 0;
+    width: 100%;
+    text-align: center !important;
+}
+
+#import_packages span.select2-container {
+    width: 100% !important;
+}

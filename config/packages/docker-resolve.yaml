@@ -1,0 +1,96 @@
+resolve:
+# Symfony customization, @see Packeton\DependencyInjection\Resolve\ResolveExtension
+# deferred config loading depending on env vars
+# !After change env need to clear cache!
+    google_integration:
+        expression: 'env("OAUTH_GOOGLE_CLIENT_ID")'
+        parameters:
+            env(OAUTH_GOOGLE_ALLOW_REGISTRATION): false
+        packeton:
+            integrations:
+                google:
+                    allow_login: true # this integration makes no sense with false
+                    allow_register: '%env(bool:OAUTH_GOOGLE_ALLOW_REGISTRATION)%'
+                    google:
+                        client_id: '%env(OAUTH_GOOGLE_CLIENT_ID)%'
+                        client_secret: '%env(OAUTH_GOOGLE_CLIENT_SECRET)%'
+
+    github_integration:
+        expression: 'env("OAUTH_GITHUB_CLIENT_ID")'
+        parameters:
+            env(OAUTH_GITHUB_ALLOW_LOGIN): false
+            env(OAUTH_GITHUB_ALLOW_REGISTRATION): false
+            env(OAUTH_GITHUB_BASE_URL): null
+            env(OAUTH_GITHUB_DISABLE_ORG_HOOK): false
+            env(OAUTH_GITHUB_DISABLE_REP_HOOK): false
+        packeton:
+            integrations:
+                github:
+                    allow_login: '%env(bool:OAUTH_GITHUB_ALLOW_LOGIN)%'
+                    allow_register: '%env(bool:OAUTH_GITHUB_ALLOW_REGISTRATION)%'
+                    base_url: '%env(OAUTH_GITHUB_BASE_URL)%'
+                    disable_hook_repos: '%env(bool:OAUTH_GITHUB_DISABLE_ORG_HOOK)%'
+                    disable_hook_org: '%env(bool:OAUTH_GITHUB_DISABLE_ORG_HOOK)%'
+                    github:
+                        client_id: '%env(OAUTH_GITHUB_CLIENT_ID)%'
+                        client_secret: '%env(OAUTH_GITHUB_CLIENT_SECRET)%'
+
+    gitlab_integration:
+        expression: 'env("OAUTH_GITLAB_CLIENT_ID")'
+        parameters:
+            env(OAUTH_GITLAB_ALLOW_LOGIN): false
+            env(OAUTH_GITLAB_ALLOW_REGISTRATION): false
+            env(OAUTH_GITLAB_BASE_URL): null
+            env(OAUTH_GITLAB_DISABLE_ORG_HOOK): false
+            env(OAUTH_GITLAB_DISABLE_REP_HOOK): false
+        packeton:
+            integrations:
+                gitlab:
+                    allow_login: '%env(bool:OAUTH_GITLAB_ALLOW_LOGIN)%'
+                    allow_register: '%env(bool:OAUTH_GITLAB_ALLOW_REGISTRATION)%'
+                    base_url: '%env(OAUTH_GITLAB_BASE_URL)%'
+                    disable_hook_repos: '%env(bool:OAUTH_GITLAB_DISABLE_ORG_HOOK)%'
+                    disable_hook_org: '%env(bool:OAUTH_GITLAB_DISABLE_ORG_HOOK)%'
+                    gitlab:
+                        client_id: '%env(OAUTH_GITLAB_CLIENT_ID)%'
+                        client_secret: '%env(OAUTH_GITLAB_CLIENT_SECRET)%'
+
+    gitea_integration:
+        expression: 'env("OAUTH_GITEA_CLIENT_ID")'
+        parameters:
+            env(OAUTH_GITEA_ALLOW_LOGIN): false
+            env(OAUTH_GITEA_ALLOW_REGISTRATION): false
+            env(OAUTH_GITEA_BASE_URL): null
+            env(OAUTH_GITEA_DISABLE_ORG_HOOK): false
+            env(OAUTH_GITEA_DISABLE_REP_HOOK): false
+        packeton:
+            integrations:
+                gitea:
+                    allow_login: '%env(bool:OAUTH_GITEA_ALLOW_LOGIN)%'
+                    allow_register: '%env(bool:OAUTH_GITEA_ALLOW_REGISTRATION)%'
+                    base_url: '%env(OAUTH_GITEA_BASE_URL)%'
+                    disable_hook_repos: '%env(bool:OAUTH_GITEA_DISABLE_ORG_HOOK)%'
+                    disable_hook_org: '%env(bool:OAUTH_GITEA_DISABLE_ORG_HOOK)%'
+                    gitea:
+                        client_id: '%env(OAUTH_GITEA_CLIENT_ID)%'
+                        client_secret: '%env(OAUTH_GITEA_CLIENT_SECRET)%'
+
+    bitbucket_integration:
+        expression: 'env("OAUTH_BITBUCKET_CLIENT_ID")'
+        parameters:
+            env(OAUTH_BITBUCKET_ALLOW_LOGIN): false
+            env(OAUTH_BITBUCKET_ALLOW_REGISTRATION): false
+            env(OAUTH_BITBUCKET_BASE_URL): null
+            env(OAUTH_BITBUCKET_DISABLE_ORG_HOOK): false
+            env(OAUTH_BITBUCKET_DISABLE_REP_HOOK): false
+        packeton:
+            integrations:
+                bitbucket:
+                    allow_login: '%env(bool:OAUTH_BITBUCKET_ALLOW_LOGIN)%'
+                    allow_register: '%env(bool:OAUTH_BITBUCKET_ALLOW_REGISTRATION)%'
+                    base_url: '%env(OAUTH_BITBUCKET_BASE_URL)%'
+                    disable_hook_repos: '%env(bool:OAUTH_BITBUCKET_DISABLE_ORG_HOOK)%'
+                    disable_hook_org: '%env(bool:OAUTH_BITBUCKET_DISABLE_ORG_HOOK)%'
+                    bitbucket:
+                        key: '%env(OAUTH_BITBUCKET_CLIENT_ID)%'
+                        secret: '%env(OAUTH_BITBUCKET_CLIENT_SECRET)%'

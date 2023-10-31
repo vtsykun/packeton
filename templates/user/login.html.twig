@@ -1,0 +1,64 @@
+{% extends "user/unauthorized.html.twig" %}
+
+{% block search_main %}
+{% endblock %}
+
+{% block content_cetral_title %}
+    <div style="text-align: center;">
+        <h2 class="title">Sign in Packeton</h2>
+    </div>
+{% endblock %}
+
+{% block content_cetral_form %}
+    <form action="{{ path('login') }}" method="POST">
+        <div class="form-group clearfix">
+            <label for="username">{{ 'security.login.username'|trans }}</label>
+            <div class="input-group clearfix">
+                <input class="form-control" type="text" id="username" name="_username" placeholder="username or email">
+                <span class="input-group-addon"><i class="fa fa-user"></i></span>
+            </div>
+        </div>
+
+        <div class="form-group clearfix">
+            <label for="password">{{ 'security.login.password'|trans }}</label>
+            <div class="input-group clearfix">
+                <input class="form-control" type="password" id="password" name="_password">
+                <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+            </div>
+        </div>
+
+        <div class="checkbox">
+            <a class="pull-right" href="{{ path('request_pwd_reset') }}">Forgot password?</a>
+
+            <label for="remember_me">
+                <input type="checkbox" id="remember_me" name="_remember_me" value="on" checked="checked" />
+                {{- 'security.login.remember_me'|trans }}
+            </label>
+        </div>
+        <input class="btn btn-block btn-success btn-lg" type="submit" id="_submit" name="_submit" value="{{ 'security.login.submit'|trans }}" />
+    </form>
+    <hr>
+    {% if loginProviders|length > 0 %}
+        {% include 'user/login_providers.html.twig' %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+            let check = $('#remember_me');
+            check.on('change', () => {
+                let checked = check.is(':checked');
+                let expires = new Date();
+                expires.setTime(expires.getTime() + 1000 * 1800);
+                if (checked) {
+                    document.cookie = '_remember_me_flag=on;expires='+ expires.toUTCString() +';path=/';
+                } else {
+                    document.cookie = "_remember_me_flag=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                }
+
+            });
+            check.trigger('change');
+        });
+    </script>
+{% endblock %}

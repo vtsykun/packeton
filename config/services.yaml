@@ -1,0 +1,235 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    env(APP_COMPOSER_HOME): null
+    env(PACKAGIST_DIST_HOST): null
+    env(GITHUB_NO_API): true
+    env(PACKAGIST_DIST_PATH): '%kernel.project_dir%/var/zipball'
+    env(PACKAGE_UPDATE_INTERVAL): 43200
+    env(TRUSTED_PROXIES): null
+    env(MAILER_FROM): 'Packeton <packeton@example.com>'
+    env(PUBLIC_ACCESS): false
+    env(STORAGE_SOURCE): local
+
+    # twig sandbox
+    security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim', 'return']
+    security_policy_functions: ['attribute', 'cycle', 'date', 'max', 'min', 'random', 'range', 'constant']
+    security_policy_methods: []
+    security_policy_forbidden_classes:
+        - 'Packeton\Entity\Job'
+        - 'Packeton\Entity\SshCredentials'
+        - 'Packeton\Entity\ApiToken'
+        - 'Packeton\Entity\OAuthIntegration'
+    security_policy_forbidden_properties:
+        'Packeton\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
+        'Packeton\Entity\Package': ['credentials']
+    security_policy_forbidden_methods:
+        'Packeton\Entity\User': ['getApiToken', 'unserialize', 'getGithubToken', 'getPassword', 'getSalt', 'getPlainPassword', '!regex /^(add|set)/']
+        'Packeton\Entity\Package': ['getCredentials', '!regex /^(add|set)/']
+
+    default_login_provider: 'form_login'
+    default_login_options:
+        provider: all_users
+        login_path: /login
+        use_forward: false
+        check_path: /login
+        failure_path: null
+    
+    composer_home_dir: '%env(resolve:APP_COMPOSER_HOME)%'
+    mirror_repos_meta_dir: '%composer_home_dir%/proxy-meta'
+    mirror_repos_dist_dir: '%composer_home_dir%/proxy-dist'
+    
+    package_name_regex: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+'
+    package_name_regex_v2: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'
+    package_name_regex_v1: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.$-]+' # package$hash
+
+    mirror_metadata_regex: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.-]+'
+    mirror_metadata_regex_v2: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.~-]+'
+    mirror_metadata_regex_v1: '[A-Za-z0-9_.-]+/[@A-Za-z0-9_.$-]+'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $redis: '@snc_redis.default'
+            Redis: '@snc_redis.default'
+            $jwtTokenConfig: '%packeton_jws_config%'
+            $jwtSignAlgorithm: '%packeton_jws_algo%'
+            $mirrorRepoMetaDir: '%mirror_repos_meta_dir%'
+            $mirrorDistDir: '%mirror_repos_dist_dir%'
+            $packageRegexp: '%package_name_regex%'
+            $swaggerDocsDir: '%kernel.project_dir%/swagger'
+            $artifactPaths: '%packeton_artifact_paths%'
+            $noPrivateHttpClient: '@Symfony\Component\HttpClient\NoPrivateNetworkHttpClient'
+            Symfony\Component\Security\Core\User\UserCheckerInterface: '@Packeton\Security\UserChecker'
+            League\Flysystem\FilesystemOperator $baseStorage: '@flysystem.base'
+            League\Flysystem\FilesystemOperator $artifactStorage: '@flysystem.artifact'
+
+    Packeton\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Event/'
+            - '../src/Kernel.php'
+            - '../src/Repository/'
+            - '../src/Mirror/Decorator/'
+            - '../src/Webhook/Twig/'
+
+    packeton.menu.profile:
+        class: Knp\Menu\MenuItem
+        factory: ['@Packeton\Menu\MenuBuilder', createProfileMenu]
+        tags:
+            - { name: knp_menu.menu, alias: profile_menu }
+
+    packeton.menu.admin:
+        class: Knp\Menu\MenuItem
+        factory: ['@Packeton\Menu\MenuBuilder', createAdminMenu]
+        tags:
+            - { name: knp_menu.menu, alias: admin_menu }
+
+    packeton.menu.user:
+        class: Knp\Menu\MenuItem
+        factory: ['@Packeton\Menu\MenuBuilder', createUserMenu]
+        tags:
+            - { name: knp_menu.menu, alias: user_menu }
+
+    Packeton\Resolver\ControllerArgumentResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 105 }
+    
+    Packeton\Service\AssetHashVersionStrategy:
+        arguments:
+            $publicDir: '%kernel.project_dir%/public'
+            $debug: '%kernel.debug%'
+
+    Packeton\Security\Acl\AnonymousVoter:
+        arguments:
+            $isAnonymousAccess: '%anonymous_access%'
+            $isAnonymousArchiveAccess: '%anonymous_archive_access%'
+            $isAnonymousMirror: '%anonymous_mirror_access%'
+    
+    Packeton\Model\UploadZipballStorage:
+        arguments:
+            $supportTypes: '%packeton_artifact_types%'
+            $tmpDir: '%packeton_artifact_storage%'
+
+    Packeton\Service\DistConfig:
+        arguments:
+            $config: '%packeton_archive_opts%'
+
+    Packeton\Package\InMemoryDumper:
+        arguments:
+            $config: '%packeton_dumper_opts%'
+
+    Packeton\DBAL\OpensslCrypter:
+        public: true
+        arguments:
+            $encryptionDbalKey: '%env(APP_SECRET)%'
+
+    Packeton\Webhook\HmacOpensslCrypter:
+        arguments:
+            $signKey: '%env(APP_SECRET)%'
+
+    Packeton\Composer\PackagistFactory:
+        arguments:
+            $composerHome: '%composer_home_dir%'
+            $githubNoApi: '%packeton_github_no_api%'
+
+    Packeton\Cron\CronWorker:
+        arguments:
+            $consoleHandler: '@?monolog.handler.console'
+            $scheduleRunner: '@okvpn_cron.runner_default'
+
+    Packeton\Webhook\EventListener\HookListener:
+        tags:
+            - { name: kernel.event_listener, event: packageRefresh }
+            - { name: kernel.event_listener, event: packagePersist }
+            - { name: kernel.event_listener, event: packageError }
+            - { name: kernel.event_listener, event: packageRemove }
+            - { name: kernel.event_listener, event: packageAdvisory }
+            - { name: kernel.event_listener, event: security.interactive_login, method: onUserLogin }
+
+    packeton.twig.webhook_security_policy:
+        class: Twig\Sandbox\SecurityPolicy
+        autoconfigure: false
+        arguments:
+            # tags
+            - '%security_policy_tags%'
+            # filters
+            - []
+            # methods
+            - '%security_policy_methods%'
+            # properties
+            - []
+            # functions
+            - '%security_policy_functions%'
+
+    Packeton\Webhook\Twig\WebhookSecurityPolicy:
+        decorates: packeton.twig.webhook_security_policy
+        autoconfigure: false
+        arguments:
+            - '@.inner'
+            - ~  # Parent tags
+            - [] # Allow all filters
+            - ~  # Parent functions
+            - '%security_policy_forbidden_methods%'
+            - '%security_policy_forbidden_properties%'
+            - '%security_policy_forbidden_classes%'
+        calls:
+            - [setAllowedExtension, [!tagged trusted_extension]]
+
+    packeton.twig.webhook_sandbox:
+        class: Twig\Extension\SandboxExtension
+        autoconfigure: false
+        arguments:
+            - '@packeton.twig.webhook_security_policy'
+            - true # use sandbox globally in instance
+
+    Packeton\Webhook\Twig\PlaceholderExtension:
+        autoconfigure: false
+        tags:
+            - { name: trusted_extension }
+
+    Packeton\Webhook\Twig\WebhookExtension:
+        autoconfigure: false
+        arguments:
+            - '@doctrine'
+            - '@Packeton\Util\ChangelogUtils'
+            - '@snc_redis.default'
+        tags:
+            - { name: trusted_extension }
+
+    Packeton\Webhook\Twig\PayloadRenderer:
+        arguments:
+            $extensions: !tagged trusted_extension
+            $options:
+                cache: '%kernel.cache_dir%/webhook'
+                clear_text_tokens: false
+        calls:
+            - [addExtension, ['@packeton.twig.webhook_sandbox']]
+
+    Packeton\Security\CheckLdapCredentialsListener:
+        autoconfigure: false
+
+    Packeton\Security\Token\TokenCheckerRegistry:
+        autoconfigure: false
+        lazy: true
+        arguments:
+            - '@Packeton\Security\Token\DefaultTokenChecker'
+        calls:
+            - [addTokenChecker, ['@Packeton\Security\Token\PatTokenChecker']]
+            - [addTokenChecker, ['@Packeton\Security\Token\JwtTokenChecker']]
+            - [addTokenChecker, ['@Packeton\Security\Token\IntegrationTokenChecker']]
+
+    Symfony\Component\HttpClient\NoPrivateNetworkHttpClient: ~
+
+    Okvpn\Expression\TwigLanguage:
+        arguments:
+            $options:
+                cache: '%kernel.cache_dir%/expr'

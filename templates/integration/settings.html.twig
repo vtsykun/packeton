@@ -1,0 +1,46 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}{{ alias|capitalize }} - Settings - {{ parent() }}{% endblock %}
+
+{% block scripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
+{% endblock %}
+
+{% block content %}
+
+    <h2 class="title">
+        {{ alias|capitalize }} - Settings
+    </h2>
+
+    {% include 'integration/info_app.html.twig' %}
+    <hr>
+
+    <style>
+        #settings-form label {
+            margin-bottom: 0;
+        }
+        #settings-form input[type=radio] {
+            margin: 0
+        }
+        .form-group > label {
+            font-weight: bold;
+        }
+    </style>
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-sm-6', id: 'settings-form' } }) }}
+        {{ form_widget(form) }}
+
+        <a href="{{ path('integration_index', {'alias': alias, 'id': oauth.id}) }}"> << Go Back</a>
+        <input class="btn btn-block btn-default btn-lg" type="submit" value="Update Settings" />
+        {{ form_end(form) }}
+
+        <div class="col-sm-6">
+            <p>If you do not see any repos in the Excluded VCS repos select2 try to clear cache</p>
+        </div>
+    </section>
+{% endblock %}

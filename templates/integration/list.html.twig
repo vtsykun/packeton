@@ -1,0 +1,38 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}Integrations - {{ parent() }}{% endblock %}
+
+{% block content %}
+<section class="row">
+    <a href="{{ path('integration_connect') }}" class="btn btn-primary" style="float: right">Install Integration</a>
+    <br>
+    <br>
+    {% if integrations|length > 0 %}
+        <ul class="packages user-grid list-unstyled">
+            {% for integration in integrations %}
+                {% set apps = integration.findApps() %}
+                {% set config = integration.config() %}
+                {% for oauth in apps %}
+                    {% set viewPath = path('integration_index', {'alias': config.name, 'id': oauth.id }) %}
+
+                    <li data-url="{{ viewPath }}" class="row">
+                        <div class="col-xs-12 package-item">
+                            <div class="row" style="margin: 6px 12px;">
+                                <div class="s-flex">
+                                    <a href="{{ viewPath }}" class="s-flex no-underline link-gray-dark">
+                                        {% if config.logo %}
+                                            <img height="40" src="{{ config.logo }}" alt="ref">
+                                        {% endif %}
+                                        <h4 class="tab-cell">{{ config.title ?? config.name }}</h4>
+                                    </a>
+                                </div>
+                                {% include 'integration/info_app.html.twig' %}
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</section>
+{% endblock %}

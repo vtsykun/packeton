@@ -1,0 +1,108 @@
+<div class="panel {% if package.abandoned %}package-panel-danger{% else %}package-panel-info{% endif %}">
+    <div class="panel-heading">
+        <h3 id="{{ package.name }}" class="panel-title package-title">
+            <a href="{{ path('view_package', {'name': package.name}) }}" class="anchor">
+                {{ package.name }}
+            </a>
+        </h3>
+
+        {% if package.abandoned %}
+        <p class="abandoned">
+            <strong>Abandoned!</strong>
+            Package is abandoned, you should avoid using it.
+            {% if package.replacementPackage %}
+                Use {{ package.replacementPackage }} instead.
+            {% else %}
+                No replacement was suggested.
+            {% endif %}
+        </p>
+        {% endif %}
+
+    </div>
+
+    <div class="panel-body">
+        {% if package.description %}
+        <p>{{ package.description }}</p>
+        {% endif %}
+
+        {% if package.highest and package.highest.tags|length %}
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>Keywords</strong></div>
+            <div class="col-xs-12 col-sm-10">{{ package.highest.tags|join(', ') }}</div>
+        </div>
+        {% endif %}
+
+        {% if package.highest and package.highest.homepage %}
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>Homepage</strong></div>
+            <div class="col-xs-12 col-sm-10"><a href="{{ package.highest.homepage }}">{{ package.highest.homepage }}</a></div>
+        </div>
+        {% endif %}
+
+        {% if package.highest and package.highest.license %}
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>License</strong></div>
+            <div class="col-xs-12 col-sm-10">{{ package.highest.license|join(', ') }}</div>
+        </div>
+        {% endif %}
+
+        {% if package.highest and package.highest.authors|length %}
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>Authors</strong></div>
+            <div class="col-xs-12 col-sm-10">
+                {% for author in package.highest.authors %}
+                {%- if author.homepage -%}
+                <a href="{{ author.homepage }}">{{ author.name }}</a>
+                {%- else -%}
+                {{ author.name }}
+                {%- endif -%}
+                {%- if not loop.last -%}, {% endif -%}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if package.highest and package.highest.support %}
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>Support</strong></div>
+            <div class="col-xs-12 col-sm-10">
+                <ul>
+                    {% for support_type, support_url in package.highest.support %}
+                    <li>{{ support_type|capitalize }}: <a href="{{ support_url }}">{{ support_url }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>Releases</strong></div>
+            <div class="col-xs-12 col-sm-10">
+                {% for version in package.versions %}
+                    {%- if (version.dist) and (version.type != 'metapackage') -%}
+
+                        <a href="{{ version.dist['url']|replace({'__host_unset__': ''}) }}" title="dist-reference: {{ version.dist['reference'] }}">
+                            {{ version.version }}
+                        </a>
+                        {%- else -%}
+                            <span>{{ version.version }}</span>
+                        {%- endif -%}
+                        {%- if not loop.last -%}, {% endif -%}
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if dependencies is defined and dependencies|length %}
+        <div class="row">
+            <div class="col-xs-2 text-xs-left text-sm-right"><strong>Required by</strong></div>
+            <div class="col-xs-12 col-sm-10">
+                <ul>
+                    {% for dependency in dependencies %}
+                    <li><a href="{{ path('view_package', {'name': dependency.name}) }}">{{ dependency.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>

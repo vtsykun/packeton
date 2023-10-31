@@ -1,0 +1,10 @@
+packeton:
+    github_no_api: '%env(bool:GITHUB_NO_API)%'
+    rss_max_items: 30
+    archive: true
+    anonymous_access: '%env(bool:PUBLIC_ACCESS)%'
+    anonymous_archive_access: '%env(bool:PUBLIC_ACCESS)%'
+    archive_options:
+        format: zip
+        basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'
+        endpoint: '%env(PACKAGIST_DIST_HOST)%'

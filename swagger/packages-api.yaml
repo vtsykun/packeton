@@ -1,0 +1,112 @@
+tags:
+    - name: "Packages"
+      description: "Packages info"
+
+x-pkg-param: &pkg-param
+    parameters:
+        -   name: "name"
+            in: "path"
+            required: true
+            type: "string"
+
+paths:
+    '/api/webhook-invoke/{name}':
+        post:
+            summary: 'Invoke generic webhook'
+            example: $Default
+            description: |
+                External custom webhook. Use query parameter token=user:apitoken for authorization if basic is not supported.
+            <<: *pkg-param
+
+    '/api/jobs/{id}':
+        get:
+            summary: 'Job result'
+            parameters:
+                -   name: "id"
+                    in: "path"
+                    required: true
+                    type: "string"
+
+    '/api/healthz':
+        get:
+            summary: 'Health check'
+
+    '/api/update-package':
+        post:
+            tags: [ Packages ]
+            summary: 'Update package webhook by payload'
+            description: |
+                Update package webhook by payload, see <a href="/about">About</a> <br>
+                Use query parameter token=user:apitoken for authorization if basic is not supported.
+            example: $Default
+
+    '/api/update-package/{name}':
+        get:
+            tags: [ Packages ]
+            summary: 'Update package hook by name'
+            <<: *pkg-param
+
+    '/api/create-package':
+        post:
+            tags: [ Packages ]
+            summary: 'Create a package'
+            example: $PackageCreate
+    
+    '/api/packages':
+        get:
+            tags: [ Packages ]
+            summary: 'List of packages'
+            parameters:
+                -   name: type
+                    description: For example composer-plugin
+                    in: query
+                -   name: vendor
+                    description: For example composer
+                    in: query
+                -   name: "fields[]"
+                    description:  fields - repository, type, versions
+                    in: query
+                    required: false
+                    schema:
+                        type: array
+                        items:
+                            type: string
+
+    '/api/packages/{name}':
+        get:
+            tags: [ Packages ]
+            summary: 'View a package'
+            <<: *pkg-param
+
+        put:
+            tags: [ Packages ]
+            summary: 'Update a package'
+            example: $PackageUpdate
+            <<: *pkg-param
+    
+    '/api/packages/{name}/changelog':
+        get:
+            tags: [ Packages ]
+            summary: 'Get Git changelog for package'
+            parameters:
+                -   name: name
+                    in: path
+                    required: true
+                    type: string
+                -   name: from
+                    description: From version, example v2.8.0
+                    in: query
+                -   name: to
+                    description: To version, example v2.8.1
+                    in: query
+
+examples:
+    PackageCreate: |
+        {
+          "repository": "git@github.com:sonata-project/SonataSeoBundle.git",
+          "credentials": 1
+        }
+    PackageUpdate: |
+        {
+          "repository": "git@github.com:sonata-project/SonataSeoBundle.git"
+        }

@@ -1,0 +1,53 @@
+nelmio_security:
+    clickjacking:
+        paths:
+            '^/.*': DENY
+
+    content_type:
+        nosniff: true
+
+    xss_protection:
+        enabled: true
+        mode_block: true
+
+    csp:
+        enabled: true
+        hash:
+            algorithm: sha256
+        report_logger_service: logger
+        hosts: []
+        compat_headers: false
+        content_types: ["text/html"]
+        enforce:
+            browser_adaptive:
+                enabled: false
+            default-src:
+                - 'self'
+            script-src:
+                - 'self'
+                - 'https://cdn.jsdelivr.net/npm/d3@3.5.17/'
+                - 'https://cdn.jsdelivr.net/npm/nvd3@1.8.6/'
+                - 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.17/'
+                - 'https://cdn.jsdelivr.net/npm/select2@4.0/'
+            connect-src:
+                - 'self'
+            img-src:
+                - 'self'
+                - 'https:'
+                - 'data:'
+            object-src:
+                - 'none'
+            style-src:
+                - 'self'
+                - 'unsafe-inline'
+                - 'https://fonts.googleapis.com'
+                - 'https://cdn.jsdelivr.net'
+            font-src:
+                - 'self'
+                - 'https://fonts.googleapis.com'
+                - 'https://fonts.gstatic.com'
+                - 'https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/'
+            frame-src:
+                - 'self'
+            base-uri:
+                - 'none'

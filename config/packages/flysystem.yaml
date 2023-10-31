@@ -1,0 +1,54 @@
+flysystem:
+    storages:
+        local.storage:
+            adapter: 'local'
+            options:
+                directory: '%env(resolve:PACKAGIST_DIST_PATH)%'
+
+        local.artifact:
+            adapter: 'local'
+            options:
+                directory: '%packeton_artifact_storage%'
+
+        flysystem.base:
+            adapter: 'lazy'
+            options:
+                source: '%env(STORAGE_SOURCE)%.storage'
+
+        flysystem.artifact:
+            adapter: 'lazy'
+            options:
+                source: '%env(STORAGE_SOURCE)%.artifact'
+
+resolve:
+    # deferred config loading depending on env vars
+    expression: 'env("STORAGE_SOURCE") == "s3"'
+    flysystem:
+        storages:
+            s3.storage:
+                adapter: 'asyncaws'
+                options:
+                    client: 'packeton.s3.storage'
+                    bucket: '%env(STORAGE_AWS_BUCKET)%'
+                    prefix: '%env(STORAGE_AWS_PREFIX)%'
+
+            s3.artifact:
+                adapter: 'asyncaws'
+                options:
+                    client: 'packeton.s3.storage'
+                    bucket: '%env(STORAGE_AWS_BUCKET)%'
+                    prefix: '%env(STORAGE_AWS_ARTIFACT_PREFIX)%'
+
+    parameters:
+        env(STORAGE_AWS_BUCKET): 'packeton-bucket'
+        env(STORAGE_AWS_PREFIX): 'packeton'
+        env(STORAGE_AWS_ARGS): '[]'
+        env(STORAGE_AWS_ARTIFACT_PREFIX): 'artifact'
+
+    services:
+        packeton.s3.storage:
+            class: AsyncAws\S3\S3Client
+            arguments:
+                $configuration: '%env(json:STORAGE_AWS_ARGS)%'
+                $httpClient: '@Symfony\Contracts\HttpClient\HttpClientInterface'
+                $logger: '@logger'

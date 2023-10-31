@@ -1,31 +1,16 @@
-/web/bundles
-/web/css
-/web/js
-/web/composer
-/web/images
-/web/uploads/users/*
-/web/media/cache
-/web/build.js
-/var/password.dat
-/var/password.json
-/password.json
-behat.yml
-/.web-server-pid
-/app/config/parameters.yml
-/build/
-.idea
-/phpunit.xml
-/var/*
-/var/cache/*
-!var/cache/.gitkeep
-!var/hook/.gitkeep
-!var/hook/*
-/var/logs/*
-!var/logs/.gitkeep
-!/var/sessions
-/var/sessions/*
-!var/sessions/.gitkeep
-!var/SymfonyRequirements.php
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
 /vendor/
-/web/bundles/
-/var/bin/
+###< symfony/framework-bundle ###
+/book/
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###

@@ -1,0 +1,77 @@
+{% extends "layout.html.twig" %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+    <script src="{{ asset('packeton/js/import.js')}}"></script>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
+{% endblock %}
+
+{% set showSearchDesc = 'hide' %}
+
+{% block content %}
+<h2 class="title">{{ 'submit.import'|trans }}</h2>
+
+<section class="row">
+    {{ form_start(form, { attr: {'data-check-url': path('package_import_check'), 'data-submit-url': path('package_import'), id: 'submit-package-form' } }) }}
+    {% set options %}
+        {{ form_row(form.clone) }}
+        {{ form_row(form.credentials) }}
+        {{ form_row(form.limit) }}
+        {{ form_row(form.filter) }}
+    {% endset %}
+    <div class="col-md-6">
+        <h4 style="font-weight: bold">Import source settings</h4>
+        {{ form_widget(form) }}
+        {{ form_rest(form) }}
+        <input class="btn btn-block btn-success btn-lg" id="submit" type="submit" value="{{ 'submit.submit'|trans }}" />
+    </div>
+
+    <div class="col-md-6">
+        <h4 style="font-weight: bold">Repository settings</h4>
+        {{ options }}
+    </div>
+    {{ form_end(form) }}
+</section>
+
+{% if jobs is defined and jobs|length > 0 %}
+    <section class="row">
+        <div class="col-md-8" style="padding-top: 35px">
+            <h3 class="title" style="font-size: 1.8em">Scheduled Import Jobs</h3>
+            {% for job in jobs %}
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        {% if job.status == 'completed' %}
+                            <i class="fa fa-check" style="color: #28a745" title="Success"></i>
+                        {% elseif job.errored %}
+                            <i class="fa fa-times" style="color: #ba140d" title="Failed"></i>
+                        {% else %}
+                            <i class="fa fa-bullseye" style="color: #ceb034" title="Pending"></i>
+                        {% endif %}
+                        <span class="hook-delivery-guid" data-toggle="collapse" aria-expanded="true" href="#collapse-{{ job.id }}" aria-controls="collapse-{{ job.id }}">
+                            <i class="fa fa-cube"></i> {{ job.id }}
+                        </span>
+                        <span style="float: right;font-size: 0.85em; color: #7b7b7d">{{ job.completedAt|date('Y-m-d H:i:s') ~ ' UTC' }}</span>
+                    </div>
+
+                    <div class="hook-delivery-content collapse" id="collapse-{{ job.id }}">
+                        <div style="margin: 8px">
+                            <b>Output:</b>
+                            <pre class="github">{{ job.getResult('output') }}</pre>
+                            {% if job.getResult('exceptionMsg') %}
+                                <b>Error:</b>
+                                <pre class="github">{{ job.getResult('exceptionMsg') }}</pre>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'user/unauthorized.html.twig' %}
+
+{% block title %}Reset your password - {{ parent() }}{% endblock %}
+
+{% block content_cetral_form %}
+    <h2>Reset your password</h2>
+    {% for flashError in app.flashes('reset_password_error') %}
+        <div class="alert alert-warning" role="alert">{{ flashError }}</div>
+    {% endfor %}
+
+    {{ form_start(requestForm) }}
+        {{ form_rest(requestForm) }}
+        <div><small>Enter your email address and we will send you a link to reset your password.</small></div>
+
+        <button class="btn btn-block btn-inverse btn-lg" id="_request_password_submit">Send password reset email</button>
+    {{ form_end(requestForm) }}
+{% endblock %}

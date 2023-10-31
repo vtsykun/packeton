@@ -1,0 +1,72 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <h2 class="title">{{ sshKey.id ? 'Edit' : 'Add' }} composer git/ssh credentials
+
+    {% if sshKey.id is not null %}
+        <div class="btn-group btn-group-xs">
+            <form class="delete onsubmit-confirm action" action="{{ path('user_delete_sshkey', {id: sshKey.id}) }}" method="POST" >
+                {{ csrf_token_input('delete') }}
+                <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+        </div>
+    {% endif %}
+    </h2>
+
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+        {{ form_rest(form) }}
+        <input class="btn btn-block btn-success btn-lg" type="submit" value="ADD KEY" />
+            {{ form_end(form) }}
+        <div class="col-md-6">
+            <b>Notice. Only owner can edit the ssh keys</b>
+            <h4>Git SSH Key</h4>
+            <p>
+                Application requires the keys to be in PEM format. You receive the following error
+                <code>"This private key is not valid"</code> because the ssh key was generated with newer OpenSSH.
+                New keys with OpenSSH private key format can be converted using ssh-keygen utility to the old PEM format.
+            </p>
+            <pre>
+cp ~/.ssh/id_rsa id_rsa.pem
+ssh-keygen -p -m PEM -f id_rsa.pem
+cat id_rsa.pem
+</pre>
+            <br>
+
+            <h4>Composer auth config</h4>
+            <p>
+                You can overwrite global authentication credentials <code>auth.json</code> <br>
+                This value must be a valid JSON and manually editing this value may result in invalid json errors, so
+                you can find the location of your global auth.json and copy generated value.
+                See <a href="https://getcomposer.org/doc/articles/authentication-for-private-packages.md" target="_blank">Authentication for privately hosted repositories</a>
+            </p>
+            <pre>
+{
+    "http-basic": {
+        "example.org": {"username": "user", "password": "pass"}
+    }
+}</pre>
+        </div>
+    </section>
+
+    <div style="padding-top: 10px; clear: both"></div>
+
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+
+            <h2 class="title"></h2>
+            <b>Your SSH credentials</b>
+
+            {% for listKey in listKeys %}
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <a href="{{ path('user_edit_sshkey', {id: listKey.id}) }}">{{ listKey.name|truncate(45) }}</a>
+                        &nbsp;
+                        <span style="font-size: 0.8em; color: grey">{{ listKey.fingerprint ? listKey.fingerprint : 'Composer Auth' }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

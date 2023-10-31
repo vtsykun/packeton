@@ -1,32 +1,39 @@
 Packeton - Private PHP package repository for vendors
 ======================================================
 
-[![Docker pulls](https://img.shields.io/docker/pulls/okvpn/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/okvpn/packeton)
-[![Docker stars](https://img.shields.io/docker/stars/okvpn/packeton.svg?label=docker+stars)](https://hub.docker.com/r/okvpn/packeton)
-[![Docker version](https://images.microbadger.com/badges/version/okvpn/packeton.svg)](https://hub.docker.com/r/okvpn/packeton)
-[![Docker layers](https://images.microbadger.com/badges/image/okvpn/packeton.svg)](https://hub.docker.com/r/okvpn/packeton)
+[![Run Tests](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml/badge.svg)](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml)
+[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
+[![Hits-of-Code](https://hitsofcode.com/github/vtsykun/packeton?branch=master&label=Hits-of-Code)](https://hitsofcode.com/github/vtsykun/packeton/view?branch=master&label=Hits-of-Code)
+[![Docker pulls](https://img.shields.io/docker/pulls/packeton/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/packeton/packeton)
+[![License](http://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
 
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
 
+**Full documentation** [docs.packeton.org](https://docs.packeton.org/)
+
 Features
 --------
 
-- Compatible with composer.
-- Support update webhook for GitHub, Bitbucket and GitLab.
-- Support custom webhook format.
-- Customers user and groups.
+- Compatible with Composer API v2, bases on Symfony 6.
+- Support update webhook for GitHub, Gitea, Bitbucket and GitLab or custom format.
+- Customers user and ACL groups and limit access by vendor and versions.
+- Composer Proxies and Mirroring.
 - Generic Packeton [webhooks](docs/webhook.md)
-- Limit access by vendor and versions.
 - Allow to freeze updates for the new releases after expire a customers license.
-- Mirroring for packages' zip files and downloads its from your host.
-- Allow to add ssh keys from UI and use multiple SSH Keys settings for different github/git accounts.
+- Mirroring for packages zip files and downloads it's from your host.
+- Credentials and Authentication http-basic config or ssh keys.
+- Support monolithic repositories, like `symfony/symfony`
+- Pull Request `composer.lock` change review.
+- OAuth2 GitHub, Bitbucket, GitLab/Gitea and Other Integrations.
+- Security Monitoring.
+- Milty sub repositories.
 
 What was changed in this fork?
 -----------------------------
-- Disable anonymously access, registrations, spam/antispam, added groups and permissions.
-- Support MySQL and PostgresSQL.
-- Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies.
+- Disable anonymously access, registrations, spam/antispam, added ACL permissions.
+- Support MySQL, PostgresSQL or SQLite.
+- Removed HWIOBundle, Algolia, GoogleAnalytics and other not used dependencies and other metrics collectors.
 
 Table of content
 ---------------
@@ -34,6 +41,7 @@ Table of content
 - [Run as Docker container](#install-and-run-in-docker)
 - [Demo](#demo)
 - [Installation from code](#installation)
+- [Using a reverse proxy](/docs/reverse-proxy.md)
 - [Outgoing Webhook](/docs/webhook.md)
     - [Intro](/docs/webhook.md#introduction)
     - [Examples](/docs/webhook.md#examples)
@@ -42,6 +50,12 @@ Table of content
         - [JIRA issue fix version](/docs/webhook.md#jira-create-a-new-release-and-set-fix-version)
         - [Gitlab setup auto webhook](/docs/webhook.md#gitlab-auto-webhook)
 - [Ssh key access](#ssh-key-access-and-composer-oauth-token)
+- [Configuration](#configuration)
+- [LDAP Authenticating](/docs/authentication-ldap.md)
+- [Import from Packagist.com](/docs/usage/migrate.md)
+- [OAuth2 GitHub, GitLab Integrations](/docs/oauth2.md)
+    - [Pull Request review](/docs/pull-request-review.md)
+    - [GitHub Setup](/docs/oauth2/github-oauth.md)
 - [Update Webhooks](#update-webhooks)
     - [Github](#github-webhooks)
     - [GitLab](#gitlab-service)
@@ -49,137 +63,98 @@ Table of content
     - [Bitbucket](#bitbucket-webhooks)
     - [Manual hook](#manual-hook-setup)
     - [Custom webhook format](#custom-webhook-format-transformer)
+- [Mirroring Composer repos](docs/usage/mirroring.md)
+- [S3 Storage Provider](docs/usage/storage.md)
+- [Security Monitoring](docs/usage/security-monitoring.md)
+- [Compare Private Packagist with Packeton](docs/readme.md#compare-private-packagist-with-packeton)
 - [Usage](#usage-and-authentication)
-    - [Create admin user](#create-admin-user)
+    - [Create admin user](#create-admin-and-maintainer-users)
 
 Demo
 ----
-See our [Administration Demo](https://pkg.okvpn.org). Username/password (admin/composer)
+See our [Administration Demo](https://demo.packeton.org). Username/password (admin/123456)
 
 [![Demo](docs/img/demo.png)](docs/img/demo.png)
 
 Install and Run in Docker
 ------------------------
 
-Pull the image from docker hub https://hub.docker.com/r/okvpn/packeton:
+You can use [packeton/packeton](https://hub.docker.com/r/packeton/packeton) image or GitHub container registry `ghcr.io/vtsykun/packeton:latest` image
 
 ```
-docker pull okvpn/packeton
+docker run -d --name packeton \
+    --mount type=volume,src=packeton-data,dst=/data \
+    -p 8080:80 \
+    packeton/packeton:latest
 ```
 
-Run the image (with docker-composer):
-
-```yaml
-version: '3'
-
-services:
-    packagist:
-        image: okvpn/packeton:latest
-        container_name: packagist
-        restart: unless-stopped
-        hostname: packagist
-        volumes:
-            - .docker/redis:/var/lib/redis  # Redis data
-            - .docker/zipball:/var/www/packagist/app/zipball # Zipped archive cache for "dist" downloads
-            - .docker/composer:/var/www/.composer  # Composer cache
-            - .docker/ssh:/var/www/.ssh # Share here your ssh keys
-        environment:
-            PRIVATE_REPO_DOMAIN_LIST: bitbucket.org gitlab.com github.com
-            PACKAGIST_DIST_HOST: https://pkg.okvpn.org # Dist url to download the zip package.
-            DATABASE_HOST: 172.17.0.1
-            DATABASE_PORT: 5432
-            DATABASE_DRIVER: pdo_pgsql
-            DATABASE_USER: postgres
-            DATABASE_NAME: packagist
-            DATABASE_PASSWORD: 123456
-            ADMIN_USER: admin
-            ADMIN_PASSWORD: composer
-            ADMIN_EMAIL: admin@example.com
-            GITHUB_NO_API: 'true'
-        ports:
-          - 127.0.0.1:8080:80
+After container is running, you may wish to create an admin user via command `packagist:user:manager`
+```
+docker exec -it packeton bin/console packagist:user:manager admin --password=123456 --admin
 ```
 
-Also you can configure Packeton server to run behind a NGINX reverse proxy. 
-For example to enable ssl.
+Or build and run docker container with docker-compose:
+
+- [docker-compose.yml](./docker-compose.yml) Single container example, here the container runs supervisor that to start 
+other jobs: nginx, redis, php-fpm, cron, worker. However, it does not follow the docker best-practises 
+where 1 service must be per container. But it is very easy to use and KISS principle 
+
+- [docker-compose-split.yml](./docker-compose-split.yml) - multiple containers, where 1 service per container
 
 ```
-server {
-    listen *:443 ssl http2;
+docker-compose build
 
-    server_name pkg.okvpn.org;
-
-    ssl_certificate /etc/letsencrypt/live/pkg.okvpn.org/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/pkg.okvpn.org/privkey.pem;
-    ssl_dhparam /etc/nginx/ssl/dh.pem;
-    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4';
- 
-    ssl_protocols TLSv1.1 TLSv1.2;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache  builtin:1000  shared:SSL:10m;
-    ssl_session_timeout  5m;
-    access_log  off;
-    error_log  /var/log/nginx/pkg_error.log;
-
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_buffers 16 16k;
-    gzip_http_version 1.1;
-    gzip_min_length 2048;
-    gzip_types text/css image/svg+xml application/octet-stream application/javascript text/javascript application/json;
-
-    location / {
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_pass http://127.0.0.1:8080/;
-    }
-}
-
-server {
-    if ($host = pkg.okvpn.org) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
-    listen 80;
-    return 301 https://$host$request_uri;
-    server_name pkg.okvpn.org;
-}
+docker-compose up -d # Run with single supervisor container 
+docker-compose up -f docker-compose-split.yml -d # Or split 
 ```
+
+#### Docker Environment variables
+
+- `APP_SECRET` - Must be static, used for encrypt SSH keys in database. The value is generated automatically, see `.env` in the data volume. 
+- `APP_COMPOSER_HOME` - composer home, default /data/composer
+- `DATABASE_URL` - Database DSN, default sqlite:////data/app.db. Example for postgres "postgresql://app:pass@127.0.0.1:5432/app?serverVersion=14&charset=utf8"
+- `PACKAGIST_DIST_PATH` - Default /data/zipball, path to storage zipped versions
+- `REDIS_URL` - Redis DB, default redis://localhost
+- `PACKAGIST_DIST_HOST` - Hostname, (auto) default use the current host header in the request.
+- `TRUSTED_PROXIES` - Ips for Reverse Proxy. See [Symfony docs](https://symfony.com/doc/current/deployment/proxies.html)
+- `TRUSTED_HOSTS` - Trusted host, set if you've enabled public access and your nginx configuration uses without `server_name`. Otherwise, possible the DDoS attack with generated a big cache size for each host.
+- `PUBLIC_ACCESS` - Allow anonymous users access to read packages metadata, default: `false`
+- `MAILER_DSN` - Mailer for reset password, default disabled
+- `MAILER_FROM` - Mailer from
 
 Installation
 ------------
 
 ### Requirements
 
-- MySQL or PostgresSQL for the main data store.
+- PHP 8.1+
 - Redis for some functionality (favorites, download statistics, worker queue).
 - git/svn/hg depending on which repositories you want to support.
 - Supervisor to run a background job worker
+- (optional) MySQL or PostgresSQL for the main data store, default SQLite
 
 1. Clone the repository
-2. Copy and edit `app/config/parameters.yml` and change the relevant values for your setup.
-3. Install dependencies: `composer install`
-4. Run `bin/console doctrine:schema:create` to setup the DB
-5. Run `bin/console assets:install web` to deploy the assets on the web dir.
-6. Run `bin/console cache:warmup --env=prod` and `app/console cache:warmup --env=prod` to warmup cache
-7. Create admin user via console.
+2. Install dependencies: `composer install`
+3. Create .env.local and copy needed environment variables into it, see docker Environment variables section
+4. Run `bin/console doctrine:schema:update --force --complete` to set up the DB
+5. Create admin user via console.
 
 ```
-php bin/console fos:user:create
-# Add admin role
-php bin/console fos:user:promote <username> ROLE_ADMIN
-# Add maintainer role
-php bin/console fos:user:promote <username> ROLE_MAINTAINER
+php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin 
 ```
 
-8. Enable cron tabs and background jobs.
-Enable crontab `crontab -e -u www-data` 
+6. (optional) If you changed the configuration files, then you need to clear the cache `rm -rf var/cache/*` or `php bin/console cache:clear`
+
+7. Enable cron tabs and background jobs.
+Enable crontab `crontab -e -u www-data` or use Docker friendly build-in cron demand runner.
 
 ```
-* * * * * /var/www/packagist/bin/console --env=prod okvpn:cron >> /dev/null
+* * * * * /var/www/packagist/bin/console okvpn:cron >> /dev/null
+```
+
+Example, run cron as background process without crontab. Can use with supervisor.
+```
+bin/console okvpn:cron --demand
 ```
 
 Setup Supervisor to run worker.
@@ -211,13 +186,13 @@ priority=1
 user=www-data
 ```
 
-9. **IMPORTANT** Make sure that web-server, cron and supervisor run under the same user, that should have an ssh key 
+8. **IMPORTANT** Make sure that web-server, cron and supervisor run under the same user, that should have an ssh key 
 that gives it read (clone) access to your git/svn/hg repositories. If you run application under `www-data` 
 you can add your ssh keys to /var/www/.ssh/
 
 You should now be able to access the site, create a user, etc.
 
-10. Make a VirtualHost with DocumentRoot pointing to web/
+9. Make a VirtualHost with DocumentRoot pointing to public/
 
 Ssh key access and composer oauth token.
 -----------------------
@@ -229,16 +204,12 @@ structure must be like this.
 
 ```
     └── /var/www/
-        ├── .ssh/ # ssh keys directory
-        │   ├── config
-        │   ├── id_rsa # main ssh key
-        │   ├── private_key_2 # additional ssh key
-        │   └── private_key_3
-        │
-        └── .composer/ # composer home
-            ├── auth.json
-            └── config.json
-    
+        └── .ssh/ # ssh keys directory
+            ├── config
+            ├── id_rsa # main ssh key
+            ├── private_key_2 # additional ssh key
+            └── private_key_3
+
 ```
 
 Example ssh config for multiple SSH Keys for different github account/repos, 
@@ -261,9 +232,15 @@ Host github-org2
 
 ```
 
-You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.github.com/jeffersonmartin/d0d4a8dfec90d224d14f250b36c74d2f)
+If you have the error ```This private key is not valid``` inserting your ssh in admin panel is because the ssh key was generated with newer OpenSSH.
+New keys with OpenSSH private key format can be converted using ssh-keygen utility to the old PEM format.
+```ssh-keygen -p -m PEM -f ~/.ssh/id_rsa```
 
-```
+You can add GitHub/GitLab access token to `auth.json` of composer home dir 
+(default `APP_COMPOSER_HOME="%kernel.project_dir%/var/.composer"`) or use UI credentials,
+see [here](https://getcomposer.org/doc/articles/authentication-for-private-packages.md) 
+
+```json
 {
     "github-oauth": {
         "github.com": "xxxxxxxxxxxxx"
@@ -271,16 +248,117 @@ You can add GitHub/GitLab access token to `auth.json`, see [here](https://gist.g
 }
 ```
 
+#### Allow connections to http
+
+You can create `config.json` in the composer home (see `APP_COMPOSER_HOME` env var) or add this option
+in the UI credentials form.
+
+```json
+{
+    "secure-http": false
+}
+```
+
 #### Don't use GitHub Api.
 
-By default composer will use GitHub API to get metadata for your GitHub repository, you can add 
-`use-github-api` to composer config.json to always use ssh key and clone the repository as 
-it would with any other git repository, [see here](https://getcomposer.org/doc/06-config.md#use-github-api)
+We disable usage GitHub API by default to force use ssh key or clone the repository via https as
+it would with any other git repository. You can enable it again with env option `GITHUB_NO_API` 
+[see here](https://getcomposer.org/doc/06-config.md#use-github-api).
+
+Configuration
+-------------
+
+In order to add a configuration add a file with any name to the folder `config/packages/*`. 
+The config will merge with default values in priority sorted by filename.
+
+The configuration for Docker installation is available at `/data/config.yaml`.
+Also, you can use docker volume to add config directly at path `config/packages/ldap.yaml`.
+
+```yaml
+...
+        volumes:
+            - .docker:/data
+            - ${PWD}/ldap.yaml:/var/www/packagist/config/packages/ldap.yaml
+```
+
+Where `/var/www/packagist/` default ROOT for docker installation.
+
+Full example of configuration.
+
+```yaml
+packeton:
+    github_no_api: '%env(bool:GITHUB_NO_API)%' # default true
+    rss_max_items: 30
+    archive: true
+
+    # default false
+    anonymous_access: '%env(bool:PUBLIC_ACCESS)%'
+
+    anonymous_archive_access: '%env(bool:PUBLIC_ACCESS)%' # default false
+
+    archive_options:
+        format: zip
+        basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'
+        endpoint: '%env(PACKAGIST_DIST_HOST)%' # default auto detect by host headers 
+        include_archive_checksum: false
+        prebuild_zipball: false # If true - will be created .zip package for each release (and uploaded to S3/storage). Default - build dynamically, only if requested
+
+    # disable by default 
+    jwt_authentication:
+        algo: EdDSA
+        private_key: '%kernel.project_dir%/var/jwt/eddsa-key.pem'
+        public_key: '%kernel.project_dir%/var/jwt/eddsa-public.pem'
+        passphrase: ~
+
+    # See mirrors section
+    mirrors: ~
+    
+    metadata:
+        format: auto # Default, see about metadata.
+        info_cmd_message: ~ # Bash logo, example - \u001b[37;44m#StandWith\u001b[30;43mUkraine\u001b[0m
+    
+    artifacts:
+        # Allow uploading archives
+        support_types: ['gz', 'tar', 'tgz', 'zip']
+        #Allowed paths for artifact composer repo type
+        allowed_paths:
+            - '/data/hdd1/composer'
+        # Default path to storage/(local cache for S3) of uploaded artifacts
+        artifact_storage: '%composer_home_dir%/artifact_storage'
+
+    web_protection: 
+        ## Multi host protection, disable web-ui if host !== app.example.com and ips != 127.0.0.1, 10.9.1.0/24
+        ## But the repo metadata will be available for all hosts and ips.
+        repo_hosts: ['*', '!app.example.com'] 
+        allow_ips: '127.0.0.1, 10.9.1.0/24'
+```
+
+### Metadata format.
+
+Packeton support metadata for Composer 1 and 2. For performance reasons, for Composer 1 uses metadata
+depending on the user-agent header: `providers-lazy-url` if ua != 1; `provider-includes` if ua == 1;
+
+| Format strategy | UA 1                           | UA 2                            | UA is NULL                      |
+|-----------------|--------------------------------|---------------------------------|---------------------------------|
+| auto            | provider-includes metadata-url | providers-lazy-url metadata-url | providers-lazy-url metadata-url |
+| only_v1         | provider-includes              | provider-includes               | provider-includes               |
+| only_v2         | metadata-url                   | metadata-url                    | metadata-url                    |
+| full            | provider-includes metadata-url | provider-includes metadata-url  | provider-includes metadata-url  |
+
+Where `UA 1` - Composer User-Agent = 1. `UA 2` - Composer User-Agent = 2.
 
 Update Webhooks
 ---------------
-You can use GitLab, GitHub, and Bitbucket project post-receive hook to keep your packages up to date 
-every time you push code.
+You can use GitLab, Gitea, GitHub, and Bitbucket project post-receive hook to keep your packages up to date 
+every time you push code. More simple way use group webhooks, to prevent from being added it per each repository manually.
+
+| Provider  | Group webhook support | Target Path                                               |
+|-----------|-----------------------|-----------------------------------------------------------|
+| GitHub    | Yes                   | `https://example.org/api/github?token=`                   |
+| GitLab    | Only paid plan        | `https://example.org/api/update-package?token=`           |
+| Gitea     | Yes                   | `https://example.org/api/update-package?token=`           |
+| Bitbucket | Yes                   | `https://example.org/api/bitbucket?token=`                |
+| Custom    | -                     | `https://example.org/api/update-package/{packnam}?token=` |
 
 #### Bitbucket Webhooks
 To enable the Bitbucket web hook, go to your BitBucket repository, 
@@ -306,11 +384,11 @@ Enter `https://<app>/api/update-package?token=user:token` as URL.
 To enable the GitHub webhook go to your GitHub repository. Click the "Settings" button, click "Webhooks". 
 Add a new hook. Enter `https://<app>/api/github?token=user:token` as URL.
 
-#### Manual hook setup
+#### Manual or other hook setup
 
 If you do not use Bitbucket or GitHub there is a generic endpoint you can call manually 
 from a git post-receive hook or similar. You have to do a POST request to 
-`https://pkg.okvpn.org/api/update-package?token=user:api_token` with a request body looking like this:
+`https://example.org/api/update-package?token=user:api_token` with a request body looking like this:
 
 ```
 {
@@ -320,24 +398,18 @@ from a git post-receive hook or similar. You have to do a POST request to
 }
 ```
 
-Also you can overwrite regex that was used to parse the repository url, 
-see [ApiController](src/Packagist/WebBundle/Controller/ApiController.php#L348)
+It will be works with Gitea by default.
+
+Also, you can use package name in path parameter, see [ApiController](src/Controller/ApiController.php#L78)
 
 ```
-{
-  "repository": {
-    "url": "PACKAGIST_PACKAGE_URL"
-  },
-  "packeton": {
-    "regex": "{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(scm/)?(?P<path>[\\w.-]+(?:/[\\w.-]+?)+)(?:\\.git|/)?$}i"
-  }
-}
+https://example.org/api/update-package/acme/packet1?token=<token>
 ```
 
 You can do this using curl for example:
 
 ```
-curl -XPOST -H 'content-type:application/json' 'https://pkg.okvpn.org/api/update-package?token=user:api_token' -d' {"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'
+curl -XPOST -H 'content-type:application/json' 'https://example.org/api/update-package?token=user:api_token' -d' {"repository":{"url":"PACKAGIST_PACKAGE_URL"}}'
 ```
 
 Instead of using repo url you can use directly composer package name. 
@@ -362,7 +434,7 @@ You have to do a POST request with a request body.
 #### Custom webhook format transformer
 
 You can create a proxy middleware to transform JSON payload to the applicable inner format.
-In first you need create a new Rest Endpoint to accept external request.
+In the first you need create a new Rest Endpoint to accept external request.
 
 Go to `Settings > Webhooks` and click `Add webhook`. Fill the form:
  - url - `https://<app>/api/update-package?token=user:token`
@@ -413,13 +485,13 @@ payload according to your rules.
 
 Usage and Authentication
 ------------------------
-By default admin user have access to all repositories and able to submit packages, create users, view statistics. 
+By default, admin user have access to all repositories and able to submit packages, create users, view statistics. 
 The customer users can only see related packages and own profile with instruction how to use api token.
 
 To authenticate composer access to repository needs add credentials globally into auth.json, for example:
 
 ```
-composer config --global --auth http-basic.pkg.okvpn.org <user> <token>
+composer config --global --auth http-basic.example.org <user> <token>
 ```
 
 API Token you can found in your Profile.
@@ -441,15 +513,20 @@ Configure this private repository in your `composer.json`.
 
 ### Create admin and maintainer users.
 
-Only admin and maintainer user can submit a new package.
-Only admin user can create the new customer users. 
-You can create an user and then promote to admin or maintainer via console using fos user bundle commands.
+
+**Application Roles**
+
+- `ROLE_USER` - minimal access level, these users only can read metadata only for selected packages.
+- `ROLE_FULL_CUSTOMER` - Can read all packages metadata.
+- `ROLE_MAINTAINER` -  Can submit a new package and read all metadata.
+- `ROLE_ADMIN` - Can create a new customer users, management webhooks and credentials.
+
+You can create a user and then promote to admin or maintainer via console using fos user bundle commands.
 
 ```
-php bin/console fos:user:create
-php bin/console fos:user:promote <username> ROLE_ADMIN
+php bin/console packagist:user:manager username --email=admin@example.com --password=123456 --admin # create admin user
+php bin/console packagist:user:manager user1 --add-role=ROLE_MAINTAINER # Add ROLE_MAINTAINER to user user1
 ```
-
 
 LICENSE
 ------

@@ -1,0 +1,14 @@
+okvpn_cron:
+    tasks:
+        -
+            command: 'packagist:stats:compile'
+            cron:    '0 0 * * *'
+        -
+            command: 'packagist:update'
+            cron:    '*/15 * * * *'
+            arguments: {'--update-crawl-interval': '%env(int:PACKAGE_UPDATE_INTERVAL)%' }
+
+    default_policy:
+        lock: true
+    with_stamps:
+        - Packeton\Cron\WorkerStamp

@@ -1,0 +1,25 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}
+    {{ 'packages.settings_title'|trans({ '%name%': package.name }) }}
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h2 class="title">{{ 'packages.settings_title'|trans({ '%name%': package.name }) }}</h2>
+
+<section class="row">
+    {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+    {{ form_widget(form) }}
+    <input class="btn btn-block btn-primary btn-lg" id="submit" type="submit" value="{{ 'edit.submit'|trans }}" />
+    {{ form_end(form) }}
+</section>
+{% endblock %}

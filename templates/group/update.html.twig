@@ -1,0 +1,66 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <h2 class="title">
+        {%- if app.request.attributes.get('_route') == 'groups_update' %}
+            Update group
+        {%- else %}
+            Create an ACL group
+        {%- endif %}
+    </h2>
+
+    <section class="row">
+        {{ form_start(form, { attr: { class: 'col-md-6' } }) }}
+        {{ form_errors(form) }}
+        {{ form_row(form.name) }}
+        {% if form.proxies is defined %}
+            {{ form_row(form.proxies) }}
+        {% endif %}
+        <h3>Access matrix</h3>
+        {% set aclPermissions = get_packages_choice_form_data(form.aclPermissions) %}
+        {% if aclPermissions|length > 0 %}
+            <ul class="nav nav-tabs" role="tablist">
+            {% for vendor, items in aclPermissions %}
+                {% set title = vendor ~ (items['selected'] > 0 ? ' (' ~ items['selected'] ~ ')' : '') %}
+                {% set vid = 'ven-' ~ vendor  %}
+                <li role="presentation" class="{{ loop.first ? 'active' : '' }}"><a href="#{{ vid }}" aria-controls="{{ vid }}" role="tab" data-toggle="tab">{{ title|capitalize }}</a></li>
+            {% endfor %}
+            </ul>
+
+            <div class="tab-content">
+            {% for vendor, items in aclPermissions %}
+                {% set vid = 'ven-' ~ vendor  %}
+                    <div role="tabpanel" class="tab-pane {{ loop.first ? 'active' : '' }}" id="{{ vid }}">
+                        <div style="margin-bottom: -15px">
+                            <button type="button" class="btn-link select-all">Select All</button>
+                            <button type="button" class="btn-link select-none">Select None</button>
+                        </div>
+                        {% for permission in items['items'] %}
+                            <div>{{ form_row(permission) }}</div>
+                        {% endfor %}
+                    </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+
+        <input class="btn btn-block btn-success btn-lg" type="submit" value="{{ 'submit.submit'|trans }}" />
+        {{ form_end(form) }}
+        <div class="col-md-6">
+        </div>
+    </section>
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+           $('.select-all').on('click', (e) => {
+               e.preventDefault();
+               let checkbox = $(e.target).closest('.tab-pane').find('input[type=checkbox]');
+               checkbox.prop('checked', true);
+           });
+
+            $('.select-none').on('click', (e) => {
+                e.preventDefault();
+                let checkbox = $(e.target).closest('.tab-pane').find('input[type=checkbox]');
+                checkbox.prop('checked', false);
+            });
+        });
+    </script>
+{% endblock %}

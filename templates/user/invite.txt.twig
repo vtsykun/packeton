@@ -1,0 +1,8 @@
+Hi,
+
+{{ user|default('Admin') }} has invited you to join the own composer private repository.
+Use this link to set a new password and accept invitation.
+
+{{ url('do_user_invite', {token: token}) }}
+
+Best Regards.

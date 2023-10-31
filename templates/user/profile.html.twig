@@ -1,0 +1,69 @@
+{% extends "layout.html.twig" %}
+
+{% import "macros.html.twig" as macros %}
+
+{% set isActualUser = app.user and app.user.userIdentifier is same as(user.userIdentifier) %}
+
+{% block content %}
+<h2 class="title">
+    {{ user.userIdentifier }}
+    <small>
+        {{ 'user.member_since'|trans }}: {{ user.createdAt|date('M d, Y') }}
+        {%- if is_granted('ROLE_MAINTAINER') %}
+            <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+        {%- endif %}
+    </small>
+</h2>
+
+<section class="row">
+    {% if is_granted('ROLE_ADMIN') and user.admin == false %}
+        <div class="btn-group btn-group-xs">
+            <a href="{{ path('users_login_attempts', {name: user.userIdentifier}) }}" class="btn btn-default">Sessions</a>
+        </div>
+
+        <div class="btn-group btn-group-xs">
+            <a href="{{ path('users_update', {name: user.userIdentifier}) }}" class="btn btn-primary">Edit</a>
+        </div>
+        <div class="btn-group btn-group-xs">
+            <form class="delete onsubmit-confirm action" action="{{ path('user_delete', {name: user.userIdentifier}) }}" method="post" >
+                {{ csrf_token_input('delete') }}
+                <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+        </div>
+    {% endif %}
+
+    {% if user.admin == false or isActualUser %}
+        <section class="col-md-12">
+            <p>Your customer needs to authenticate to access their Composer repository:<br>
+                The simplest way to provide your credentials is providing your set of credentials
+                inline with the repository specification such as:
+            </p>
+            <pre>
+{
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "{{ app.request.getScheme() }}://{{ user.userIdentifier }}:{{ show_api_token(user) }}@{{ app.request.getHttpHost() }}"
+        }
+    ]
+}
+            </pre>
+            <p>
+                When you don't want to hard code your credentials into your composer.json.
+                There is a second way to provide these details and it is via interaction.
+                If you don't provide the authentication credentials composer will prompt you upon connection
+                to enter the username and password.
+            </p>
+            <pre>
+composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ show_api_token(user) }}
+            </pre>
+            <p>
+                For continuous integration or deployment environments, you may use COMPOSER_AUTH environment variable
+            </p>
+            <pre>
+COMPOSER_AUTH='{"http-basic": {"{{ app.request.getHttpHost() }}": {"username": "{{ user.userIdentifier }}", "password": "{{ show_api_token(user) }}"}}}'
+            </pre>
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

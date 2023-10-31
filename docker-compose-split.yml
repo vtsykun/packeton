@@ -1,0 +1,94 @@
+version: '3.9'
+
+x-volumes: &default-volume
+    volumes:
+        - app-data:/data
+        - app-var:/var/www/packagist/var
+
+x-restart-policy: &restart_policy
+    restart: unless-stopped
+
+x-environment: &default-environment
+    REDIS_URL: redis://redis
+    DATABASE_URL: "postgresql://packeton:pack123@postgres:5432/packeton?serverVersion=14&charset=utf8"
+    SKIP_INIT: 1
+
+services:
+    redis:
+        image: redis:7-alpine
+        hostname: redis
+        <<: *restart_policy
+        volumes:
+            - redis-data:/data
+ 
+    postgres:
+        image: postgres:14-alpine
+        hostname: postgres
+        <<: *restart_policy
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: packeton
+            POSTGRES_PASSWORD: pack123
+            POSTGRES_DB: packeton
+
+    php-fpm:
+        image: packeton/packeton:latest
+        hostname: php-fpm
+        command: ['php-fpm', '-F']
+        <<: *restart_policy
+        <<: *default-volume
+        environment:
+            <<: *default-environment
+            SKIP_INIT: 0
+            WAIT_FOR_HOST: 'postgres:5432'
+        depends_on:
+            - "postgres"
+            - "redis"
+
+    nginx:
+        image: packeton/packeton:latest
+        hostname: nginx
+        ports:
+            - '127.0.0.1:8088:80'
+        <<: *restart_policy
+        <<: *default-volume
+        command: >
+            bash -c 'sed s/_PHP_FPM_HOST_/php-fpm:9000/g < docker/nginx/nginx-tpl.conf > /etc/nginx/nginx.conf && nginx'
+        environment:
+            <<: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - "php-fpm"
+
+    worker:
+        image: packeton/packeton:latest
+        hostname: packeton-worker
+        command: ['bin/console', 'packagist:run-workers', '-v']
+        user: www-data
+        <<: *restart_policy
+        <<: *default-volume
+        environment:
+            <<: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - "php-fpm"
+
+    cron:
+        image: packeton/packeton:latest
+        hostname: packeton-cron
+        command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
+        user: www-data
+        <<: *restart_policy
+        <<: *default-volume
+        environment:
+            <<: *default-environment
+            WAIT_FOR_HOST: 'php-fpm:9000'
+        depends_on:
+            - "php-fpm"
+
+volumes:
+    redis-data:
+    postgres-data:
+    app-data:
+    app-var:

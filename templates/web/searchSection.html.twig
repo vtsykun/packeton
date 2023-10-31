@@ -1,0 +1,18 @@
+<section class="wrapper wrapper-search">
+    <div class="container {% if showSearchDesc == 'show' %}with-description{% endif %}">
+        {{ render(controller('Packeton\\Controller\\WebController::searchFormAction', { req: app.request })) }}
+
+        {%- if showSearchDesc == 'show' %}
+        <div class="row">
+            <div class="col-sm-9 hidden-xs">
+                {% block logo_small_default %}
+                    <a href="{{ path('home') }}">
+                        <img src="{{ asset('packeton/img/logo-small.png') }}" class="logo">
+                    </a>
+                    <p>{{ 'search.claim_html'|trans|raw }}</p>
+                {% endblock %}
+            </div>
+        </div>
+        {%- endif %}
+    </div>
+</section>

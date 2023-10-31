@@ -1,0 +1,257 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{% block textarea_widget %}
+{% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+{{ parent() }}
+{% endblock textarea_widget %}
+
+{%- block choice_widget_collapsed -%}
+    {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+    {{ parent() }}
+{%- endblock choice_widget_collapsed -%}
+
+{% block form_widget_simple %}
+{% apply spaceless %}
+    {% set attr = attr|merge({'class': attr.class|default('') ~ ' form-control'}) %}
+    {% set type = type|default('text') %}
+
+    {{ parent() }}
+{% endapply %}
+{% endblock form_widget_simple %}
+
+{% block form_row %}
+{% apply spaceless %}
+    <div class="form-group{% if errors|length > 0 %} has-error{% endif %}">
+        {{ form_label(form) }}
+
+        {{ form_widget(form) }}
+
+        {% for error in errors %}
+            <span class="help-block form-error">
+                {{
+                    error.messagePluralization is null
+                    ? error.messageTemplate|trans(error.messageParameters, 'validators')
+                    : error.messageTemplate|trans(error.messagePluralization, error.messageParameters, 'validators')
+                }}
+            </span>
+        {% endfor %}
+    </div>
+{% endapply %}
+{% endblock form_row %}
+
+{% block form_errors %}
+{% apply spaceless %}
+    {% if errors|length > 0 %}
+        {% for error in errors %}
+            <div class="alert alert-danger">{{ error.message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endapply %}
+{% endblock form_errors %}
+
+{%- block package_permission_widget -%}
+    <div class="collection-item">
+        <div class="input-group">
+            <div class="input-group-addon" style="width: 75%;">{% if value is not empty %}{{ value.name }}{% endif %}</div>
+            <div class="input-group-addon" style="width: 11%">
+                {{ form_widget(form.selected) }}
+            </div>
+            <div style="width: 15%; float: right" class="package-permission">{{ form_widget(form.version) }}</div>
+            {{ form_widget(form.name) }}
+        </div>
+        {{ form_errors(form.version) }}
+        {{ form_errors(form.selected) }}
+        {{ form_errors(form.name) }}
+    </div>
+{%- endblock package_permission_widget -%}
+
+{%- block _sub_repository_packages_entry_row -%}
+<div class="collection-item">
+    <div class="input-group">
+        <div class="input-group-addon" style="width: 80%;">{{ value }}</div>
+        <div class="input-group-addon" style="width: 20%; border-right: 1px solid;">
+            {{- form_widget(form) -}}
+        </div>
+    </div>
+</div>
+{%- endblock -%}
+
+{% block _sub_repository_slug_widget %}
+<div class="input-group">
+    <span class="input-group-addon" style="width: 50%">{{ app.request.schemeAndHttpHost }}/</span>
+    {{- form_widget(form, {'attr': {'style': 'width: 50%'}}) -}}
+</div>
+{% endblock %}
+
+{%- block form_label -%}
+    {% if label is not same as(false) -%}
+        {% if not compound -%}
+            {% set label_attr = label_attr|merge({'for': id}) %}
+        {%- endif -%}
+        {% if required -%}
+            {% set label_attr = label_attr|merge({'class': (label_attr.class|default('') ~ ' required')|trim}) %}
+        {%- endif -%}
+        {% if label is empty -%}
+            {%- if label_format is not empty -%}
+                {% set label = label_format|replace({
+                    '%name%': name,
+                    '%id%': id,
+                }) %}
+            {%- else -%}
+                {% set label = name|humanize %}
+            {%- endif -%}
+        {%- endif -%}
+
+        {%- set labelValue -%}
+            {%- if translation_domain is same as(false) -%}
+                {{- label -}}
+            {%- else -%}
+                {{- label|trans({}, translation_domain) -}}
+            {%- endif -%}
+        {%- endset -%}
+
+        <{{ element|default('label') }}{% if label_attr %}{% with { attr: label_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}>
+            {%- if tooltip is defined and tooltip -%}
+                <i class="fa fa-info-circle"
+                   style="cursor: pointer; color: #0c71d0; padding-right: 8px;"
+                   data-placement="top"
+                   data-html="true"
+                   data-content="{{ tooltip|trans }}"
+                   data-toggle="popover"></i>
+            {%- endif -%}
+
+            {%- if with_value is defined and with_value -%}
+                {{-  value -}}&nbsp;<span style="color: #7b7b7d; font-size: 0.85em">{{- labelValue -}}</span>
+            {%- else -%}
+                {{- labelValue -}}
+            {%- endif -%}
+
+            {%- if required -%}<em>*</em>{%- endif -%}
+        </{{ element|default('label') }}>
+    {%- endif -%}
+{%- endblock form_label -%}
+
+{%- block choice_widget_expanded -%}
+    <div {{ block('widget_container_attributes') }}>
+        {%- for child in form %}
+            <div class="choice-widget-expanded">
+                {{- form_widget(child) -}}
+                {{- form_label(child, null, {translation_domain: choice_translation_domain, with_value: attr['with_value'] is defined and attr['with_value']}) -}}
+            </div>
+        {% endfor -%}
+    </div>
+{%- endblock choice_widget_expanded -%}
+
+{%- block mono_repo_package_widget -%}
+    {{ form_errors(form) }}
+    {{ form_widget(form) }}
+
+    <div class="hide-unchecked" style="margin-bottom: 5px">
+        <a href="{{ path('fetch_monorepo_info') }}" class="test-item" title="Run tests to lookup composer.json by glob expr">Test list</a>
+    </div>
+    <pre class="debug-container" style="display: none"></pre>
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+            let debug = $('.debug-container');
+            let $el = $('.test-item');
+
+            $el.on('click', (e) => {
+                let url = $el.attr('href');
+                e.preventDefault();
+                debug.html('');
+                $.post(url, $el.closest('form').serializeArray(), (data) => {
+                    debug.show();
+                    if (data['list']) {
+                        debug.html(data['list']);
+                    } else {
+                        console.log(data);
+                    }
+                });
+            });
+        });
+    </script>
+{%- endblock mono_repo_package_widget -%}
+
+{% block integration_package_widget %}
+    {{ form.repoType is defined ? form_row(form.repoType) }}
+    {{ form.integration is defined ? form_row(form.integration) }}
+    {{ form.externalRef is defined ? form_row(form.externalRef) }}
+
+    {{ form_rest(form) }}
+    <p>You must select an integration to add a package.</p>
+    <p> <b>Notice.</b> If you don't see the package in repository name select2 then you need to refresh the cache on the integration page.</p>
+    <script nonce="{{ csp_nonce('script') }}">
+        window.defer(function () {
+            let select = $('.integration');
+            select.on('change', (e) => {
+                let val = select.val();
+                let s2 = $('.jselect2');
+                if (!val) {
+                    s2.select2({'data': []});
+                    s2.html('').change();
+                    return;
+                }
+
+                let url = '/integration/all/' + val + '/repos';
+                $.ajax({
+                    url: url,
+                    success: (result) => {
+                        let options = result.map((item) => '<option value="' + item.id + '">' + item.text + '</option>');
+                        s2.select2({'data': result});
+                        s2.html(options.join('')).change();
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
+{%- block embed_collection_widget -%}
+    {% import _self as self %}
+    {% if prototype is defined %}
+        {% set prototype_html = self.collection_item_prototype(form) %}
+    {% endif %}
+
+    {% set attr = attr|merge({'class': (attr.class is defined ? attr.class ~ ' ' : '') ~ 'collection-fields-list' }) %}
+    {% set id = id ~ '_collection' %}
+    <div class="row-embed">
+        {% set prototype_name = form.vars.prototype_name %}
+        <div {{ block('widget_container_attributes') }} data-last-index="{{ form.children|length}}" data-prototype-name="{{ prototype_name }}"{% if prototype_html is defined %} data-prototype="{{ prototype_html|escape }}"{% endif %}>
+            {% if form.children|length %}
+                {% for child in form.children %}
+                    {{ self.collection_item_prototype(child) }}
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% if allow_add %}
+            <button type="button" class="btn btn-primary btn-sm add-list-item">Add</button>
+        {% endif %}
+    </div>
+{%- endblock -%}
+
+{% macro collection_item_prototype(widget) %}
+    {% if 'collection' in widget.vars.block_prefixes %}
+        {% set form = widget.vars.prototype %}
+        {% set name = widget.vars.prototype.vars.name %}
+        {% set disabled = widget.vars.disabled %}
+        {% set allow_delete = widget.vars.allow_delete %}
+    {% else %}
+        {% set form = widget %}
+        {% set name = widget.vars.full_name %}
+        {% set disabled = widget.parent.vars.disabled %}
+        {% set allow_delete = widget.parent.vars.allow_delete %}
+        {% if widget.vars.allow_delete is defined %}
+            {% set allow_delete = allow_delete and widget.vars.allow_delete %}
+        {% endif %}
+    {% endif %}
+
+    <div class="collection-item" data-content="{{ name }}">
+        <div class="collection-row{% if not allow_delete %} not-removable{% endif %}">
+            {{ form_widget(form, {disabled: disabled}) }}
+            {% if allow_delete %}
+                <a class="removeRow" href="#" type="button" data-related="{{ name }}">&times;</a>
+            {% endif %}
+        </div>
+        <hr>
+    </div>
+{% endmacro %}

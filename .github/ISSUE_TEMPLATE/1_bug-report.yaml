@@ -1,0 +1,60 @@
+name: Bug Report
+description: Found something you weren't expecting? Report it here!
+labels: kind/bug
+body:
+    -   type: markdown
+        attributes:
+            value: |
+                NOTE: Do not report security reports publicly. See Reporting a vulnerability policy https://github.com/vtsykun/packeton/security/policy
+    -   type: markdown
+        attributes:
+            value: |
+                1. Make sure you are using the latest release.
+                2. Please give all relevant information below for bug reports: logs details, stack traces, environment. You can found exception logs in var/log/
+                3. Please provide steps how to reproduce.
+    -   type: textarea
+        id: description
+        attributes:
+            label: Description
+            description: |
+                Please provide a description of your issue here.
+    -   type: dropdown
+        id: demo-reproduce
+        attributes:
+            label: Can you reproduce the bug on the Packeton demo site?
+            description: |
+                If so, please provide a URL in the Description field
+                URL of Packeton demo: https://demo.packeton.org
+            options:
+                - "Not applicable"
+                - "Yes"
+                - "No"
+    -   type: dropdown
+        id: database
+        attributes:
+            label: Database
+            description: What database system are you running?
+            options:
+                - PostgreSQL
+                - MySQL
+                - SQLite
+                - Other
+    -   type: markdown
+        attributes:
+            value: |
+                It's really important to provide pertinent logs
+                In addition, if you can temporary enable dev mode with `APP_ENV=dev` and run `composer install` to install all dev dependencies to see errors in UI.
+                After tests, please do not forget disable dev mode, because it is not secure for production.
+    -   type: textarea
+        id: screenshots
+        attributes:
+            label: Screenshots
+            description: If this issue involves the UX/UI bugs, please provide one or more screenshots
+    -   type: textarea
+        id: run-info
+        attributes:
+            label: How are you running Packeton?
+            description: |
+                Please include information about environment, e.g. if it is being run from docker, a php-fpm, nginx etc
+        validations:
+            required: false

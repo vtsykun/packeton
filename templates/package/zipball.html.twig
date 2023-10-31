@@ -1,0 +1,35 @@
+<h3>Zipball Assets</h3><hr>
+{% set pathArtifact = pathArtifact is defined and pathArtifact %}
+<div style="color: #656d76">
+    {% if pathArtifact %}
+    <div>
+        <p>To use archives directly as composer package, you can select an artifact repository type with a folder containing zip or tar.gz</p>
+        {% if paths is defined and paths|length > 0 %}
+            <p>Allowed paths:</p>
+            <div style="border: 1px dashed #656d76; border-radius: 0; color: #333">{{ paths|join('<br>') }}</div>
+        {% endif %}
+    </div>
+    <hr>
+    {% endif %}
+    <p>Or attach files by dragging & dropping, selecting or pasting them.</p>
+    <label class="label-1" id="releases-drag" for="releases-upload">
+        <input type="file" multiple id="releases-upload" class="file-1" data-url="{{ path('archive_upload') }}">
+        <input type="hidden" class="csrf-token" name="_token" value="{{ csrf_token('archive_upload') }}">
+        <span style="text-align: center">
+        <svg style="fill: #656d76; vertical-align: middle" height="32" aria-hidden="true" viewBox="0 0 24 24" version="1.1" width="32">
+            <path style="fill: currentColor;" d="M4.97 13.22a.75.75 0 0 1 1.06 0L11 18.19V3.75a.75.75 0 0 1 1.5 0v14.44l4.97-4.97a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734l-6.25 6.25a.75.75 0 0 1-1.06 0l-6.25-6.25a.75.75 0 0 1 0-1.06Z"></path>
+        </svg>Attach binaries by dropping them here or selecting them.
+        </span>
+    </label>
+    <div class="error-container" style="color: #a94442"></div>
+    <div class="progress-container"></div>
+    <div class="files-container">
+        {% set zipballs = get_free_zipballs() %}
+        {% for zip in zipballs %}
+            <div class="attachment-item" data-id="{{ zip['id'] }}">
+                <span>{{ zip['filename'] }}</span>
+                <span class="fa fa-times"></span>
+            </div>
+        {% endfor %}
+    </div>
+</div>

@@ -1,38 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!-- http://www.phpunit.de/manual/current/en/appendixes.configuration.html -->
-<phpunit
-    backupGlobals               = "false"
-    backupStaticAttributes      = "false"
-    colors                      = "true"
-    convertErrorsToExceptions   = "true"
-    convertNoticesToExceptions  = "true"
-    convertWarningsToExceptions = "true"
-    processIsolation            = "false"
-    stopOnFailure               = "false"
-    syntaxCheck                 = "false"
-    bootstrap                   = "app/autoload.php" >
-
+<!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd" colors="true"
+         bootstrap="tests/bootstrap.php">
+    <php>
+        <ini name="display_errors" value="1"/>
+        <ini name="error_reporting" value="-1"/>
+        <server name="APP_ENV" value="test" force="true"/>
+        <server name="SHELL_VERBOSITY" value="-1"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
+    </php>
     <testsuites>
-        <testsuite name="Packagist Test Suite">
-            <directory>src/*/*Bundle/Tests</directory>
-            <directory>src/*/Bundle/*Bundle/Tests</directory>
+        <testsuite name="functional">
+            <directory>tests/Functional</directory>
         </testsuite>
     </testsuites>
-
-    <php>
-        <server name="KERNEL_DIR" value="app/" />
-    </php>
-
-    <filter>
-        <whitelist>
-            <directory>src</directory>
-            <exclude>
-                <directory>src/*/*Bundle/Resources</directory>
-                <directory>src/*/*Bundle/Tests</directory>
-                <directory>src/*/Bundle/*Bundle/Resources</directory>
-                <directory>src/*/Bundle/*Bundle/Tests</directory>
-            </exclude>
-        </whitelist>
-    </filter>
+    <coverage/>
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </source>
 </phpunit>

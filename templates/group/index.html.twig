@@ -1,0 +1,47 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+<section class="row">
+    <form name="search" method="get" action="{{ path('groups_index') }}" id="search--group-form" autocomplete="off">
+        <div class="sortable row">
+            <div class="col-xs-12 js-search-field-wrapper col-md-9">
+                <input type="search" id="search_group_group" name="search_group" autocomplete="off" placeholder="Search group by name..." tabindex="1" class=" form-control" value="{{ searchGroup }}">
+            </div>
+        </div>
+    </form>
+</section>
+<div style="float:right; margin: 20px">
+    <a class="btn btn-default" href="{{ path('groups_create') }}">Create group</a>
+</div>
+<section class="row">
+    <ul class="packages list-unstyled">
+        {% for group in groups %}
+            {% set groupUrl = path('groups_update', { 'id' : group.id }) %}
+            {% set data = get_group_data(group) %}
+            <li data-url="{{ groupUrl }}" class="row">
+                <div class="col-xs-12 package-item" style="border-width: 1px;border-style: groove; border-radius: 0">
+                    <div class="row" style="margin: 6px 12px;">
+                        <div class="s-flex">
+                            <h4 class="s-flex tab-cell font-bold"><a class="no-underline" style="white-space: nowrap" href="{{ groupUrl }}">{{ group.name }}</a></h4>
+                            <div style="width: 100%; margin-top: 10px">
+                                <form class="onsubmit-confirm" action="{{ path('groups_delete', { 'id': group.id}) }}" style="float: right" method="POST">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete') }}">
+                                    <button type="submit" class="btn btn-danger" title="Delete">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <p class="link-gray" style="font-size: 12px">
+                            Packages: {{ data['packages']|join(', ') }}
+                        </p>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+
+    {% if groups.haveToPaginate() %}
+        {{ pagerfanta(groups, 'twitter_bootstrap', {'proximity': 2}) }}
+    {% endif %}
+</section>
+{% endblock %}

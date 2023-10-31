@@ -1,0 +1,17 @@
+{% if errors is defined and errors is not null %}
+    <div class="alert alert-warning">
+        {{ errors }}
+    </div>
+{% endif %}
+
+{% if response is not null %}
+    {% for hook in response %}
+        <div style="padding-top: 25px">
+            {% if hook.errorMessage is defined %}
+                <pre class="github">{{ hook.errorMessage }}</pre>
+            {% else %}
+                {% include 'webhook/hookinfo.html.twig' with {'hook': hook} %}
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endif %}

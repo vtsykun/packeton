@@ -1,0 +1,35 @@
+{% extends "layout.html.twig" %}
+
+{% block scripts %}
+    <script src="{{ asset('packeton/js/submitPackage.js')}}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="{{ asset('packeton/css/forms.css') }}" />
+{% endblock %}
+
+{% set showSearchDesc = 'hide' %}
+
+{% block content %}
+<h2 class="title">{{ 'submit.title'|trans }}</h2>
+
+<section class="row">
+    {% block submit_form_block %}
+        {{ form_start(form, { attr: { class: 'col-md-6', 'data-check-url': path('submit.fetch_info', {'type': type}), 'data-submit-url': path('submit'), id: 'submit-package-form' } }) }}
+            {% block submit_form %}
+                {{ form_widget(form) }}
+                {{ form_rest(form) }}
+                <input class="btn btn-block btn-success btn-lg" id="submit" type="submit" value="{{ 'submit.submit'|trans }}" />
+            {% endblock %}
+        {{ form_end(form) }}
+    {% endblock %}
+
+    {% block submit_form_guide %}
+        <div class="col-md-6">
+            {{ 'submit.guide'|trans({ '%path_about%': path('about'), '%credentials%': path('user_add_sshkey') })|raw }}
+        </div>
+    {% endblock %}
+</section>
+{% endblock %}
