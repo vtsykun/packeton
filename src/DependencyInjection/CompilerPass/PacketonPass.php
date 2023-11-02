@@ -17,10 +17,6 @@ final class PacketonPass implements CompilerPassInterface
     {
         $this->registerUpdaters($container);
         $this->registerWorkers($container);
-
-        if ($container->hasDefinition('snc_redis.default')) {
-            $container->getDefinition('snc_redis.default')->setLazy(true);
-        }
     }
 
     private function registerUpdaters(ContainerBuilder $container): void
