@@ -179,6 +179,7 @@ class UserController extends AbstractController
     {
         $user = new User();
         $user->generateApiToken();
+        $user->setEnabled(true);
 
         return $this->handleUpdate($request, $user, 'User has been saved.');
     }
