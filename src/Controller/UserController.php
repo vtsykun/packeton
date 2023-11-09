@@ -143,8 +143,6 @@ class UserController extends AbstractController
 
         $qb = $this->registry->getRepository(User::class)
             ->createQueryBuilder('u');
-        $qb->where("u.roles NOT LIKE '%ADMIN%'")
-            ->orderBy('u.id', 'DESC');
 
         if ($searchUser = $request->query->get('user_query')) {
             $qb->andWhere('u.username LIKE :searchUser')
