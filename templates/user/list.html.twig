@@ -33,9 +33,11 @@
                             {% endif %}
                         </a>
 
-                        <div style="width: 90%; margin-top: 10px" class="user-edit-btn">
-                            <a href="{{ path('users_update', {name: user.userIdentifier}) }}" style="float: right; padding: 5px 14px;" class="btn btn-primary">Edit</a>
-                        </div>
+                        {% if user.admin == false %}
+                            <div style="width: 90%; margin-top: 10px" class="user-edit-btn">
+                                <a href="{{ path('users_update', {name: user.userIdentifier}) }}" style="float: right; padding: 5px 14px;" class="btn btn-primary">Edit</a>
+                            </div>
+                        {% endif %}
                     </div>
                     <p class="link-gray" style="font-size: 12px">
                         Active: {{ user.enabled ? 'Yes' : 'No' }}<br>

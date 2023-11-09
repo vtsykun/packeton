@@ -11,6 +11,7 @@ use Packeton\Security\Provider\UserProvider;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\LogicException;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\Input as SymfonyInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -41,7 +42,7 @@ class UserManagerCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('username', InputArgument::REQUIRED, 'The username')
+            ->addArgument('username', InputArgument::OPTIONAL, 'The username')
             ->addOption('email', null, InputOption::VALUE_OPTIONAL, 'Update/set email address')
             ->addOption('enabled', null, InputOption::VALUE_OPTIONAL, 'Set user enable/disable, example --enabled=1, --enabled=0')
             ->addOption('password', null, InputOption::VALUE_OPTIONAL, 'Update/set password')
@@ -59,6 +60,7 @@ class UserManagerCommand extends Command
 The <info>%command.name%</info> command create/update or show information about user.
 Example usage:
 
+    <info>%command.full_name%</info> Show list of users
     <info>%command.full_name% admin --email=admin@example.com --password=123456 --admin</info> Create admin user
     <info>%command.full_name% dev12100 --email=devnull@example.com --password --add-role=ROLE_MAINTAINER</info> Create maintainer.
     <info>%command.full_name% admin --show-token --token-format=jwt</info> Show JWT API token if setup JWT config.
@@ -74,11 +76,20 @@ HELP
         $io = new SymfonyStyle($input, $output);
         $username = $input->getArgument('username');
 
+        if (empty($username)) {
+            $this->printUsersTable($output);
+            return 0;
+        }
+
         /** @var User $user */
-        $user = null;
-        try {
-            $user = $this->userProvider->loadUserByIdentifier($username);
-        } catch (\Exception) {}
+        $user = $this->registry->getRepository(User::class)->findOneByUsernameOrEmail($username);
+
+        if (null === $user) {
+            try {
+                $user = $this->userProvider->loadUserByIdentifier($username);
+            } catch (\Exception) {
+            }
+        }
 
         if (!$this->hasAnyOptions($input)) {
             $io->warning("Command run without any option. A new empty user will be created");
@@ -161,6 +172,30 @@ HELP
         return 0;
     }
 
+    protected function printUsersTable(OutputInterface $output): void
+    {
+        $table = new Table($output);
+
+        $table
+            ->setHeaders(['ID', 'Username', 'Email', 'Enabled', 'Roles'])
+            ->setRows($this->getUserData());
+
+        $table->render();
+    }
+
+    protected function getUserData(): array
+    {
+        $qb = $this->registry->getRepository(User::class)
+            ->createQueryBuilder('u');
+
+        $users = $qb->resetDQLPart('select')
+            ->select('u.id', 'u.username', 'u.email', 'u.enabled', 'u.roles')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn($u) => [$u['id'], $u['username'], $u['email'], $u['enabled'] ? 'Yes' : 'No', $u['roles'] && is_array($u['roles']) ? implode(',', $u['roles']) : 'ROLE_USER'], $users);
+    }
+
     protected function updateRoles(User $user, InputInterface $input, OutputInterface $output)
     {
         if ($role = $input->getOption('add-role')) {
@@ -176,7 +211,9 @@ HELP
 
     protected function dropUser(?UserInterface $user, InputInterface $input, OutputInterface $output)
     {
-        if ($user instanceof User) {
+        if (!$user instanceof User) {
+            $this->printUsersTable($output);
+
             throw new LogicException('User not found or not exists in database');
         }
 
