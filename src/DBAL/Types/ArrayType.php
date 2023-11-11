@@ -26,7 +26,7 @@ class ArrayType extends Type
      */
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
     {
-        return null === $value ? null : json_encode($value);
+        return null === $value ? null : json_encode($value, JSON_UNESCAPED_SLASHES);
     }
 
     /**
