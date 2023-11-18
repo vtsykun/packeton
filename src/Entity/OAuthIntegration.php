@@ -12,6 +12,8 @@ use Packeton\Util\PacketonUtils;
 #[ORM\Table(name: 'oauth_integration')]
 class OAuthIntegration
 {
+    use SerializedFieldsTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -22,9 +24,6 @@ class OAuthIntegration
 
     #[ORM\Column(name: 'access_token', type: 'json', nullable: true)]
     private ?array $accessToken = null;
-
-    #[ORM\Column(name: 'serialized_fields', type: 'json', nullable: true)]
-    private array $serializedFields = [];
 
     #[ORM\Column(name: 'user_identifier', length: 255, nullable: true)]
     private ?string $owner = null;
@@ -41,6 +40,7 @@ class OAuthIntegration
     public function __construct()
     {
         $this->createdAt = new \DateTime();
+        $this->serializedFields = [];
     }
 
     public function getId(): ?int
@@ -250,28 +250,6 @@ class OAuthIntegration
     public function setInstallationId(null|string|int $id = null): self
     {
         return $this->setSerialized('installation_id', $id ? (int) $id : null);
-    }
-
-    protected function setSerialized(string $field, mixed $value): self
-    {
-        if (null === $value) {
-            unset($this->serializedFields[$field]);
-        } else {
-            $this->serializedFields[$field] = $value;
-        }
-        return $this;
-    }
-
-    protected function getSerialized(string $field, string $type, mixed $default = null): int|null|array|string|bool
-    {
-        $value = $this->serializedFields[$field] ?? $default;
-        static $aliases = [
-            'int' => 'integer',
-            'bool' => 'boolean'
-        ];
-
-        $type = $aliases[$type] ?? $type;
-        return gettype($value) === $type ? $value : $default;
     }
 
     public function filteredRepos(array $repos, bool $short = false): array

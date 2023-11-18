@@ -105,7 +105,7 @@ class Package
     private ?OAuthIntegration $integration = null;
 
     #[ORM\Column(name: 'serialized_data', type: 'json', nullable: true)]
-    private ?array $serializedData = null;
+    private ?array $serializedFields = null;
 
     #[ORM\Column(name: 'external_ref', length: 255, nullable: true)]
     private ?string $externalRef = null;
@@ -480,24 +480,6 @@ class Package
     }
 
     /**
-     * @return array|null
-     */
-    public function getSerializedData(): ?array
-    {
-        return $this->serializedData;
-    }
-
-    /**
-     * @param array|null $serializedData
-     * @return Package
-     */
-    public function setSerializedData(array $serializedData = null)
-    {
-        $this->serializedData = $serializedData;
-        return $this;
-    }
-
-    /**
      * @return Package|null
      */
     public function getParentPackage(): ?Package
@@ -523,7 +505,7 @@ class Package
     public function isSourceEnabled(): bool
     {
         $false = $this->parentPackage !== null
-            || ($this->serializedData['subDirectory'] ?? null)
+            || ($this->serializedFields['subDirectory'] ?? null)
             || $this->repoType === 'artifact';
 
         return !$false;

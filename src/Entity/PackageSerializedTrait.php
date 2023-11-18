@@ -9,44 +9,46 @@ use Composer\Semver\Constraint\Constraint;
 
 trait PackageSerializedTrait
 {
+    use SerializedFieldsTrait;
+
     public function getSubDirectory(): ?string
     {
-        return $this->serializedData['subDirectory'] ?? null;
+        return $this->serializedFields['subDirectory'] ?? null;
     }
 
     public function setSubDirectory(?string $subDir): void
     {
-        $this->setSerializedField('subDirectory', $subDir);
+        $this->setSerialized('subDirectory', $subDir);
     }
 
     public function getGlob(): ?string
     {
-        return $this->serializedData['glob'] ?? null;
+        return $this->serializedFields['glob'] ?? null;
     }
 
     public function setGlob(?string $glob): void
     {
-        $this->setSerializedField('glob', $glob);
+        $this->setSerialized('glob', $glob);
     }
 
     public function getExcludedGlob(): ?string
     {
-        return $this->serializedData['excludedGlob'] ?? null;
+        return $this->serializedFields['excludedGlob'] ?? null;
     }
 
     public function setExcludedGlob(?string $glob): void
     {
-        $this->setSerializedField('excludedGlob', $glob);
+        $this->setSerialized('excludedGlob', $glob);
     }
 
     public function getWebhookInfo(): ?array
     {
-        return $this->serializedData['webhook_info'] ?? null;
+        return $this->serializedFields['webhook_info'] ?? null;
     }
 
     public function setWebhookInfo(?array $info): void
     {
-        $this->setSerializedField('webhook_info', $info);
+        $this->setSerialized('webhook_info', $info);
     }
 
     public function isPullRequestReview(): bool
@@ -56,27 +58,27 @@ trait PackageSerializedTrait
 
     public function setPullRequestReview(?bool $value = null): void
     {
-        $this->setSerializedField('pull_request_review', $value);
+        $this->setSerialized('pull_request_review', $value);
     }
 
     public function isSkipNotModifyTag(): ?bool
     {
-        return (bool)($this->serializedData['skip_empty_tag'] ?? null);
+        return (bool)($this->serializedFields['skip_empty_tag'] ?? null);
     }
 
     public function setSkipNotModifyTag(?bool $value): void
     {
-        $this->setSerializedField('skip_empty_tag', $value);
+        $this->setSerialized('skip_empty_tag', $value);
     }
 
     public function getArchives(): ?array
     {
-        return $this->serializedData['archives'] ?? null;
+        return $this->serializedFields['archives'] ?? null;
     }
 
     public function getAllArchives(): ?array
     {
-        $archives =  $this->serializedData['archives'] ?? [];
+        $archives =  $this->serializedFields['archives'] ?? [];
         foreach ($this->getCustomVersions() as $version) {
             if (isset($version['dist'])) {
                 $archives[] = $version['dist'];
@@ -97,37 +99,35 @@ trait PackageSerializedTrait
             $this->artifactDriver = $this->driverError = null;
         }
 
-        $this->setSerializedField('archives', $archives);
+        $this->setSerialized('archives', $archives);
     }
 
     public function setUpdateFlags(int $flags): void
     {
-        $this->serializedData['update_flags'] = $flags;
+        $this->setSerialized('update_flags', $flags);
     }
 
     public function getUpdateFlags(): int
     {
-        return $this->serializedData['update_flags'] ?? 0;
+        return $this->getSerialized('update_flags', 'int', 0);
     }
 
     public function resetUpdateFlags(): int
     {
         $flags = $this->getUpdateFlags();
-        unset($this->serializedData['update_flags']);
+        unset($this->serializedFields['update_flags']);
 
         return $flags;
     }
 
     public function getRequirePatches(): array
     {
-        $patches = $this->serializedData['req_patch'] ?? [];
-        return is_array($patches) ? $patches : [];
+        return $this->getSerialized('req_patch', 'array', []);
     }
 
     public function setRequirePatches(?array $patches): void
     {
-        $patches = $patches ?: null;
-        $this->setSerializedField('req_patch', $patches);
+        $this->setSerialized('req_patch', $patches ?: null);
     }
 
     public function addRequirePatch(string $version, ?array $patch): void
@@ -167,7 +167,7 @@ trait PackageSerializedTrait
 
     public function getSecurityAudit(): array
     {
-        return $this->serializedData['security_audit'] ?? [];
+        return $this->serializedFields['security_audit'] ?? [];
     }
 
     public function setSecurityAudit(array $audit): void
@@ -176,7 +176,7 @@ trait PackageSerializedTrait
             $audit = null;
         }
 
-        $this->setSerializedField('security_audit', $audit);
+        $this->setSerialized('security_audit', $audit);
     }
 
     public function hasSecurityIssue(): bool
@@ -187,7 +187,7 @@ trait PackageSerializedTrait
 
     public function getCustomVersions(): array
     {
-        return $this->serializedData['custom_versions'] ?? [];
+        return $this->getSerialized('custom_versions', 'array', []);
     }
 
     public function setCustomVersions($versions): void
@@ -196,25 +196,16 @@ trait PackageSerializedTrait
 
         $versions = $versions ? array_values($versions) : null;
 
-        $this->setSerializedField('custom_versions', $versions);
+        $this->setSerialized('custom_versions', $versions);
     }
 
     public function isDisabledUpdate(): bool
     {
-        return (bool) ($this->serializedData['disabled_update'] ?? false);
+        return (bool) ($this->serializedFields['disabled_update'] ?? false);
     }
 
     public function setDisabledUpdate(?bool $flag): void
     {
-        $this->setSerializedField('disabled_update', $flag);
-    }
-
-    protected function setSerializedField(string $field, mixed $value): void
-    {
-        if (null === $value) {
-            unset($this->serializedData[$field]);
-        } else {
-            $this->serializedData[$field] = $value;
-        }
+        $this->setSerialized('disabled_update', $flag);
     }
 }
