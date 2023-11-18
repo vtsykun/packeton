@@ -1,6 +1,6 @@
 # Introduction
 
-Packeton - Private PHP package repository for vendors. [GitHub Source Code](https://github.com/vtsykun/packeton)
+Packeton - Private PHP package repository for vendors.
 
 **Documentation** [docs.packeton.org](https://docs.packeton.org)
 
