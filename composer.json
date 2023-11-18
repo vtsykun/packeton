@@ -82,7 +82,7 @@
         "symfony/yaml": "^6.3",
         "twig/extra-bundle": "^3.4",
         "twig/string-extra": "^3.4",
-        "twig/twig": "^2.0|^3.0"
+        "twig/twig": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",

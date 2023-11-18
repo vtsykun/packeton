@@ -6,6 +6,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'templates/**'
+      - 'config/**'
     branches:
       - master
   pull_request:
@@ -19,9 +20,17 @@ env:
 
 jobs:
   tests:
-    name: "Tests"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.1'
+            redis: '6'
+          - php: '8.3'
+            redis: '7'
+    name: PHP ${{ matrix.php }}
     runs-on: ubuntu-20.04
-    
+
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v3"
@@ -30,19 +39,17 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: "none"
-          extensions: "intl, zip, redis"
-          php-version: "8.1"
+          extensions: "curl, mbstring, pdo, pdo_sqlite, sqlite, zip, redis"
+          php-version: ${{ matrix.php }}
           tools: composer
-      
+
       - name: "Install dependencies"
-        uses: "ramsey/composer-install@v2"
-        with:
-          composer-options: "--ansi --no-interaction"
-      
+        run: composer update --ansi --no-interaction
+    
       - name: Start Redis
         uses: "supercharge/redis-github-action@1.6.0"
         with:
-          redis-version: 6
-      
+          redis-version: ${{ matrix.redis }}
+
       - name: "Run tests"
         run: "composer tests"
