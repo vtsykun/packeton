@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        redis: '6'
+        redis: ['6']
         include:
           - php: '8.1'
 #          - php: '8.2'
