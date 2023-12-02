@@ -228,7 +228,12 @@
                 <div class="row">
                     <ul class="social col-xs-7 col-sm-4 col-md-2 pull-right">
                         {% block footer_contact %}
-                            <li><a href="https://github.com/vtsykun/packeton" title="{{ 'menu.github'|trans }}"><span class="fa fa-github"></span></a></li>
+                            <li><a href="https://github.com/vtsykun/packeton" title="{{ 'menu.github'|trans }}" style="text-decoration: none">
+                                <div>
+                                    <span class="fa fa-github"></span>
+                                    <span style="font-size: 12px; vertical-align: middle">Report a bug</span>
+                                </div>
+                            </a></li>
                         {% endblock %}
                     </ul>
 
