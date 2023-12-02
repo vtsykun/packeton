@@ -9,6 +9,9 @@ framework:
     assets:
         version_strategy: Packeton\Service\AssetHashVersionStrategy
 
+    handle_all_throwables: true
+    annotations:
+        enabled: false
     cache:
         pools:
             # pool for root/packages.json
