@@ -47,7 +47,6 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -76,6 +75,25 @@ class UserController extends AbstractController
             'meta' => $this->getPackagesMetadata($packages),
             'packages' => $packages,
         ]);
+    }
+
+    #[Route('/profile/regenerate-token', name: 'profile_regenerate_token')]
+
+    public function regenerateToken(Request $request): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid('token', $request->query->get('_token'))) {
+            return new Response('Invalid Csrf Params', 400);
+        }
+
+        $user->generateApiToken();
+        $this->getEM()->flush();
+
+        return $this->redirectToRoute('profile_show');
     }
 
     #[Route('/profile/edit', name: 'profile_edit')]

@@ -6,6 +6,8 @@
 <section class="col-md-9">
     {% set isMaintainer = is_granted('ROLE_MAINTAINER') %}
     {% set apiToken = get_api_token(app.user, false, true) %}
+    {% set token = csrf_token('token') %}
+
     {%- if apiToken is not null %}
         <h3 class="font-normal profile-title">{{ 'profile.your_api_token'|trans }}</h3>
 
@@ -15,6 +17,7 @@
                 <button class="btn btn-success btn-show-api-token" type="button">{{ 'profile.show_api_token'|trans }}</button>
             </span>
         </div>
+        <a href="{{ path('profile_regenerate_token', {'_token': token}) }}" class="onclick-confirm" data-msg="Are you sure you want to refresh the token?"><i class="fa fa-refresh"></i> Regenerate token</a>
 
         <p>You need to authenticate to access their Composer repository, for example to enter credentials run command:</p>
         <pre>composer config --global --auth http-basic.{{ app.request.getHttpHost() }} {{ user.userIdentifier }} {{ show_api_token(apiToken) }}</pre>
