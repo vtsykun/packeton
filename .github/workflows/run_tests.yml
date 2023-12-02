@@ -23,12 +23,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        redis: 6
         include:
           - php: '8.1'
-            redis: '6'
+#          - php: '8.2'
+#            redis: '7'
           - php: '8.3'
             redis: '7'
-    name: PHP ${{ matrix.php }}
+            symfony: '7.0.*'
+    name: PHP ${{ matrix.php }} SYMFONY ${{ matrix.symfony }}
     runs-on: ubuntu-20.04
 
     steps:
@@ -39,13 +42,19 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: "none"
-          extensions: "curl, mbstring, pdo, pdo_sqlite, sqlite, zip, redis"
+          extensions: "curl, pdo, pdo_sqlite, sqlite, zip, redis"
           php-version: ${{ matrix.php }}
           tools: composer
 
       - name: "Install dependencies"
-        run: composer update --ansi --no-interaction
-    
+        run: |
+          if [[ ! -z "${{ matrix.symfony }}" ]]; then
+            export SYMFONY_REQUIRE="${{ matrix.symfony }}"
+            echo "Install for $SYMFONY_REQUIRE"
+            composer update --ansi --no-interaction
+          else
+            composer install --ansi --no-interaction
+          fi
       - name: Start Redis
         uses: "supercharge/redis-github-action@1.6.0"
         with:
