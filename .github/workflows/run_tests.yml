@@ -24,14 +24,15 @@ jobs:
       fail-fast: false
       matrix:
         redis: ['6']
+        driver: ['sqlite']
         include:
           - php: '8.1'
 #          - php: '8.2'
-#            redis: '7'
+#            driver: 'mysql'
           - php: '8.3'
             redis: '7'
             symfony: '7.0.*'
-    name: PHP ${{ matrix.php }} SYMFONY ${{ matrix.symfony }}
+    name: PHP ${{ matrix.php }} SYMFONY ${{ matrix.symfony }} - ${{ matrix.driver }}
     runs-on: ubuntu-20.04
 
     steps:
@@ -42,15 +43,20 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: "none"
-          extensions: "curl, pdo, pdo_sqlite, sqlite, zip, redis"
+          extensions: "curl, pdo, pdo_sqlite, pdo_mysql, pdo_pgsql, sqlite, zip, redis"
           php-version: ${{ matrix.php }}
           tools: composer
 
       - name: "Install dependencies"
         run: |
+          set -x
           if [[ ! -z "${{ matrix.symfony }}" ]]; then
             export SYMFONY_REQUIRE="${{ matrix.symfony }}"
-            echo "Install for $SYMFONY_REQUIRE"
+            
+#            temporary workaround to support Symfony 7.0 in tests.
+            composer config --global --auth http-basic.demo.packeton.org token ${{ secrets.PACKETON_TOKEN }}
+            composer config repositories.sf7 composer https://demo.packeton.org/sf7
+
             composer update --ansi --no-interaction
           else
             composer install --ansi --no-interaction
