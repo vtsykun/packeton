@@ -174,7 +174,7 @@ class PackagistExtension extends AbstractExtension
             return "";
         }
 
-        return mb_strlen($string) > $length ? mb_substr($string, 0, $length) . '...' : $string;
+        return strlen($string) > $length ? substr($string, 0, $length) . '...' : $string;
     }
 
     public function numericTest($val)

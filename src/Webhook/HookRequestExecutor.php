@@ -142,7 +142,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
         $opts = $this->hideSensitiveParameters(null, $request->jsonSerialize(), $secrets)[1];
         if (is_array($headers = $opts['options']['headers'] ?? null)) {
             foreach ($headers as $name => $value) {
-                if (str_contains(mb_strtolower($name), 'authorization')) {
+                if (str_contains(strtolower($name), 'authorization')) {
                     $headers[$name] = '***';
                 }
             }
