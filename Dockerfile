@@ -24,7 +24,7 @@ RUN set -eux; \
     pecl install -o -f redis; \
     docker-php-ext-enable redis; \
     docker-php-ext-install sockets ldap xsl zip pdo pdo_pgsql pdo_mysql sysvsem opcache \
-        bz2 mbstring pcntl; \
+        bz2 pcntl; \
     runDeps="$( \
         scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
             | tr ',' '\n' \
@@ -42,7 +42,8 @@ COPY composer.json composer.lock /var/www/packagist/
 
 RUN composer install --no-interaction --no-suggest --no-dev --no-scripts && \
     chown www-data:www-data -R /var/www && \
-    rm -rf /root/.composer
+    rm -rf /root/.composer && \
+    rm -rf vendor/oro/doctrine-extensions/tests vendor/cebe/markdown/tests vendor/monolog/monolog/logo.jpg
 
 COPY --chown=82:82 . /var/www/packagist/
 
