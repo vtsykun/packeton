@@ -42,7 +42,8 @@ COPY composer.json composer.lock /var/www/packagist/
 
 RUN composer install --no-interaction --no-suggest --no-dev --no-scripts && \
     chown www-data:www-data -R /var/www && \
-    rm -rf /root/.composer
+    rm -rf /root/.composer && \
+    rm -rf vendor/oro/doctrine-extensions/tests vendor/cebe/markdown/tests vendor/monolog/monolog/logo.jpg
 
 COPY --chown=82:82 . /var/www/packagist/
 
