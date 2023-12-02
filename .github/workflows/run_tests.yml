@@ -48,12 +48,12 @@ jobs:
           tools: composer
 
       - name: "Install dependencies"
+#         temporary workaround to support Symfony 7.0 in tests.
         run: |
           set -x
           if [[ ! -z "${{ matrix.symfony }}" ]]; then
             export SYMFONY_REQUIRE="${{ matrix.symfony }}"
-            
-#            temporary workaround to support Symfony 7.0 in tests.
+
             composer config --global --auth http-basic.demo.packeton.org token ${{ secrets.PACKETON_TOKEN }}
             composer config repositories.sf7 composer https://demo.packeton.org/sf7
 
