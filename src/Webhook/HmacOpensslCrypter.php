@@ -52,7 +52,7 @@ class HmacOpensslCrypter
     private function removeHmac(string $data): array
     {
         $data = base64_decode($data);
-        $hashLength = mb_strlen(hash($this->hmacAlgo, $data, true), '8bit');
+        $hashLength = strlen(hash($this->hmacAlgo, $data, true));
 
         $hmac = substr($data, 0, $hashLength);
         $data = substr($data, $hashLength);

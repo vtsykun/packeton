@@ -59,7 +59,7 @@ trait GZipTrait
      */
     protected function isGzip(string $gzip): bool
     {
-        if (\mb_strpos($gzip, "\x1f"."\x8b"."\x08") === 0) {
+        if (str_starts_with($gzip, "\x1f" . "\x8b" . "\x08")) {
             return true;
         }
 
