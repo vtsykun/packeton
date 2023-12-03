@@ -32,7 +32,7 @@ jobs:
             driver: 'PGSQL'
             redis: 7
             symfony: '7.0.*'
-    name: PHP ${{ matrix.php }} SYMFONY ${{ matrix.symfony }} - ${{ matrix.driver }}
+    name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
     runs-on: ubuntu-22.04
 
     steps:
@@ -80,6 +80,5 @@ jobs:
           sudo apt install pgloader
           gunzip -c tests/dump/test.db.gz > tests/dump/test.db
           pgloader sqlite:////${PWD}/tests/dump/test.db pgsql://postgres:123456@127.0.0.1/packeton
-          
       - name: "Run tests"
         run: "composer tests"
