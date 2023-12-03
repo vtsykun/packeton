@@ -29,7 +29,7 @@ jobs:
             redis: 6
             symfony: '6.4.*'
           - php: '8.3'
-            driver: 'PGSQL'
+            driver: 'MYSQL'
             redis: 7
             symfony: '7.0.*'
     name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
