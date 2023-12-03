@@ -77,8 +77,7 @@ jobs:
           echo 'DATABASE_URL="postgresql://postgres:123456@127.0.0.1/packeton?serverVersion=14.0&charset=utf8"' >> .env.test;
           bin/console doctrine:schema:update --force --complete
           
-          sudo apt install pgloader
           gunzip -c tests/dump/test.db.gz > tests/dump/test.db
-          pgloader sqlite:////${PWD}/tests/dump/test.db pgsql://postgres:123456@127.0.0.1/packeton
+          php tests/import_db.php sqlite:////${PWD}/tests/dump/test.db postgresql://postgres:123456@127.0.0.1/packeton
       - name: "Run tests"
         run: "composer tests"
