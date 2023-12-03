@@ -96,7 +96,7 @@ jobs:
           bin/console doctrine:schema:update --force --complete
   
           gunzip -c tests/dump/test.db.gz > tests/dump/test.db
-          php tests/import_db.php 'sqlite:////${PWD}/tests/dump/test.db' 'mysql://root:123456@127.0.0.1/packeton?serverVersion=8.0&charset=utf8mb4'
+          php tests/import_db.php sqlite:////${PWD}/tests/dump/test.db mysql://root:123456@127.0.0.1:3306/packeton
 
       - name: "Run tests"
         run: "composer tests"
