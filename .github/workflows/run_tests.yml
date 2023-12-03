@@ -28,8 +28,16 @@ jobs:
             driver: 'SQLITE'
             redis: 6
             symfony: '6.4.*'
+          - php: '8.2'
+            driver: 'PGSQL'
+            redis: 6
+            symfony: '6.4.*'
           - php: '8.3'
             driver: 'MYSQL'
+            redis: 6
+            symfony: '6.4.*'
+          - php: '8.3'
+            driver: 'SQLITE'
             redis: 7
             symfony: '7.0.*'
     name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
