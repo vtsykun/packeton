@@ -25,14 +25,15 @@ jobs:
       matrix:
         include:
           - php: '8.1'
-            driver: 'sqlite'
+            driver: 'SQLITE'
             redis: 6
+            symfony: '6.4.*'
           - php: '8.3'
-            driver: 'pgsql'
+            driver: 'PGSQL'
             redis: 7
             symfony: '7.0.*'
-    name: PHP ${{ matrix.php }} - ${{ matrix.driver }} SF ${{ matrix.symfony }}
-    runs-on: ubuntu-20.04
+    name: PHP ${{ matrix.php }} SYMFONY ${{ matrix.symfony }} - ${{ matrix.driver }}
+    runs-on: ubuntu-22.04
 
     steps:
       - name: "Checkout"
@@ -47,21 +48,19 @@ jobs:
           tools: composer
 
       - name: "Install Postgres"
-        if: ${{ matrix.driver=='pgsql' }}
+        if: ${{ matrix.driver=='PGSQL' }}
         uses: harmon758/postgresql-action@v1
         with:
           postgresql version: '14'
+          postgresql password: '123456'
+          postgresql db: 'packeton'
 
       - name: "Install dependencies"
-#         temporary workaround to support Symfony 7.0 in tests.
         run: |
           set -x
-          if [[ ! -z "${{ matrix.symfony }}" ]]; then
+          echo $DATABASE_URL
+          if [[ "${{ matrix.symfony }}" != "6.4.*" ]]; then
             export SYMFONY_REQUIRE="${{ matrix.symfony }}"
-
-            composer config --global --auth http-basic.demo.packeton.org token ${{ secrets.PACKETON_TOKEN }}
-            composer config repositories.sf7 composer https://demo.packeton.org/sf7
-
             composer update --ansi --no-interaction
           else
             composer install --ansi --no-interaction
@@ -71,5 +70,16 @@ jobs:
         with:
           redis-version: ${{ matrix.redis }}
 
+      - name: "Prepare Postgres"
+        if: ${{ matrix.driver=='PGSQL' }}
+        run: |
+          set -x
+          echo 'DATABASE_URL="postgresql://postgres:123456@127.0.0.1/packeton?serverVersion=14.0&charset=utf8"' >> .env.test;
+          bin/console doctrine:schema:update --force --complete
+          
+          sudo apt install pgloader
+          gunzip -c tests/dump/test.db.gz > tests/dump/test.db
+          pgloader sqlite:////${PWD}/tests/dump/test.db pgsql://postgres:123456@127.0.0.1/packeton
+          
       - name: "Run tests"
         run: "composer tests"
