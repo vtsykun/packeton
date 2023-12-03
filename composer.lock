@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2f29747e664bada9406ce065bc7fe43",
+    "content-hash": "b66de5f55c27f180549d89c112a28064",
     "packages": [
         {
             "name": "async-aws/core",
@@ -136,55 +136,55 @@
         },
         {
             "name": "babdev/pagerfanta-bundle",
-            "version": "v4.2.1",
+            "version": "dev-symfony-7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/BabDev/PagerfantaBundle.git",
-                "reference": "86e8fee90d49afb2aef86e8a92f494d1041105f2"
+                "reference": "adc4d6bfcc7e963f4b7c0481768617880b537d5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/BabDev/PagerfantaBundle/zipball/86e8fee90d49afb2aef86e8a92f494d1041105f2",
-                "reference": "86e8fee90d49afb2aef86e8a92f494d1041105f2",
+                "url": "https://api.github.com/repos/BabDev/PagerfantaBundle/zipball/adc4d6bfcc7e963f4b7c0481768617880b537d5d",
+                "reference": "adc4d6bfcc7e963f4b7c0481768617880b537d5d",
                 "shasum": ""
             },
             "require": {
                 "pagerfanta/core": "^3.7 || ^4.0",
                 "php": "^8.1",
                 "psr/container": "^1.0 || ^2.0",
-                "symfony/config": "^5.4 || ^6.2",
-                "symfony/dependency-injection": "^5.4 || ^6.2",
-                "symfony/http-foundation": "^5.4 || ^6.2",
-                "symfony/http-kernel": "^5.4 || ^6.2",
-                "symfony/property-access": "^5.4 || ^6.2",
-                "symfony/routing": "^5.4 || ^6.2"
+                "symfony/config": "^5.4 || ^6.3 || ^7.0",
+                "symfony/dependency-injection": "^5.4 || ^6.3 || ^7.0",
+                "symfony/http-foundation": "^5.4 || ^6.3 || ^7.0",
+                "symfony/http-kernel": "^5.4 || ^6.3 || ^7.0",
+                "symfony/property-access": "^5.4 || ^6.3 || ^7.0",
+                "symfony/routing": "^5.4 || ^6.3 || ^7.0"
             },
             "conflict": {
                 "jms/serializer": "<3.18",
                 "jms/serializer-bundle": "<4.2",
                 "pagerfanta/twig": "<3.7",
-                "symfony/serializer": "<5.4 || >=6.0,<6.2",
-                "symfony/translation": "<5.4 || >=6.0,<6.2",
-                "symfony/twig-bridge": "<5.4 || >=6.0,<6.2",
-                "symfony/twig-bundle": "<5.4 || >=6.0,<6.2",
+                "symfony/serializer": "<5.4 || >=6.0,<6.3",
+                "symfony/translation": "<5.4 || >=6.0,<6.3",
+                "symfony/twig-bridge": "<5.4 || >=6.0,<6.3",
+                "symfony/twig-bundle": "<5.4 || >=6.0,<6.3",
                 "twig/twig": "<2.13",
                 "white-october/pagerfanta-bundle": "*"
             },
             "require-dev": {
                 "jms/serializer": "^3.18",
                 "jms/serializer-bundle": "^4.2 || ^5.0",
-                "matthiasnoback/symfony-dependency-injection-test": "^4.3.1",
+                "matthiasnoback/symfony-dependency-injection-test": "^5.0@dev",
                 "pagerfanta/twig": "^3.7 || ^4.0",
                 "phpstan/extension-installer": "^1.2",
-                "phpstan/phpstan": "1.10.15",
-                "phpstan/phpstan-phpunit": "1.3.13",
+                "phpstan/phpstan": "1.10.34",
+                "phpstan/phpstan-phpunit": "1.3.14",
                 "phpstan/phpstan-symfony": "1.3.2",
-                "phpunit/phpunit": "9.6.8",
-                "symfony/phpunit-bridge": "^5.4 || ^6.2",
-                "symfony/serializer": "^5.4 || ^6.2",
-                "symfony/translation": "^5.4 || ^6.2",
-                "symfony/twig-bridge": "^5.4 || ^6.2",
-                "symfony/twig-bundle": "^5.4 || ^6.2",
+                "phpunit/phpunit": "9.6.12",
+                "symfony/phpunit-bridge": "^5.4 || ^6.3 || ^7.0",
+                "symfony/serializer": "^5.4 || ^6.3 || ^7.0",
+                "symfony/translation": "^5.4 || ^6.3 || ^7.0",
+                "symfony/twig-bridge": "^5.4 || ^6.3 || ^7.0",
+                "symfony/twig-bundle": "^5.4 || ^6.3 || ^7.0",
                 "twig/twig": "^2.13 || ^3.0"
             },
             "suggest": {
@@ -211,7 +211,7 @@
             ],
             "support": {
                 "issues": "https://github.com/BabDev/PagerfantaBundle/issues",
-                "source": "https://github.com/BabDev/PagerfantaBundle/tree/v4.2.1"
+                "source": "https://github.com/BabDev/PagerfantaBundle/tree/symfony-7"
             },
             "funding": [
                 {
@@ -219,7 +219,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-06-29T21:45:49+00:00"
+            "time": "2023-11-16T23:16:18+00:00"
         },
         {
             "name": "cebe/markdown",
@@ -3095,16 +3095,16 @@
         },
         {
             "name": "league/flysystem-bundle",
-            "version": "3.3.1",
+            "version": "3.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem-bundle.git",
-                "reference": "956c039258e3ed44747c8d97f5132e3e9a6d6765"
+                "reference": "ad6ef9c0a8d918269ae5cf47da2f0a4a995bfbd8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem-bundle/zipball/956c039258e3ed44747c8d97f5132e3e9a6d6765",
-                "reference": "956c039258e3ed44747c8d97f5132e3e9a6d6765",
+                "url": "https://api.github.com/repos/thephpleague/flysystem-bundle/zipball/ad6ef9c0a8d918269ae5cf47da2f0a4a995bfbd8",
+                "reference": "ad6ef9c0a8d918269ae5cf47da2f0a4a995bfbd8",
                 "shasum": ""
             },
             "require": {
@@ -3150,9 +3150,9 @@
             "description": "Symfony bundle integrating Flysystem into Symfony 5.4+ applications",
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem-bundle/issues",
-                "source": "https://github.com/thephpleague/flysystem-bundle/tree/3.3.1"
+                "source": "https://github.com/thephpleague/flysystem-bundle/tree/3.3.2"
             },
-            "time": "2023-11-02T12:55:29+00:00"
+            "time": "2023-12-02T17:27:51+00:00"
         },
         {
             "name": "league/flysystem-local",
@@ -3435,26 +3435,26 @@
         },
         {
             "name": "nelmio/security-bundle",
-            "version": "v3.0.0",
+            "version": "v3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nelmio/NelmioSecurityBundle.git",
-                "reference": "34699d40d81b58b6bd256e34489c799620dff2a4"
+                "reference": "da7cc88ae338c6b8370c45c2e5fec88d24f5595d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nelmio/NelmioSecurityBundle/zipball/34699d40d81b58b6bd256e34489c799620dff2a4",
-                "reference": "34699d40d81b58b6bd256e34489c799620dff2a4",
+                "url": "https://api.github.com/repos/nelmio/NelmioSecurityBundle/zipball/da7cc88ae338c6b8370c45c2e5fec88d24f5595d",
+                "reference": "da7cc88ae338c6b8370c45c2e5fec88d24f5595d",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.4 || ^8.0",
-                "symfony/framework-bundle": "^4.4 || ^5.4 || ^6.0",
-                "symfony/http-kernel": "^4.4 || ^5.4 || ^6.0",
-                "symfony/security-core": "^4.4 || ^5.4 || ^6.0",
-                "symfony/security-csrf": "^4.4 || ^5.4 || ^6.0",
-                "symfony/security-http": "^4.4 || ^5.4 || ^6.0",
-                "symfony/yaml": "^4.4 || ^5.4 || ^6.0",
+                "symfony/framework-bundle": "^5.4 || ^6.3 || ^7.0",
+                "symfony/http-kernel": "^5.4 || ^6.3 || ^7.0",
+                "symfony/security-core": "^5.4 || ^6.3 || ^7.0",
+                "symfony/security-csrf": "^5.4 || ^6.3 || ^7.0",
+                "symfony/security-http": "^5.4 || ^6.3 || ^7.0",
+                "symfony/yaml": "^5.4 || ^6.3 || ^7.0",
                 "ua-parser/uap-php": "^3.4.4"
             },
             "require-dev": {
@@ -3465,10 +3465,10 @@
                 "phpstan/phpstan-symfony": "^1.1",
                 "phpunit/phpunit": "^9.5",
                 "psr/cache": "^1.0 || ^2.0 || ^3.0",
-                "symfony/browser-kit": "^4.4 || ^5.4 || ^6.0",
-                "symfony/cache": "^4.4 || ^5.4 || ^6.0",
-                "symfony/phpunit-bridge": "^6.0",
-                "symfony/twig-bundle": "^4.4 || ^5.4 || ^6.0",
+                "symfony/browser-kit": "^5.4 || ^6.3 || ^7.0",
+                "symfony/cache": "^5.4 || ^6.3 || ^7.0",
+                "symfony/phpunit-bridge": "^6.3 || ^7.0",
+                "symfony/twig-bundle": "^5.4 || ^6.3 || ^7.0",
                 "twig/twig": "^2.10 || ^3.0"
             },
             "type": "symfony-bundle",
@@ -3502,9 +3502,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nelmio/NelmioSecurityBundle/issues",
-                "source": "https://github.com/nelmio/NelmioSecurityBundle/tree/v3.0.0"
+                "source": "https://github.com/nelmio/NelmioSecurityBundle/tree/v3.1.0"
             },
-            "time": "2022-03-17T07:30:15+00:00"
+            "time": "2023-12-03T08:44:55+00:00"
         },
         {
             "name": "okvpn/cron-bundle",
@@ -11802,9 +11802,18 @@
             "time": "2023-11-20T00:12:19+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "babdev/pagerfanta-bundle",
+            "version": "dev-symfony-7",
+            "alias": "4.9.99",
+            "alias_normalized": "4.9.99.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "babdev/pagerfanta-bundle": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

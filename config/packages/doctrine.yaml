@@ -55,12 +55,6 @@ doctrine:
                 replace:        Oro\ORM\Query\AST\Functions\String\Replace
                 date_format:    Oro\ORM\Query\AST\Functions\String\DateFormat
 
-when@test:
-    doctrine:
-        dbal:
-            # "TEST_TOKEN" is typically set by ParaTest
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
-
 when@prod:
     doctrine:
         orm:

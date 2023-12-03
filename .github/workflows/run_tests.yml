@@ -25,11 +25,23 @@ jobs:
       matrix:
         include:
           - php: '8.1'
-            redis: '6'
+            driver: 'SQLITE'
+            redis: 6
+            symfony: '6.4.*'
+          - php: '8.2'
+            driver: 'PGSQL'
+            redis: 6
+            symfony: '6.4.*'
           - php: '8.3'
-            redis: '7'
-    name: PHP ${{ matrix.php }}
-    runs-on: ubuntu-20.04
+            driver: 'MYSQL'
+            redis: 6
+            symfony: '6.4.*'
+          - php: '8.3'
+            driver: 'SQLITE'
+            redis: 7
+            symfony: '7.0.*'
+    name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
+    runs-on: ubuntu-22.04
 
     steps:
       - name: "Checkout"
@@ -39,17 +51,60 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: "none"
-          extensions: "curl, mbstring, pdo, pdo_sqlite, sqlite, zip, redis"
+          extensions: "curl, pdo, pdo_sqlite, pdo_mysql, pdo_pgsql, sqlite, zip, redis"
           php-version: ${{ matrix.php }}
           tools: composer
 
+      - name: "Install Postgres"
+        if: ${{ matrix.driver=='PGSQL' }}
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '14'
+          postgresql password: '123456'
+          postgresql db: 'packeton'
+
+      - name: "Install MySql"
+        if: ${{ matrix.driver=='MYSQL' }}
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql version: '8.0'
+          mysql database: 'packeton'
+          mysql root password: '123456'
+
       - name: "Install dependencies"
-        run: composer update --ansi --no-interaction
-    
+        run: |
+          set -x
+          echo $DATABASE_URL
+          if [[ "${{ matrix.symfony }}" != "6.4.*" ]]; then
+            export SYMFONY_REQUIRE="${{ matrix.symfony }}"
+            composer update --ansi --no-interaction
+          else
+            composer install --ansi --no-interaction
+          fi
       - name: Start Redis
         uses: "supercharge/redis-github-action@1.6.0"
         with:
           redis-version: ${{ matrix.redis }}
+
+      - name: "Prepare Postgres"
+        if: ${{ matrix.driver=='PGSQL' }}
+        run: |
+          set -x
+          echo 'DATABASE_URL="postgresql://postgres:123456@127.0.0.1/packeton?serverVersion=14.0&charset=utf8"' >> .env.test;
+          bin/console doctrine:schema:update --force --complete
+          
+          gunzip -c tests/dump/test.db.gz > tests/dump/test.db
+          php tests/import_db.php sqlite:////${PWD}/tests/dump/test.db postgresql://postgres:123456@127.0.0.1/packeton
+
+      - name: "Prepare MySql"
+        if: ${{ matrix.driver=='MYSQL' }}
+        run: |
+          set -x
+          echo 'DATABASE_URL="mysql://root:123456@127.0.0.1/packeton?serverVersion=8.0&charset=utf8mb4"' >> .env.test;
+          bin/console doctrine:schema:update --force --complete
+  
+          gunzip -c tests/dump/test.db.gz > tests/dump/test.db
+          php tests/import_db.php sqlite:////${PWD}/tests/dump/test.db mysql://root:123456@127.0.0.1:3306/packeton
 
       - name: "Run tests"
         run: "composer tests"
