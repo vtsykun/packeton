@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Attribute\Vars;
 use Packeton\Entity\Package;
 use Packeton\Entity\Zipball;
+use Packeton\Event\ZipballEvent;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
 use Packeton\Service\DistManager;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class ZipballController extends AbstractController
 {
@@ -27,6 +29,7 @@ class ZipballController extends AbstractController
         protected DistManager $dm,
         protected UploadZipballStorage $storage,
         protected ManagerRegistry $registry,
+        protected EventDispatcherInterface $dispatcher
     ) {
     }
 
@@ -98,6 +101,9 @@ class ZipballController extends AbstractController
             $msg = $this->isGranted('ROLE_MAINTAINER') ? $e->getMessage() : null;
             return $this->createNotFound($msg);
         }
+
+        $this->dispatcher->dispatch($event = new ZipballEvent($package, $reference, $dist), ZipballEvent::DOWNLOAD);
+        $dist = $event->getDist();
 
         if (is_string($dist)) {
             return new BinaryFileResponse($dist);

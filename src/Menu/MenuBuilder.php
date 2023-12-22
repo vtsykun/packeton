@@ -5,10 +5,12 @@ namespace Packeton\Menu;
 use Knp\Menu\FactoryInterface;
 use Knp\Menu\ItemInterface;
 use Packeton\Entity\User;
+use Packeton\Event\MenuLoadEvent;
 use Packeton\Integrations\IntegrationRegistry;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MenuBuilder
@@ -19,6 +21,7 @@ class MenuBuilder
         private readonly TranslatorInterface $translator,
         private readonly AuthorizationCheckerInterface $checker,
         private readonly IntegrationRegistry $integrations,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -59,6 +62,8 @@ class MenuBuilder
             $menu->addChild($this->translator->trans('menu.integrations'), ['label' => 'menu.integrations_icon', 'route' => 'integration_list', 'extras' => ['safe_label' => true]]);
         }
 
+        $this->dispatchLoad($menu, 'admin_menu');
+
         return $menu;
     }
 
@@ -80,6 +85,8 @@ class MenuBuilder
         } else if ($user instanceof UserInterface) {
             $menu->addChild($this->translator->trans('menu.my_tokens'), ['label' => 'menu.my_tokens_icon', 'route' => 'profile_list_tokens', 'extras' => ['safe_label' => true]]);
         }
+
+        $this->dispatchLoad($menu, 'user_menu');
     }
 
     private function getUsername()
@@ -89,5 +96,10 @@ class MenuBuilder
         }
 
         return null;
+    }
+
+    private function dispatchLoad(ItemInterface $menu, string $name)
+    {
+        $this->dispatcher->dispatch(new MenuLoadEvent($menu, $name), MenuLoadEvent::NAME);
     }
 }
