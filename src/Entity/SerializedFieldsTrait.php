@@ -11,7 +11,7 @@ trait SerializedFieldsTrait
     #[ORM\Column(name: 'serialized_fields', type: 'json', nullable: true)]
     private ?array $serializedFields = null;
 
-    public function getSerialized(string $field, ?string $type = null, mixed $default = null): int|null|array|string|bool
+    public function getSerialized(string $field, ?string $type = null, mixed $default = null): int|null|array|string|bool|float
     {
         $value = $this->serializedFields[$field] ?? $default;
         static $aliases = [
