@@ -80,6 +80,7 @@ services:
             - '../src/Repository/'
             - '../src/Mirror/Decorator/'
             - '../src/Webhook/Twig/'
+            - '../src/{**/DiExclude}'
 
     packeton.menu.profile:
         class: Knp\Menu\MenuItem
