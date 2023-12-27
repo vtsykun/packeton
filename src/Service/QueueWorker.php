@@ -185,11 +185,11 @@ class QueueWorker implements ConsoleAwareInterface
         }
 
         if (!isset($result['message']) || !isset($result['status'])) {
-            throw new \LogicException('$result must be an array with at least status and message keys');
+            throw new \LogicException('['.$job->getType().'] '. '$result must be an array with at least status and message keys');
         }
 
         if (!in_array($result['status'], [Job::STATUS_COMPLETED, Job::STATUS_FAILED, Job::STATUS_ERRORED, Job::STATUS_PACKAGE_GONE, Job::STATUS_PACKAGE_DELETED], true)) {
-            throw new \LogicException('$result[\'status\'] must be one of '.Job::STATUS_COMPLETED.' or '.Job::STATUS_FAILED.', '.$result['status'].' given');
+            throw new \LogicException('['.$job->getType().'] '. '$result[\'status\'] must be one of '.Job::STATUS_COMPLETED.' or '.Job::STATUS_FAILED.', '.$result['status'].' given');
         }
 
         if (isset($result['exception'])) {
