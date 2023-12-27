@@ -23,6 +23,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+#[Route(defaults: ['_format' => 'json'])]
 class ZipballController extends AbstractController
 {
     public function __construct(
