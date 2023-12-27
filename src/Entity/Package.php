@@ -536,6 +536,15 @@ class Package
         return $this->versions->findFirst(fn($k, $v) => $v->getReference() === $reference);
     }
 
+    /**
+     * @param string $reference
+     * @return Version[]
+     */
+    public function getAllVersionsByReference(string $reference): array
+    {
+        return $this->versions->filter(fn(Version $v, $k) => $v->getReference() === $reference)->toArray();
+    }
+
     public function getVersion($normalizedVersion)
     {
         if (null === $this->cachedVersions) {
