@@ -9,6 +9,7 @@ on:
             - 'templates/**'
             - 'Dockerfile'
             - 'docker/**'
+            - 'composer.lock'
         branches:
             - master
     workflow_dispatch:
