@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b66de5f55c27f180549d89c112a28064",
+    "content-hash": "5ccb7072d63a2b93e75dac84e07e5bf0",
     "packages": [
         {
             "name": "async-aws/core",
@@ -76,16 +76,16 @@
         },
         {
             "name": "async-aws/s3",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/async-aws/s3.git",
-                "reference": "289ca73bf08fada63a41f23dc38db1f186225e5d"
+                "reference": "374f388c578800b50d4c758301fba62bddfce1c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/async-aws/s3/zipball/289ca73bf08fada63a41f23dc38db1f186225e5d",
-                "reference": "289ca73bf08fada63a41f23dc38db1f186225e5d",
+                "url": "https://api.github.com/repos/async-aws/s3/zipball/374f388c578800b50d4c758301fba62bddfce1c9",
+                "reference": "374f388c578800b50d4c758301fba62bddfce1c9",
                 "shasum": ""
             },
             "require": {
@@ -99,7 +99,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.1-dev"
+                    "dev-master": "2.2-dev"
                 }
             },
             "autoload": {
@@ -120,7 +120,7 @@
                 "sdk"
             ],
             "support": {
-                "source": "https://github.com/async-aws/s3/tree/2.1.0"
+                "source": "https://github.com/async-aws/s3/tree/2.2.0"
             },
             "funding": [
                 {
@@ -132,7 +132,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-12-13T20:52:19+00:00"
+            "time": "2024-01-09T08:38:58+00:00"
         },
         {
             "name": "babdev/pagerfanta-bundle",
@@ -916,93 +916,17 @@
             "time": "2022-02-25T21:32:43+00:00"
         },
         {
-            "name": "doctrine/annotations",
-            "version": "1.14.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/doctrine/annotations.git",
-                "reference": "fb0d71a7393298a7b232cbf4c8b1f73f3ec3d5af"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/annotations/zipball/fb0d71a7393298a7b232cbf4c8b1f73f3ec3d5af",
-                "reference": "fb0d71a7393298a7b232cbf4c8b1f73f3ec3d5af",
-                "shasum": ""
-            },
-            "require": {
-                "doctrine/lexer": "^1 || ^2",
-                "ext-tokenizer": "*",
-                "php": "^7.1 || ^8.0",
-                "psr/cache": "^1 || ^2 || ^3"
-            },
-            "require-dev": {
-                "doctrine/cache": "^1.11 || ^2.0",
-                "doctrine/coding-standard": "^9 || ^10",
-                "phpstan/phpstan": "~1.4.10 || ^1.8.0",
-                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.5",
-                "symfony/cache": "^4.4 || ^5.4 || ^6",
-                "vimeo/psalm": "^4.10"
-            },
-            "suggest": {
-                "php": "PHP 8.0 or higher comes with attributes, a native replacement for annotations"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Doctrine\\Common\\Annotations\\": "lib/Doctrine/Common/Annotations"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Guilherme Blanco",
-                    "email": "guilhermeblanco@gmail.com"
-                },
-                {
-                    "name": "Roman Borschel",
-                    "email": "roman@code-factory.org"
-                },
-                {
-                    "name": "Benjamin Eberlei",
-                    "email": "kontakt@beberlei.de"
-                },
-                {
-                    "name": "Jonathan Wage",
-                    "email": "jonwage@gmail.com"
-                },
-                {
-                    "name": "Johannes Schmitt",
-                    "email": "schmittjoh@gmail.com"
-                }
-            ],
-            "description": "Docblock Annotations Parser",
-            "homepage": "https://www.doctrine-project.org/projects/annotations.html",
-            "keywords": [
-                "annotations",
-                "docblock",
-                "parser"
-            ],
-            "support": {
-                "issues": "https://github.com/doctrine/annotations/issues",
-                "source": "https://github.com/doctrine/annotations/tree/1.14.3"
-            },
-            "time": "2023-02-01T09:20:38+00:00"
-        },
-        {
             "name": "doctrine/cache",
-            "version": "1.13.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/cache.git",
-                "reference": "56cd022adb5514472cb144c087393c1821911d09"
+                "reference": "1ca8f21980e770095a31456042471a57bc4c68fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/cache/zipball/56cd022adb5514472cb144c087393c1821911d09",
-                "reference": "56cd022adb5514472cb144c087393c1821911d09",
+                "url": "https://api.github.com/repos/doctrine/cache/zipball/1ca8f21980e770095a31456042471a57bc4c68fb",
+                "reference": "1ca8f21980e770095a31456042471a57bc4c68fb",
                 "shasum": ""
             },
             "require": {
@@ -1012,18 +936,12 @@
                 "doctrine/common": ">2.2,<2.4"
             },
             "require-dev": {
-                "alcaeus/mongo-php-adapter": "^1.1",
                 "cache/integration-tests": "dev-master",
                 "doctrine/coding-standard": "^9",
-                "mongodb/mongodb": "^1.1",
                 "phpunit/phpunit": "^7.5 || ^8.5 || ^9.5",
-                "predis/predis": "~1.0",
                 "psr/cache": "^1.0 || ^2.0 || ^3.0",
                 "symfony/cache": "^4.4 || ^5.4 || ^6",
                 "symfony/var-exporter": "^4.4 || ^5.4 || ^6"
-            },
-            "suggest": {
-                "alcaeus/mongo-php-adapter": "Required to use legacy MongoDB driver"
             },
             "type": "library",
             "autoload": {
@@ -1072,7 +990,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/cache/issues",
-                "source": "https://github.com/doctrine/cache/tree/1.13.0"
+                "source": "https://github.com/doctrine/cache/tree/2.2.0"
             },
             "funding": [
                 {
@@ -1088,7 +1006,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-05-20T20:06:54+00:00"
+            "time": "2022-05-20T20:07:39+00:00"
         },
         {
             "name": "doctrine/collections",
@@ -3631,26 +3549,29 @@
         },
         {
             "name": "oro/doctrine-extensions",
-            "version": "2.0.2",
+            "version": "3.0-alpha2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oroinc/doctrine-extensions.git",
-                "reference": "478101fdb37e7a3bd4efad78b6e36fc49c26055f"
+                "reference": "0fc0ad25ff12b44e9213c8e70875d1da833a3a4b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oroinc/doctrine-extensions/zipball/478101fdb37e7a3bd4efad78b6e36fc49c26055f",
-                "reference": "478101fdb37e7a3bd4efad78b6e36fc49c26055f",
+                "url": "https://api.github.com/repos/oroinc/doctrine-extensions/zipball/0fc0ad25ff12b44e9213c8e70875d1da833a3a4b",
+                "reference": "0fc0ad25ff12b44e9213c8e70875d1da833a3a4b",
                 "shasum": ""
             },
             "require": {
-                "doctrine/orm": ">=2.6",
-                "php": ">=7.3"
+                "doctrine/dbal": "~2.6|~3.0",
+                "doctrine/orm": "~2.6",
+                "php": ">=8.1"
             },
             "require-dev": {
+                "doctrine/annotations": ">1.0, <2.0",
                 "doctrine/data-fixtures": "^1.3",
-                "phpunit/phpunit": "9.*",
+                "phpunit/phpunit": "~10",
                 "squizlabs/php_codesniffer": "3.5.*",
+                "symfony/cache": "5.*",
                 "symfony/yaml": "5.*"
             },
             "type": "library",
@@ -3683,32 +3604,30 @@
             ],
             "support": {
                 "issues": "https://github.com/oroinc/doctrine-extensions/issues",
-                "source": "https://github.com/oroinc/doctrine-extensions/tree/2.0.2"
+                "source": "https://github.com/oroinc/doctrine-extensions/tree/3.0-alpha2"
             },
-            "time": "2022-05-10T14:09:20+00:00"
+            "time": "2023-12-28T12:05:55+00:00"
         },
         {
             "name": "pagerfanta/core",
-            "version": "v3.8.0",
+            "version": "v4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Pagerfanta/core.git",
-                "reference": "a995f69ff9af64a45c3dc3d8217100624ae214f2"
+                "reference": "c7378a868b6291fe723a4d666f04c4be2faefdda"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Pagerfanta/core/zipball/a995f69ff9af64a45c3dc3d8217100624ae214f2",
-                "reference": "a995f69ff9af64a45c3dc3d8217100624ae214f2",
+                "url": "https://api.github.com/repos/Pagerfanta/core/zipball/c7378a868b6291fe723a4d666f04c4be2faefdda",
+                "reference": "c7378a868b6291fe723a4d666f04c4be2faefdda",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
-                "php": "^7.4 || ^8.0",
-                "symfony/deprecation-contracts": "^2.1 || ^3.0",
-                "symfony/polyfill-php80": "^1.15"
+                "php": "^8.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.6 || ^10.0"
+                "phpunit/phpunit": "^10.2"
             },
             "type": "library",
             "autoload": {
@@ -3728,35 +3647,32 @@
                 "pagerfanta"
             ],
             "support": {
-                "source": "https://github.com/Pagerfanta/core/tree/v3.8.0"
+                "source": "https://github.com/Pagerfanta/core/tree/v4.2.0"
             },
-            "time": "2023-04-15T16:39:14+00:00"
+            "time": "2023-07-10T22:08:24+00:00"
         },
         {
             "name": "pagerfanta/doctrine-orm-adapter",
-            "version": "v3.8.0",
+            "version": "v4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Pagerfanta/doctrine-orm-adapter.git",
-                "reference": "d0865fbfc7f8dd6e4c16f76135f904c60c3af3b5"
+                "reference": "81cd6b61449469ca511cb14df6d5ecbf9331d695"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Pagerfanta/doctrine-orm-adapter/zipball/d0865fbfc7f8dd6e4c16f76135f904c60c3af3b5",
-                "reference": "d0865fbfc7f8dd6e4c16f76135f904c60c3af3b5",
+                "url": "https://api.github.com/repos/Pagerfanta/doctrine-orm-adapter/zipball/81cd6b61449469ca511cb14df6d5ecbf9331d695",
+                "reference": "81cd6b61449469ca511cb14df6d5ecbf9331d695",
                 "shasum": ""
             },
             "require": {
-                "doctrine/orm": "^2.8",
-                "pagerfanta/core": "^3.0",
-                "php": "^7.4 || ^8.0",
-                "symfony/deprecation-contracts": "^2.1 || ^3.0"
+                "doctrine/orm": "^2.14",
+                "pagerfanta/core": "^3.7 || ^4.0",
+                "php": "^8.1"
             },
             "require-dev": {
-                "doctrine/annotations": "^1.11.1",
-                "doctrine/cache": "^1.11 || ^2.0",
-                "phpunit/phpunit": "^9.6 || ^10.0",
-                "symfony/cache": "^4.4 || ^5.4 || ^6.0"
+                "phpunit/phpunit": "^10.2",
+                "symfony/cache": "^5.4 || ^6.2"
             },
             "type": "library",
             "autoload": {
@@ -3778,32 +3694,31 @@
                 "pagerfanta"
             ],
             "support": {
-                "source": "https://github.com/Pagerfanta/doctrine-orm-adapter/tree/v3.8.0"
+                "source": "https://github.com/Pagerfanta/doctrine-orm-adapter/tree/v4.2.0"
             },
-            "time": "2023-04-15T16:39:14+00:00"
+            "time": "2023-07-10T22:06:56+00:00"
         },
         {
             "name": "pagerfanta/twig",
-            "version": "v3.8.0",
+            "version": "v4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Pagerfanta/twig.git",
-                "reference": "19ba831401d7bc5249997c09c574e5c922773b12"
+                "reference": "7284d6ff3537e42c36d94bfba8659d7791102853"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Pagerfanta/twig/zipball/19ba831401d7bc5249997c09c574e5c922773b12",
-                "reference": "19ba831401d7bc5249997c09c574e5c922773b12",
+                "url": "https://api.github.com/repos/Pagerfanta/twig/zipball/7284d6ff3537e42c36d94bfba8659d7791102853",
+                "reference": "7284d6ff3537e42c36d94bfba8659d7791102853",
                 "shasum": ""
             },
             "require": {
-                "pagerfanta/core": "^3.0",
-                "php": "^7.4 || ^8.0",
-                "symfony/polyfill-php80": "^1.15",
+                "pagerfanta/core": "^3.7 || ^4.0",
+                "php": "^8.1",
                 "twig/twig": "^2.13 || ^3.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.6 || ^10.0"
+                "phpunit/phpunit": "^10.2"
             },
             "type": "library",
             "autoload": {
@@ -3823,9 +3738,9 @@
                 "pagerfanta"
             ],
             "support": {
-                "source": "https://github.com/Pagerfanta/twig/tree/v3.8.0"
+                "source": "https://github.com/Pagerfanta/twig/tree/v4.2.0"
             },
-            "time": "2023-04-15T16:39:14+00:00"
+            "time": "2023-07-10T22:06:56+00:00"
         },
         {
             "name": "psr/cache",
@@ -11804,9 +11719,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "babdev/pagerfanta-bundle": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

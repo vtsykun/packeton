@@ -2,18 +2,6 @@
     "babdev/pagerfanta-bundle": {
         "version": "v3.7.0"
     },
-    "doctrine/annotations": {
-        "version": "1.14",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "1.0",
-            "ref": "a2759dd6123694c8d901d0ec80006e044c2e6457"
-        },
-        "files": [
-            "config/routes/annotations.yaml"
-        ]
-    },
     "doctrine/doctrine-bundle": {
         "version": "2.7",
         "recipe": {
