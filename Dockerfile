@@ -17,6 +17,7 @@ RUN set -eux; \
         oniguruma-dev \
     ; \
     \
+    export MAKEFLAGS="-j$(($(nproc) < 4 ? $(nproc) : 4))"; \
     export CFLAGS="$PHP_CFLAGS" \
         CPPFLAGS="$PHP_CPPFLAGS" \
         LDFLAGS="$PHP_LDFLAGS"; \
