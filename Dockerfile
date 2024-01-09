@@ -18,7 +18,7 @@ RUN set -eux; \
     ; \
     \
     export MAKEFLAGS="-j$(($(nproc) < 4 ? $(nproc) : 4))"; \
-    export CFLAGS="$PHP_CFLAGS" \
+    export CFLAGS="$PHP_CFLAGS -fvisibility=hidden" \
         CPPFLAGS="$PHP_CPPFLAGS" \
         LDFLAGS="$PHP_LDFLAGS"; \
     \
