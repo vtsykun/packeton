@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5ccb7072d63a2b93e75dac84e07e5bf0",
+    "content-hash": "dc25e65300fe4fad3569e946bae47d9a",
     "packages": [
         {
             "name": "async-aws/core",
@@ -3549,29 +3549,26 @@
         },
         {
             "name": "oro/doctrine-extensions",
-            "version": "3.0-alpha2",
+            "version": "2.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oroinc/doctrine-extensions.git",
-                "reference": "0fc0ad25ff12b44e9213c8e70875d1da833a3a4b"
+                "reference": "478101fdb37e7a3bd4efad78b6e36fc49c26055f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oroinc/doctrine-extensions/zipball/0fc0ad25ff12b44e9213c8e70875d1da833a3a4b",
-                "reference": "0fc0ad25ff12b44e9213c8e70875d1da833a3a4b",
+                "url": "https://api.github.com/repos/oroinc/doctrine-extensions/zipball/478101fdb37e7a3bd4efad78b6e36fc49c26055f",
+                "reference": "478101fdb37e7a3bd4efad78b6e36fc49c26055f",
                 "shasum": ""
             },
             "require": {
-                "doctrine/dbal": "~2.6|~3.0",
-                "doctrine/orm": "~2.6",
-                "php": ">=8.1"
+                "doctrine/orm": ">=2.6",
+                "php": ">=7.3"
             },
             "require-dev": {
-                "doctrine/annotations": ">1.0, <2.0",
                 "doctrine/data-fixtures": "^1.3",
-                "phpunit/phpunit": "~10",
+                "phpunit/phpunit": "9.*",
                 "squizlabs/php_codesniffer": "3.5.*",
-                "symfony/cache": "5.*",
                 "symfony/yaml": "5.*"
             },
             "type": "library",
@@ -3604,9 +3601,9 @@
             ],
             "support": {
                 "issues": "https://github.com/oroinc/doctrine-extensions/issues",
-                "source": "https://github.com/oroinc/doctrine-extensions/tree/3.0-alpha2"
+                "source": "https://github.com/oroinc/doctrine-extensions/tree/2.0.2"
             },
-            "time": "2023-12-28T12:05:55+00:00"
+            "time": "2022-05-10T14:09:20+00:00"
         },
         {
             "name": "pagerfanta/core",
