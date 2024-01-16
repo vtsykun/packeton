@@ -52,6 +52,10 @@ class PackagesAclChecker
 
     public function isGrantedAccessForAllVersions(PUI $user, Package $package)
     {
+        if ($package->isFullVisibility()) {
+            return true;
+        }
+
         $versionConstraints = $this->getVersions($user, $package);
         foreach ($versionConstraints as $constraint) {
             if ($constraint === null) {

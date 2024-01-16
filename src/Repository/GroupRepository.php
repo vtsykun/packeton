@@ -28,6 +28,9 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
     public function getAllowedVersionByPackage(?UserInterface $user, Package $package)
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
+        if ($package->isFullVisibility()) {
+            return [null]; // all versions
+        }
 
         if ($user instanceof User) {
             $qb
@@ -93,12 +96,13 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
                 ->setParameter('gid', $user->getAclGroups() ? : [-1]);
         }
 
-        $result = $qb->getQuery()->getResult();
+        $result = $qb->getQuery()->getSingleColumnResult();
+        $result = array_merge($result, $this->getFullVisiblePackages());
+
         if (empty($result)) {
             return [];
         }
 
-        $result = array_column($result, 'id');
         if (true === $hydration) {
             $qb = $this->getEntityManager()->createQueryBuilder();
             $qb->select('p')
@@ -119,6 +123,17 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         }
 
         return $result;
+    }
+
+    public function getFullVisiblePackages(): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+
+        return $qb->select('p.id')
+            ->from(Package::class, 'p')
+            ->where('p.fullVisibility = :visibility')
+            ->setParameter('visibility', true)
+            ->getQuery()->getSingleColumnResult();
     }
 
     public function getGroupsData(Group|int $group): array

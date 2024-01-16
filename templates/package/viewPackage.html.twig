@@ -262,7 +262,11 @@
                                 <p><span>Type:</span>{{ package.type }}</p>
                             {% endif %}
 
-                            {% if groups is defined and groups is not empty and canEdit %}
+                            {% if canEdit and package.fullVisibility %}
+                                <p><span>Groups:</span>ALL USERS</p>
+                            {% endif %}
+
+                            {% if groups is defined and groups is not empty and canEdit and package.fullVisibility is empty %}
                                 {%- set listGroups -%}
                                     {%- for group in groups -%}
                                         {% if _key != 0 or groups|length > 4 %}

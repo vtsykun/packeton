@@ -110,6 +110,9 @@ class Package
     #[ORM\Column(name: 'external_ref', length: 255, nullable: true)]
     private ?string $externalRef = null;
 
+    #[ORM\Column(name: 'full_visibility', type: 'boolean', nullable: true)]
+    private ?bool $fullVisibility = null;
+
     /**
      * @internal
      * @var \Composer\Repository\Vcs\VcsDriverInterface
@@ -798,6 +801,18 @@ class Package
     public function setExternalRef(?string $externalRef): self
     {
         $this->externalRef = $externalRef;
+
+        return $this;
+    }
+
+    public function isFullVisibility(): ?bool
+    {
+        return $this->fullVisibility;
+    }
+
+    public function setFullVisibility(?bool $fullVisibility): self
+    {
+        $this->fullVisibility = $fullVisibility;
 
         return $this;
     }
