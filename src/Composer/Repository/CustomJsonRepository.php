@@ -14,6 +14,7 @@ use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Zipball;
+use Packeton\Package\RepTypes;
 use Packeton\Service\DistConfig;
 
 class CustomJsonRepository extends ArrayRepository implements PacketonRepositoryInterface
@@ -126,6 +127,12 @@ class CustomJsonRepository extends ArrayRepository implements PacketonRepository
             $data['dist'] = [
                 'type' => $fileType,
                 'reference' => $dist->getReference(),
+                'url' => DistConfig::HOSTNAME_PLACEHOLDER,
+            ];
+        } elseif (($this->repoConfig['repoType'] ?? null) === RepTypes::VIRTUAL) {
+            $data['dist'] = [
+                'type' => 'zip',
+                'reference' => sha1(json_encode($data)),
                 'url' => DistConfig::HOSTNAME_PLACEHOLDER,
             ];
         }

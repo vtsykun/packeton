@@ -71,7 +71,8 @@ class ApiController extends AbstractController
         $form = $this->createForm($formType, $package, [
             'csrf_protection' => false,
             'validation_groups' => ['Create', 'Default'],
-            'is_created' => true
+            'is_created' => true,
+            'repo_type' => RepTypes::normalizeType($type),
         ]);
 
         $form->submit($payload);
@@ -169,7 +170,8 @@ class ApiController extends AbstractController
         $form = $this->createForm($formType, $package, [
             'csrf_protection' => false,
             'validation_groups' => ['Update', 'Default'],
-            'is_created' => false
+            'is_created' => false,
+            'repo_type' => $package->getRepoType(),
         ]);
 
         $form->submit($payload, false);

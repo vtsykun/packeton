@@ -9,6 +9,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -29,13 +30,19 @@ class CustomVersionType extends AbstractType
         $builder
             ->add('version', TextType::class, [
                 'constraints' => [new NotBlank()]
-            ])
-            ->add('dist', ChoiceType::class, [
-                'required' => false,
-                'label' => 'Uploaded dist',
-                'choices' => $options['dist_choices'],
-                'attr' => ['class' => 'jselect2 archive-select']
-            ])
+            ]);
+
+        if ($options['with_dist']) {
+            $builder
+                ->add('dist', ChoiceType::class, [
+                    'required' => false,
+                    'label' => 'Uploaded dist',
+                    'choices' => $options['dist_choices'],
+                    'attr' => ['class' => 'jselect2 archive-select']
+                ]);
+        }
+
+        $builder
             ->add('definition', JsonTextType::class, [
                 'required' => false,
                 'label' => 'composer.json config',
@@ -50,8 +57,15 @@ class CustomVersionType extends AbstractType
     {
         $resolver->setDefaults([
             'dist_choices' => null,
-            'constraints' => [new Callback($this->validateData(...))]
+            'with_dist' => true,
         ]);
+
+        $resolver->addNormalizer('constraints', function(Options $options): array {
+            if ($options['with_dist']) {
+                return [new Callback($this->validateData(...))];
+            }
+            return [];
+        });
     }
 
     public function validateData($value, ExecutionContextInterface $context): void

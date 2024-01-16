@@ -27,7 +27,8 @@ class BasePackageType extends AbstractType
                 'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
                 'Artifacts' => RepTypes::ARTIFACT,
                 'Custom (JSON)' => RepTypes::CUSTOM,
-                'Satis / Packagist.com / VCS Import' => 'import'
+                'Virtual (only JSON metadata)' => RepTypes::VIRTUAL,
+                'Satis / Packagist.com / VCS Import' => 'import', // only redirect
             ];
 
             if ($options['has_active_integration']) {
@@ -52,6 +53,7 @@ class BasePackageType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('is_created', false);
+        $resolver->setDefault('repo_type', null);
         $resolver->setDefault('data_class', Package::class);
         $resolver->setDefault('has_active_integration', $this->hasActiveIntegration());
     }

@@ -122,6 +122,7 @@ class PackageController extends AbstractController
             'action' => $this->generateUrl('submit', ['type' => $type]),
             'validation_groups' => ['Create', 'Default'],
             'is_created' => true,
+            'repo_type' => RepTypes::normalizeType($type),
         ]);
 
         if ($this->getUser() instanceof User) {
@@ -166,6 +167,7 @@ class PackageController extends AbstractController
             [
                 'validation_groups' => ['Create', 'Default'],
                 'is_created' => true,
+                'repo_type' => RepTypes::normalizeType($type),
             ]
         );
 
@@ -233,7 +235,8 @@ class PackageController extends AbstractController
             [
                 'validation_groups' => ['Update'],
                 'is_created' => false,
-                'allow_extra_fields' => true
+                'allow_extra_fields' => true,
+                'repo_type' => RepTypes::MONO_REPO,
             ]
         );
 
@@ -813,6 +816,7 @@ class PackageController extends AbstractController
         $form = $this->createForm($formTypeClass, $package, [
             'action' => $this->generateUrl('edit_package', ['name' => $package->getName()]),
             'validation_groups' => ['Update', 'Default'],
+            'repo_type' => $package->getRepoType(),
         ]);
 
         $form->handleRequest($req);

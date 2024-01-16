@@ -21,6 +21,7 @@ use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Version;
+use Packeton\Package\RepTypes;
 use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\PacketonUtils;
 
@@ -219,7 +220,7 @@ class PackageRepository extends EntityRepository
             "SELECT p.id FROM package p
             WHERE p.abandoned = false
             AND p.parent_id is NULL
-            AND (p.repo_type NOT IN ('artifact', 'custom') OR p.repo_type IS NULL)
+            AND (p.repo_type NOT IN (:notcrawled) OR p.repo_type IS NULL)
             AND (
                 p.crawledAt IS NULL
                 OR (p.autoUpdated = false AND p.crawledAt < :crawled)
@@ -231,6 +232,10 @@ class PackageRepository extends EntityRepository
                 'crawled' => date('Y-m-d H:i:s', time() - ($interval ?: 14400)),
                 // crawl auto-updated packages once a week just in case
                 'autocrawled' => date('Y-m-d H:i:s', strtotime('-7day')),
+                'notcrawled' => RepTypes::isNotAutoCrawled() ?: ['na'],
+            ],
+            [
+                'notcrawled' => ArrayParameterType::STRING
             ]
         );
     }

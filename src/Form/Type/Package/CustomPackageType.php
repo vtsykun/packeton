@@ -5,6 +5,7 @@ namespace Packeton\Form\Type\Package;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Form\Handler\CustomPackageHandler;
 use Packeton\Form\Type\EmbedCollectionType;
+use Packeton\Package\RepTypes;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -38,7 +39,8 @@ class CustomPackageType extends AbstractType
                 'allow_add' => true,
                 'allow_delete' => true,
                 'entry_options' => [
-                    'dist_choices' => $this->getChoices($options['is_created'])
+                    'dist_choices' => $this->getChoices($options['is_created']),
+                    'with_dist' => $options['repo_type'] !== RepTypes::VIRTUAL,
                 ],
             ]);
 

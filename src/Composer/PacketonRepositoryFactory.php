@@ -41,7 +41,7 @@ class PacketonRepositoryFactory
 
         return match ($type) {
             RepTypes::ARTIFACT => new ArtifactRepository($repoConfig, $this->zipballStorage, $this->registry, $io, $config, $httpDownloader),
-            RepTypes::CUSTOM => new CustomJsonRepository($repoConfig, $this->registry, $io, $config, $httpDownloader),
+            RepTypes::CUSTOM, RepTypes::VIRTUAL => new CustomJsonRepository($repoConfig, $this->registry, $io, $config, $httpDownloader),
             default => new VcsRepository($repoConfig, $io, $config, $httpDownloader, $this->driverFactory, null, $process),
         };
     }
