@@ -24,10 +24,15 @@ class SettingsPackageType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('disabledUpdate', CheckboxType::class, [
-            'required' => false,
-            'label' => 'Disable cron auto-updates',
-        ]);
+        $builder
+            ->add('disabledUpdate', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Disable cron auto-updates',
+            ])
+            ->add('fullVisibility', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Visible for all users',
+            ]);
 
         if ($options['has_active_integration']) {
             $builder->add('pullRequestReview', ChoiceType::class, [
