@@ -397,7 +397,7 @@ class Package
             $this->repository = $path;
         }
 
-        if ($this->getRepoType() === RepTypes::CUSTOM) {
+        if ($this->getRepoType() === RepTypes::CUSTOM || $this->getRepoType() === RepTypes::VIRTUAL) {
             $this->customDriver = $this->driverError = null;
             $this->repository = $path;
         }

@@ -19,6 +19,7 @@ use Packeton\Entity\Version;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\ZipballInterface;
 use Packeton\Model\UploadZipballStorage;
+use Packeton\Model\VirtualPackageManager;
 use Packeton\Package\RepTypes;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -34,6 +35,7 @@ class DistManager
         private readonly IntegrationRegistry $integrations,
         private readonly FilesystemOperator $baseStorage,
         private readonly Filesystem $fs,
+        private readonly VirtualPackageManager $virtualPackageManager,
     ) {
     }
 
@@ -169,17 +171,21 @@ class DistManager
 
     private function downloadArtifact(string $reference, Package $package): ?string
     {
+        if ($package->getRepoType() === RepTypes::VIRTUAL) {
+            return $this->virtualPackageManager->buildArchive($package, $reference);
+        }
+
         if ($path = $this->artifact->moveToLocal($reference)) {
             return $path;
         }
 
         $repository = $this->createRepositoryAndIo($package);
         $packages = $repository->getPackages();
-        $found = array_filter($packages, fn($p) => $reference === $p->getDistReference());
+        $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
 
-        /** @var PackageInterface $package */
-        if ($package = reset($found)) {
-            $distUrl = $package->getDistUrl();
+        /** @var PackageInterface $pkg */
+        if ($pkg = reset($found)) {
+            $distUrl = $pkg->getDistUrl();
             if (is_string($distUrl) && str_starts_with($distUrl, '/')) {
                 return $distUrl;
             }

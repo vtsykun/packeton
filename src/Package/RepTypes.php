@@ -17,6 +17,7 @@ class RepTypes
     public const ARTIFACT = 'artifact';
     public const INTEGRATION = 'integration';
     public const CUSTOM = 'custom';
+    public const VIRTUAL = 'virtual';
 
     private static $types = [
         self::ARTIFACT,
@@ -24,6 +25,7 @@ class RepTypes
         self::INTEGRATION,
         self::VCS,
         self::CUSTOM,
+        self::VIRTUAL,
     ];
 
     public static function getFormType(?string $type): string
@@ -32,15 +34,20 @@ class RepTypes
             self::MONO_REPO => MonoRepoPackageType::class,
             self::ARTIFACT => ArtifactPackageType::class,
             self::INTEGRATION => IntegrationPackageType::class,
-            self::CUSTOM => CustomPackageType::class,
+            self::CUSTOM, self::VIRTUAL => CustomPackageType::class,
             default => PackageType::class,
         };
+    }
+
+    public static function isNotAutoCrawled(): array
+    {
+        return [self::VIRTUAL, self::CUSTOM, self::ARTIFACT];
     }
 
     public static function isBuildInDist(?string $type): bool
     {
         return match ($type) {
-            self::ARTIFACT, self::CUSTOM => true,
+            self::ARTIFACT, self::CUSTOM, self::VIRTUAL => true,
             default => false,
         };
     }
@@ -49,7 +56,7 @@ class RepTypes
     {
         return match ($type) {
             self::ARTIFACT => "package/{$action}Artifact.html.twig",
-            self::CUSTOM => "package/{$action}Custom.html.twig",
+            self::CUSTOM, self::VIRTUAL => "package/{$action}Custom.html.twig",
             default => null,
         };
     }
@@ -61,6 +68,7 @@ class RepTypes
             self::ARTIFACT => self::ARTIFACT,
             self::INTEGRATION => self::INTEGRATION,
             self::CUSTOM => self::CUSTOM,
+            self::VIRTUAL => self::VIRTUAL,
             default => self::VCS,
         };
     }
