@@ -91,6 +91,31 @@ class RootMetadataMerger
             ];
         }
 
-        return $stamps->withContent(\array_merge($rootFile, $newFile), \JSON_UNESCAPED_SLASHES | \JSON_PRETTY_PRINT);
+        $result = \array_merge($rootFile, $newFile);
+        $this->normalizePackagesNode($result);
+
+        return $stamps->withContent($result, \JSON_UNESCAPED_SLASHES | \JSON_PRETTY_PRINT);
+    }
+
+    protected function normalizePackagesNode(array &$result): void
+    {
+        if (!is_array($packages = $result['packages'] ?? null)) {
+            return;
+        }
+
+        $i = 1;
+        foreach ($packages as $packageName => $list) {
+            if (!is_array($list)) {
+                break;
+            }
+            foreach ($list as $ver => $pkg) {
+                if (isset($pkg['uid'])) {
+                    break 2;
+                }
+                $list[$ver]['uid'] = $i++;
+            }
+            $packages[$packageName] = $list;
+        }
+        $result['packages'] = $packages;
     }
 }

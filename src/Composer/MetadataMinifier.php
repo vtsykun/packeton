@@ -10,6 +10,12 @@ use Composer\MetadataMinifier\MetadataMinifier as ComposerMetadataMinifier;
 class MetadataMinifier
 {
     private static $masterVersions = ['dev-master', 'dev-main', 'dev-default', 'dev-trunk'];
+    private VersionParser $parser;
+
+    public function __construct()
+    {
+        $this->parser = new VersionParser();
+    }
 
     /**
      * Convert metadata v1 to metadata v2
@@ -24,6 +30,7 @@ class MetadataMinifier
 
         foreach ($packages as $packName => $versions) {
             $versions = \array_filter($versions, fn($v) => $isDev === null || $this->isValidStability($v, $isDev));
+            $versions = \array_map(fn($v) => $v + ['version_normalized' => $v['version_normalized'] ?? $this->normalizeVersion($v['version'])], $versions);
 
             \usort($versions, fn($v1, $v2) => -1 * version_compare($v1['version_normalized'], $v2['version_normalized']));
             \array_map(fn($v) => $obj->time < ($v['time'] ?? 0) ? $obj->time = ($v['time'] ?? 0) : null, $versions);
@@ -91,6 +98,15 @@ class MetadataMinifier
         }
 
         return ['packages' => $metadata['packages'] ?? []];
+    }
+
+    private function normalizeVersion(string $version): string
+    {
+        try {
+            return $this->parser->normalize($version);
+        } catch (\Throwable $e) {
+            return $version;
+        }
     }
 
     public static function getNormalizedVersionV1($version)
