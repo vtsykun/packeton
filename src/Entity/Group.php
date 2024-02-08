@@ -19,6 +19,9 @@ class Group
     #[ORM\Column(name: 'name', length: 64, unique: true)]
     private ?string $name = null;
 
+    #[ORM\Column(name: 'expired_updates_at', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $expiredUpdatesAt = null;
+
     #[ORM\Column(name: 'proxies', type: 'simple_array', nullable: true)]
     private ?array $proxies = null;
 
@@ -139,6 +142,24 @@ class Group
             $permission->setGroup();
         }
 
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getExpiredUpdatesAt(): ?\DateTimeInterface
+    {
+        return $this->expiredUpdatesAt;
+    }
+
+    /**
+     * @param \DateTimeInterface $expiredUpdatesAt
+     * @return $this
+     */
+    public function setExpiredUpdatesAt(?\DateTimeInterface $expiredUpdatesAt)
+    {
+        $this->expiredUpdatesAt = $expiredUpdatesAt;
         return $this;
     }
 }

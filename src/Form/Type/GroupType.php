@@ -6,6 +6,7 @@ use Packeton\Entity\Group;
 use Packeton\Mirror\ProxyRepositoryRegistry;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -26,7 +27,13 @@ class GroupType extends AbstractType
         $proxyChoice = \array_combine($proxyChoice, $proxyChoice);
 
         $builder
-            ->add('name', TextType::class, ['label' => 'Name', 'constraints' => [new NotBlank()]]);
+            ->add('name', TextType::class, ['label' => 'Name', 'constraints' => [new NotBlank()]])
+            ->add('expiredUpdatesAt', DateType::class, [
+                'widget' => 'single_text',
+                'required' => false,
+                'label' => 'Update expiration',
+                'tooltip' => 'A new release updates will be frozen after this date. But the user can uses the versions released before.'
+            ]);
 
         if ($proxyChoice) {
             $builder
