@@ -64,6 +64,27 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
         return $result;
     }
 
+    public function getExpirationDateForUser(PacketonUserInterface $user): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+
+        $result = [];
+        $expiredData = $qb->select('MAX(g.expiredUpdatesAt) as expired', 'IDENTITY(perm.package) as package')
+            ->from(Group::class, 'g')
+            ->innerJoin('g.aclPermissions', 'perm')
+            ->andWhere('g.expiredUpdatesAt IS NOT NULL')
+            ->andWhere('g.id IN (:ids)')
+            ->groupBy('package')
+            ->setParameter('ids', $user->getAclGroups() ?: [-1])
+            ->getQuery()->getArrayResult();
+
+        foreach ($expiredData as $item) {
+            $result[(int)$item['package']] = new \DateTimeImmutable($item['expired'], new \DateTimeZone('UTC'));
+        }
+
+        return $result;
+    }
+
     /**
      * @param UserInterface $user
      * @param bool $hydration flags
@@ -161,6 +182,7 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             'id' => $group->getId(),
             'name' => $group->getName(),
             'proxies' => $group->getProxies(),
+            'expiredUpdatesAt' => $group->getExpiredUpdatesAt(),
         ] + $this->getGroupsData($group);
     }
 

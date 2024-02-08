@@ -9,30 +9,17 @@ use Packeton\Entity\Group;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Model\PacketonUserInterface as PUI;
+use Packeton\Repository\GroupRepository;
 
 class PackagesAclChecker
 {
-    /**
-     * @var ManagerRegistry
-     */
-    private $registry;
 
-    /**
-     * @var VersionParser
-     */
-    private $parser;
+    private VersionParser $parser;
+    private array $versionCache = [];
+    private array $expiredCache = [];
 
-    /**
-     * @var array
-     */
-    private $versionCache = [];
-
-    /**
-     * @param ManagerRegistry $registry
-     */
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(private ManagerRegistry $registry)
     {
-        $this->registry = $registry;
         $this->parser = new VersionParser();
     }
 
@@ -55,6 +42,9 @@ class PackagesAclChecker
         if ($package->isFullVisibility()) {
             return true;
         }
+        if ($this->getExpiredDate($user, $package)) {
+            return false;
+        }
 
         $versionConstraints = $this->getVersions($user, $package);
         foreach ($versionConstraints as $constraint) {
@@ -76,7 +66,7 @@ class PackagesAclChecker
      */
     public function isGrantedAccessForVersion(PUI $user, Version $version)
     {
-        if ($user->getExpiredUpdatesAt() && $user->getExpiredUpdatesAt() < $version->getReleasedAt()) {
+        if (($date = $this->getExpiredDate($user, $version->getPackage())) && $date < $version->getReleasedAt()) {
             return false;
         }
 
@@ -102,8 +92,19 @@ class PackagesAclChecker
             return $this->versionCache[$hash];
         }
 
-        $version = $this->registry->getRepository(Group::class)
-            ->getAllowedVersionByPackage($user, $package);
+        $version = $this->getGroupRepo()->getAllowedVersionByPackage($user, $package);
         return $this->versionCache[$hash] = $version;
+    }
+
+    public function getExpiredDate(PUI $user, Package $package): ?\DateTimeInterface
+    {
+        $expiredData = $this->expiredCache[$user->getUserIdentifier()] ??= $this->getGroupRepo()->getExpirationDateForUser($user);
+
+        return $expiredData[$package->getId()] ?? $user->getExpiredUpdatesAt();
+    }
+
+    private function getGroupRepo(): GroupRepository
+    {
+        return $this->registry->getRepository(Group::class);
     }
 }

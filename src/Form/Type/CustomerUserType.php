@@ -56,8 +56,8 @@ class CustomerUserType extends AbstractType
             ->add('expiredUpdatesAt', DateType::class, [
                 'required' => false,
                 'widget' => 'single_text',
-                'label' => 'Update expiration',
-                'tooltip' => 'A new release updates will be frozen after this date. But the user can uses the versions released before'
+                'label' => 'Update expiration date',
+                'tooltip' => 'Default release updates expiration date. By default the value from the ACL group will be used if it is set'
             ])
             ->add('fullAccess', CheckboxType::class, [
                 'required' => false,
