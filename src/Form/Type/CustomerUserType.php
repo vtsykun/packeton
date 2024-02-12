@@ -98,7 +98,7 @@ class CustomerUserType extends AbstractType
 
             $builder
                 ->add('subReposView', ChoiceType::class, [
-                    'label' => 'Allowed subrepositories',
+                    'label' => 'Allowed sub-repositories',
                     'multiple' => true,
                     'required' => false,
                     'choices' => $subRepos,

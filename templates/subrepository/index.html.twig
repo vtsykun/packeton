@@ -1,12 +1,20 @@
 {% extends "layout.html.twig" %}
 
+{% block title %}{{ 'subrepository.title'|trans }} - {{ parent() }}{% endblock %}
+
 {% block content %}
-
-<div style="float:right; margin: 20px">
-    <a class="btn btn-default" href="{{ path('subrepository_create') }}">Create subrepository</a>
-</div>
-
 <section class="row">
+    <h2 class="title">{{ 'subrepository.title'|trans }}</h2>
+    <div class="col">
+        <div style="float:right">
+            <a class="btn btn-default" href="{{ path('subrepository_create') }}">{{ 'subrepository.create_subrepository'|trans }}</a>
+        </div>
+        <p style="max-width: 65%">{{ 'subrepository.guide'|trans|raw }}</p>
+    </div>
+
+    <div style="padding-top: 10px; clear: both"></div>
+
+    {% if repos|length > 0 %}
     <ul class="packages list-unstyled">
         {% for repo in repos %}
             {% set url = path('subrepository_update', { 'id' : repo.id }) %}
@@ -27,10 +35,10 @@
                         Repository URLs
                         <pre style="border-left: none;padding: 0; margin: 0; overflow: hidden">
 {
-  "repositories": [{
-    "type": "composer",
-    "url": "{{ app.request.getSchemeAndHttpHost() ~ '/' ~ repo.slug }}"
-  }]
+"repositories": [{
+"type": "composer",
+"url": "{{ app.request.getSchemeAndHttpHost() ~ '/' ~ repo.slug }}"
+}]
 }</pre>
                         </p>
                     </div>
@@ -38,7 +46,8 @@
             </li>
         {% endfor %}
     </ul>
-
-
+    {% else %}
+    <p>{{ 'subrepository.nothing_yet'|trans }}</p>
+    {% endif %}
 </section>
 {% endblock %}

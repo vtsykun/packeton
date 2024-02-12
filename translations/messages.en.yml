@@ -29,9 +29,9 @@ menu:
     ssh_keys: Credentials
     webhooks: Webhooks
     proxies: Composer Proxies
-    subrepository: SubRepositories
+    subrepository: Sub-repositories
     integrations: Integrations
-    
+
     profile_icon: '<span class="fa fa-id-card"></span>Profile'
     logout_icon: '<span class="fa fa-power-off"></span>Logout'
     change_password_icon: '<span class="fa fa-lock"></span>Change password'
@@ -43,7 +43,7 @@ menu:
     my_login_icon: '<span class="fa fa-desktop"></span>Login attempts'
     ssh_keys_icon: '<span class="fa fa-key"></span>Credentials'
     webhooks_icon: '<span class="fa fa-bell"></span>Webhooks'
-    subrepository_icon: '<span class="fa fa-floppy-o"></span>SubRepositories'
+    subrepository_icon: '<span class="fa fa-floppy-o"></span>Sub-repositories'
     break_line_icon: '<hr>'
     proxies_icon: '<span class="fa fa-random"></span>Composer Proxies'
     settings_icon: '<span class="fa fa-cogs"></span>Settings'
@@ -208,6 +208,15 @@ webhooks:
         Symfony http-client options, must be a valid JSON.
         See <a href="https://symfony.com/doc/current/components/http_client.html" target="_blank"> symfony docs </a>
         for details
+
+subrepository:
+    title: Sub-repositories
+    guide: |
+        The sub-repository feature is to create an additional Composer repository with their own URL or subdomain with a separate list of packages.
+        It works similar to a GitHub organization, you may later configure access for users in the user edit page.
+        Admins will have access to all sub-repositories.
+    create_subrepository: Create sub-repository
+    nothing_yet: No sub-repository configured yet.
 
 user:
     member_since: member since

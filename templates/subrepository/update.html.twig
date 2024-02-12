@@ -2,11 +2,12 @@
 
 {% block content %}
     <h2 class="title">
-        {%- if app.request.attributes.get('_route') == 'subrepository_update' %}
-            Update subrepository
-        {%- else %}
-            Create subrepository
-        {%- endif %}
+        {% if app.request.attributes.get('_route') == 'subrepository_update' %}
+            {{ 'common.update'|trans }}
+        {% else %}
+            {{ 'common.create'|trans }}
+        {% endif %}
+        {{ 'subrepository.title'|trans }}
     </h2>
 
     <section class="row">
@@ -50,12 +51,11 @@
         {{ form_end(form) }}
 
         <div class="col-md-6">
-            <h4>Composer Subrepository</h4>
+            <h4>Composer sub-repository</h4>
             <p>
-                The subrepository feature is to create an additional Composer repository
-                with their own URL or subdomain with a separate list of packages.
-                The Subrepository works similar GitHub organization, you may later configure access for users in the user edit page.
-                Admins will have access to all subrepositories.
+                The sub-repository feature is to create an additional Composer repository with their own URL or subdomain with a separate list of packages.
+                It works similar to a GitHub organization, you may later configure access for users in the user edit page.
+                Admins will have access to all sub-repositories.
             </p>
 
         </div>

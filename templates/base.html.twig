@@ -58,11 +58,11 @@
 
                         {% if subReposData is not empty and app.user %}
                             <div class="btn-group navbar-brand-dropdown">
-                                <a type="button" class="dropdown-toggle" data-toggle="dropdown" title="Change current subrepository">
+                                <a type="button" class="dropdown-toggle" data-toggle="dropdown" title="Change current sub-repository">
                                     {{ subReposData['current']|capitalize }}
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ path('subrepository_switch_root') }}">Switch subrepository</a></li>
+                                    <li><a href="{{ path('subrepository_switch_root') }}">Switch sub-repository</a></li>
                                     <li role="separator" class="divider"></li>
 
                                     {% for repo in subReposData['repos'] %}
@@ -71,8 +71,7 @@
 
                                     {% if isAdmin %}
                                         <li role="separator" class="divider"></li>
-                                        <li><a href="{{ path('subrepository_create') }}" style="font-weight: 900"><i class="fa fa-plus-square-o"></i>
-                                                Create subrepository</a></li>
+                                        <li><a href="{{ path('subrepository_create') }}" style="font-weight: 900"><i class="fa fa-plus-square-o"></i>Create sub-repository</a></li>
                                     {% endif %}
                                 </ul>
                             </div>
