@@ -432,7 +432,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         $response = $response->toArray();
 
         $response['user_name'] = $response['login'] ?? null;
-        $response['user_identifier'] = $response['email'];
+        $response['user_identifier'] = $response['email'] ?? $response['login'];
         $response['external_id'] = isset($response['id']) ? $this->getConfig()->getName() . ':' . $response['id'] : null;
 
         return $response;
@@ -520,10 +520,12 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
      */
     public function createUser(array $userData): User
     {
+        $email = $userData['email'] ?? (str_contains($userData['user_identifier'], '@') ? $userData['user_identifier'] : $userData['user_identifier'] .'@example.com');
+
         $user = new User();
         $user->setEnabled(true)
             ->setRoles($this->getConfig()->roles())
-            ->setEmail($userData['email'])
+            ->setEmail($email)
             ->setUsername($userData['login'])
             ->setGithubId($userData['external_id'] ?? null)
             ->generateApiToken();
