@@ -1,10 +1,13 @@
 {% extends "layout.html.twig" %}
 
-{% block title %}Proxies - {{ parent() }}{% endblock %}
+{% block title %}{{ 'proxies_and_mirroring.title'|trans }} - {{ parent() }}{% endblock %}
 
 {% block content %}
 <section class="row">
-    <h2>Proxies and Mirroring</h2><hr>
+    <h2 class="title">{{ 'proxies_and_mirroring.title'|trans }}</h2>
+
+    <div style="padding-top: 10px; clear: both"></div>
+
     {% if proxies|length > 0 %}
     <ul class="packages user-grid list-unstyled">
         {% for proxy in proxies %}
@@ -41,9 +44,8 @@
     </ul>
     {% else %}
     <section class="col-md-12">
-        <p>To enable mirroring and proxies, you need to update the application configuration, see docs</p>
+        <p>{{ 'proxies_and_mirroring.guide'|trans }}</p>
         <pre>
-
 # config/packages/example.yaml
 packeton:
   mirrors:

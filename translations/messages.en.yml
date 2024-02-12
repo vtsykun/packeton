@@ -218,6 +218,12 @@ subrepository:
     create_subrepository: Create sub-repository
     nothing_yet: No sub-repository configured yet.
 
+proxies_and_mirroring:
+    title: Proxies and Mirroring
+    guide: |
+        To enable mirroring and proxies, you need to update the application configuration, 
+        <a href="https://docs.packeton.org/usage/mirroring.html" target="_blank">see docs</a>
+
 user:
     member_since: member since
     packages: "%username%'s packages"
