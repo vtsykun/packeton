@@ -107,7 +107,13 @@ browse:
     join_or: ' or '
 
 integration:
-    self_help: 'All repositories to which this user has access outside the organization will be available'
+    title: OAuth2 and Sync integrations
+    avaible_integrations: Available integrations
+    install_integration: Install integration
+    self_help: All repositories to which this user has access outside the organization will be available
+    nothing_yet: No integrations configured yet.
+    guide: |
+        Integrations needs to be configured in yaml files, for more information <a href="https://docs.packeton.org/oauth2.html">see the docs</a>.
 
 submit:
     title: Submit package

@@ -1,38 +1,47 @@
 {% extends "layout.html.twig" %}
 
-{% block title %}Integrations - {{ parent() }}{% endblock %}
+{% block title %}{{ 'integration.title'|trans }} - {{ parent() }}{% endblock %}
 
 {% block content %}
 <section class="row">
-    <a href="{{ path('integration_connect') }}" class="btn btn-primary" style="float: right">Install Integration</a>
-    <br>
-    <br>
-    {% if integrations|length > 0 %}
-        <ul class="packages user-grid list-unstyled">
-            {% for integration in integrations %}
-                {% set apps = integration.findApps() %}
-                {% set config = integration.config() %}
-                {% for oauth in apps %}
-                    {% set viewPath = path('integration_index', {'alias': config.name, 'id': oauth.id }) %}
+    <h2 class="title">{{ 'integration.title'|trans }}</h2>
+    <div class="col">
+        <div style="float:right">
+            <a class="btn btn-default" href="{{ path('integration_connect') }}">{{ 'integration.install_integration'|trans }}</a>
+        </div>
+        <p style="max-width: 65%">{{ 'integration.guide'|trans|raw }}</p>
+    </div>
 
-                    <li data-url="{{ viewPath }}" class="row">
-                        <div class="col-xs-12 package-item">
-                            <div class="row" style="margin: 6px 12px;">
-                                <div class="s-flex">
-                                    <a href="{{ viewPath }}" class="s-flex no-underline link-gray-dark">
-                                        {% if config.logo %}
-                                            <img height="40" src="{{ config.logo }}" alt="ref">
-                                        {% endif %}
-                                        <h4 class="tab-cell">{{ config.title ?? config.name }}</h4>
-                                    </a>
-                                </div>
-                                {% include 'integration/info_app.html.twig' %}
+    <div style="padding-top: 10px; clear: both"></div>
+
+    {% if integrations|length > 0 %}
+    <ul class="packages user-grid list-unstyled">
+        {% for integration in integrations %}
+            {% set apps = integration.findApps() %}
+            {% set config = integration.config() %}
+            {% for oauth in apps %}
+                {% set viewPath = path('integration_index', {'alias': config.name, 'id': oauth.id }) %}
+
+                <li data-url="{{ viewPath }}" class="row">
+                    <div class="col-xs-12 package-item">
+                        <div class="row" style="margin: 6px 12px;">
+                            <div class="s-flex">
+                                <a href="{{ viewPath }}" class="s-flex no-underline link-gray-dark">
+                                    {% if config.logo %}
+                                        <img height="40" src="{{ config.logo }}" alt="ref">
+                                    {% endif %}
+                                    <h4 class="tab-cell">{{ config.title ?? config.name }}</h4>
+                                </a>
                             </div>
+                            {% include 'integration/info_app.html.twig' %}
                         </div>
-                    </li>
-                {% endfor %}
+                    </div>
+                </li>
             {% endfor %}
-        </ul>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>{{ 'integration.nothing_yet'|trans }}</p>
     {% endif %}
 </section>
 {% endblock %}
