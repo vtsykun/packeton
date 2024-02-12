@@ -38,8 +38,10 @@ class AuditLoginListener
         }
 
         try {
-            $username = $event->getPassport()?->getUser()->getUserIdentifier();
-        } catch (\Throwable $e) {
+            if(!$username = $event->getPassport()?->getUser()->getUserIdentifier()) {
+                return;
+            }
+        } catch (\Throwable) {
             return;
         }
 
