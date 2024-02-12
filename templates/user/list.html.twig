@@ -1,24 +1,31 @@
 {% extends "layout.html.twig" %}
 
+{% block title %}{{ 'menu.my_users'|trans }} - {{ parent() }}{% endblock %}
+
 {% block content %}
 <section class="row">
-    <form name="search_user" method="get" action="{{ path('users_list') }}" id="search--user-form" autocomplete="off">
-        <div class="sortable row">
-            <div class="col-xs-12 js-search-field-wrapper col-md-9">
-                <input type="search" id="search_user_user" name="user_query" autocomplete="off" placeholder="Search user by username..." tabindex="1" class=" form-control" value="{{ searchUser }}">
-            </div>
-        </div>
-    </form>
+    <h2 class="title">{{ 'menu.my_users'|trans }}</h2>
 </section>
-<div style="float:right; margin: 20px">
-    <a class="btn btn-default" href="{{ path('users_login_attempts_all') }}">All user sessions</a>
-    <a class="btn btn-primary" href="{{ path('users_create') }}">Create user</a>
-</div>
+<section class="row">
+    <div class="col-xs-12 col-md-9">
+        <form name="search_user" method="get" action="{{ path('users_list') }}" id="search--user-form" autocomplete="off">
+            <div class="sortable row">
+                <div class="js-search-field-wrapper">
+                    <input type="search" id="search_user_user" name="user_query" autocomplete="off" placeholder="Search user by username..." tabindex="1" class=" form-control" value="{{ searchUser }}">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="pull-right">
+        <a class="btn btn-default" href="{{ path('users_login_attempts_all') }}">All user sessions</a>
+        <a class="btn btn-primary" href="{{ path('users_create') }}">Create user</a>
+    </div>
+</section>
 <section class="row">
     <ul class="packages user-grid list-unstyled">
         {% for user in users %}
         {% set userUrl = path('user_profile', { 'name' : user.userIdentifier }) %}
-        <li data-url="{{ userUrl }}" class="row">
+        <li data-url="{{ userUrl }}">
             <div class="col-xs-12 package-item">
                 <div class="row" style="margin: 6px 12px;">
 
