@@ -2531,7 +2531,7 @@ sebastian/lines-of-code            2.0.1   Library for counting the lines of cod
 <li><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li>
 </ul>
 <h2 id="base-configuration-reference"><a class="header" href="#base-configuration-reference">Base configuration reference</a></h2>
-<p>To enable OAuth2 integrations you need to add following configuration </p>
+<p>To enable OAuth2 integrations, you need to add the following configuration </p>
 <pre><code class="language-yml">packeton:
     integrations:
         github: # Alias name 
@@ -2664,8 +2664,8 @@ https://example.com/oauth2/{alias}/check
 <h4 id="gitlab-groups-webhooks-notices"><a class="header" href="#gitlab-groups-webhooks-notices">GitLab Groups Webhooks notices</a></h4>
 <p>A group webhooks needed for synchronization a new package. 
 They are triggered by events that occur across all projects in the group.
-This feature enabled only for Premium / EE / Gold paid plan, but it can be replaced with GitLab Packagist Integration</p>
-<p>You must manually setup this integration.</p>
+This feature is enabled only for Premium / EE / Gold paid plan, but it can be replaced with GitLab Packagist Integration</p>
+<p>You must manually set up this integration.</p>
 <p><a href="img/gitlab.png"><img src="img/gitlab.png" alt="Gitlab" /></a></p>
 <p>Where token you can find on the packeton integration view page. The token must have <code>whk</code> prefix 
 to find related integration access token.</p>
@@ -2717,7 +2717,7 @@ But for enable it manually only for one selected repository you need add webhook
 <p>Go to you GitHub account Settings / Developer settings (<code>https://github.com/settings/developers</code>) and select &quot;New OAuth App&quot;</p>
 <p>Use the packeton host as &quot;Callback URL / Redirect URL&quot;. For example <code>https://packeton.example.org</code></p>
 <p><a href="oauth2/../img/github-oauth2.png"><img src="oauth2/../img/github-oauth2.png" alt="Groups" /></a></p>
-<p>Use obtained <code>clinent_id</code>, <code>client_secret</code> to create configuration in yaml. For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
+<p>Use obtained <code>client_id</code>, <code>client_secret</code> to create configuration in yaml. For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
 <pre><code class="language-yaml">packeton:
     integrations:
         github: # any alias name 
@@ -2727,25 +2727,34 @@ But for enable it manually only for one selected repository you need add webhook
                 client_id: 'xxx'
                 client_secret: 'xxx'
 </code></pre>
-<p>Now go to Packeton integration page and click Install Integration. You will see list of available integrations and its Redirect Urls</p>
-<p>Click to Connect to set up oauth2 credentials</p>
+<p>Now go to Packeton integration page and click Install Integration. You will see a list of available integrations and its Redirect Urls</p>
+<p>Click to <code>Connect</code> to set up oauth2 credentials.</p>
 <p><a href="oauth2/../img/github-connect.png"><img src="oauth2/../img/github-connect.png" alt="Groups" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="github-app-integration"><a class="header" href="#github-app-integration">GitHub App Integration</a></h1>
-<p>GitHub App Integration is alternative of GitHub OAuth2. To create GitHub go to 
-Settings / Developer settings / GitHub Apps and click New GitHub App.</p>
-<p>Use the next &quot;Callback URL / Redirect URL&quot;.</p>
-<p>Redirect Urls:</p>
-<pre><code>https://example.com/oauth2/{alias}/install
-https://example.com/oauth2/{alias}/check
-</code></pre>
-<p>The webhooks URL maybe any. We don't use it and setup webhooks per repository or choice organization.</p>
-<p>Select Permissions: </p>
+<p>GitHub App Integration is alternative of GitHub OAuth2. 
+To create GitHub go to: Settings / Developer settings / GitHub Apps and click <code>New GitHub App</code>.</p>
 <ul>
-<li>Webhooks read-write (Repository permissions)</li>
-<li>Metadata (Repository permissions)</li>
-<li>Pull requests read-write (Repository permissions)</li>
-<li>Webhooks read-write (Organization permissions)</li>
-<li>Members read (Organization permissions) - optional</li>
+<li>Enter a GitHub App name: Private Packeton.</li>
+<li>Enter a homepage url: https://packeton.example.com for example.</li>
+<li>Click <code>Add Callback URL</code> and use the next &quot;Callback URL / Redirect URL&quot;.</li>
+</ul>
+<pre><code>https://packeton.example.com/oauth2/{alias}/install
+https://packeton.example.com/oauth2/{alias}/check
+</code></pre>
+<ul>
+<li>Uncheck webhook active checkbox</li>
+</ul>
+<p>Select Repository permissions:</p>
+<ul>
+<li>Content: read-only </li>
+<li>Webhooks: read-write</li>
+<li>Metadata: read-only (already selected)</li>
+<li>Pull requests read-write </li>
+</ul>
+<p>Select Organization permissions:</p>
+<ul>
+<li>Webhooks: read-write</li>
+<li>Members: read (optional)</li>
 </ul>
 <p><a href="oauth2/../img/githubapp1.png"><img src="oauth2/../img/githubapp1.png" alt="Img" /></a></p>
 <p>After creating App go to App view page and find <code>app_id</code> and generate a &quot;Private Key&quot;</p>
@@ -2761,12 +2770,15 @@ For docker installation you may use <code>config.yaml</code> file in docker volu
                 private_key: '/data/packeton-key.pem'
                 app_id: 340120
 </code></pre>
-<p>When you must install GitHub App in you Github Account. Go to public App page, like <code>https://github.com/apps/{name}</code>
-and click configure. Select you organization or own account.</p>
+<p>When you must install GitHub App in your GitHub Account. </p>
+<p>Go to public App page, like <code>https://github.com/apps/{name}</code> and click configure. 
+Select your organization or own account.</p>
 <p><a href="oauth2/../img/githubapp2.png"><img src="oauth2/../img/githubapp2.png" alt="Img" /></a></p>
 <p>After install you will see <code>installation_id</code> on URL address. For example <code>https://github.com/settings/installations/38069000</code></p>
-<p>Now go to Packeton integration page and click Install Integration. When click to Connect under you githubapp configuration.</p>
-<p>To finish setup Go to Packeton integration view page / Settings and provider <code>installation_id</code> in the form</p>
+<p>Now go to Packeton <code>integration</code> page and click <code>Install Integration</code>. 
+When click to <code>Connect</code> under you <code>github</code> configuration.</p>
+<p><a href="oauth2/../img/githubapp4.png"><img src="oauth2/../img/githubapp4.png" alt="Img" /></a></p>
+<p>To finish setup Go to Packeton <code>integration</code> view page / Settings and provider <code>installation_id</code> in the form</p>
 <p><a href="oauth2/../img/githubapp3.png"><img src="oauth2/../img/githubapp3.png" alt="Img" /></a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="gitlab-integration-setup"><a class="header" href="#gitlab-integration-setup">GitLab Integration Setup</a></h1>
 <p>Go to you GitLab account preferences (<code>https://gitlab.example.com/-/profile/preferences</code>) and select &quot;Applications&quot;</p>

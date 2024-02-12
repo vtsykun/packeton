@@ -151,7 +151,7 @@
 <p>Go to you GitHub account Settings / Developer settings (<code>https://github.com/settings/developers</code>) and select &quot;New OAuth App&quot;</p>
 <p>Use the packeton host as &quot;Callback URL / Redirect URL&quot;. For example <code>https://packeton.example.org</code></p>
 <p><a href="../img/github-oauth2.png"><img src="../img/github-oauth2.png" alt="Groups" /></a></p>
-<p>Use obtained <code>clinent_id</code>, <code>client_secret</code> to create configuration in yaml. For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
+<p>Use obtained <code>client_id</code>, <code>client_secret</code> to create configuration in yaml. For docker installation you may use <code>config.yaml</code> file in docker volume.</p>
 <pre><code class="language-yaml">packeton:
     integrations:
         github: # any alias name 
@@ -161,8 +161,8 @@
                 client_id: 'xxx'
                 client_secret: 'xxx'
 </code></pre>
-<p>Now go to Packeton integration page and click Install Integration. You will see list of available integrations and its Redirect Urls</p>
-<p>Click to Connect to set up oauth2 credentials</p>
+<p>Now go to Packeton integration page and click Install Integration. You will see a list of available integrations and its Redirect Urls</p>
+<p>Click to <code>Connect</code> to set up oauth2 credentials.</p>
 <p><a href="../img/github-connect.png"><img src="../img/github-connect.png" alt="Groups" /></a></p>
 
                     </main>
