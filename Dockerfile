@@ -48,8 +48,9 @@ RUN composer install --no-interaction --no-suggest --no-dev --no-scripts && \
 
 COPY --chown=82:82 . /var/www/packagist/
 
-RUN composer run-script auto-scripts && \
-    mkdir var/composer var/zipball && \
+RUN export COMPOSER_ALLOW_SUPERUSER=1; \
+    composer run-script auto-scripts; \
+    mkdir var/composer var/zipball; \
     rm -rf /root/.composer var/cache
 
 RUN set -eux; \
