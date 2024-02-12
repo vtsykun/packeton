@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packeton\Tests\Phpunit;
+namespace Packeton\Tests\Functional;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;

@@ -2,7 +2,7 @@
 
 namespace Packeton\Tests\Functional\Controller;
 
-use Packeton\Tests\Phpunit\PacketonTestTrait;
+use Packeton\Tests\Functional\PacketonTestTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
