@@ -9,6 +9,7 @@
 /vendor/
 ###< symfony/framework-bundle ###
 /book/
+.docker/
 
 ###> phpunit/phpunit ###
 /phpunit.xml
