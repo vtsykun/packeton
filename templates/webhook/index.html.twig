@@ -4,56 +4,53 @@
     <script src="{{ asset('packeton/js/hookView.js')}}"></script>
 {% endblock %}
 
-{% block content %}
+{% block title %}{{ 'webhooks.title'|trans }} - {{ parent() }}{% endblock %}
 
-<section class="row webhook">
-    <div>
+{% block content %}
+<section class="row">
+    <h2 class="title">{{ 'webhooks.title'|trans }}</h2>
+    <div class="col">
         <div style="float:right">
-            <a class="btn btn-default" href="{{ path('webhook_create') }}">Add webhook</a>
+            <a class="btn btn-default" href="{{ path('webhook_create') }}">{{ 'webhooks.add_webhook'|trans }}</a>
         </div>
-        <h3>Webhooks</h3>
-        <p style="max-width: 65%">
-            Outgoing Webhooks allow external services to be notified when certain events happen (new_release, new_repo, etc.).
-            See <a href="https://github.com/vtsykun/packeton/blob/master/docs/webhook.md" target="_blank">
-                Example how to use Webhooks.
-            </a>
-            If you need to setup a post-receive hook to trigger for update package
-            see <a href="{{ path('about') }}#how-to-update-packages">Service Webhooks</a>
-        </p>
+        <p style="max-width: 65%">{{ 'webhooks.guide'|trans({ '%path_about%': path('about') })|raw }}</p>
     </div>
 
     <div style="padding-top: 10px; clear: both"></div>
-
-    {% set deleteCsrfToken = csrf_token('webhook_delete') %}
-    {% for webhook in webhooks %}
-        <div class="panel panel-default">
-            {% set viewUrl = path('webhook_update', {id: webhook.id}) %}
-            <div class="panel-heading" title="Update hook {{ webhook.name }}">
-                <a href="{{ viewUrl }}" class="link" style="font-size: 1.2em">{{ webhook.name }}</a>
-            </div>
-
-            <div class="panel-body">
-                <div style="float: right">
-                    <form class="delete-hook" action="{{ path("webhook_delete", {"id": webhook.id}) }}" method="DELETE">
-                        <input type="hidden" name="_token" value="{{ deleteCsrfToken }}" />
-                        <button style="padding: 5px 14px;" class="btn submit btn-danger" type="submit">Delete</button>
-                    </form>
+    {% if webhooks|length > 0 %}
+        {% set deleteCsrfToken = csrf_token('webhook_delete') %}
+        {% for webhook in webhooks %}
+            <div class="panel panel-default">
+                {% set viewUrl = path('webhook_update', {id: webhook.id}) %}
+                <div class="panel-heading" title="Update hook {{ webhook.name }}">
+                    <a href="{{ viewUrl }}" class="link" style="font-size: 1.2em">{{ webhook.name }}</a>
                 </div>
-                <p>{% if webhook.active == true %}
-                        <i class="fa fa-check" style="color: #28a745" title="Active"></i>
-                    {% else %}
-                        <i class="fa fa-times" style="color: #ba140d"  title="Disabled"></i>
-                    {% endif %}
-                    <a href="{{ viewUrl }}" class="link">
-                        {{ webhook.url }}
-                    </a>
-                </p>
-                <p style="color: #7b7b7d;font-size: 0.92em">Events: ({{ webhook.events|join(',') }})
-                    &nbsp<a href="{{ path('webhook_test_action', {id: webhook.id}) }}">test action</a>
-                </p>
 
+                <div class="panel-body">
+                    <div style="float: right">
+                        <form class="delete-hook" action="{{ path("webhook_delete", {"id": webhook.id}) }}" method="DELETE">
+                            <input type="hidden" name="_token" value="{{ deleteCsrfToken }}" />
+                            <button style="padding: 5px 14px;" class="btn submit btn-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                    <p>{% if webhook.active == true %}
+                            <i class="fa fa-check" style="color: #28a745" title="Active"></i>
+                        {% else %}
+                            <i class="fa fa-times" style="color: #ba140d"  title="Disabled"></i>
+                        {% endif %}
+                        <a href="{{ viewUrl }}" class="link">
+                            {{ webhook.url }}
+                        </a>
+                    </p>
+                    <p style="color: #7b7b7d;font-size: 0.92em">Events: ({{ webhook.events|join(',') }})
+                        &nbsp<a href="{{ path('webhook_test_action', {id: webhook.id}) }}">test action</a>
+                    </p>
+
+                </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p>{{ 'webhooks.nothing_yet'|trans }}</p>
+    {% endif %}
 </section>
 {% endblock %}

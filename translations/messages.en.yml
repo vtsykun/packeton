@@ -49,6 +49,11 @@ menu:
     settings_icon: '<span class="fa fa-cogs"></span>Settings'
     integrations_icon: '<span class="fa fa-github"></span>Integrations'
 
+common:
+    update: Update
+    delete: Delete
+    create: Create
+
 security:
     login:
         username: Username
@@ -197,17 +202,25 @@ api_doc:
     get_package_data: Getting package data
 
 webhooks:
+    title: Webhooks
+    guide: |
+        Outgoing Webhooks allow external services to be notified when certain events happen (new_release, new_repo, etc.).
+        See <a href="https://docs.packeton.org/webhook.html" target="_blank">Example how to use Webhooks.</a>
+        If you need to setup a post-receive hook to trigger for update package
+        see <a href="%path_about%#how-to-update-packages">Service Webhooks</a>
+    add_webhook: Add webhook
     payload.tooltip: |
         The twig template code to render the Generic body request payload.
         Untrusted template code is evaluate in a Twig sandbox mode.
         You can use <i>json_encode</i> filter to send JSON request, see more about syntax
         in <a href="https://twig.symfony.com/doc/2.x/" target="_blank"> twig docs </a>.
-        More examples and variables description you can see
-        <a href="https://github.com/vtsykun/packeton/blob/master/docs/webhook.md" target="_blank"> here </a>
+        More examples and variables description you can see 
+        <a href="https://docs.packeton.org/webhook.html" target="_blank">here</a>
     options.tooltip: |
         Symfony http-client options, must be a valid JSON.
         See <a href="https://symfony.com/doc/current/components/http_client.html" target="_blank"> symfony docs </a>
         for details
+    nothing_yet: No webhooks configured yet.
 
 subrepository:
     title: Sub-repositories
