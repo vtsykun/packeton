@@ -12,7 +12,7 @@ Table of content
 
 ## Base configuration reference
 
-To enable OAuth2 integrations you need to add following configuration 
+To enable OAuth2 integrations, you need to add the following configuration 
 ```yml
 packeton:
     integrations:
@@ -162,9 +162,9 @@ https://example.com/oauth2/{alias}/check
 
 A group webhooks needed for synchronization a new package. 
 They are triggered by events that occur across all projects in the group.
-This feature enabled only for Premium / EE / Gold paid plan, but it can be replaced with GitLab Packagist Integration
+This feature is enabled only for Premium / EE / Gold paid plan, but it can be replaced with GitLab Packagist Integration
 
-You must manually setup this integration.
+You must manually set up this integration.
 
 [![Gitlab](img/gitlab.png)](img/gitlab.png)
 
