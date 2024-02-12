@@ -1540,7 +1540,7 @@ a.loading, a:has(> .btn.loading ) {
 }
 
 .packages .package-item {
-    padding: 5px 15px;
+    padding: 1em 1em 0;
     margin-bottom: 10px;
     background: #fff;
     border-radius: 4px;
