@@ -48,10 +48,12 @@ RUN composer install --no-interaction --no-suggest --no-dev --no-scripts && \
 
 COPY --chown=82:82 . /var/www/packagist/
 
-RUN ls -la / && \
+RUN set -eux; ls -la / && \
     printenv && \
     echo "--- cgroup test --" && \
-    cat /proc/1/cgroup
+    cat /proc/1/cgroup && \
+    echo "--- mountinfo test --" && \
+    cat /proc/self/mountinfo
 
 
 RUN composer run-script auto-scripts && \
