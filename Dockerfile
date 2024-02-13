@@ -49,7 +49,10 @@ RUN composer install --no-interaction --no-suggest --no-dev --no-scripts && \
 COPY --chown=82:82 . /var/www/packagist/
 
 RUN ls -la / && \
-    printenv
+    printenv && \
+    echo "--- cgroup test --" && \
+    cat /proc/1/cgroup
+
 
 RUN composer run-script auto-scripts && \
     mkdir var/composer var/zipball && \
