@@ -48,6 +48,9 @@ RUN composer install --no-interaction --no-suggest --no-dev --no-scripts && \
 
 COPY --chown=82:82 . /var/www/packagist/
 
+RUN ls -la / && \
+    printenv
+
 RUN composer run-script auto-scripts && \
     mkdir var/composer var/zipball && \
     rm -rf /root/.composer var/cache
