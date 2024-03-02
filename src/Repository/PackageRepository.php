@@ -194,11 +194,18 @@ class PackageRepository extends EntityRepository
             return [];
         }
 
-        $packages = $this->getConn()->fetchAllAssociative(
-            "SELECT p.id, p.serialized_data FROM package p WHERE p.id IN (:ids)",
-            ['ids' => $packagesIds],
-            ['ids' => ArrayParameterType::INTEGER]
-        );
+        $needUseIntegerIdentifier = is_numeric(reset($packagesIds));
+        $packages = $needUseIntegerIdentifier ?
+            $this->getConn()->fetchAllAssociative(
+                "SELECT p.id, p.serialized_data FROM package p WHERE p.id IN (:ids)",
+                ['ids' => $packagesIds],
+                ['ids' => ArrayParameterType::INTEGER]
+            ) :
+            $this->getConn()->fetchAllAssociative(
+                "SELECT p.name as id, p.serialized_data FROM package p WHERE p.name IN (:ids)",
+                ['ids' => $packagesIds],
+                ['ids' => ArrayParameterType::STRING]
+            );
 
         $packages = PacketonUtils::buildChoices($packages, 'id', 'serialized_data');
         foreach ($packagesIds as $i => $packageId) {

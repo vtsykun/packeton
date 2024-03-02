@@ -208,4 +208,17 @@ trait PackageSerializedTrait
     {
         $this->setSerialized('disabled_update', $flag);
     }
+
+    public function isArchived(): bool
+    {
+        return (bool) ($this->serializedFields['archived'] ?? false);
+    }
+
+    public function setArchived(?bool $flag): void
+    {
+        $this->setSerialized('archived', $flag);
+        if (true === $flag) {
+            $this->setAbandoned(true);
+        }
+    }
 }

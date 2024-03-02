@@ -58,7 +58,7 @@ class InMemoryDumper
             $package = $this->getPackageRepo()->findOneByName($package);
         }
 
-        if (!$package instanceof Package) {
+        if (!$package instanceof Package || $package->isArchived()) {
             return [];
         }
 
@@ -143,6 +143,8 @@ class InMemoryDumper
 
             $availablePackages = $this->getPackageRepo()->getPackageNames($allowed);
             $availablePackages = $subRepo ? $subRepo->filterAllowed($availablePackages) : $availablePackages;
+            $availablePackages = $this->getPackageRepo()->filterByJson($availablePackages, static fn($data) => !($data['archived'] ?? false));
+
             return [null, [], $availablePackages];
         }
 
@@ -151,10 +153,12 @@ class InMemoryDumper
                 ->getAllowedPackagesForUser($user) :
             $this->getPackageRepo()->findAll();
 
+        $packages = array_values(array_filter($packages, static fn(Package $pkg) => !$pkg->isArchived()));
+
         $providers = $packagesData = [];
         $versionData = $this->getVersionData($packages);
 
-        $availablePackages = array_map(fn(Package $pkg) => $pkg->getName(), $packages);
+        $availablePackages = array_map(static fn(Package $pkg) => $pkg->getName(), $packages);
         $availablePackages = $subRepo ? $subRepo->filterAllowed($availablePackages) : $availablePackages;
         $keys = array_flip($availablePackages);
 
