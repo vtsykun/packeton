@@ -70,6 +70,12 @@
                         {% endif %}
                     {% endif %}
 
+                    {% if package.archived %}
+                        <div class="alert alert-danger">
+                            This package is <strong>ARCHIVED</strong> and will not be available in metadata.
+                        </div>
+                    {% endif %}
+
                     {% if package.abandoned %}
                         <div class="alert alert-danger">
                             This package is <strong>abandoned</strong> and no longer maintained.

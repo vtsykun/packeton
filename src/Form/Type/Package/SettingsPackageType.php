@@ -32,6 +32,10 @@ class SettingsPackageType extends AbstractType
             ->add('fullVisibility', CheckboxType::class, [
                 'required' => false,
                 'label' => 'Visible for all users',
+            ])
+            ->add('archived', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Mark package as archived',
             ]);
 
         if ($options['has_active_integration']) {
