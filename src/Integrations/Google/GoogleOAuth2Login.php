@@ -85,6 +85,7 @@ class GoogleOAuth2Login implements LoginInterface
         $response['user_name'] = explode('@', $response['email'])[0];
         $response['user_identifier'] = $response['email'];
         $response['external_id'] = isset($response['sub']) ? $this->name . ':' . $response['sub'] : null;
+        $response['_type'] = self::LOGIN_EMAIL;
 
         return $response;
     }

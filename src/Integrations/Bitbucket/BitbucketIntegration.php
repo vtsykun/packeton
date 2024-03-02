@@ -378,6 +378,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
         $response['user_name'] = $response['username'] ?? null;
         $response['user_identifier'] = $response['username'] ?? null;
         $response['external_id'] = isset($response['uuid']) ? "{$this->name}:{$response['uuid']}" : null;
+        $response['_type'] = self::LOGIN_USERNAME;
 
         return $response;
     }

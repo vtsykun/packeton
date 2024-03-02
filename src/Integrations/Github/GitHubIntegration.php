@@ -456,6 +456,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         $response['user_name'] = $response['login'] ?? null;
         $response['user_identifier'] = $response['email'] ?? $response['login'];
         $response['external_id'] = isset($response['id']) ? $this->getConfig()->getName() . ':' . $response['id'] : null;
+        $response['_type'] = isset($response['email']) ? self::LOGIN_EMAIL : self::LOGIN_USERNAME;
 
         return $response;
     }

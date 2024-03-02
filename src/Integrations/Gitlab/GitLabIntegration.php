@@ -157,6 +157,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
         $response['user_name'] = $response['username'] ?? null;
         $response['user_identifier'] = $response['email'];
         $response['external_id'] = isset($response['id']) ? "{$this->name}:{$response['id']}" : null;
+        $response['_type'] = self::LOGIN_EMAIL;
 
         return $response;
     }

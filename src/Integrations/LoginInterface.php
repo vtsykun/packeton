@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 interface LoginInterface extends IntegrationInterface
 {
+    public const LOGIN_EMAIL = 'email';
+    public const LOGIN_USERNAME = 'username';
+
     /**
      * @param Request|null $request
      * @param array $options

@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityRepository;
 use Packeton\Entity\Group;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Integrations\LoginInterface;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
@@ -32,8 +33,10 @@ class UserRepository extends EntityRepository
     public function findByOAuth2Data(array $data): ?User
     {
         $user = null;
-        if (isset($data['user_identifier'])) {
-            $user = $this->findOneByUsernameOrEmail($data['user_identifier']);
+        if ($identifier = ($data['user_identifier'] ?? null)) {
+            $user = ($data['_type'] ?? null) === LoginInterface::LOGIN_USERNAME ?
+                 $this->findOneBy(['usernameCanonical' => mb_strtolower($identifier)])
+                 : $this->findOneBy(['emailCanonical' => $identifier]);
         }
 
         if (null === $user && isset($data['external_id'])) {

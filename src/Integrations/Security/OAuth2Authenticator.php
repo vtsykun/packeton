@@ -70,6 +70,11 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
             throw new CustomUserMessageAuthenticationException('Unable to fetch oauth data');
         }
 
+        if (empty($data['_type'])) {
+            $this->logger->error("oauth2 authenticator error, client response must contains _type of user_identifier field.", ['user' => $data]);
+            throw new CustomUserMessageAuthenticationException('Invalid oauth user data. Client response must contains _type of user identifier');
+        }
+
         $badges = [];
         if (filter_var($request->cookies->get('_remember_me_flag'), FILTER_VALIDATE_BOOL)) {
             $badges[] = new RememberMeBadge();
