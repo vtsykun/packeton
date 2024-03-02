@@ -39,7 +39,7 @@ class OAuthIntegration
 
     public function __construct()
     {
-        $this->createdAt = new \DateTime();
+        $this->createdAt = new \DateTimeImmutable();
         $this->serializedFields = [];
     }
 

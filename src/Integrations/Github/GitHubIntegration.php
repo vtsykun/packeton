@@ -100,7 +100,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
             return $response->toArray();
         });
 
-        $orgs = array_map(function ($org) {
+        $orgs = array_map(static function ($org) {
             $org['identifier'] = $org['organization']['login'];
             $org['name'] = $org['organization']['login'];
             $org['logo'] = $org['organization']['avatar_url'];
@@ -295,7 +295,10 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         }
 
         $repoId = $payload['repository']['id'];
-        $kind = $request->headers->get('x-github-event', 'push');
+        $kind = $request->headers->get('x-github-event');
+        if (null === $kind) {
+            $kind = ($payload['pull_request'] ?? null) ? 'pull_request' : 'push';
+        }
 
         if (in_array($kind, ['push', 'tag_push'])) {
             return $this->processPushEvent($accessToken, $payload, $repoId, $repoName);
@@ -355,6 +358,25 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         ];
 
         return $this->pushEventSynchronize($app, $data + $payload);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function hasComposerLockChanges(array $token, array $payload): ?bool
+    {
+        try {
+            $name = $this->paginatorQueryName ?? 'per_page';
+            $content = $this->makeApiRequest($token, 'GET', "/repos/{$payload['name']}/pulls/{$payload['iid']}/files", ['query' => [$name => 100]]);
+            $files = array_column($content, 'filename');
+        } catch (\Throwable $e) {
+            return null;
+        }
+        if (empty($files) || count($files) === 100) {
+            return null;
+        }
+
+        return in_array('composer.lock', $files, true);
     }
 
     protected function getRemoteContent(array $token, string|int $projectId, string $file, ?string $ref = null, bool $asJson = true): null|string|array

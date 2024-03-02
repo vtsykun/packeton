@@ -261,6 +261,16 @@ trait AppIntegrationTrait
      *      target_id: string, target_branch: string, default_branch: string, iid: int|string} $payload
      * {@inheritdoc}
      */
+    protected function hasComposerLockChanges(array $token, array $payload): ?bool
+    {
+        return null;
+    }
+
+    /**
+     * @param array{name: string, id: string, source_id: string, source_branch: string,
+     *      target_id: string, target_branch: string, default_branch: string, iid: int|string} $payload
+     * {@inheritdoc}
+     */
     protected function pullRequestReview(App $app, array $payload, callable $request): ?array
     {
         $name = $payload['name'];
@@ -283,6 +293,10 @@ trait AppIntegrationTrait
         }
 
         $token = $this->refreshToken($app);
+        if (false === $this->hasComposerLockChanges($token, $payload)) {
+            return [];
+        }
+
         $newLock = $this->getRemoteContent($token, $payload['source_id'], 'composer.lock', $payload['source_branch']);
         $prevLock = $this->getRemoteContent($token, $payload['target_id'], 'composer.lock', $payload['target_branch']);
         if (null === ($diff = ComposerDiffReview::generateDiff($prevLock, $newLock))) {
