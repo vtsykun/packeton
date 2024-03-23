@@ -8,5 +8,5 @@ use Packeton\Entity\OAuthIntegration as App;
 
 interface ZipballInterface
 {
-    public function zipballDownload(App $accessToken, string|int $repoId, string $reference, string $savePath = null): string;
+    public function zipballDownload(App $accessToken, string|int $repoId, string $reference, ?string $savePath = null): string;
 }

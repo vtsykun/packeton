@@ -240,7 +240,7 @@ class IntegrationController extends AbstractController
         return $oauth->getOwner() === null || $oauth->getOwner() === $this->getUser()?->getUserIdentifier();
     }
 
-    protected function getClient($alias, OAuthIntegration $oauth = null): AppInterface
+    protected function getClient($alias, ?OAuthIntegration $oauth = null): AppInterface
     {
         if ($alias instanceof OAuthIntegration) {
             $oauth = $alias;

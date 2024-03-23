@@ -80,7 +80,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2Url(Request $request = null, array $options = []): Response
+    public function redirectOAuth2Url(?Request $request = null, array $options = []): Response
     {
         $options['redirect_uri'] = false;
         $options['scope'] = ['email'];
@@ -90,7 +90,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2App(Request $request = null, array $options = []): Response
+    public function redirectOAuth2App(?Request $request = null, array $options = []): Response
     {
         $options['redirect_uri'] = false;
         return $this->getAuthorizationResponse($this->baseUrl . $this->pathAuthorize, $options, 'oauth_auto_redirect');
@@ -370,7 +370,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
     /**
      * {@inheritdoc}
      */
-    public function fetchUser(array|Request $request, array $options = [], array &$accessToken = null): array
+    public function fetchUser(array|Request $request, array $options = [], ?array &$accessToken = null): array
     {
         $accessToken ??= $request instanceof Request ? $this->getAccessToken($request) : $request;
         $response = $this->makeApiRequest($accessToken, 'GET', '/user');
@@ -386,7 +386,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
     /**
      * {@inheritdoc}
      */
-    public function authenticateIO(App $app, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(App $app, IOInterface $io, Config $config, ?string $repoUrl = null): void
     {
         $token = $this->refreshToken($app);
         $urls = parse_url($this->baseUrl);
@@ -402,7 +402,7 @@ class BitbucketIntegration implements IntegrationInterface, LoginInterface, AppI
     /**
      * {@inheritdoc}
      */
-    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array
+    public function receiveHooks(App $accessToken, ?Request $request = null, ?array $payload = null): ?array
     {
         if (empty($payload)) {
             return null;

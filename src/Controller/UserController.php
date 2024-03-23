@@ -247,7 +247,7 @@ class UserController extends AbstractController
 
     #[Route('/users/{name}/login-attempts', name: 'users_login_attempts')]
     #[Route('/profile/login-attempts', name: 'profile_login_attempts')]
-    public function loginAttemptsAction(#[Vars(['name' => 'username'])] User $user = null): Response
+    public function loginAttemptsAction(#[Vars(['name' => 'username'])] ?User $user = null): Response
     {
         $currentUser = $this->getUser();
         if (null !== $user && true === $user->isAdmin() && $currentUser->getUserIdentifier() !== $user->getUserIdentifier()) {
@@ -322,7 +322,7 @@ class UserController extends AbstractController
 
     #[Route('/users/sshkey', name: 'user_add_sshkey', methods: ['GET', 'POST'])]
     #[Route('/users/sshkey/{id}', name: 'user_edit_sshkey', methods: ['GET', 'POST'])]
-    public function addSSHKeyAction(Request $request, #[Vars] SshCredentials $key = null): Response
+    public function addSSHKeyAction(Request $request, #[Vars] ?SshCredentials $key = null): Response
     {
         if ($key && !$this->isGranted('VIEW', $key)) {
             throw new AccessDeniedException();

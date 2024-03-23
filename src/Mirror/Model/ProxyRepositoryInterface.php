@@ -13,7 +13,7 @@ interface ProxyRepositoryInterface
      * @param int $modifiedSince
      * @return JsonMetadata|null
      */
-    public function findPackageMetadata(string $nameOrUri, int $modifiedSince = null): ?JsonMetadata;
+    public function findPackageMetadata(string $nameOrUri, ?int $modifiedSince = null): ?JsonMetadata;
 
     /**
      * Provider include metadata
@@ -23,7 +23,7 @@ interface ProxyRepositoryInterface
      *
      * @return JsonMetadata|null
      */
-    public function findProviderMetadata(string $nameOrUri, int $modifiedSince = null): ?JsonMetadata;
+    public function findProviderMetadata(string $nameOrUri, ?int $modifiedSince = null): ?JsonMetadata;
 
     /**
      * Get composer root
@@ -31,5 +31,5 @@ interface ProxyRepositoryInterface
      * @param int $modifiedSince
      * @return JsonMetadata|null
      */
-    public function rootMetadata(int $modifiedSince = null): ?JsonMetadata;
+    public function rootMetadata(?int $modifiedSince = null): ?JsonMetadata;
 }

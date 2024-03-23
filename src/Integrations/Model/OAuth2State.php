@@ -56,7 +56,7 @@ class OAuth2State
         return $this->getStateBag()->get($key);
     }
 
-    public function save(Response $response = null): void
+    public function save(?Response $response = null): void
     {
         $request = $this->requestStack->getMainRequest();
         if (null === $request || false === $request->attributes->has('_oauth2_state_bag')) {

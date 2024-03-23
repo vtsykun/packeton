@@ -40,7 +40,7 @@ class MassImportHandler
         $this->io = $io;
     }
 
-    public function createImportJob(ImportRequest $request, UserInterface $user = null): Job
+    public function createImportJob(ImportRequest $request, ?UserInterface $user = null): Job
     {
         $repos = $this->getRepoUrls($request);
 
@@ -119,7 +119,7 @@ class MassImportHandler
         return $result;
     }
 
-    protected function fetchComposerRepos(string $url, string $username = null, string $password = null, int $limit = null, string $packageList = null, string $filter = null): array
+    protected function fetchComposerRepos(string $url, ?string $username = null, ?string $password = null, ?int $limit = null, ?string $packageList = null, ?string $filter = null): array
     {
         if (preg_match('{^(\.|[a-z]:|/)}i', $url)) {
             throw new \RuntimeException("local filesystem URLs is not allowed");

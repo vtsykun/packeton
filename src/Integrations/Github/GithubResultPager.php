@@ -22,7 +22,7 @@ class GithubResultPager
     ) {
     }
 
-    public function all(string $column = null): array
+    public function all(?string $column = null): array
     {
         $params = $this->params;
         $paginationParameter = $this->options['query_name'] ?? 'per_page';

@@ -54,7 +54,7 @@ class PackageRepository extends EntityRepository
         return $query->getResult();
     }
 
-    public function getPackageNames(array $allowed = null)
+    public function getPackageNames(?array $allowed = null)
     {
         $query = $this->createQueryBuilder('p')
             ->resetDQLPart('select')
@@ -312,7 +312,7 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getSingleResult();
     }
 
-    public function getPackagesWithVersions(array $ids = null, $filters = [])
+    public function getPackagesWithVersions(?array $ids = null, $filters = [])
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p', 'v')
@@ -534,7 +534,7 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function searchPackageByTags(array $tags, array $allowed = null): array
+    public function searchPackageByTags(array $tags, ?array $allowed = null): array
     {
         $qb = $this->createQueryBuilder('p')
             ->leftJoin('p.versions', 'v')
@@ -550,7 +550,7 @@ class PackageRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function searchPackage(string $search, int $limit = 10, int $page = 0, array $allowed = null): array
+    public function searchPackage(string $search, int $limit = 10, int $page = 0, ?array $allowed = null): array
     {
         $search = strtolower(trim($search));
         $packageNames = $this->getPackageNames($allowed);

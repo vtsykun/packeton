@@ -121,7 +121,7 @@ class DistConfig
      *
      * @return string
      */
-    public function generateRoute(string $name, string $reference, string $format = null): string
+    public function generateRoute(string $name, string $reference, ?string $format = null): string
     {
         $hostName = ($this->config['endpoint'] ?? null) ? rtrim($this->config['endpoint'], '/') : self::HOSTNAME_PLACEHOLDER;
 

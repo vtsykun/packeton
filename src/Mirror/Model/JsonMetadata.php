@@ -63,7 +63,7 @@ class JsonMetadata
         return new MetadataOptions($this->options);
     }
 
-    public function withPatch(callable $patchData = null): self
+    public function withPatch(?callable $patchData = null): self
     {
         $clone = clone $this;
         $this->patches = $patchData;

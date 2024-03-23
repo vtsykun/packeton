@@ -15,7 +15,7 @@ class DefaultFormHandler
     ){
     }
 
-    public function handle(Request|array $request, FormInterface $form, bool $patch = false, callable $onSuccess = null): bool
+    public function handle(Request|array $request, FormInterface $form, bool $patch = false, ?callable $onSuccess = null): bool
     {
         if ($request instanceof Request) {
             $form->handleRequest($request);

@@ -32,7 +32,7 @@ class ProviderController extends AbstractController
 
     #[Route('/packages.json', name: 'root_packages')]
     #[Route('/{slug}/packages.json', name: 'root_packages_slug')]
-    public function packagesAction(Request $request, string $slug = null): Response
+    public function packagesAction(Request $request, ?string $slug = null): Response
     {
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getRootLastModify());
@@ -54,7 +54,7 @@ class ProviderController extends AbstractController
 
     #[Route('/p/providers${hash}.json', name: 'root_providers', requirements: ['hash' => '[a-f0-9]+'])]
     #[Route('/{slug}/p/providers${hash}.json', name: 'root_providers_slug', requirements: ['hash' => '[a-f0-9]+'])]
-    public function providersAction(string $hash, Request $request, string $slug = null): Response
+    public function providersAction(string $hash, Request $request, ?string $slug = null): Response
     {
         $subRepo = $this->subRepositoryHelper->getSubrepositoryId();
         $providers = $this->packageManager->getProvidersJson($this->getUser(), $hash, $subRepo);

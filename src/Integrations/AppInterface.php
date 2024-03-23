@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 interface AppInterface extends IntegrationInterface
 {
-    public function redirectOAuth2App(Request $request = null, array $options = []): Response;
+    public function redirectOAuth2App(?Request $request = null, array $options = []): Response;
 
     public function getAccessToken(Request $request, array $options = []): array;
 
@@ -46,7 +46,7 @@ interface AppInterface extends IntegrationInterface
 
     public function removeOrgHook(App $accessToken, int|string $orgId): ?array;
 
-    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array;
+    public function receiveHooks(App $accessToken, ?Request $request = null, ?array $payload = null): ?array;
 
     public function findApps(): array;
 

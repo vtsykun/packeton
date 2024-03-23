@@ -377,7 +377,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
     /**
      * {@inheritdoc}
      */
-    public function setLastLogin(\DateTime $time = null)
+    public function setLastLogin(?\DateTime $time = null)
     {
         $this->lastLogin = $time;
 
@@ -397,7 +397,7 @@ abstract class BaseUser implements UserInterface, PasswordAuthenticatedUserInter
     /**
      * {@inheritdoc}
      */
-    public function setPasswordRequestedAt(\DateTime $date = null)
+    public function setPasswordRequestedAt(?\DateTime $date = null)
     {
         $this->passwordRequestedAt = $date;
 

@@ -112,7 +112,7 @@ class PackageController extends AbstractController
 
     #[Route('/packages/submit/{type}', name: 'submit', defaults: ['type' => 'vcs'])]
     #[IsGranted('ROLE_MAINTAINER')]
-    public function submitPackageAction(Request $req, string $type = null): Response
+    public function submitPackageAction(Request $req, ?string $type = null): Response
     {
         $package = new Package();
         $package->setRepoType(RepTypes::normalizeType($type));
@@ -157,7 +157,7 @@ class PackageController extends AbstractController
 
     #[Route('/packages/fetch-info/{type}', name: 'submit.fetch_info', defaults: ['_format' => 'json', 'type' => 'vcs'])]
     #[IsGranted('ROLE_MAINTAINER')]
-    public function fetchInfoAction(Request $req, string $type = null): Response
+    public function fetchInfoAction(Request $req, ?string $type = null): Response
     {
         $package = new Package();
         $package->setRepoType(RepTypes::normalizeType($type));
@@ -998,7 +998,7 @@ class PackageController extends AbstractController
 
     #[Route('/packages/{name}/stats/all.json', name: 'package_stats', requirements: ['name' => '%package_name_regex%'])]
     #[IsGranted('ROLE_FULL_CUSTOMER')]
-    public function overallStatsAction(Request $req, \Redis $redis, #[Vars] Package $package, Version $version = null): Response
+    public function overallStatsAction(Request $req, \Redis $redis, #[Vars] Package $package, ?Version $version = null): Response
     {
         $this->checkSubrepositoryAccess($package->getName());
 
@@ -1172,7 +1172,7 @@ class PackageController extends AbstractController
         }
     }
 
-    private function createDatePoints(\DateTimeImmutable $from, \DateTimeImmutable $to, $average, Package $package, Version $version = null)
+    private function createDatePoints(\DateTimeImmutable $from, \DateTimeImmutable $to, $average, Package $package, ?Version $version = null)
     {
         $interval = $this->getStatsInterval($average);
 
@@ -1218,7 +1218,7 @@ class PackageController extends AbstractController
         return $date->setTime(0, 0, 0);
     }
 
-    private function guessStatsAverage(\DateTimeImmutable $from, \DateTimeImmutable $to = null)
+    private function guessStatsAverage(\DateTimeImmutable $from, ?\DateTimeImmutable $to = null)
     {
         if ($to === null) {
             $to = new \DateTimeImmutable('-2 days');

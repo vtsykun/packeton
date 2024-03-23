@@ -32,7 +32,7 @@ class ChangelogUtils
      *
      * @return array
      */
-    public function getChangelog(Package $package, string $fromVersion, string $toVersion, int $limit = null): array
+    public function getChangelog(Package $package, string $fromVersion, string $toVersion, ?int $limit = null): array
     {
         $config = $this->factory->createConfig($package->getCredentials());
 

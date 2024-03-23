@@ -29,7 +29,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $name, int $modifiedSince = null): ?JsonMetadata
+    public function findPackageMetadata(string $name, ?int $modifiedSince = null): ?JsonMetadata
     {
         return null;
     }
@@ -37,7 +37,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $name, int $modifiedSince = null): ?JsonMetadata
+    public function findProviderMetadata(string $name, ?int $modifiedSince = null): ?JsonMetadata
     {
         return null;
     }
@@ -45,7 +45,7 @@ abstract class AbstractProxyRepository implements ProxyRepositoryInterface, Prox
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(int $modifiedSince = null): ?JsonMetadata
+    public function rootMetadata(?int $modifiedSince = null): ?JsonMetadata
     {
         return null;
     }

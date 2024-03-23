@@ -62,7 +62,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
      * @param string|null $path
      * @return string
      */
-    public function getUrl(string $path = null): string
+    public function getUrl(?string $path = null): string
     {
         return $this->getConfig()->getUrl($path);
     }
@@ -70,7 +70,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(int $modifiedSince = null): ?JsonMetadata
+    public function rootMetadata(?int $modifiedSince = null): ?JsonMetadata
     {
         if ($this->filesystem->exists($this->rootFilename)) {
             return $this->createMetadataFromFile($this->rootFilename);
@@ -82,7 +82,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $providerName, int $modifiedSince = null): ?JsonMetadata
+    public function findProviderMetadata(string $providerName, ?int $modifiedSince = null): ?JsonMetadata
     {
         $filename = $this->providersDir . $this->providerKey($providerName);
 
@@ -96,7 +96,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $name, int $modifiedSince = null): ?JsonMetadata
+    public function findPackageMetadata(string $name, ?int $modifiedSince = null): ?JsonMetadata
     {
         @[$package, $hash] = \explode('$', $name);
 
@@ -166,7 +166,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $packages;
     }
 
-    protected function createMetadataFromFile(string $filename, string $hash = null, int $modifiedSince = null, mixed $patch  = null): JsonMetadata
+    protected function createMetadataFromFile(string $filename, ?string $hash = null, ?int $modifiedSince = null, mixed $patch  = null): JsonMetadata
     {
         $unix = @\filemtime($filename) ?: null;
         if ($modifiedSince && $unix && $unix <= $modifiedSince) {
@@ -186,7 +186,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $this->proxyOptions = null;
     }
 
-    protected function updateRootStats(array $root = null): array
+    protected function updateRootStats(?array $root = null): array
     {
         $root ??= $this->rootMetadata()?->decodeJson() ?: [];
         if ($root) {
@@ -240,7 +240,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         }
     }
 
-    public function hasPackage(string $package, string $hash = null): bool
+    public function hasPackage(string $package, ?string $hash = null): bool
     {
         $filename = $this->packageDir . $this->packageKey($package, $hash);
         return $this->filesystem->exists($filename);
@@ -295,7 +295,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $this->filesystem->dumpFile($filename, $content);
     }
 
-    public function lookupAllProviders(ProxyOptions $config = null): iterable
+    public function lookupAllProviders(?ProxyOptions $config = null): iterable
     {
         $config ??= $this->getConfig();
         if ($config->getRootProviders()) {
@@ -354,7 +354,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $this->zipballManager;
     }
 
-    public function packageKey(string $package, string $hash = null): string
+    public function packageKey(string $package, ?string $hash = null): string
     {
         @[$vendor, $pkg] = \explode('/', $package, 2);
 

@@ -16,7 +16,7 @@ class MetadataCache
     ) {
     }
 
-    public function get(string $key, callable $callback, int $lastModify = null, callable $needClearCache = null)
+    public function get(string $key, callable $callback, ?int $lastModify = null, ?callable $needClearCache = null)
     {
         // Use host key to prevent Cache Poisoning attack, if dist URL generated dynamic.
         // But for will protection must be used trusted_hosts

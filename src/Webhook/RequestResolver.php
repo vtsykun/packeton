@@ -74,7 +74,7 @@ class RequestResolver implements ContextAwareInterface, LoggerAwareInterface
     /**
      * @inheritDoc
      */
-    public function setContext(WebhookContext $context = null): void
+    public function setContext(?WebhookContext $context = null): void
     {
         $this->renderer->setContext($context);
     }

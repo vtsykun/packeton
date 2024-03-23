@@ -29,7 +29,7 @@ class SenderWorker
     private $maxNestingLevel;
     private $logger;
 
-    public function __construct(DenormalizerInterface $denormalizer, ManagerRegistry $registry, HookRequestExecutor $executor, JobScheduler $jobScheduler, LoggerInterface $logger = null, $maxNestingLevel = self::MAX_NESTING_LEVEL)
+    public function __construct(DenormalizerInterface $denormalizer, ManagerRegistry $registry, HookRequestExecutor $executor, JobScheduler $jobScheduler, ?LoggerInterface $logger = null, $maxNestingLevel = self::MAX_NESTING_LEVEL)
     {
         $this->denormalizer = $denormalizer;
         $this->registry = $registry;

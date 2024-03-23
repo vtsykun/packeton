@@ -16,7 +16,7 @@ class Scheduler
     ) {
     }
 
-    public function scheduleUpdate($packageOrId, bool $updateEqualRefs = false, bool $deleteBefore = false, \DateTimeInterface $executeAfter = null): Job
+    public function scheduleUpdate($packageOrId, bool $updateEqualRefs = false, bool $deleteBefore = false, ?\DateTimeInterface $executeAfter = null): Job
     {
         if ($packageOrId instanceof Package) {
             $packageOrId = $packageOrId->getId();
@@ -42,7 +42,7 @@ class Scheduler
         return $this->createJob('package:updates', ['id' => $packageOrId, 'update_equal_refs' => $updateEqualRefs, 'delete_before' => $deleteBefore], $packageOrId, $executeAfter);
     }
 
-    public function publish(string $type, array|Job|null $job = null, int $packageId = null): Job
+    public function publish(string $type, array|Job|null $job = null, ?int $packageId = null): Job
     {
         if ($job instanceof Job) {
             $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));
@@ -131,7 +131,7 @@ class Scheduler
         return $results;
     }
 
-    private function createJob(string $type, array $payload, int $packageId = null, $executeAfter = null): Job
+    private function createJob(string $type, array $payload, ?int $packageId = null, $executeAfter = null): Job
     {
         $jobId = bin2hex(random_bytes(20));
 

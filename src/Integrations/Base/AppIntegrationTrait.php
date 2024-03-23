@@ -94,7 +94,7 @@ trait AppIntegrationTrait
         return [];
     }
 
-    public function receiveHooks(OAuthIntegration $app, Request $request = null, ?array $payload = null): ?array
+    public function receiveHooks(OAuthIntegration $app, ?Request $request = null, ?array $payload = null): ?array
     {
         return null;
     }
@@ -124,7 +124,7 @@ trait AppIntegrationTrait
         return null;
     }
 
-    public function authenticateIO(OAuthIntegration $accessToken, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(OAuthIntegration $accessToken, IOInterface $io, Config $config, ?string $repoUrl = null): void
     {
     }
 
@@ -134,7 +134,7 @@ trait AppIntegrationTrait
         return "oauthapp:{$this->name}:$appId";
     }
 
-    protected function getCached(string|int|OAuthIntegration $appId, string $key, bool $withCache = true, callable $callback = null): mixed
+    protected function getCached(string|int|OAuthIntegration $appId, string $key, bool $withCache = true, ?callable $callback = null): mixed
     {
         if (true === $withCache) {
             try {

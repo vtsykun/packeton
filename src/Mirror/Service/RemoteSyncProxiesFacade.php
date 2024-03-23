@@ -27,7 +27,7 @@ class RemoteSyncProxiesFacade
     ) {
     }
 
-    public function sync(RPR $repo, IOInterface $io, int $flags = 0, SignalHandler $signal = null): array
+    public function sync(RPR $repo, IOInterface $io, int $flags = 0, ?SignalHandler $signal = null): array
     {
         $this->syncProvider->setIO($io);
         $this->syncProvider->setSignalHandler($signal);

@@ -42,7 +42,7 @@ class MonoRepoUpdater implements UpdaterInterface
     /**
      * {@inheritdoc}
      */
-    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, int $flags = 0, SignalHandler $signal = null): Package
+    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, int $flags = 0, ?SignalHandler $signal = null): Package
     {
         if (!$repository instanceof VcsRepository) {
             $io->error("Only vcs repos support for mono-repo type, skip update");

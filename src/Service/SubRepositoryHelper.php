@@ -53,7 +53,7 @@ class SubRepositoryHelper
         return $entity === null ? null : (empty($packages) ? [] : $packages);
     }
 
-    public function allowedPackageIds(array $moreAllowed = null): ?array
+    public function allowedPackageIds(?array $moreAllowed = null): ?array
     {
         $entity = $this->getCurrentSubrepository();
         if (null === $entity) {
@@ -135,7 +135,7 @@ class SubRepositoryHelper
         return $req->attributes->get('_sub_repo');
     }
 
-    public function getTwigData(UserInterface $user = null): array
+    public function getTwigData(?UserInterface $user = null): array
     {
         $data = $this->getData();
         if (empty($data)) {

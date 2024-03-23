@@ -54,7 +54,7 @@ class TreeGitDriver extends GitDriver
         return parent::getFileContent($file, $identifier);
     }
 
-    public function getRepoTree(string $identifier = null): array
+    public function getRepoTree(?string $identifier = null): array
     {
         $identifier ??= $this->getRootIdentifier();
         if (str_starts_with($identifier, '-')) {

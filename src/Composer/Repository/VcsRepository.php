@@ -25,7 +25,7 @@ class VcsRepository extends ComposerVcsRepository implements PacketonRepositoryI
     /** @var VcsDriverFactory */
     protected $driverFactory;
 
-    public function __construct(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, VcsDriverFactory $driverFactory, EventDispatcher $dispatcher = null, ?ProcessExecutor $process = null, ?VersionCacheInterface $versionCache = null)
+    public function __construct(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, VcsDriverFactory $driverFactory, ?EventDispatcher $dispatcher = null, ?ProcessExecutor $process = null, ?VersionCacheInterface $versionCache = null)
     {
         parent::__construct($repoConfig, $io, $config, $httpDownloader, $dispatcher, $process, [], $versionCache);
         $this->driverFactory = $driverFactory;

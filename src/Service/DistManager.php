@@ -52,7 +52,7 @@ class DistManager
         return $this->buildAndWriteArchive($reference, $package, $version);
     }
 
-    public function buildAndWriteArchive(string $reference, Package $package, Version|string $version = null): mixed
+    public function buildAndWriteArchive(string $reference, Package $package, Version|string|null $version = null): mixed
     {
         $versionName = $version instanceof Version ? $version->getVersion() : $version;
 
@@ -67,7 +67,7 @@ class DistManager
         return $archive;
     }
 
-    public function buildArchive(string $reference, Package $package, Version|string $version = null): mixed
+    public function buildArchive(string $reference, Package $package, Version|string|null $version = null): mixed
     {
         $version ??= $package->getVersionByReference($reference);
         $versionName = $version instanceof Version ? $version->getVersion() : $version;

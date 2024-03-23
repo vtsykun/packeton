@@ -29,7 +29,7 @@ class PackagistFactory
         protected PacketonRepositoryFactory $repositoryFactory,
         protected IntegrationRegistry $integrations,
         protected bool $githubNoApi = true,
-        string $composerHome = null
+        ?string $composerHome = null
     ) {
         $this->tmpDir = $composerHome ?: sys_get_temp_dir();
         if ($composerHome) {
@@ -62,7 +62,7 @@ class PackagistFactory
      *
      * @return \Composer\Package\Archiver\ArchiveManager|Archiver\ArchiveManager
      */
-    public function createArchiveManager(IOInterface $io, PacketonRepositoryInterface $repository, DownloadManager $dm = null): ArchiveManager
+    public function createArchiveManager(IOInterface $io, PacketonRepositoryInterface $repository, ?DownloadManager $dm = null): ArchiveManager
     {
         $dm ??= $this->createDownloadManager($io, $repository);
         $repoConfig = $repository->getRepoConfig();
@@ -95,7 +95,7 @@ class PackagistFactory
      * @param CredentialsInterface|null $credentials
      * @return \Composer\Config
      */
-    public function createConfig(CredentialsInterface $credentials = null)
+    public function createConfig(?CredentialsInterface $credentials = null)
     {
         $config = ConfigFactory::createConfig();
 
@@ -137,7 +137,7 @@ class PackagistFactory
      *
      * @return PacketonRepositoryInterface
      */
-    public function createRepository(string $url, IOInterface $io = null, Config $config = null, CredentialsInterface $credentials = null, array $repoConfig = []): PacketonRepositoryInterface
+    public function createRepository(string $url, ?IOInterface $io = null, ?Config $config = null, ?CredentialsInterface $credentials = null, array $repoConfig = []): PacketonRepositoryInterface
     {
         $io ??= new NullIO();
         if (null === $config) {

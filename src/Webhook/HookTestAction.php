@@ -24,7 +24,7 @@ class HookTestAction
     private $tokenStorage;
     private $requestStack;
 
-    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor, TokenStorageInterface $tokenStorage = null, RequestStack $requestStack = null)
+    public function __construct(ManagerRegistry $registry, HookRequestExecutor $executor, ?TokenStorageInterface $tokenStorage = null, ?RequestStack $requestStack = null)
     {
         $this->registry = $registry;
         $this->executor = $executor;
@@ -142,7 +142,7 @@ class HookTestAction
      *
      * @return HookResponse[]
      */
-    private function processChildWebhook(Webhook $webhook, array $context, HttpClientInterface $client = null, int $nestingLevel = 0)
+    private function processChildWebhook(Webhook $webhook, array $context, ?HttpClientInterface $client = null, int $nestingLevel = 0)
     {
         if ($nestingLevel >= 3) {
             return [new HookErrorResponse('Maximum webhook nesting level of 3 reached')];

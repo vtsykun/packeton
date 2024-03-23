@@ -146,7 +146,7 @@ class PackageManager
         return true;
     }
 
-    public function getRootPackagesJson(UserInterface $user = null, int $apiVersion = null, ?int $subRepo = null)
+    public function getRootPackagesJson(?UserInterface $user = null, ?int $apiVersion = null, ?int $subRepo = null)
     {
         $packagesData = $this->dumpInMemory($user, false, $apiVersion, $subRepo);
         return $packagesData[0];
@@ -159,7 +159,7 @@ class PackageManager
      *
      * @return bool|array
      */
-    public function getProvidersJson(?UserInterface $user, $hash, int $subRepo = null)
+    public function getProvidersJson(?UserInterface $user, $hash, ?int $subRepo = null)
     {
         [$root, $providers] = $this->dumpInMemory($user, subRepo: $subRepo);
         if (null === $providers || !isset($root['provider-includes'])) {
@@ -208,7 +208,7 @@ class PackageManager
      *
      * @return mixed
      */
-    public function getCachedPackageJson(?UserInterface $user, string $package, string $hash = null, int $subRepo = null)
+    public function getCachedPackageJson(?UserInterface $user, string $package, ?string $hash = null, ?int $subRepo = null)
     {
         [$root, $providers, $packages] = $this->dumpInMemory($user, subRepo: $subRepo);
 
@@ -221,7 +221,7 @@ class PackageManager
         return $packages[$package];
     }
 
-    private function dumpInMemory(UserInterface $user = null, bool $ignoreLastModify = true, int $apiVersion = null, int $subRepo = null)
+    private function dumpInMemory(?UserInterface $user = null, bool $ignoreLastModify = true, ?int $apiVersion = null, ?int $subRepo = null)
     {
         if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
             $user = null;

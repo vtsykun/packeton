@@ -192,7 +192,7 @@ class UpdaterWorker implements ConsoleAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function setOutput(OutputInterface $output = null): void
+    public function setOutput(?OutputInterface $output = null): void
     {
         $this->cmdOutput = $output;
     }

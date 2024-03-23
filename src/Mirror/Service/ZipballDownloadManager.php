@@ -157,7 +157,7 @@ class ZipballDownloadManager
         return $filename;
     }
 
-    private function createArchiveFormSource(CompletePackageInterface $package, string $url, string $saveTo, CredentialsInterface $cred = null): ?string
+    private function createArchiveFormSource(CompletePackageInterface $package, string $url, string $saveTo, ?CredentialsInterface $cred = null): ?string
     {
         $vcsRepository = $this->packagistFactory->createRepository($url, null, null, $cred);
         $vcsRepository->getPackages();

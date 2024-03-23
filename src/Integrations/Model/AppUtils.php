@@ -16,7 +16,7 @@ class AppUtils
         'api', 'clone_https', 'clone_ssh'
     ];
 
-    public static function findUrl(string $externalId, App $app, AppInterface $client, AppConfig $config = null): string
+    public static function findUrl(string $externalId, App $app, AppInterface $client, ?AppConfig $config = null): string
     {
         $repos = $client->repositories($app);
 
@@ -58,7 +58,7 @@ class AppUtils
         return $job;
     }
 
-    public static function castError(\Throwable $e, App|array $app = null, bool $moreInfo = false): string
+    public static function castError(\Throwable $e, App|array|null $app = null, bool $moreInfo = false): string
     {
         $msg = '';
         $app = $app instanceof App ? $app->getAccessToken() : $app;

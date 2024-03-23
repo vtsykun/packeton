@@ -43,7 +43,7 @@ class GiteaIntegration extends GitHubIntegration
     /**
      * {@inheritdoc}
      */
-    public function authenticateIO(App $app, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(App $app, IOInterface $io, Config $config, ?string $repoUrl = null): void
     {
         $token = $this->refreshToken($app);
         $urls = parse_url($this->baseUrl);

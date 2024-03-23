@@ -34,7 +34,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
+    public function findPackageMetadata(string $nameOrUri, ?int $modifiedSince = null): JsonMetadata
     {
         [$package, ] = \explode('$', $nameOrUri);
 
@@ -54,7 +54,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
+    public function findProviderMetadata(string $nameOrUri, ?int $modifiedSince = null): JsonMetadata
     {
         return $this->fetch(__FUNCTION__, func_get_args(), function () {
             throw new MetadataNotFoundException('Not found');
@@ -64,7 +64,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(int $modifiedSince = null): JsonMetadata
+    public function rootMetadata(?int $modifiedSince = null): JsonMetadata
     {
         $metadata = $this->fetch(__FUNCTION__, [], function () {
             try {
@@ -88,7 +88,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
         return $metadata;
     }
 
-    protected function fetch(string $key, array $args = [], callable $fn = null): JsonMetadata
+    protected function fetch(string $key, array $args = [], ?callable $fn = null): JsonMetadata
     {
         $meta = $this->repository->{$key}(...$args);
 
@@ -99,7 +99,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
         return $meta ? : $fn($args);
     }
 
-    protected function lazyFetchPackageMetadata(string $package, string &$hash = null): string|array
+    protected function lazyFetchPackageMetadata(string $package, ?string &$hash = null): string|array
     {
         $http = $this->syncService->initHttpDownloader($this->config);
 
@@ -117,7 +117,7 @@ class ProxyRepositoryFacade extends AbstractProxyRepositoryDecorator
             $this->requestMetadataVia2($http, [$package], $apiUrl, fn ($name, array $meta) => $queue->enqueue($meta), $reject);
 
         } elseif ($apiUrl = $this->config->getMetadataV1Url($package)) {
-            $fulfilled = static function ($name, Response $meta, string $currentHash = null) use ($queue, &$hash) {
+            $fulfilled = static function ($name, Response $meta, ?string $currentHash = null) use ($queue, &$hash) {
                 $hash = $currentHash;
                 $queue->enqueue($meta->getBody());
             };

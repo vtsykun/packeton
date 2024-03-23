@@ -116,7 +116,7 @@ class MirrorController extends AbstractController
         return $this->renderMetadata($metadata, $request);
     }
 
-    protected function renderMetadata(JsonMetadata $metadata, Request $request, callable $lazyLoad = null): Response
+    protected function renderMetadata(JsonMetadata $metadata, Request $request, ?callable $lazyLoad = null): Response
     {
         $response = new Response($metadata->getContent(), 200, ['Content-Type' => 'application/json']);
         $response->setLastModified($metadata->lastModified());

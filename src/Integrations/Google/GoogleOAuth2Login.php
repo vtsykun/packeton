@@ -39,7 +39,7 @@ class GoogleOAuth2Login implements LoginInterface
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2Url(Request $request = null, array $options = []): Response
+    public function redirectOAuth2Url(?Request $request = null, array $options = []): Response
     {
         return $this->getAuthorizationResponse('https://accounts.google.com/o/oauth2/v2/auth', $options);
     }
@@ -71,7 +71,7 @@ class GoogleOAuth2Login implements LoginInterface
     /**
      * {@inheritdoc}
      */
-    public function fetchUser(array|Request $request, array $options = [], array &$accessToken = null): array
+    public function fetchUser(array|Request $request, array $options = [], ?array &$accessToken = null): array
     {
         $accessToken ??= $request instanceof Request ? $this->getAccessToken($request) : $request;
 

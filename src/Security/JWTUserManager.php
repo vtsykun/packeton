@@ -15,7 +15,7 @@ class JWTUserManager
         private readonly JWSTokenProvider $tokenProvider,
     ) {}
 
-    public function createTokenForUser(UserInterface $user, array $extra = null): string
+    public function createTokenForUser(UserInterface $user, ?array $extra = null): string
     {
         $payload = [$user->getUserIdentifier(), $user->getRoles(), $extra];
 

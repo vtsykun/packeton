@@ -197,12 +197,12 @@ class PacketonUtils
         return rtrim($baseDir, '/');
     }
 
-    public static function buildChoices(array $listOf, string $key, string $value = null): array
+    public static function buildChoices(array $listOf, string $key, ?string $value = null): array
     {
         return array_combine(array_column($listOf, $key), $value ? array_column($listOf, $value) : $listOf);
     }
 
-    public static function matchGlobAll(array $listOf, null|string|array $globs, string|array $excluded = null): array
+    public static function matchGlobAll(array $listOf, null|string|array $globs, string|array|null $excluded = null): array
     {
         $excluded = is_string($excluded) ? explode("\n", $excluded) : ($excluded ?: []);
         $globs = is_string($globs) ? explode("\n", $globs) : ($globs ?: []);
@@ -240,7 +240,7 @@ class PacketonUtils
         return $listOfPackages;
     }
 
-    public static function matchGlob(array $listOf, null|string|array $globs, string|array $excluded = null, ?string $suffix = '/composer.json'): array
+    public static function matchGlob(array $listOf, null|string|array $globs, string|array|null $excluded = null, ?string $suffix = '/composer.json'): array
     {
         $excluded = is_string($excluded) ? explode("\n", $excluded) : ($excluded ?: []);
         $globs = is_string($globs) ? explode("\n", $globs) : ($globs ?: []);
