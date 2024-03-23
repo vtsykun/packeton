@@ -29,13 +29,13 @@ class InMemoryDumper
         private readonly PackagesAclChecker $checker,
         private readonly RouterInterface $router,
         private readonly SubRepositoryHelper $subRepositoryHelper,
-        array $config = null,
+        ?array $config = null,
     ) {
         $this->infoMessage = $config['info_cmd_message'] ?? null;
         $this->metadataFormat = MetadataFormat::tryFrom((string) ($config['format'] ?? null)) ?: MetadataFormat::AUTO;
     }
 
-    public function dump(UserInterface $user = null, int $apiVersion = null, int $subRepo = null): array
+    public function dump(?UserInterface $user = null, ?int $apiVersion = null, ?int $subRepo = null): array
     {
         return $this->dumpRootPackages($user, $apiVersion, $subRepo);
     }
@@ -52,7 +52,7 @@ class InMemoryDumper
      *
      * @return array
      */
-    public function dumpPackage(?UserInterface $user, $package, array $versionData = null): array
+    public function dumpPackage(?UserInterface $user, $package, ?array $versionData = null): array
     {
         if (is_string($package)) {
             $package = $this->getPackageRepo()->findOneByName($package);
@@ -88,7 +88,7 @@ class InMemoryDumper
         return $packageData;
     }
 
-    private function dumpRootPackages(UserInterface $user = null, int $apiVersion = null, int $subRepo = null)
+    private function dumpRootPackages(?UserInterface $user = null, ?int $apiVersion = null, ?int $subRepo = null)
     {
         /** @var SubRepository $subRepo */
         $subRepo = $subRepo ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
@@ -135,7 +135,7 @@ class InMemoryDumper
         return [$rootFile, $providers, $packagesData];
     }
 
-    private function dumpUserPackages(UserInterface $user = null, int $apiVersion = null, SubRepository $subRepo = null): array
+    private function dumpUserPackages(?UserInterface $user = null, ?int $apiVersion = null, ?SubRepository $subRepo = null): array
     {
         if (false === $this->metadataFormat->providerIncludes($apiVersion)) {
             $allowed = $user ? $this->registry->getRepository(Group::class)

@@ -59,7 +59,7 @@ class ApiTokenAuthenticator implements AuthenticatorInterface, AuthenticationEnt
     /**
      * {@inheritdoc}
      */
-    public function start(Request $request, AuthenticationException $authException = null): Response
+    public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
         $message = $authException->getMessage();
         if ($authException instanceof AuthenticationCredentialsNotFoundException) {

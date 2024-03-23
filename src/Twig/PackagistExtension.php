@@ -74,7 +74,7 @@ class PackagistExtension extends AbstractExtension
         return $value;
     }
 
-    public function getSubReposData(UserInterface $user = null)
+    public function getSubReposData(?UserInterface $user = null)
     {
         return $this->subRepositoryHelper->getTwigData($user);
     }
@@ -127,7 +127,7 @@ class PackagistExtension extends AbstractExtension
         return $this->registry->getRepository(Group::class)->getGroupsData($group);
     }
 
-    public function getApiToken(UserInterface $user = null, bool $short = true, bool $generate = false): ?string
+    public function getApiToken(?UserInterface $user = null, bool $short = true, bool $generate = false): ?string
     {
         if ($user instanceof User) {
             return ($short ? ($user->getUserIdentifier() . ':') : '') . $user->getApiToken();
@@ -142,7 +142,7 @@ class PackagistExtension extends AbstractExtension
         return null;
     }
 
-    public function showApiTokenButton(UserInterface|string $token = null, bool $short = false)
+    public function showApiTokenButton(UserInterface|string|null $token = null, bool $short = false)
     {
         if ($token instanceof User) {
             $token = ($short ? ($token->getUserIdentifier() . ':') : '') . $token->getApiToken();

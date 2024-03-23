@@ -20,7 +20,7 @@ class GitHubAppIntegration extends GitHubIntegration implements FormSettingsInte
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2App(Request $request = null, array $options = []): RedirectResponse
+    public function redirectOAuth2App(?Request $request = null, array $options = []): RedirectResponse
     {
         if (!empty($this->config['client_id']) && !empty($this->config['client_secret'])) {
             return parent::redirectOAuth2App($request, $options);
@@ -94,7 +94,7 @@ class GitHubAppIntegration extends GitHubIntegration implements FormSettingsInte
     /**
      * {@inheritdoc}
      */
-    public function authenticateIO(App $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(App $oauth2, IOInterface $io, Config $config, ?string $repoUrl = null): void
     {
         parent::authenticateIO($oauth2, $io, $config, $repoUrl);
 
@@ -110,7 +110,7 @@ class GitHubAppIntegration extends GitHubIntegration implements FormSettingsInte
     /**
      * {@inheritdoc}
      */
-    protected function isTokenExpired(array $token, App $app = null): bool
+    protected function isTokenExpired(array $token, ?App $app = null): bool
     {
         if (($token['installation_id'] ?? 'na') !== $app?->getInstallationId() || empty($token['access_token'])) {
             return true;
@@ -134,7 +134,7 @@ class GitHubAppIntegration extends GitHubIntegration implements FormSettingsInte
     /**
      * {@inheritdoc}
      */
-    protected function doRefreshToken(array $token, App $app = null): array
+    protected function doRefreshToken(array $token, ?App $app = null): array
     {
         if (empty($iid = $app->getInstallationId())) {
             return ['access_token' => ''];

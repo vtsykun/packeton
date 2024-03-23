@@ -46,7 +46,7 @@ class WebhookLogger extends AbstractLogger
     /**
      * @param LoggerInterface|null $logger
      */
-    public function setWrapperLogger(LoggerInterface $logger = null)
+    public function setWrapperLogger(?LoggerInterface $logger = null)
     {
         $this->wrapperLogger = $logger;
     }

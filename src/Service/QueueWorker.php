@@ -223,7 +223,7 @@ class QueueWorker implements ConsoleAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function setOutput(OutputInterface $output = null): void
+    public function setOutput(?OutputInterface $output = null): void
     {
         $this->output = $output;
     }

@@ -19,7 +19,7 @@ trait BaseIntegrationTrait
     /**
      * {@inheritdoc}
      */
-    public function getConfig(OAuthIntegration $app = null, bool $details = false): AppConfig
+    public function getConfig(?OAuthIntegration $app = null, bool $details = false): AppConfig
     {
         return new AppConfig($this->config + $this->getConfigApp($app, $details));
     }
@@ -27,7 +27,7 @@ trait BaseIntegrationTrait
     /**
      * {@inheritdoc}
      */
-    public function evaluateExpression(array $context = [], string $scriptPayload = null): mixed
+    public function evaluateExpression(array $context = [], ?string $scriptPayload = null): mixed
     {
         if (null === $this->exprLang) {
             $this->initExprLang();
@@ -54,7 +54,7 @@ trait BaseIntegrationTrait
         $this->exprLang = isset($this->twigLanguage) ? clone $this->twigLanguage : new TwigLanguage();
         $repo = $this->registry->getRepository(OAuthIntegration::class);
 
-        $apiCallable = function(string $action, string $url, array $query = [], bool $cache = true, int $app = null) use ($repo) {
+        $apiCallable = function(string $action, string $url, array $query = [], bool $cache = true, ?int $app = null) use ($repo) {
             $baseApp = $app ? $repo->find($app) : $repo->findForExpressionUsage($this->name);
             $key = "twig-expr:" . sha1(serialize([$action, $url, $query]));
 
@@ -78,7 +78,7 @@ trait BaseIntegrationTrait
     /**
      * {@inheritdoc}
      */
-    protected function getConfigApp(OAuthIntegration $app = null, bool $details = false): array
+    protected function getConfigApp(?OAuthIntegration $app = null, bool $details = false): array
     {
         $config = [];
         if ($app instanceof OAuthIntegration) {
@@ -109,7 +109,7 @@ trait BaseIntegrationTrait
         return [$base];
     }
 
-    protected function getAuthorizationResponse(string $baseUrl, array $options, string $route = null): RedirectResponse
+    protected function getAuthorizationResponse(string $baseUrl, array $options, ?string $route = null): RedirectResponse
     {
         $route ??= 'oauth_check';
         $bag = $this->state->getStateBag();

@@ -75,7 +75,7 @@ class ProviderManager
         return $this->initializedPackages = $names;
     }
 
-    public function setRootLastModify(int $unix = null): void
+    public function setRootLastModify(?int $unix = null): void
     {
         try {
             $this->redis->set('packages-last-modify', $unix ?: time());
@@ -104,7 +104,7 @@ class ProviderManager
         return $advisory ? json_decode($advisory, true) : null;
     }
 
-    public function setLastModify(string $package, int $flags = null, int $unix = null): void
+    public function setLastModify(string $package, ?int $flags = null, ?int $unix = null): void
     {
         try {
             $flags ??= 3;
@@ -124,7 +124,7 @@ class ProviderManager
         }
     }
 
-    public function getLastModify(string $package, bool $isDev = null): \DateTimeInterface
+    public function getLastModify(string $package, ?bool $isDev = null): \DateTimeInterface
     {
         $key = $isDev && !str_ends_with($package, '~dev') ? $package.'~dev' : $package;
 

@@ -12,7 +12,7 @@ class UpdaterFactory
     {
     }
 
-    public function createUpdater(string $repoType = null): UpdaterInterface
+    public function createUpdater(?string $repoType = null): UpdaterInterface
     {
         $repoType ??= 'vcs';
         return $this->container->get($repoType);

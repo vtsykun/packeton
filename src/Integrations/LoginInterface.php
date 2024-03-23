@@ -20,7 +20,7 @@ interface LoginInterface extends IntegrationInterface
      *
      * @return Response|RedirectResponse
      */
-    public function redirectOAuth2Url(Request $request = null, array $options = []): Response;
+    public function redirectOAuth2Url(?Request $request = null, array $options = []): Response;
 
     /**
      * @param Request $request
@@ -37,7 +37,7 @@ interface LoginInterface extends IntegrationInterface
      *
      * @return array
      */
-    public function fetchUser(Request|array $request, array $options = [], array &$accessToken = null): array;
+    public function fetchUser(Request|array $request, array $options = [], ?array &$accessToken = null): array;
 
     /**
      * @param array $userData
@@ -52,5 +52,5 @@ interface LoginInterface extends IntegrationInterface
      * @param string|null $scriptPayload
      * @return mixed
      */
-    public function evaluateExpression(array $context = [], string $scriptPayload = null): mixed;
+    public function evaluateExpression(array $context = [], ?string $scriptPayload = null): mixed;
 }

@@ -56,7 +56,7 @@ class VcsDriverFactory
      *
      * @return \Composer\Repository\Vcs\VcsDriver
      */
-    public function createDriver(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, ProcessExecutor $process, string $classOrType = null, array $options = [])
+    public function createDriver(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, ProcessExecutor $process, ?string $classOrType = null, array $options = [])
     {
         $driver = null;
         if ($classOrType && class_exists($classOrType)) {

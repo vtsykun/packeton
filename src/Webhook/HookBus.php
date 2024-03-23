@@ -29,7 +29,7 @@ class HookBus
         ]);
     }
 
-    public function dispatchAll(mixed $context, string $event, string $package = null, Criteria $criteria = null): array
+    public function dispatchAll(mixed $context, string $event, ?string $package = null, ?Criteria $criteria = null): array
     {
         $jobs = [];
         $webhooks = $this->getWebhooks($event, $package, $criteria);
@@ -40,12 +40,12 @@ class HookBus
         return $jobs;
     }
 
-    public function hasActive(string $event, string $package = null, Criteria $criteria = null): bool
+    public function hasActive(string $event, ?string $package = null, ?Criteria $criteria = null): bool
     {
         return (bool) $this->getWebhooks($event, $package, $criteria);
     }
 
-    protected function getWebhooks(string $event, string $package = null, Criteria $criteria = null)
+    protected function getWebhooks(string $event, ?string $package = null, ?Criteria $criteria = null)
     {
         return $this->registry->getRepository(Webhook::class)->findActive($package, [$event], $criteria);
     }

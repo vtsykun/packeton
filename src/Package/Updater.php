@@ -108,7 +108,7 @@ class Updater implements UpdaterInterface
     /**
      * {@inheritdoc}
      */
-    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, SignalHandler $signal = null): Package
+    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, $flags = 0, ?SignalHandler $signal = null): Package
     {
         $rfs = new RemoteFilesystem($io, $config);
 

@@ -9,5 +9,5 @@ interface ContextAwareInterface
     /**
      * @param WebhookContext|null $context
      */
-    public function setContext(WebhookContext $context = null): void;
+    public function setContext(?WebhookContext $context = null): void;
 }

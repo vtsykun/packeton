@@ -47,7 +47,7 @@ class RemotePackagesManager implements ApprovalRepoInterface
         $this->redis->set($this->patchKey, \json_encode($settings));
     }
 
-    public function getPatchMetadata(string $package = null): array
+    public function getPatchMetadata(?string $package = null): array
     {
         $settings = $this->redis->get($this->patchKey);
         $settings = $settings ? \json_decode($settings, true) : [];
@@ -55,7 +55,7 @@ class RemotePackagesManager implements ApprovalRepoInterface
         return $package ? ($settings[$package] ?? []) : $settings;
     }
 
-    public function unsetPatchMetadata(string $package = null, string $version = null): void
+    public function unsetPatchMetadata(?string $package = null, ?string $version = null): void
     {
         $settings = $this->getPatchMetadata();
         if ($package) {

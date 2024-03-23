@@ -8,5 +8,5 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 interface ConsoleAwareInterface
 {
-    public function setOutput(OutputInterface $output = null): void;
+    public function setOutput(?OutputInterface $output = null): void;
 }

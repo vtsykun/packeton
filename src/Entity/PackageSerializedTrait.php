@@ -147,7 +147,7 @@ trait PackageSerializedTrait
         return (bool) $this->getRequirePatches();
     }
 
-    public function findRequirePatch(string $normalizedVersion, string &$matchKey = null): ?array
+    public function findRequirePatch(string $normalizedVersion, ?string &$matchKey = null): ?array
     {
         $parser = new VersionParser();
         foreach ($this->getRequirePatches() as $constraintStr => $patch) {

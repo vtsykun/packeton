@@ -58,7 +58,7 @@ class UserRepository extends EntityRepository
         return $this->findOneBy(['usernameCanonical' => mb_strtolower($usernameOrEmail)]);
     }
 
-    public function getPackageMaintainersQueryBuilder(Package $package, User $excludeUser=null)
+    public function getPackageMaintainersQueryBuilder(Package $package, ?User $excludeUser=null)
     {
         $qb = $this->createQueryBuilder('u')
             ->select('u')

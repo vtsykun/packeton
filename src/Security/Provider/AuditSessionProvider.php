@@ -70,7 +70,7 @@ class AuditSessionProvider
         return array_map(AuditSession::create(...), $sessions);
     }
 
-    public function logWebLogin(Request $request, string|UserInterface $user, bool $rememberMe = false, string $error = null): void
+    public function logWebLogin(Request $request, string|UserInterface $user, bool $rememberMe = false, ?string $error = null): void
     {
         $current = [
             'ua' => $request->headers->get('user-agent'),
@@ -85,7 +85,7 @@ class AuditSessionProvider
         $this->log($current, $user instanceof UserInterface ? $user->getUserIdentifier() : $user);
     }
 
-    public function logApi(Request $request, string|UserInterface $user, #[\SensitiveParameter] string $apiToken, string $error = null): void
+    public function logApi(Request $request, string|UserInterface $user, #[\SensitiveParameter] string $apiToken, ?string $error = null): void
     {
         $user = $user instanceof UserInterface ? $user->getUserIdentifier() : $user;
 

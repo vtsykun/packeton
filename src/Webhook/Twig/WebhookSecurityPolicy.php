@@ -31,7 +31,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
     private $allowedTags;
     private $allowedFilters;
 
-    public function __construct(SecurityPolicyInterface $strictSecurityPolicy, array $forbiddenTags = null, array $forbiddenFilters = null, array $forbiddenFunctions = null, array $forbiddenMethods = null, array $forbiddenProperties = null, array $forbiddenClasses = [])
+    public function __construct(SecurityPolicyInterface $strictSecurityPolicy, ?array $forbiddenTags = null, ?array $forbiddenFilters = null, ?array $forbiddenFunctions = null, ?array $forbiddenMethods = null, ?array $forbiddenProperties = null, array $forbiddenClasses = [])
     {
         $this->strictSecurityPolicy = $strictSecurityPolicy;
         $this->forbiddenTags = $forbiddenTags;
@@ -91,7 +91,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
         $this->strictSecurityPolicy->checkSecurity($tags, $filters, $functions);
     }
 
-    public function setForbiddenMethods(array $methods = null)
+    public function setForbiddenMethods(?array $methods = null)
     {
         if (null === $methods) {
             return;
@@ -115,7 +115,7 @@ class WebhookSecurityPolicy implements SecurityPolicyInterface
         }
     }
 
-    public function setForbiddenProperties(array $properties = null)
+    public function setForbiddenProperties(?array $properties = null)
     {
         if (null === $properties) {
             return;

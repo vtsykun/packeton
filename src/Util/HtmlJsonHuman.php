@@ -17,7 +17,7 @@ class HtmlJsonHuman
         return $dom->saveHTML();
     }
 
-    public function buildDom($object, \DOMDocument $root = null, \DOMElement $parent = null)
+    public function buildDom($object, ?\DOMDocument $root = null, ?\DOMElement $parent = null)
     {
         if (null === $root) {
             $root = new \DOMDocument('1.0');

@@ -26,7 +26,7 @@ class JobScheduler
      *
      * @return Job
      */
-    public function publish(string $type, array|Job|null $job = null, int $hash = null): Job
+    public function publish(string $type, array|Job|null $job = null, ?int $hash = null): Job
     {
         if ($job instanceof Job) {
             $job->setCreatedAt(new \DateTime('now', new \DateTimeZone('UTC')));

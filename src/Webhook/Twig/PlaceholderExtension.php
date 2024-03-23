@@ -34,7 +34,7 @@ class PlaceholderExtension extends AbstractExtension
         ];
     }
 
-    public function fillPlaceholder(string $name, $variables, PlaceholderContext $context = null)
+    public function fillPlaceholder(string $name, $variables, ?PlaceholderContext $context = null)
     {
         if ($context === null) {
             return;

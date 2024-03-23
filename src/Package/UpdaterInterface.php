@@ -26,7 +26,7 @@ interface UpdaterInterface
      *
      * @return Package
      */
-    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, int $flags = 0, SignalHandler $signal = null): Package;
+    public function update(IOInterface $io, Config $config, Package $package, RepositoryInterface $repository, int $flags = 0, ?SignalHandler $signal = null): Package;
 
     /**
      * @return string[]

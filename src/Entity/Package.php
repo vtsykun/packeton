@@ -476,7 +476,7 @@ class Package
      * @param string|null $repoType
      * @return Package
      */
-    public function setRepoType(string $repoType = null)
+    public function setRepoType(?string $repoType = null)
     {
         $this->repoType = $repoType;
         return $this;
@@ -494,7 +494,7 @@ class Package
      * @param Package $parentPackage
      * @return $this
      */
-    public function setParentPackage(Package $package = null)
+    public function setParentPackage(?Package $package = null)
     {
         $this->parentPackage = $package;
         return $this;
@@ -775,7 +775,7 @@ class Package
      * @param SshCredentials $credentials
      * @return Package
      */
-    public function setCredentials(SshCredentials $credentials = null)
+    public function setCredentials(?SshCredentials $credentials = null)
     {
         $this->credentials = $credentials;
         return $this;

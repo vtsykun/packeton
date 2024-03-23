@@ -32,7 +32,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function rootMetadata(int $modifiedSince = null): JsonMetadata
+    public function rootMetadata(?int $modifiedSince = null): JsonMetadata
     {
         $metadata = $this->repository->rootMetadata($modifiedSince);
         $metadata->setOptions($this->rpm->getSettings());
@@ -61,7 +61,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findProviderMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
+    public function findProviderMetadata(string $nameOrUri, ?int $modifiedSince = null): JsonMetadata
     {
         if (\str_starts_with($nameOrUri, 'include-packeton/all$') && null !== $this->remote) {
             $approved = $this->rpm->getApproved();
@@ -77,7 +77,7 @@ class ProxyRepositoryACLDecorator extends AbstractProxyRepositoryDecorator
     /**
      * {@inheritdoc}
      */
-    public function findPackageMetadata(string $nameOrUri, int $modifiedSince = null): JsonMetadata
+    public function findPackageMetadata(string $nameOrUri, ?int $modifiedSince = null): JsonMetadata
     {
         [$package, ] = \explode('$', $nameOrUri);
         $user = $this->tokenStorage->getToken()?->getUser();

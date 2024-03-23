@@ -20,7 +20,7 @@ trait HttpMetadataTrait
     /**
      * @throws TransportException
      */
-    private function requestMetadataVia2(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, callable $lastModifyLoader = null): void
+    private function requestMetadataVia2(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, ?callable $onReject = null, ?callable $lastModifyLoader = null): void
     {
         $queue = new \ArrayObject();
         $loop = new SignalLoop($downloader, $this->signal);
@@ -80,7 +80,7 @@ trait HttpMetadataTrait
         }
     }
 
-    private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, callable $onReject = null, iterable $providers = []): void
+    private function requestMetadataVia1(HttpDownloader $downloader, iterable $packages, string $url, callable $onFulfilled, ?callable $onReject = null, iterable $providers = []): void
     {
         $resolvedPackages = $promise = [];
         $loop = new SignalLoop($downloader, $this->signal);

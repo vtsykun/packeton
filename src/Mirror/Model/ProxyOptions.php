@@ -14,7 +14,7 @@ class ProxyOptions extends MetadataOptions
      *
      * @return string
      */
-    public function getUrl(string $path = null): string
+    public function getUrl(?string $path = null): string
     {
         $url = \rtrim($this->config['url'], '/');
 
@@ -31,7 +31,7 @@ class ProxyOptions extends MetadataOptions
         return $path ? $url . '/' . \ltrim($path, '/') : $url;
     }
 
-    public function getMetadataV2Url(string $package = null): ?string
+    public function getMetadataV2Url(?string $package = null): ?string
     {
         if (!isset($this->config['root']['metadata-url'])) {
             return null;
@@ -55,7 +55,7 @@ class ProxyOptions extends MetadataOptions
         return $this->getUrl($this->config['root']['metadata-changes-url']);
     }
 
-    public function getMetadataV1Url(string $package = null, string $hash = null): ?string
+    public function getMetadataV1Url(?string $package = null, ?string $hash = null): ?string
     {
         $providersUrl = $this->config['root']['providers-url'] ??
             ($this->config['root']['providers-lazy-url'] ?? null);
@@ -192,7 +192,7 @@ class ProxyOptions extends MetadataOptions
         return $this->config['composer_auth'] ?? null;
     }
 
-    public function getStats(string $name = null, mixed $default = null): mixed
+    public function getStats(?string $name = null, mixed $default = null): mixed
     {
         $stats = $this->config['stats'] ?? [];
         return $name ? $stats[$name] ?? $default : $stats;

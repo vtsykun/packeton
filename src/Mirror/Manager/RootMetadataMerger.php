@@ -15,7 +15,7 @@ class RootMetadataMerger
     ) {
     }
 
-    public function merge(JsonMetadata $stamps, int $composerApi = null): JsonMetadata
+    public function merge(JsonMetadata $stamps, ?int $composerApi = null): JsonMetadata
     {
         $rootFile = $stamps->decodeJson();
         $config = $stamps->getOptions();

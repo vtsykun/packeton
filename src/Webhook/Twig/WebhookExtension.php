@@ -242,7 +242,7 @@ class WebhookExtension extends AbstractExtension implements ContextAwareInterfac
     /**
      * @inheritDoc
      */
-    public function setContext(WebhookContext $context = null): void
+    public function setContext(?WebhookContext $context = null): void
     {
         $this->context = $context;
     }

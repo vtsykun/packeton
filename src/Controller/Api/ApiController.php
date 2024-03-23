@@ -111,7 +111,7 @@ class ApiController extends AbstractController
     #[Route('/api/bitbucket', name: 'bitbucket_postreceive')]
     #[Route('/api/update-package', name: 'generic_postreceive')]
     #[Route('/api/update-package/{name}', name: 'generic_named_postreceive', requirements: ['name' => '%package_name_regex%'])]
-    public function updatePackageAction(Request $request, #[Vars] Package $package = null, bool $fallback = false): Response
+    public function updatePackageAction(Request $request, #[Vars] ?Package $package = null, bool $fallback = false): Response
     {
         // parse the payload
         $payload = $this->getJsonPayload($request);
@@ -315,7 +315,7 @@ class ApiController extends AbstractController
         return \is_array($payload) ? $payload : null;
     }
 
-    protected function receiveIntegrationHook(Request $request, OAuthIntegration $oauth = null): ?array
+    protected function receiveIntegrationHook(Request $request, ?OAuthIntegration $oauth = null): ?array
     {
         $user = $this->getUser();
         if (null === $oauth && $user instanceof AutoHookUser) {

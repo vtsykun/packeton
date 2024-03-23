@@ -29,7 +29,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
      * @param array $variables
      * @return HookResponse[]
      */
-    public function executeWebhook(Webhook $webhook, array $variables = [], HttpClientInterface $client = null)
+    public function executeWebhook(Webhook $webhook, array $variables = [], ?HttpClientInterface $client = null)
     {
         $variables['webhook'] = $webhook;
         $client ??= $this->noPrivateHttpClient;
@@ -202,7 +202,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
         return $headers;
     }
 
-    private function createFailsResponse(Webhook $webhook, \Throwable $exception, HookRequest $request = null)
+    private function createFailsResponse(Webhook $webhook, \Throwable $exception, ?HookRequest $request = null)
     {
         $message = null;
         if ($exception->getPrevious() instanceof InterruptException) {
@@ -228,7 +228,7 @@ class HookRequestExecutor implements ContextAwareInterface, LoggerAwareInterface
     /**
      * @inheritDoc
      */
-    public function setContext(WebhookContext $context = null): void
+    public function setContext(?WebhookContext $context = null): void
     {
         $this->requestResolver->setContext($context);
     }

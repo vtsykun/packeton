@@ -45,7 +45,7 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
         LogLevel::INFO => 100,
     ];
 
-    public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null, protected ?int $maxBufferSize = null, OutputInterface $output = null)
+    public function __construct(string $input = '', int $verbosity = StreamOutput::VERBOSITY_NORMAL, ?OutputFormatterInterface $formatter = null, protected ?int $maxBufferSize = null, ?OutputInterface $output = null)
     {
         $input = new StringInput($input);
         $input->setInteractive(false);
@@ -61,7 +61,7 @@ class DebugIO extends ConsoleIO implements ConsoleAwareInterface
     /**
      * {@inheritdoc}
      */
-    public function setOutput(OutputInterface $output = null): void
+    public function setOutput(?OutputInterface $output = null): void
     {
         $this->consoleOutput = $output;
     }

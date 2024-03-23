@@ -25,12 +25,12 @@ class SyncProviderService
     ) {
     }
 
-    public function setErrorHandler(callable $onRejected = null): void
+    public function setErrorHandler(?callable $onRejected = null): void
     {
         $this->onRejected = $onRejected;
     }
 
-    public function setSignalHandler(SignalHandler $signal = null): void
+    public function setSignalHandler(?SignalHandler $signal = null): void
     {
         $this->signal = $signal;
     }
@@ -75,7 +75,7 @@ class SyncProviderService
         return $this->httpLoop($providerIncludes, $repo->getConfig(), $loopCallback);
     }
 
-    public function loadPackages(RemoteProxyRepository $repo, iterable $providers, string $providerUrl = null): array
+    public function loadPackages(RemoteProxyRepository $repo, iterable $providers, ?string $providerUrl = null): array
     {
         $loopCallback = function ($name, $provider, HttpDownloader $http) use ($repo, $providerUrl) {
             $hash = $provider['sha256'] ?? null;

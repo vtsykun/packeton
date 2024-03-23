@@ -50,7 +50,7 @@ class IntegrationTokenChecker implements TokenCheckerInterface, PatTokenCheckerI
     /**
      * {@inheritdoc}
      */
-    public function checkAccess(Request $request, UserInterface $user = null): void
+    public function checkAccess(Request $request, ?UserInterface $user = null): void
     {
         $route = $request->attributes->get('_route');
         if ($route !== 'api_integration_postreceive' && !PatUserScores::isAllowed('webhooks', $route)) {

@@ -180,7 +180,7 @@ class PackageRepositoryValidator extends ConstraintValidator
         }
     }
 
-    protected function validatePackageName($name, string $property = null): void
+    protected function validatePackageName($name, ?string $property = null): void
     {
         $property ??= 'repository';
         if (empty($name)) {

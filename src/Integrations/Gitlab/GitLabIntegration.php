@@ -69,7 +69,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2Url(Request $request = null, array $options = []): Response
+    public function redirectOAuth2Url(?Request $request = null, array $options = []): Response
     {
         $options = $options + ['scope' => ['read_user']];
         return $this->getAuthorizationResponse($this->baseUrl . $this->pathAuthorize, $options);
@@ -78,7 +78,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2App(Request $request = null, array $options = []): Response
+    public function redirectOAuth2App(?Request $request = null, array $options = []): Response
     {
         $options = $options + ['scope' => ['read_user', 'api']];
         return $this->getAuthorizationResponse($this->baseUrl . $this->pathAuthorize, $options, 'oauth_install');
@@ -148,7 +148,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function fetchUser(Request|array $request, array $options = [], array &$accessToken = null): array
+    public function fetchUser(Request|array $request, array $options = [], ?array &$accessToken = null): array
     {
         $accessToken ??= $request instanceof Request ? $this->getAccessToken($request) : $request;
 
@@ -316,7 +316,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function authenticateIO(OAuthIntegration $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(OAuthIntegration $oauth2, IOInterface $io, Config $config, ?string $repoUrl = null): void
     {
         $token = $this->refreshToken($oauth2);
         $urls = parse_url($this->baseUrl);
@@ -410,7 +410,7 @@ class GitLabIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array
+    public function receiveHooks(App $accessToken, ?Request $request = null, ?array $payload = null): ?array
     {
         if (null === $payload || !($payload['project']['id'] ?? null)) {
             return null;

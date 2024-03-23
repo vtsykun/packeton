@@ -71,7 +71,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2Url(Request $request = null, array $options = []): RedirectResponse
+    public function redirectOAuth2Url(?Request $request = null, array $options = []): RedirectResponse
     {
         $options = $options + ['scope' => $this->baseScores];
 
@@ -81,7 +81,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function redirectOAuth2App(Request $request = null, array $options = []): RedirectResponse
+    public function redirectOAuth2App(?Request $request = null, array $options = []): RedirectResponse
     {
         $options = $options + ['scope' => $this->appScores];
 
@@ -180,7 +180,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function removeHook(App $app, int|string $repoId, array $webHookInfo = null): ?array
+    public function removeHook(App $app, int|string $repoId, ?array $webHookInfo = null): ?array
     {
         if (isset($webHookInfo['owner_id'], $webHookInfo['id'])) {
             return $this->doRemoveHook($app, $webHookInfo['owner_id'], true, $webHookInfo['id']);
@@ -254,7 +254,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
         return ['name' => 'web', 'config' => ['url' => $url, 'content_type' => 'json'], 'events' => ['push', 'pull_request']];
     }
 
-    protected function doRemoveHook(App $app, string $orgId, bool $isRepo, int $hookId = null): ?array
+    protected function doRemoveHook(App $app, string $orgId, bool $isRepo, ?int $hookId = null): ?array
     {
         if ('@self' === $orgId) {
             return null;
@@ -288,7 +288,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function receiveHooks(App $accessToken, Request $request = null, ?array $payload = null): ?array
+    public function receiveHooks(App $accessToken, ?Request $request = null, ?array $payload = null): ?array
     {
         if (null === $payload || !($repoName = $payload['repository']['full_name'] ?? null)) {
             return null;
@@ -444,7 +444,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function fetchUser(Request|array $requestOrToken, array $options = [], array &$accessToken = null): array
+    public function fetchUser(Request|array $requestOrToken, array $options = [], ?array &$accessToken = null): array
     {
         $accessToken ??= $requestOrToken instanceof Request ? $this->getAccessToken($requestOrToken) : $requestOrToken;
 
@@ -464,7 +464,7 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
     /**
      * {@inheritdoc}
      */
-    public function authenticateIO(App $oauth2, IOInterface $io, Config $config, string $repoUrl = null): void
+    public function authenticateIO(App $oauth2, IOInterface $io, Config $config, ?string $repoUrl = null): void
     {
         $token = $this->refreshToken($oauth2);
         $urls = parse_url($this->baseUrl);

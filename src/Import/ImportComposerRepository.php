@@ -36,7 +36,7 @@ class ImportComposerRepository
         $this->option = $option;
     }
 
-    public function getPackages(array $packageNames = null): array
+    public function getPackages(?array $packageNames = null): array
     {
         $packages = [];
         $allProviders = null;
