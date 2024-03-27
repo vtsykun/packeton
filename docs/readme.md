@@ -36,7 +36,7 @@ Packeton - Private PHP package repository for vendors.
 | Patch Mirroring metadata  | Support. UI metadata manager                                                | -                                                                        |
 | Incoming webhooks         | Support. Full compatibility with packagist.org and its integrations         | Support. Used unique uuid address                                        |
 | Outgoing webhooks         | Full Support. Custom UI request builder with expressions                    | Support. Request payload format is not configurable                      |
-| Subrepositories           | Support                                                                     | Support                                                                  |
+| Sub-repositories          | Support                                                                     | Support                                                                  |
 | LDAP                      | Support. On config level                                                    | Support                                                                  |
 | Dependency License Review | -                                                                           | Support                                                                  |
 | Security Monitoring       | Support. Webhook notifications                                              | Support. Webhook/email notifications                                     |
