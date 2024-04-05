@@ -230,6 +230,10 @@ services:
 
     Symfony\Component\HttpClient\NoPrivateNetworkHttpClient: ~
 
+    Packeton\Package\Updater:
+      calls:
+        - [setSerializerCachePath, ['%kernel.cache_dir%/html_purifier']]
+
     Okvpn\Expression\TwigLanguage:
         arguments:
             $options:
