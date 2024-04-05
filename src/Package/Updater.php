@@ -86,6 +86,8 @@ class Updater implements UpdaterInterface
         ],
     ];
 
+    private ?string $serializerCachePath = null;
+
     public function __construct(
         protected ManagerRegistry $doctrine,
         protected DistConfig $distConfig,
@@ -95,6 +97,15 @@ class Updater implements UpdaterInterface
         protected DistManager $distManager,
     ) {
         ErrorHandler::register();
+    }
+
+    public function setSerializerCachePath(string $serializerCachePath): void
+    {
+        if (!mkdir($serializerCachePath, true) && !is_dir($serializerCachePath)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $serializerCachePath));
+        }
+
+        $this->serializerCachePath = $serializerCachePath;
     }
 
     /**
@@ -894,6 +905,9 @@ class Updater implements UpdaterInterface
         $config->set('HTML.AllowedAttributes', implode(',', $attributes));
         $config->set('Attr.EnableID', true);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
+        if ($this->serializerCachePath !== null) {
+            $config->set('Cache.SerializerPath', $this->serializerCachePath);
+        }
 
         // add custom HTML tag definitions
         $def = $config->getHTMLDefinition(true);
