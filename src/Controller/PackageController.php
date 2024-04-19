@@ -939,9 +939,14 @@ class PackageController extends AbstractController
     }
 
     #[Route(
-        '/packages/{name}/dependents',
+        '/packages/{name}/dependents.{_format}',
         name: 'view_package_dependents',
-        requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'],
+       requirements: [
+            'name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)',
+            '_format' => '(json)',
+        ],
+        defaults: ['_format' => 'html'],
+        methods: ['GET']
     )]
     #[IsGranted('ROLE_FULL_CUSTOMER')]
     public function dependentsAction(Request $req, $name): Response
@@ -963,6 +968,14 @@ class PackageController extends AbstractController
 
         $data['meta'] = $this->getPackagesMetadata($data['packages']);
         $data['name'] = $name;
+
+        if ('json' === $req->getRequestFormat()) {
+            $response = new JsonResponse(['package' => $data]);
+            $response->setSharedMaxAge(12*3600);
+
+            return $response;
+        }
+
 
         return $this->render('package/dependents.html.twig', $data);
     }
