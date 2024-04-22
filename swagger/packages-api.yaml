@@ -83,6 +83,12 @@ paths:
             summary: 'Update a package'
             example: $PackageUpdate
             <<: *pkg-param
+
+    '/api/packages/{name}/dependents':
+        get:
+            tags: [ Packages ]
+            summary: 'View the dependents of a package'
+            <<: *pkg-param
     
     '/api/packages/{name}/changelog':
         get:
