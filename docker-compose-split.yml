@@ -36,8 +36,7 @@ services:
         image: packeton/packeton:latest
         hostname: php-fpm
         command: ['php-fpm', '-F']
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy, *default-volume]
         environment:
             <<: *default-environment
             SKIP_INIT: 0
@@ -51,8 +50,7 @@ services:
         hostname: nginx
         ports:
             - '127.0.0.1:8088:80'
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy, *default-volume]
         command: >
             bash -c 'sed s/_PHP_FPM_HOST_/php-fpm:9000/g < docker/nginx/nginx-tpl.conf > /etc/nginx/nginx.conf && nginx'
         environment:
@@ -66,8 +64,7 @@ services:
         hostname: packeton-worker
         command: ['bin/console', 'packagist:run-workers', '-v']
         user: www-data
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy, *default-volume]
         environment:
             <<: *default-environment
             WAIT_FOR_HOST: 'php-fpm:9000'
@@ -79,8 +76,7 @@ services:
         hostname: packeton-cron
         command: ['bin/console', 'okvpn:cron', '--demand', '--time-limit=3600']
         user: www-data
-        <<: *restart_policy
-        <<: *default-volume
+        <<: [*restart_policy, *default-volume]
         environment:
             <<: *default-environment
             WAIT_FOR_HOST: 'php-fpm:9000'
