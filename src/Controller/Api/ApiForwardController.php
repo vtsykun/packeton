@@ -27,7 +27,7 @@ class ApiForwardController extends AbstractController
         return $this->forward('Packeton\Controller\PackageController::viewPackageAction', ['name' => $name, '_format' => 'json']);
     }
 
-    #[Route('/packages/{name}/dependents', name: 'packages_item', requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'], methods: ['GET'])]
+    #[Route('/packages/{name}/dependents', name: 'packages_dependents', requirements: ['name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)'], methods: ['GET'])]
     public function dependents(string $name)
     {
         return $this->forward('Packeton\Controller\PackageController::dependentsAction', ['name' => $name, '_format' => 'json']);
