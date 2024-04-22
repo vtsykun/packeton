@@ -970,7 +970,7 @@ class PackageController extends AbstractController
         $data['name'] = $name;
 
         if ('json' === $req->getRequestFormat()) {
-            $response = new JsonResponse(['package' => $data]);
+            $response = new JsonResponse($data);
             $response->setSharedMaxAge(12*3600);
 
             return $response;
