@@ -941,7 +941,7 @@ class PackageController extends AbstractController
     #[Route(
         '/packages/{name}/dependents.{_format}',
         name: 'view_package_dependents',
-       requirements: [
+        requirements: [
             'name' => '([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?|ext-[A-Za-z0-9_.-]+?)',
             '_format' => '(json)',
         ],
@@ -975,7 +975,6 @@ class PackageController extends AbstractController
 
             return $response;
         }
-
 
         return $this->render('package/dependents.html.twig', $data);
     }
