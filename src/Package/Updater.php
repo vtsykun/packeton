@@ -99,12 +99,8 @@ class Updater implements UpdaterInterface
         ErrorHandler::register();
     }
 
-    public function setSerializerCachePath(string $serializerCachePath): void
+    public function setSerializerCachePath(?string $serializerCachePath): void
     {
-        if (!mkdir($serializerCachePath, true) && !is_dir($serializerCachePath)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $serializerCachePath));
-        }
-
         $this->serializerCachePath = $serializerCachePath;
     }
 
@@ -906,6 +902,9 @@ class Updater implements UpdaterInterface
         $config->set('Attr.EnableID', true);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
         if ($this->serializerCachePath !== null) {
+            if (!is_dir($this->serializerCachePath)) {
+                @mkdir($this->serializerCachePath, recursive: true);
+            }
             $config->set('Cache.SerializerPath', $this->serializerCachePath);
         }
 
