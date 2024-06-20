@@ -1,18 +1,25 @@
 {% extends "layout.html.twig" %}
 
+{% block title %}{{ 'menu.my_users'|trans }} - {{ parent() }}{% endblock %}
+
 {% block content %}
 <section class="row">
-    <form name="search" method="get" action="{{ path('groups_index') }}" id="search--group-form" autocomplete="off">
-        <div class="sortable row">
-            <div class="col-xs-12 js-search-field-wrapper col-md-9">
-                <input type="search" id="search_group_group" name="search_group" autocomplete="off" placeholder="Search group by name..." tabindex="1" class=" form-control" value="{{ searchGroup }}">
-            </div>
-        </div>
-    </form>
+    <h2 class="title">{{ 'menu.my_groups'|trans }}</h2>
 </section>
-<div style="float:right; margin: 20px">
-    <a class="btn btn-default" href="{{ path('groups_create') }}">Create group</a>
-</div>
+<section class="row">
+    <div class="col-xs-12 col-md-9">
+        <form name="search" method="get" action="{{ path('groups_index') }}" id="search--group-form" autocomplete="off">
+            <div class="sortable row">
+                <div class="js-search-field-wrapper">
+                    <input type="search" id="search_group_group" name="search_group" autocomplete="off" placeholder="Search group by name..." tabindex="1" class=" form-control" value="{{ searchGroup }}">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="pull-right">
+        <a class="btn btn-default" href="{{ path('groups_create') }}">Create group</a>
+    </div>
+</section>
 <section class="row">
     <ul class="packages list-unstyled">
         {% for group in groups %}
