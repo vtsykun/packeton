@@ -451,12 +451,11 @@ class PackageRepository extends EntityRepository
 
     public function getSuggests($name, $offset = 0, $limit = 15)
     {
-        $sql = 'SELECT p.id, p.name, p.description, p.language, p.abandoned, p.replacementPackage
+        $sql = 'SELECT DISTINCT p.id, p.name, p.description, p.language, p.abandoned, p.replacementPackage
             FROM link_suggest s
             INNER JOIN package_version pv ON (pv.id = s.version_id AND pv.development = true)
             INNER JOIN package p ON (p.id = pv.package_id)
             WHERE s.packageName = :name
-            GROUP BY pv.package_id
             ORDER BY p.name ASC LIMIT ' . ((int)$limit) . ' OFFSET ' . ((int)$offset);
 
         $stmt = $this->getEntityManager()->getConnection()
