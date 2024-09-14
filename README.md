@@ -2,10 +2,10 @@ Packeton - Private PHP package repository for vendors
 ======================================================
 
 [![Run Tests](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml/badge.svg)](https://github.com/vtsykun/packeton/actions/workflows/run_tests.yml)
-[![PHP Version Require](http://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
+[![PHP Version Require](https://poser.pugx.org/okvpn/packeton/require/php)](https://packagist.org/packages/okvpn/packeton)
 [![Hits-of-Code](https://hitsofcode.com/github/vtsykun/packeton?branch=master&label=Hits-of-Code)](https://hitsofcode.com/github/vtsykun/packeton/view?branch=master&label=Hits-of-Code)
 [![Docker pulls](https://img.shields.io/docker/pulls/packeton/packeton.svg?label=docker+pulls)](https://hub.docker.com/r/packeton/packeton)
-[![License](http://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
+[![License](https://poser.pugx.org/okvpn/packeton/license)](https://packagist.org/packages/okvpn/packeton)
 
 Fork of [Packagist](https://github.com/composer/packagist). 
 The Open Source alternative of [Private Packagist for vendors](https://packagist.com), that based on [Satis](https://github.com/composer/satis) and [Packagist](https://github.com/composer/packagist).
