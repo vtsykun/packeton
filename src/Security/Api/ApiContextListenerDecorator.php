@@ -7,7 +7,8 @@ namespace Packeton\Security\Api;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\Security\Http\Firewall\ContextListener;
+use Symfony\Component\Security\Http\Firewall\AbstractListener;
+use Symfony\Component\Security\Http\Firewall\FirewallListenerInterface;
 
 /**
  * Mixed Authenticator. Used to allow call api method from session context
@@ -17,28 +18,25 @@ use Symfony\Component\Security\Http\Firewall\ContextListener;
  * This is simplified user access to debug metadata and reuse API
  */
 #[Exclude]
-class ApiContextListener extends ContextListener
+class ApiContextListenerDecorator extends AbstractListener
 {
-    /**
-     * {@inheritdoc}
-     */
+    public function __construct(private readonly FirewallListenerInterface $listener)
+    {
+    }
+
     public function supports(Request $request): ?bool
     {
         // Allow only GET request. it's protected by CORS rules +same-site strict rule.
         return $request->getMethod() === 'GET';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function authenticate(RequestEvent $event): void
     {
-        parent::authenticate($event);
-
         $request = $event->getRequest();
-
-        // to prevent create a session via API token - change firewall name
-        $request->attributes->set('_security_firewall_run', '__unset__');
         $request->attributes->set('_stateless', false);
+
+        $this->listener->authenticate($event);
+
+        $request->attributes->set('_security_firewall_run', '__unset__');
     }
 }

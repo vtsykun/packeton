@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\DependencyInjection\CompilerPass;
 
-use Packeton\Security\Api\ApiContextListener;
+use Packeton\Security\Api\ApiContextListenerDecorator;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -95,10 +95,13 @@ final class ApiFirewallCompilerPass implements CompilerPassInterface
 
         $listenerId = 'packeton.context_listener.' . $contextKey;
         $container
-            ->setDefinition($listenerId, new ChildDefinition('security.context_listener'))
-            ->setClass(ApiContextListener::class)
+            ->setDefinition($parent = $listenerId.".decorator", new ChildDefinition('security.context_listener'))
             ->replaceArgument(2, $contextKey)
             ->replaceArgument(4, null); // Remove event dispatcher to prevent save session for stateless api.
+
+        $container->register($listenerId)
+            ->setClass(ApiContextListenerDecorator::class)
+            ->setArguments([new Reference($parent)]);
 
         $this->contextListeners[$contextKey] = $listenerId;
 
