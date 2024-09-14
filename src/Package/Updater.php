@@ -584,6 +584,16 @@ class Updater implements UpdaterInterface
             return null;
         }
 
+        // svn support
+        if ($data->getSourceType() === 'svn' && $data->getSourceReference()) {
+            $virtualReference = sha1($data->getSourceReference());
+            return [
+                'url' => $this->distConfig->generateRoute($data->getName(), $virtualReference, $this->distConfig->getArchiveFormat()),
+                'type' => $this->distConfig->getArchiveFormat(),
+                'reference' => $virtualReference
+            ];
+        }
+
         if ($this->distConfig->isPreBuild()) {
             $path = null;
             try {

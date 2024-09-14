@@ -414,6 +414,20 @@ class Version
         return $this->source ? json_decode($this->source, true) : null;
     }
 
+    public function getSourceType(): ?string
+    {
+        $type = ($this->getSource()['type'] ?? null);
+
+        return is_string($type) ? $type : null;
+    }
+
+    public function getSourceReference(): ?string
+    {
+        $reference = $this->getSource()['reference'] ?? null;
+
+        return is_string($reference) ? $reference : null;
+    }
+
     /**
      * Set dist
      *
