@@ -37,17 +37,17 @@ jobs:
             driver: 'MYSQL'
             redis: 6
             symfony: '6.4.*'
-          - php: '8.3'
+          - php: '8.4'
             driver: 'SQLITE'
             redis: 7
-            symfony: '7.0.*'
+            symfony: '7.1.*'
     name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
     runs-on: ubuntu-22.04
 
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v4"
-      
+
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
         with:
