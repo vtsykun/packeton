@@ -37,7 +37,7 @@
         "doctrine/dbal": "^3.7",
         "doctrine/doctrine-bundle": "^2.9",
         "doctrine/orm": "^2.15",
-        "ezyang/htmlpurifier": "^4.16",
+        "ezyang/htmlpurifier": "^4.16 || dev-master",
         "firebase/php-jwt": "^6.5",
         "friendsofphp/proxy-manager-lts": "^1.0",
         "knplabs/knp-menu-bundle": "^3.2",
