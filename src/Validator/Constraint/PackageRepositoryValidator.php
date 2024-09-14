@@ -35,6 +35,7 @@ class PackageRepositoryValidator extends ConstraintValidator
         match ($value->getRepoType()) {
             RepTypes::ARTIFACT => $this->validateArtifactPackage($value),
             RepTypes::CUSTOM, RepTypes::VIRTUAL => $this->validateCustomPackage($value),
+            RepTypes::PROXY => null,
             default => $this->validateVcsPackage($value),
         };
     }

@@ -9,6 +9,7 @@ use Packeton\Form\Type\Package\CustomPackageType;
 use Packeton\Form\Type\Package\IntegrationPackageType;
 use Packeton\Form\Type\Package\MonoRepoPackageType;
 use Packeton\Form\Type\Package\PackageType;
+use Packeton\Form\Type\Package\ProxyPackageType;
 
 class RepTypes
 {
@@ -18,6 +19,7 @@ class RepTypes
     public const INTEGRATION = 'integration';
     public const CUSTOM = 'custom';
     public const VIRTUAL = 'virtual';
+    public const PROXY = 'proxy';
 
     private static $types = [
         self::ARTIFACT,
@@ -26,6 +28,7 @@ class RepTypes
         self::VCS,
         self::CUSTOM,
         self::VIRTUAL,
+        self::PROXY,
     ];
 
     public static function getFormType(?string $type): string
@@ -35,6 +38,7 @@ class RepTypes
             self::ARTIFACT => ArtifactPackageType::class,
             self::INTEGRATION => IntegrationPackageType::class,
             self::CUSTOM, self::VIRTUAL => CustomPackageType::class,
+            self::PROXY => ProxyPackageType::class,
             default => PackageType::class,
         };
     }
@@ -47,7 +51,7 @@ class RepTypes
     public static function isBuildInDist(?string $type): bool
     {
         return match ($type) {
-            self::ARTIFACT, self::CUSTOM, self::VIRTUAL => true,
+            self::ARTIFACT, self::CUSTOM, self::VIRTUAL => true, self::PROXY => true,
             default => false,
         };
     }
@@ -69,6 +73,7 @@ class RepTypes
             self::INTEGRATION => self::INTEGRATION,
             self::CUSTOM => self::CUSTOM,
             self::VIRTUAL => self::VIRTUAL,
+            self::PROXY => self::PROXY,
             default => self::VCS,
         };
     }

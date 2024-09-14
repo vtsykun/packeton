@@ -27,6 +27,7 @@ class BasePackageType extends AbstractType
                 'MonoRepos (only GIT)' => RepTypes::MONO_REPO,
                 'Artifacts' => RepTypes::ARTIFACT,
                 'Custom (JSON)' => RepTypes::CUSTOM,
+                'Proxy Repo' => RepTypes::PROXY,
                 'Virtual (only JSON metadata)' => RepTypes::VIRTUAL,
                 'Satis / Packagist.com / VCS Import' => 'import', // only redirect
             ];
