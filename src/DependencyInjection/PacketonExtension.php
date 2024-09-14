@@ -59,8 +59,10 @@ class PacketonExtension extends Extension implements PrependExtensionInterface
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('packagist_web.rss_max_items', $config['rss_max_items']);
-        $container->setParameter('packeton_archive_all_opts', $config['archive_options'] ?? []);
-        $container->setParameter('packeton_archive_opts', true === $config['archive'] ? $container->getParameter('packeton_archive_all_opts') : []);
+
+        $archiveOptions = $config['archive_options'] ?? [];
+        $archiveOptions['flags'] = $config['archive'] ?? [];
+        $container->setParameter('packeton_archive_opts', $archiveOptions);
 
         $container->setParameter('packeton_dumper_opts', $config['metadata'] ?? []);
 

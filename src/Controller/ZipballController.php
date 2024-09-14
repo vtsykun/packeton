@@ -13,6 +13,7 @@ use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
 use Packeton\Service\DistManager;
 use Packeton\Util\PacketonUtils;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,7 +31,8 @@ class ZipballController extends AbstractController
         protected DistManager $dm,
         protected UploadZipballStorage $storage,
         protected ManagerRegistry $registry,
-        protected EventDispatcherInterface $dispatcher
+        protected EventDispatcherInterface $dispatcher,
+        protected LoggerInterface $logger,
     ) {
     }
 
@@ -80,7 +82,7 @@ class ZipballController extends AbstractController
     #[Route(
         '/zipball/{package}/{hash}',
         name: 'download_dist_package',
-        requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}\.[a-z]+?'],
+        requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}(\.?[A-Za-z\.]+?)?'],
         methods: ['GET']
     )]
     public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
@@ -103,6 +105,7 @@ class ZipballController extends AbstractController
             $dist = $this->dm->getDist($reference, $package);
         } catch (\Exception $e) {
             $msg = $this->isGranted('ROLE_MAINTAINER') ? $e->getMessage() : null;
+            $this->logger->warning($e->getMessage(), ['e' => $e]);
             return $this->createNotFound($msg);
         }
 

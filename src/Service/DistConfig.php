@@ -5,22 +5,24 @@ declare(strict_types=1);
 namespace Packeton\Service;
 
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class DistConfig
 {
     public const HOSTNAME_PLACEHOLDER = '__host_unset__';
 
-    private $config;
-    private $router;
+    public const FLAG_MIRROR = 'mirror';
+    public const FLAG_REPLACE = 'replace';
 
     /**
      * @param RouterInterface $router
      * @param array $config
      */
-    public function __construct(RouterInterface $router, array $config)
-    {
-        $this->config = $config;
-        $this->router = $router;
+    public function __construct(
+        private readonly RouterInterface $router,
+        #[Autowire('%packeton_archive_opts%')]
+        private readonly array $config
+    ) {
     }
 
     public function generateTargetDir(string $name)
@@ -138,12 +140,19 @@ class DistConfig
         return $hostName . $uri;
     }
 
-    /**
-     * @return bool
-     */
-    public function isEnable(): bool
+    public function archiveEnabled(): bool
     {
-        return !empty($this->config);
+        return !empty($this->config['flags']);
+    }
+
+    public function mirrorEnabled(): bool
+    {
+        return in_array(self::FLAG_MIRROR, $this->config['flags'] ?? []);
+    }
+
+    public function replaceEnabled(): bool
+    {
+        return in_array(self::FLAG_REPLACE, $this->config['flags'] ?? []);
     }
 
     /**
