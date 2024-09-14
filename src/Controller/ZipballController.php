@@ -91,7 +91,7 @@ class ZipballController extends AbstractController
             return $this->createNotFound();
         }
 
-        $isGranted = $this->isGranted('VIEW_ALL_VERSION', $package);
+        $isGranted = $this->isGranted('VIEW_ALL_VERSION', $package) || $this->isGranted('ROLE_FULL_CUSTOMER', $package);
         foreach ($package->getAllVersionsByReference($reference) as $version) {
             $isGranted |= $this->isGranted('ROLE_FULL_CUSTOMER', $version);
         }

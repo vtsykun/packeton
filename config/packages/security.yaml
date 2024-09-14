@@ -83,7 +83,7 @@ security:
         ROLE_UPDATE_PACKAGES: ~
         ROLE_DELETE_PACKAGES: ~
         ROLE_EDIT_PACKAGES: ~
-    
+
         ROLE_FULL_CUSTOMER: [ ROLE_USER ] # Access to all packages without ACL group restriction
         ROLE_MAINTAINER:  [ ROLE_FULL_CUSTOMER, ROLE_USER, ROLE_UPDATE_PACKAGES ]
         ROLE_ADMIN:       [ ROLE_MAINTAINER, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
