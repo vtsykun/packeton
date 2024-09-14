@@ -213,7 +213,7 @@ class DistManager
         }
 
         $probe = $versionName ? $this->tryFromVersion($package, $versionName) : null;
-        if (null === $probe || $probe->getSourceReference() !== $reference) {
+        if (null === $probe || ($probe->getSourceReference() !== $reference && $probe->getSourceType() !== 'svn')) {
             $probe = $this->guessCompletePackage($reference, $repository->getPackages());
         }
 
