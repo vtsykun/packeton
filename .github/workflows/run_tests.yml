@@ -37,17 +37,18 @@ jobs:
             driver: 'MYSQL'
             redis: 6
             symfony: '6.4.*'
-          - php: '8.3'
+          - php: '8.4'
             driver: 'SQLITE'
             redis: 7
-            symfony: '7.0.*'
+            symfony: '7.1.*'
+            composer_flags: '--ignore-platform-reqs'
     name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
     runs-on: ubuntu-22.04
 
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v4"
-      
+
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
         with:
@@ -78,9 +79,9 @@ jobs:
           echo $DATABASE_URL
           if [[ "${{ matrix.symfony }}" != "6.4.*" ]]; then
             export SYMFONY_REQUIRE="${{ matrix.symfony }}"
-            composer update --ansi --no-interaction
+            composer update --ansi --no-interaction ${{ matrix.composer_flags }}
           else
-            composer install --ansi --no-interaction
+            composer install --ansi --no-interaction ${{ matrix.composer_flags }}
           fi
       - name: Start Redis
         uses: "supercharge/redis-github-action@1.8.0"
