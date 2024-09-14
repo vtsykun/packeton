@@ -37,11 +37,11 @@ parameters:
         use_forward: false
         check_path: /login
         failure_path: null
-    
+
     composer_home_dir: '%env(resolve:APP_COMPOSER_HOME)%'
     mirror_repos_meta_dir: '%composer_home_dir%/proxy-meta'
     mirror_repos_dist_dir: '%composer_home_dir%/proxy-dist'
-    
+
     package_name_regex: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+'
     package_name_regex_v2: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'
     package_name_regex_v1: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.$-]+' # package$hash
@@ -103,7 +103,7 @@ services:
     Packeton\Resolver\ControllerArgumentResolver:
         tags:
             - { name: controller.argument_value_resolver, priority: 105 }
-    
+
     Packeton\Service\AssetHashVersionStrategy:
         arguments:
             $publicDir: '%kernel.project_dir%/public'
@@ -114,15 +114,11 @@ services:
             $isAnonymousAccess: '%anonymous_access%'
             $isAnonymousArchiveAccess: '%anonymous_archive_access%'
             $isAnonymousMirror: '%anonymous_mirror_access%'
-    
+
     Packeton\Model\UploadZipballStorage:
         arguments:
             $supportTypes: '%packeton_artifact_types%'
             $tmpDir: '%packeton_artifact_storage%'
-
-    Packeton\Service\DistConfig:
-        arguments:
-            $config: '%packeton_archive_opts%'
 
     Packeton\Package\InMemoryDumper:
         arguments:

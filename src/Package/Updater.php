@@ -573,7 +573,7 @@ class Updater implements UpdaterInterface
             ];
         }
 
-        if ($this->distConfig->isEnable() === false) {
+        if (false === $this->distConfig->replaceEnabled()) {
             if ($data->getDistUrl()) {
                 return [
                     'url' => $data->getDistUrl(),
@@ -581,7 +581,6 @@ class Updater implements UpdaterInterface
                     'reference' => $data->getDistReference(),
                 ];
             }
-
             return null;
         }
 

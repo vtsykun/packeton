@@ -6,6 +6,7 @@ use Firebase\JWT\JWT;
 use Packeton\Composer\MetadataFormat;
 use Packeton\Integrations\Factory\OAuth2FactoryInterface;
 use Packeton\Integrations\Model\AppUtils;
+use Packeton\Service\DistConfig;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -29,6 +30,18 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('packeton');
         $rootNode = $treeBuilder->getRootNode();
+
+        $archiveNormalizer = static function(mixed $value): bool|array {
+            $allFlags = [DistConfig::FLAG_REPLACE, DistConfig::FLAG_MIRROR];
+            if ($value === true) {
+                return $allFlags;
+            }
+            $value = is_string($value) ? [$value] : $value;
+            if (is_array($value) && $diff = array_diff($value, $allFlags)) {
+                throw new \InvalidArgumentException(sprintf('packeton->archive support only [mirror, replace] options, but given %s', json_encode($diff)));
+            }
+            return is_array($value) ? $value : [];
+        };
 
         $rootNode
             ->children()
@@ -57,7 +70,8 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->booleanNode('health_check')->defaultTrue()->end()
                 ->integerNode('max_import')->end()
-                ->booleanNode('archive')
+                ->variableNode('archive')
+                    ->beforeNormalization()->always()->then($archiveNormalizer)->end()
                     ->defaultFalse()
                 ->end()
                 ->arrayNode('artifacts')
@@ -104,7 +118,7 @@ class Configuration implements ConfigurationInterface
             ->validate()
             ->always(function ($values) {
                 if (($values['archive'] ?? false) && !isset($values['archive_options'])) {
-                    throw new \InvalidArgumentException('archive_options is required if archive: true');
+                    throw new \InvalidArgumentException('archive_options is required if packeton->archive is not false');
                 }
 
                 return $values;

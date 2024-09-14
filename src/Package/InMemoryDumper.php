@@ -15,6 +15,7 @@ use Packeton\Model\PacketonUserInterface as PUI;
 use Packeton\Repository\PackageRepository;
 use Packeton\Repository\VersionRepository;
 use Packeton\Security\Acl\PackagesAclChecker;
+use Packeton\Service\DistConfig;
 use Packeton\Service\SubRepositoryHelper;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -29,6 +30,7 @@ class InMemoryDumper
         private readonly PackagesAclChecker $checker,
         private readonly RouterInterface $router,
         private readonly SubRepositoryHelper $subRepositoryHelper,
+        private readonly DistConfig $distConfig,
         ?array $config = null,
     ) {
         $this->infoMessage = $config['info_cmd_message'] ?? null;
@@ -102,6 +104,12 @@ class InMemoryDumper
         $rootFile['notify-batch'] = $this->router->generate('track_download_batch');
         $rootFile['metadata-changes-url'] = $this->router->generate('metadata_changes');
         $rootFile['providers-url'] = $slug . '/p/%package%$%hash%.json';
+
+        if ($this->distConfig->mirrorEnabled()) {
+            $ref = '0000000000000000000000000000000000000000.zip';
+            $zipball = $this->router->generate('download_dist_package', ['package' => 'VND/PKG', 'hash' => $ref]);
+            $rootFile['mirrors'][] = ['dist-url' => \str_replace(['VND/PKG', $ref], ['%package%', '%reference%.%type%'], $zipball), 'preferred' => true];
+        }
 
         $rootFile['metadata-url'] = $slug . '/p2/%package%.json';
         if ($subRepo) {

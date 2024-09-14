@@ -81,7 +81,7 @@ class DistManager
 
     public function isEnabled(): bool
     {
-        return $this->config->isEnable();
+        return $this->config->archiveEnabled();
     }
 
     public function downloadUsingIntegration(string $reference, Package $package, ?string $versionName = null): string
