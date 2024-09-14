@@ -71,6 +71,7 @@ class BaseAclControllerTest extends WebTestCase
             ['/'],
             ['/packages/okvpn/cron-bundle'],
             ['/packages/okvpn/cron-bundle/stats'],
+            ['/packages/okvpn/cron-bundle/suggesters'],
             ['/packages/submit'],
             ['/users/'],
             ['/users/dev'],
