@@ -4,13 +4,15 @@
 {% block title %}Authentication Tokens{% endblock %}
 
 {% block content %}
+    {% set is_profile = app.user.userIdentifier == user.userIdentifier %}
+
     <section class="row">
-        <h2 class="title">Your Authentication Tokens</h2>
+        <h2 class="title">{% if is_profile %}Your {% else %} {{ user.userIdentifier|capitalize }} {% endif %} Authentication Tokens</h2>
 
         <b style="font-size: 1.3em">All Tokens</b>
         {% set csrfToken = csrf_token('actions') %}
         <div style="float:right; margin: 20px">
-            <a class="btn btn-primary" href="{{ path('profile_add_tokens') }}">Add Token</a>
+            <a class="btn btn-primary" href="{{ is_profile ? path('profile_add_tokens') : path('users_add_tokens', {'name': user.userIdentifier}) }}">Add Token</a>
         </div>
         <table class="table table-mb table-bordered">
             <thead style="background: #dddddd">
@@ -43,7 +45,7 @@
                                         <a data-toggle="collapse" href="#tok{{ token.id }}"  class="btn btn-primary">Show</a>
                                     </div>
                                     <div class="btn-group">
-                                        <form class="delete onsubmit-confirm action" action="{{ path('profile_remove_tokens', {'id': token.id }) }}" method="post" >
+                                        <form class="delete onsubmit-confirm action" action="{{ is_profile ? path('profile_remove_tokens', {'id': token.id }) : path('users_remove_tokens', {'id': token.id, 'name': user.userIdentifier }) }}" method="post" >
                                             <input type="hidden" name="token" value="{{ csrfToken }}"/>
                                             <button class="btn btn-danger" type="submit">Delete</button>
                                         </form>

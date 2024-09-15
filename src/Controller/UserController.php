@@ -218,15 +218,16 @@ class UserController extends AbstractController
     }
 
     #[Route('/profile/tokens', name: 'profile_list_tokens')]
-    public function tokenList(PatTokenManager $manager)
+    #[Route('/users/{name}/tokens', name: 'users_list_tokens')]
+    public function tokenList(PatTokenManager $manager, #[Vars(['name' => 'username'])] ?User $user = null)
     {
-        $user = $this->getUser();
+        $user = $this->getPatTokenUser($user);
         $tokens = $this->registry->getRepository(ApiToken::class)->findAllTokens($user);
         foreach ($tokens as $token) {
             $token->setAttributes($manager->getStats($token->getId()));
         }
 
-        return $this->render('user/token_list.html.twig', ['tokens' => $tokens]);
+        return $this->render('user/token_list.html.twig', ['tokens' => $tokens, 'user' => $user]);
     }
 
     #[Route('/users/sessions/list', name: 'users_login_attempts_all')]
@@ -261,9 +262,11 @@ class UserController extends AbstractController
     }
 
     #[Route('/profile/tokens/{id}/delete', name: 'profile_remove_tokens', methods: ['POST'])]
-    public function tokenDelete(#[Vars] ApiToken $token)
+    #[Route('/users/{name}/tokens/{id}/delete', name: 'users_remove_tokens', methods: ['POST'])]
+    public function tokenDelete(#[Vars] ApiToken $token, #[Vars(['name' => 'username'])] ?User $user = null)
     {
-        $user = $this->getUser();
+        $user = $this->getPatTokenUser($user);
+
         $identifier = $token->getOwner() ? $token->getOwner()->getUserIdentifier() : $token->getUserIdentifier();
         if ($identifier === $user->getUserIdentifier()) {
             $this->getEM()->remove($token);
@@ -276,18 +279,27 @@ class UserController extends AbstractController
         throw $this->createNotFoundException('Token not found');
     }
 
+    protected function getPatTokenUser(?User $user = null): UserInterface
+    {
+        if (null !== $user && ($user->isAdmin() || !$this->isGranted('ROLE_ADMIN'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $user ?: $this->getUser();
+    }
+
     #[Route('/profile/tokens/new', name: 'profile_add_tokens')]
-    public function tokenAdd(Request $request)
+    #[Route('/users/{name}/tokens/new', name: 'users_add_tokens')]
+    public function tokenAdd(Request $request, #[Vars(['name' => 'username'])] ?User $user = null)
     {
         $token = new ApiToken();
-        $form = $this->createForm(ApiTokenType::class, $token);
+        $form = $this->createForm(ApiTokenType::class, $token, ['user' => $user]);
 
+        $user = $this->getPatTokenUser($user);
         if ($request->getMethod() === 'POST') {
             $em = $this->registry->getManager();
             $form->handleRequest($request);
             if ($form->isSubmitted() && $form->isValid()) {
-                $user = $this->getUser();
-
                 if ($user instanceof User) {
                     $token->setOwner($user);
                 } else {
@@ -298,13 +310,17 @@ class UserController extends AbstractController
                 $em->persist($token);
                 $em->flush();
                 $this->addFlash('success', 'Token was generated');
-                return new RedirectResponse($this->generateUrl('profile_list_tokens'));
+
+                return $user === $this->getUser() ?
+                    new RedirectResponse($this->generateUrl('profile_list_tokens')) :
+                    new RedirectResponse($this->generateUrl('users_list_tokens', ['name' => $user->getUserIdentifier()]));
             }
         }
 
         return $this->render('user/token_add.html.twig', [
             'form' => $form->createView(),
-            'entity' => $token
+            'entity' => $token,
+            'user' => $user,
         ]);
     }
 

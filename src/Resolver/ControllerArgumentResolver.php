@@ -71,6 +71,9 @@ class ControllerArgumentResolver implements ValueResolverInterface
 
         foreach ($mapping as $varName => $value) {
             if (empty($value)) {
+                if ($argument->hasDefaultValue()) {
+                    return [$argument->getDefaultValue()];
+                }
                 throw new \UnexpectedValueException('Missing "'.$varName.'" in request attributes, cannot resolve $'.$argument->getName());
             }
         }

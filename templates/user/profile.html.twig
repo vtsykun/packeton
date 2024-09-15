@@ -24,6 +24,13 @@
         <div class="btn-group btn-group-xs">
             <a href="{{ path('users_update', {name: user.userIdentifier}) }}" class="btn btn-primary">Edit</a>
         </div>
+
+        {% if is_granted('ROLE_ADMIN') and user.admin == false %}
+            <div class="btn-group btn-group-xs">
+                <a href="{{ path('users_list_tokens', {name: user.userIdentifier}) }}" class="btn btn-success">Pat Tokens</a>
+            </div>
+        {% endif %}
+
         <div class="btn-group btn-group-xs">
             <form class="delete onsubmit-confirm action" action="{{ path('user_delete', {name: user.userIdentifier}) }}" method="post" >
                 {{ csrf_token_input('delete') }}
