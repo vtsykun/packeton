@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Form\Type;
 
 use Packeton\Entity\ApiToken;
+use Packeton\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -45,7 +46,7 @@ class ApiTokenType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
                 'attr' => ['with_value' => true],
-                'choices' => array_flip($this->getScores())
+                'choices' => array_flip($this->getScores($options['user']))
             ]);
 
         $builder->addEventListener(FormEvents::POST_SUBMIT, $this->postSubmit(...));
@@ -69,17 +70,21 @@ class ApiTokenType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', ApiToken::class);
+        $resolver->setDefault('user', null);
     }
 
-    protected function getScores(): array
+    protected function getScores(?User $user = null): array
     {
+        $asMaintainer = $user?->isMaintainer() || (null === $user && $this->checker->isGranted('ROLE_MAINTAINER'));
+        $asAdmin = $user?->isAdmin() || (null === $user && $this->checker->isGranted('ROLE_ADMIN'));
+
         $base = [
             'metadata' => 'Read composer packages.json metadata and ZIP archive access',
             'mirror:all' => 'Full access to mirrored packages',
             'mirror:read' => 'Read-only CI token to mirrored packages',
         ];
 
-        if ($this->checker->isGranted('ROLE_MAINTAINER')) {
+        if ($asMaintainer) {
             $base += [
                 'webhooks' => 'Update packages webhook',
                 'feeds' => 'Atom/RSS feed releases',
@@ -87,7 +92,7 @@ class ApiTokenType extends AbstractType
                 'packages:all' => 'Submit and read packages API',
             ];
         }
-        if ($this->checker->isGranted('ROLE_ADMIN')) {
+        if ($asAdmin) {
             $base += [
                 'users' => 'Access to user API',
                 'groups' => 'Access to groups API',
