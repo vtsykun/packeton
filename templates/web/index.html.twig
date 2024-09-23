@@ -2,6 +2,15 @@
 
 {% block content %}
 <section class="row">
+    {% if packages|length == 0 %}
+        <h2 class="title">Quick start!</h2>
+        <p>
+            Packeton - Private PHP package repository for vendors.<br />
+            Documentation <a href="https://docs.packeton.org/">docs.packeton.org</a>
+        </p>
+        <p>No packages are configured yet.</p>
+    {% endif %}
+
     {% for packageInfo in packages %}
         {% set package = packageInfo.package %}
         {% set dependencies = packageInfo.dependencies %}
