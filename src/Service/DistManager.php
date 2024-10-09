@@ -13,6 +13,7 @@ use Composer\Package\PackageInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use League\Flysystem\FilesystemOperator;
 use Packeton\Composer\PackagistFactory;
+use Packeton\Composer\Repository\ComposerProxyRepository;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
@@ -182,8 +183,11 @@ class DistManager
         }
 
         $repository = $this->createRepositoryAndIo($package);
-        $packages = $repository->getPackages();
-        $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
+
+        if (!$repository instanceof ComposerProxyRepository) {
+            $packages = $repository->getPackages();
+            $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
+        }
 
         if ($package->getRepoType() === RepTypes::PROXY) {
             return $this->composerProxyPackageManager->buildArchive($package, $repository, $reference);
