@@ -18,6 +18,7 @@ use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Integrations\IntegrationRegistry;
+use Packeton\Integrations\Model\AppUtils;
 use Packeton\Integrations\ZipballInterface;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Model\VirtualPackageManager;
@@ -106,15 +107,18 @@ class DistManager
         $fileName = $this->config->getFileName($reference, $versionName);
         $format = $this->config->getArchiveFormat();
 
+        $client = $this->integrations->get($oauth->getAlias());
+
         try {
-            if ($path = $archiveManager->tryFromGitArchive($reference, $format, $targetDir, $fileName)) {
+            if (false === AppUtils::useApiPref($client->getConfig(), $oauth)
+                && null !== ($path = $archiveManager->tryFromGitArchive($reference, $format, $targetDir, $fileName))
+            ) {
                 return $path;
             }
         } catch (\Throwable $e) {
             // Try from ref
         }
 
-        $client = $this->integrations->get($oauth->getAlias());
         if ($client instanceof ZipballInterface) {
             return $client->zipballDownload($oauth, $package->getExternalRef(), $reference, $targetPath);
         }
