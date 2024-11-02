@@ -9,6 +9,7 @@ use Composer\Factory;
 use Composer\IO\IOInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\Repository\ArtifactRepository;
+use Packeton\Composer\Repository\ComposerProxyRepository;
 use Packeton\Composer\Repository\CustomJsonRepository;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Composer\Repository\VcsRepository;
@@ -42,6 +43,7 @@ class PacketonRepositoryFactory
         return match ($type) {
             RepTypes::ARTIFACT => new ArtifactRepository($repoConfig, $this->zipballStorage, $this->registry, $io, $config, $httpDownloader),
             RepTypes::CUSTOM, RepTypes::VIRTUAL => new CustomJsonRepository($repoConfig, $this->registry, $io, $config, $httpDownloader),
+            RepTypes::PROXY => new ComposerProxyRepository($repoConfig, $io, $config, $httpDownloader),
             default => new VcsRepository($repoConfig, $io, $config, $httpDownloader, $this->driverFactory, null, $process),
         };
     }

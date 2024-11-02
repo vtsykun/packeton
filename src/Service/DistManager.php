@@ -13,11 +13,13 @@ use Composer\Package\PackageInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use League\Flysystem\FilesystemOperator;
 use Packeton\Composer\PackagistFactory;
+use Packeton\Composer\Repository\ComposerProxyRepository;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\ZipballInterface;
+use Packeton\Model\ComposerProxyPackageManager;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Model\VirtualPackageManager;
 use Packeton\Package\RepTypes;
@@ -35,6 +37,7 @@ class DistManager
         private readonly IntegrationRegistry $integrations,
         private readonly FilesystemOperator $baseStorage,
         private readonly Filesystem $fs,
+        private readonly ComposerProxyPackageManager $composerProxyPackageManager,
         private readonly VirtualPackageManager $virtualPackageManager,
     ) {
     }
@@ -180,8 +183,15 @@ class DistManager
         }
 
         $repository = $this->createRepositoryAndIo($package);
-        $packages = $repository->getPackages();
-        $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
+
+        if (!$repository instanceof ComposerProxyRepository) {
+            $packages = $repository->getPackages();
+            $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
+        }
+
+        if ($package->getRepoType() === RepTypes::PROXY) {
+            return $this->composerProxyPackageManager->buildArchive($package, $repository, $reference);
+        }
 
         /** @var PackageInterface $pkg */
         if ($pkg = reset($found)) {
