@@ -536,7 +536,15 @@ class Package
 
     public function getVersionByReference(string $reference): ?Version
     {
-        return $this->versions->findFirst(fn($k, $v) => $v->getReference() === $reference);
+        $matchedVersions = $this->versions->filter(static fn(Version $v) => $v->getReference() === $reference);
+
+        foreach ($matchedVersions as $matchedVersion) {
+            if ($matchedVersion->isDevelopment() === false) {
+                return $matchedVersion;
+            }
+        }
+
+        return $matchedVersions->first() ?: null;
     }
 
     /**
