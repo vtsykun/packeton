@@ -6,13 +6,15 @@ namespace Packeton\Composer\Repository;
 
 use Composer\Config;
 use Composer\IO\IOInterface;
+use Composer\Repository\ArrayRepository;
 use Composer\Repository\ComposerRepository;
 use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 
-class ComposerProxyRepository extends ComposerRepository implements PacketonRepositoryInterface
+class ComposerProxyRepository extends ArrayRepository implements PacketonRepositoryInterface
 {
     private string $packageName;
+    private ComposerRepository $repository;
 
     public function __construct(
         protected array $repoConfig,
@@ -21,8 +23,9 @@ class ComposerProxyRepository extends ComposerRepository implements PacketonRepo
         protected HttpDownloader $httpDownloader,
         protected ?ProcessExecutor $process = null
     ) {
-        parent::__construct($repoConfig, $io, $config, $httpDownloader);
+        parent::__construct();
 
+        $this->repository = new ComposerRepository($repoConfig, $io, $config, $httpDownloader);
         $this->packageName = $this->repoConfig['packageName'];
         $this->process ??= new ProcessExecutor($this->io);
     }
@@ -34,7 +37,7 @@ class ComposerProxyRepository extends ComposerRepository implements PacketonRepo
 
     public function getPackages(): array
     {
-        return $this->findPackages($this->packageName);
+        return $this->repository->findPackages($this->packageName);
     }
 
     public function getProcessExecutor(): ProcessExecutor
@@ -50,5 +53,10 @@ class ComposerProxyRepository extends ComposerRepository implements PacketonRepo
     public function getIO(): IOInterface
     {
         return $this->io;
+    }
+
+    public function getRepoConfig()
+    {
+        return $this->repository->getRepoConfig();
     }
 }
