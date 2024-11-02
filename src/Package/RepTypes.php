@@ -51,7 +51,7 @@ class RepTypes
     public static function isBuildInDist(?string $type): bool
     {
         return match ($type) {
-            self::ARTIFACT, self::CUSTOM, self::VIRTUAL => true, self::PROXY => true,
+            self::ARTIFACT, self::CUSTOM, self::VIRTUAL => true,
             default => false,
         };
     }

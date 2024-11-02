@@ -33,7 +33,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Composer\PackagistFactory;
-use Packeton\Composer\Repository\ComposerProxyRepository;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Author;
 use Packeton\Entity\Package;
@@ -42,7 +41,6 @@ use Packeton\Entity\Version;
 use Packeton\Entity\SuggestLink;
 use Packeton\Event\SecurityAdvisoryEvent;
 use Packeton\Event\UpdaterEvent;
-use Packeton\Mirror\Service\ProxyHttpDownloader;
 use Packeton\Model\ProviderManager;
 use Packeton\Repository\VersionRepository;
 use Packeton\Service\DistConfig;
@@ -97,7 +95,6 @@ class Updater implements UpdaterInterface
         protected ProviderManager $providerManager,
         protected EventDispatcherInterface $dispatcher,
         protected DistManager $distManager,
-        protected ProxyHttpDownloader $downloader,
     ) {
         ErrorHandler::register();
     }
@@ -137,12 +134,7 @@ class Updater implements UpdaterInterface
             $flags |= $addFlags;
         }
 
-        if ($repository instanceof ComposerProxyRepository) {
-            $versions = PacketonUtils::sort($repository->findPackages($package->getName()));
-        } else {
-            $versions = PacketonUtils::sort($repository->getPackages());
-        }
-
+        $versions = PacketonUtils::sort($repository->getPackages());
         /** @var VersionRepository $versionRepository */
         $versionRepository = $this->doctrine->getRepository(Version::class);
         if (null === $rootIdentifier && ($probe = end($versions))) {
@@ -571,7 +563,7 @@ class Updater implements UpdaterInterface
         // Process local path repos
         if (is_string($distUrl = $data->getDistUrl())
             && (str_starts_with($distUrl, '/') || $distUrl === DistConfig::HOSTNAME_PLACEHOLDER)
-            && (empty($data->getSourceUrl()) || in_array($package->getRepoType(), [RepTypes::CUSTOM, RepTypes::VIRTUAL, RepTypes::PROXY], true))
+            && (empty($data->getSourceUrl()) || in_array($package->getRepoType(), [RepTypes::CUSTOM, RepTypes::VIRTUAL], true))
         ) {
             return [
                 'url' => $this->distConfig->generateRoute($data->getName(), $data->getDistReference(), $data->getDistType()),
@@ -602,36 +594,24 @@ class Updater implements UpdaterInterface
             ];
         }
 
+        $dist['type'] = $this->distConfig->getArchiveFormat();
+        $dist['url'] = $this->distConfig->generateRoute($data->getName(), $data->getSourceReference());
+        $dist['reference'] = $data->getSourceReference();
+        if ($package->getRepoType() === RepTypes::PROXY) {
+            $dist['reference'] = PacketonUtils::buildHashReference($data);
+        }
+
         if ($this->distConfig->isPreBuild()) {
             $path = null;
             try {
                 $path = $this->distManager->buildAndWriteArchive(
-                    $data->getSourceReference() ?: $data->getDistReference(),
+                    $dist['reference'] ?? $data->getDistReference(),
                     $package,
                     $data->getVersion()
                 );
             } catch (\Throwable $e) {
             }
-
             $dist['shasum'] = $this->distConfig->isIncludeArchiveChecksum() && is_string($path) && file_exists($path) ? \hash_file('sha1', $path) : null;
-        }
-
-        $dist['type'] = $this->distConfig->getArchiveFormat();
-
-        $url = $data->getSourceReference();
-        if (null === $url) {
-            $url = $data->getDistReference();
-        }
-
-        if (null === $url) {
-            $url = sha1($data->getVersion());
-        }
-
-        $dist['url'] = $this->distConfig->generateRoute($data->getName(), $url);
-        $dist['reference'] = $url;
-
-        if ($package->getRepoType() === RepTypes::PROXY) {
-            $dist['proxy_url'] = $data->getDistUrl();
         }
 
         return $dist;

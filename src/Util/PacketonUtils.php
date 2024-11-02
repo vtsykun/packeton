@@ -13,6 +13,23 @@ use Symfony\Component\Finder\Glob;
 
 class PacketonUtils
 {
+    public static function buildHashReference(PackageInterface $package): string
+    {
+        $reference = $package->getSourceReference();
+        if (preg_match('/^[a-f0-9]{40}$/', $reference)) {
+            return $reference;
+        }
+
+        $proxyDist = [
+            'type' => $package->getDistType(),
+            'reference' => $package->getDistReference() ?? $package->getSourceReference(),
+            'pretty_version' => $package->getPrettyVersion(),
+            'url' => $package->getDistUrl(),
+        ];
+
+        return sha1(json_encode($proxyDist));
+    }
+
 
     /**
      * @param array $packages
