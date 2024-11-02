@@ -47,7 +47,7 @@ class ProxyPackageType extends AbstractType
                 'label' => 'Packages.json',
                 'attr'  => [
                     'class' => 'package-repo-info',
-                    'placeholder' => 'e.g.: https://repo.magento.com/packages.json',
+                    'placeholder' => 'e.g.: https://repo.magento.com',
                 ],
             ]);
 

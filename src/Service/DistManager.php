@@ -10,19 +10,19 @@ use Composer\Package\CompletePackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\PackageInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
 use League\Flysystem\FilesystemOperator;
 use Packeton\Composer\PackagistFactory;
-use Packeton\Composer\Repository\ComposerProxyRepository;
 use Packeton\Composer\Repository\PacketonRepositoryInterface;
 use Packeton\Entity\Package;
 use Packeton\Entity\Version;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\ZipballInterface;
-use Packeton\Model\ComposerProxyPackageManager;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Model\VirtualPackageManager;
 use Packeton\Package\RepTypes;
+use Packeton\Util\PacketonUtils;
 use Symfony\Component\Filesystem\Filesystem;
 
 class DistManager
@@ -37,7 +37,6 @@ class DistManager
         private readonly IntegrationRegistry $integrations,
         private readonly FilesystemOperator $baseStorage,
         private readonly Filesystem $fs,
-        private readonly ComposerProxyPackageManager $composerProxyPackageManager,
         private readonly VirtualPackageManager $virtualPackageManager,
     ) {
     }
@@ -78,6 +77,7 @@ class DistManager
         return match (true) {
             $package->getRepoType() === RepTypes::INTEGRATION => $this->downloadUsingIntegration($reference, $package, $versionName),
             RepTypes::isBuildInDist($package->getRepoType()) => $this->downloadArtifact($reference, $package),
+            $package->getRepoType() === RepTypes::PROXY => $this->downloadProxy($reference, $package, $versionName),
             default => $this->downloadVCS($reference, $package, $versionName)
         };
     }
@@ -172,6 +172,27 @@ class DistManager
         return null;
     }
 
+    private function downloadProxy(string $reference, Package $package, ?string $versionName): ?string
+    {
+        $repository = $this->createRepositoryAndIo($package);
+        $packages = new ArrayCollection($repository->getPackages());
+
+        $repoPackage = $packages->findFirst(fn ($k, PackageInterface $data) => PacketonUtils::buildHashReference($data) === $reference)
+            ?? $packages->findFirst(fn ($k, PackageInterface $data) => $data->getSourceReference() === $reference);
+
+        if (null === $repoPackage) {
+            return null;
+        }
+
+        $archiveManager = $this->packagistFactory->createArchiveManager($repository->getIO(), $repository);
+        $archiveManager->setOverwriteFiles(false);
+
+        $targetDir = $this->config->generateTargetDir($package->getName());
+        $fileName = $this->config->getFileName($reference, $versionName ?: self::EMPTY_VERSION_NAME);
+
+        return $archiveManager->archive($repoPackage, $this->config->getArchiveFormat(), $targetDir, $fileName);
+    }
+
     private function downloadArtifact(string $reference, Package $package): ?string
     {
         if ($package->getRepoType() === RepTypes::VIRTUAL) {
@@ -183,15 +204,8 @@ class DistManager
         }
 
         $repository = $this->createRepositoryAndIo($package);
-
-        if (!$repository instanceof ComposerProxyRepository) {
-            $packages = $repository->getPackages();
-            $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
-        }
-
-        if ($package->getRepoType() === RepTypes::PROXY) {
-            return $this->composerProxyPackageManager->buildArchive($package, $repository, $reference);
-        }
+        $packages = $repository->getPackages();
+        $found = array_filter($packages, static fn($p) => $reference === $p->getDistReference());
 
         /** @var PackageInterface $pkg */
         if ($pkg = reset($found)) {

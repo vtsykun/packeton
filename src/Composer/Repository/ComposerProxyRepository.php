@@ -12,6 +12,8 @@ use Composer\Util\ProcessExecutor;
 
 class ComposerProxyRepository extends ComposerRepository implements PacketonRepositoryInterface
 {
+    private string $packageName;
+
     public function __construct(
         protected array $repoConfig,
         protected IOInterface $io,
@@ -21,12 +23,18 @@ class ComposerProxyRepository extends ComposerRepository implements PacketonRepo
     ) {
         parent::__construct($repoConfig, $io, $config, $httpDownloader);
 
+        $this->packageName = $this->repoConfig['packageName'];
         $this->process ??= new ProcessExecutor($this->io);
     }
 
     public function getHttpDownloader(): HttpDownloader
     {
         return $this->httpDownloader;
+    }
+
+    public function getPackages(): array
+    {
+        return $this->findPackages($this->packageName);
     }
 
     public function getProcessExecutor(): ProcessExecutor
