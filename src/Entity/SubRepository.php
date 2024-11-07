@@ -32,6 +32,9 @@ class SubRepository
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $packages = null;
 
+    #[ORM\Column(name: 'public_access', type: 'boolean', nullable: true)]
+    private ?bool $publicAccess = null;
+
     /** @internal  */
     private ?array $cachedIds = null;
 
@@ -127,6 +130,17 @@ class SubRepository
     public function setCachedIds(?array $cachedIds): static
     {
         $this->cachedIds = $cachedIds;
+        return $this;
+    }
+
+    public function isPublicAccess(): ?bool
+    {
+        return $this->publicAccess;
+    }
+
+    public function setPublicAccess(?bool $publicAccess): static
+    {
+        $this->publicAccess = $publicAccess;
         return $this;
     }
 }

@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\SubRepository;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -51,6 +52,10 @@ class SubRepositoryType extends AbstractType
                 'required' => false,
                 'label' => 'Subdomain or separate hostname',
                 'attr' => ['placeholder' => "e.g.: repo1.example.com\nrepo2.example.com", 'rows' => 4]
+            ])
+            ->add('publicAccess', CheckboxType::class, [
+                'required' => false,
+                'label' => 'Allow public access',
             ])
             ->add('packages', ChoiceType::class, [
                 'required' => false,

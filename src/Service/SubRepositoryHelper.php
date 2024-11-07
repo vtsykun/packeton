@@ -90,6 +90,12 @@ class SubRepositoryHelper
         return $req->attributes->get('_sub_repo_type') === SubRepository::AUTO_HOST;
     }
 
+    public function isPublicAccess(?int $subRepo = null): bool
+    {
+        $subRepo ??= $this->getSubrepositoryId();
+        return $this->getData()[$subRepo]['public'] ?? false;
+    }
+
     public static function applyCondition(QueryBuilder $qb, ?array $allowed): QueryBuilder
     {
         if ($allowed === null) {
@@ -161,8 +167,6 @@ class SubRepositoryHelper
 
     protected function getData(): array
     {
-        return $this->cache->get('sub_repos_list', function () {
-            return $this->registry->getRepository(SubRepository::class)->getSubRepositoryData();
-        });
+        return $this->cache->get('sub_repos_list', fn () => $this->registry->getRepository(SubRepository::class)->getSubRepositoryData());
     }
 }
