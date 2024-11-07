@@ -11,7 +11,7 @@ class SubEntityRepository extends EntityRepository
     {
         $data = $this->createQueryBuilder('s')
             ->resetDQLPart('select')
-            ->select(['s.id', 's.slug', 's.urls', 's.name'])
+            ->select(['s.id', 's.slug', 's.urls', 's.name', 's.publicAccess as public'])
             ->getQuery()
             ->getArrayResult();
 

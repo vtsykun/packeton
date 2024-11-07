@@ -85,6 +85,12 @@ class ZipballController extends AbstractController
         requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}(\.?[A-Za-z\.]+?)?'],
         methods: ['GET']
     )]
+    #[Route(
+        '/{slug}/zipball/{package}/{hash}',
+        name: 'download_dist_package_slug',
+        requirements: ['package' => '%package_name_regex%', 'hash' => '[a-f0-9]{40}(\.?[A-Za-z\.]+?)?'],
+        methods: ['GET']
+    )]
     public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
     {
         if ((false === $this->dm->isEnabled() && false === RepTypes::isBuildInDist($package->getRepoType()))
