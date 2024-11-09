@@ -53,6 +53,14 @@ class SubRepositoryHelper
         return $entity === null ? null : (empty($packages) ? [] : $packages);
     }
 
+    public function getRepoOption(?int $subRepo, ?string $name = null): mixed
+    {
+        $subRepo ??= $this->getSubrepositoryId();
+        $data = $this->getData()[$subRepo] ?? null;
+
+        return null === $name ? $data : ($data[$name] ?? null);
+    }
+
     public function allowedPackageIds(?array $moreAllowed = null): ?array
     {
         $entity = $this->getCurrentSubrepository();
@@ -90,6 +98,12 @@ class SubRepositoryHelper
         return $req->attributes->get('_sub_repo_type') === SubRepository::AUTO_HOST;
     }
 
+    public function isPublicAccess(?int $subRepo = null): bool
+    {
+        $subRepo ??= $this->getSubrepositoryId();
+        return $this->getData()[$subRepo]['public'] ?? false;
+    }
+
     public static function applyCondition(QueryBuilder $qb, ?array $allowed): QueryBuilder
     {
         if ($allowed === null) {
@@ -114,6 +128,14 @@ class SubRepositoryHelper
         return self::applyCondition($qb, $allowed);
     }
 
+    public function findSubRepo(null|int|string $subRepoOrSlug = null): ?SubRepository
+    {
+        $subRepoOrSlug ??= $this->getSubrepositoryId();
+        $subRepo = is_string($subRepoOrSlug) ? $this->getBySlug($subRepoOrSlug) : $subRepoOrSlug;
+
+        return null !== $subRepo ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
+    }
+
     public function getCurrentSubrepository(): ?SubRepository
     {
         if (!$req = $this->requestStack->getMainRequest()) {
@@ -124,7 +146,13 @@ class SubRepositoryHelper
             $subRepo = $req->attributes->get('_sub_repo');
             $entity = $subRepo > 0 ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
         }
+
         return $entity;
+    }
+
+    public function getCurrentSlug(): ?string
+    {
+        return ($subRepo = $this->getCurrentSubrepository()) && !$this->isAutoHost() ? $subRepo->getSlug() : null;
     }
 
     public function getSubrepositoryId(): ?int
@@ -161,8 +189,6 @@ class SubRepositoryHelper
 
     protected function getData(): array
     {
-        return $this->cache->get('sub_repos_list', function () {
-            return $this->registry->getRepository(SubRepository::class)->getSubRepositoryData();
-        });
+        return $this->cache->get('sub_repos_list', fn () => $this->registry->getRepository(SubRepository::class)->getSubRepositoryData());
     }
 }

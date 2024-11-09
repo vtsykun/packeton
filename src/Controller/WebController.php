@@ -16,6 +16,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Group;
 use Packeton\Entity\Package;
+use Packeton\Entity\SubRepository;
 use Packeton\Entity\Version;
 use Packeton\Form\Model\SearchQuery;
 use Packeton\Form\Type\SearchQueryType;
@@ -49,6 +50,22 @@ class WebController extends AbstractController
 
         return $this->render('web/index.html.twig', [
             'packages' => $paginator
+        ]);
+    }
+
+    #[Route('/{slug}', name: 'sub_repository_home', methods: ['GET'], priority: -50)]
+    public function subRepoAction(Request $request, string $slug): Response
+    {
+        $repo = $this->registry->getRepository(SubRepository::class)->findOneBy(['slug' => $slug]);
+        if (!$repo instanceof SubRepository) {
+            throw $this->createNotFoundException();
+        }
+
+        $isHost = $this->subRepositoryHelper->getByHost($request->getHost());
+        
+        return $this->render('subrepository/public.html.twig', [
+            'repo' => $repo,
+            'repoUrl' =>  $request->getSchemeAndHttpHost() . ($isHost ? '' : '/'.$slug),
         ]);
     }
 

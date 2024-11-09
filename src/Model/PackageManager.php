@@ -182,7 +182,7 @@ class PackageManager
      */
     public function getPackageJson(?UserInterface $user, string $package)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
+        if ($user && ($this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER') || $this->subRepositoryHelper->isPublicAccess())) {
             $user = null;
         }
 
@@ -223,7 +223,7 @@ class PackageManager
 
     private function dumpInMemory(?UserInterface $user = null, bool $ignoreLastModify = true, ?int $apiVersion = null, ?int $subRepo = null)
     {
-        if ($user && $this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER')) {
+        if ($user && ($this->authorizationChecker->isGranted('ROLE_FULL_CUSTOMER') || $this->subRepositoryHelper->isPublicAccess($subRepo))) {
             $user = null;
         }
 

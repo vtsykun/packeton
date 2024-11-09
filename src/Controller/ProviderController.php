@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class ProviderController extends AbstractController
 {
     use ControllerTrait;
+    use SubRepoControllerTrait;
 
     public function __construct(
         private readonly PackageManager $packageManager,
@@ -128,14 +129,15 @@ class ProviderController extends AbstractController
     {
         $isDev = str_ends_with($package, '~dev');
         $packageName = preg_replace('/~dev$/', '', $package);
-        if (!$this->checkSubrepositoryAccess($packageName)) {
-            return $this->createNotFound();
-        }
 
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getLastModify($package));
         if ($response->isNotModified($request)) {
             return $response;
+        }
+
+        if (!$this->checkSubrepositoryAccess($packageName)) {
+            return $this->createNotFound();
         }
 
         $package = $this->packageManager->getPackageV2Json($this->getUser(), $packageName, $isDev);
@@ -152,12 +154,6 @@ class ProviderController extends AbstractController
     protected function createNotFound(?string $msg = null): Response
     {
         return new JsonResponse(['status' => 'error', 'message' => $msg ?: 'Not Found'], 404);
-    }
-
-    protected function checkSubrepositoryAccess(string $name): bool
-    {
-        $packages = $this->subRepositoryHelper->allowedPackageNames();
-        return $packages === null || in_array($name, $packages, true);
     }
 
     protected function createJsonResponse(array $data): JsonResponse

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+        <title>{{ repo.name|capitalize }} - Repository</title>
+
+        <link rel="icon" href="data:,">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <style>
+            body { font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }
+            .title { text-align: center}
+
+            @media screen and (min-width: 768px) {
+                h1 { font-size: 500% }
+                h1 > img { width: 10%; }
+            }
+            @media screen and (max-width: 768px) {
+                h1 { font-size: 300% }
+                h1 > img { width: 61px; }
+            }
+            .bash {
+                overflow: auto;
+                border-radius: 0 .125rem .125rem 0;
+                background: #e6e6e6;
+                padding: .75rem;
+                margin: .5rem;
+                border-left: .25rem solid #1565c0;
+                font-family: monospace, monospace;
+            }
+            .bash > span { font-family: monospace, monospace; }
+            mark.default { background: rgba(220,220,220,0.75); color: #212121; }
+            .img-valign {
+              vertical-align: middle;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-md-12 col-lg-10 col-lg-offset-1">
+                    <div class="title">
+                        <h1>
+                            {{ repo.name|capitalize }}
+                        </h1>
+                    </div>
+                    {% if repoUrl is not defined %}
+                        {% set repoUrl = app.request.getSchemeAndHttpHost() %}
+                    {% endif %}
+
+                    {% if repo.htmlMarkup %}
+                        {{- repo.htmlMarkup|raw -}}
+                    {% else %}
+                        <p>
+                            This is PHP package repository {{ repo.name }} site.
+                        </p>
+                    <div class="bash">
+                        To enable this composer repository, please add these lines to your composer.json file:
+    <pre>{
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "{{ repoUrl }}"
+    }
+  ]
+}</pre>
+
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

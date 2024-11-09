@@ -100,14 +100,14 @@ class InMemoryDumper
         $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
         $slug = $subRepo && !$this->subRepositoryHelper->isAutoHost() ? '/'. $subRepo->getSlug() : '';
 
-        $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
-        $rootFile['notify-batch'] = $this->router->generate('track_download_batch');
+        $rootFile['notify'] = $slug . str_replace('VND/PKG', '%package%', $url);
+        $rootFile['notify-batch'] = $slug . $this->router->generate('track_download_batch');
         $rootFile['metadata-changes-url'] = $this->router->generate('metadata_changes');
         $rootFile['providers-url'] = $slug . '/p/%package%$%hash%.json';
 
         if ($this->distConfig->mirrorEnabled()) {
             $ref = '0000000000000000000000000000000000000000.zip';
-            $zipball = $this->router->generate('download_dist_package', ['package' => 'VND/PKG', 'hash' => $ref]);
+            $zipball = $slug . $this->router->generate('download_dist_package', ['package' => 'VND/PKG', 'hash' => $ref]);
             $rootFile['mirrors'][] = ['dist-url' => \str_replace(['VND/PKG', $ref], ['%package%', '%reference%.%type%'], $zipball), 'preferred' => true];
         }
 
