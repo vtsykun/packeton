@@ -22,15 +22,7 @@
             <b>Notice. Only owner can edit the ssh keys</b>
             <h4>Git SSH Key</h4>
             <p>
-                Application requires the keys to be in PEM format. You receive the following error
-                <code>"This private key is not valid"</code> because the ssh key was generated with newer OpenSSH.
-                New keys with OpenSSH private key format can be converted using ssh-keygen utility to the old PEM format.
-            </p>
-            <pre>
-cp ~/.ssh/id_rsa id_rsa.pem
-ssh-keygen -p -m PEM -f id_rsa.pem
-cat id_rsa.pem
-</pre>
+                Application requires the keys to be in PEM format. Supported ED25519 ssh and RSA keys
             <br>
 
             <h4>Composer auth config</h4>
