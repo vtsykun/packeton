@@ -17,6 +17,8 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 
 class PackageType extends AbstractType
 {
+    use VcsPackageTypeTrait;
+
     /**
      * @var PackageManager
      */
@@ -55,17 +57,6 @@ class PackageType extends AbstractType
     public function getParent(): string
     {
         return BasePackageType::class;
-    }
-
-    /**
-     * @param FormEvent $event
-     */
-    public function updateRepository(FormEvent $event): void
-    {
-        $package = $event->getData();
-        if ($package instanceof Package) {
-            $this->packageManager->updatePackageUrl($package);
-        }
     }
 
     /**

@@ -159,8 +159,12 @@ class PackagistFactory
         }
 
         $repoConfig['url'] = $url;
-        if (isset($repoConfig['subDirectory']) || ($repoConfig['repoType'] ?? null) === RepTypes::MONO_REPO) {
+        $repoType = $repoConfig['repoType'] ?? null;
+        if (isset($repoConfig['subDirectory']) || $repoType === RepTypes::MONO_REPO) {
             $repoConfig['driver'] = 'git-tree';
+        }
+        if ($repoType === RepTypes::ASSET) {
+            $repoConfig['driver'] = 'asset';
         }
 
         if (null !== $credentials || true === $this->githubNoApi) {
@@ -177,6 +181,6 @@ class PackagistFactory
             $repoConfig['driver'] = $config->get('_driver');
         }
 
-        return $this->repositoryFactory->create($repoConfig, $io, $config, $repoConfig['repoType'] ?? null);
+        return $this->repositoryFactory->create($repoConfig, $io, $config, $repoType);
     }
 }

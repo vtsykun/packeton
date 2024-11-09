@@ -29,6 +29,7 @@ class BasePackageType extends AbstractType
                 'Custom (JSON)' => RepTypes::CUSTOM,
                 'Proxy Repo' => RepTypes::PROXY,
                 'Virtual (only JSON metadata)' => RepTypes::VIRTUAL,
+                'VCS (Asset + Custom JSON)' => RepTypes::ASSET,
                 'Satis / Packagist.com / VCS Import' => 'import', // only redirect
             ];
 

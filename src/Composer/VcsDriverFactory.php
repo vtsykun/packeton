@@ -6,6 +6,7 @@ namespace Packeton\Composer;
 
 use Composer\Config;
 use Composer\IO\IOInterface;
+use Composer\Repository\Vcs\VcsDriver;
 use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 
@@ -32,6 +33,7 @@ class VcsDriverFactory
             'fossil' => 'Composer\Repository\Vcs\FossilDriver',
             // svn must be last because identifying a subversion server for sure is practically impossible
             'svn' => 'Composer\Repository\Vcs\SvnDriver',
+            'asset' => 'Packeton\Composer\Repository\Vcs\AssetVcsDriver',
         ];
     }
 
@@ -54,10 +56,11 @@ class VcsDriverFactory
      * @param string|null $classOrType
      * @param array $options
      *
-     * @return \Composer\Repository\Vcs\VcsDriver
+     * @return VcsDriver
      */
-    public function createDriver(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, ProcessExecutor $process, ?string $classOrType = null, array $options = [])
+    public function createDriver(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, ProcessExecutor $process, ?string $classOrType = null, array $options = []): VcsDriver
     {
+        /** @var VcsDriver|null $driver */
         $driver = null;
         if ($classOrType && class_exists($classOrType)) {
             $driver = new $classOrType($repoConfig, $io, $config, $process);
@@ -89,6 +92,10 @@ class VcsDriverFactory
         if (null === $driver) {
             $repoUrl = $options['url'] ?? null;
             throw new \UnexpectedValueException("VCS Driver not found for repository $repoUrl");
+        }
+
+        if ($driver instanceof DriverFactoryAwareInterface) {
+            $driver->setDriverFactory($this);
         }
 
         if (!($options['lazy'] ?? false)) {

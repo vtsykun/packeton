@@ -109,7 +109,7 @@ class Updater implements UpdaterInterface
      */
     public static function supportRepoTypes(): iterable
     {
-        return [RepTypes::VCS, RepTypes::ARTIFACT, RepTypes::INTEGRATION, RepTypes::CUSTOM, RepTypes::VIRTUAL, RepTypes::PROXY];
+        return [RepTypes::VCS, RepTypes::ARTIFACT, RepTypes::INTEGRATION, RepTypes::CUSTOM, RepTypes::VIRTUAL, RepTypes::PROXY, RepTypes::ASSET];
     }
 
     /**

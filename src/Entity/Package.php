@@ -458,6 +458,7 @@ class Package
             'oauth2' => $this->integration,
             'externalRef' => $this->externalRef,
             'customVersions' => $this->getCustomVersions(),
+            'customComposerJson' => $this->getCustomComposerJson(),
             'packageName' => $this->name,
         ];
 
