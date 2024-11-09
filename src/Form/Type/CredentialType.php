@@ -20,9 +20,9 @@ class CredentialType extends AbstractType
                 'choice_label' => function (SshCredentials $credentials) {
                     $label = $credentials->getName();
                     if ($credentials->getFingerprint()) {
-                        $label = $label . "(SSH_KEY {$credentials->getFingerprint()})";
+                        $label = $label . " ({$credentials->getFingerprint()})";
                     } elseif ($credentials->getComposerConfig()) {
-                        $label = $label . "(Composer Auth)";
+                        $label = $label . " (Composer Auth)";
                     }
 
                     return $label;

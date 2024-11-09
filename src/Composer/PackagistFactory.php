@@ -19,6 +19,7 @@ use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\Model\AppUtils;
 use Packeton\Model\CredentialsInterface;
 use Packeton\Package\RepTypes;
+use Packeton\Util\SshKeyHelper;
 
 class PackagistFactory
 {
@@ -107,12 +108,13 @@ class PackagistFactory
                 $config->merge(['config' => $credentials->getComposerConfig()]);
             }
 
-            if ($credentials->getKey()) {
+            if ($key = $credentials->getKey()) {
                 $uid = @getmyuid();
-                $keyId = method_exists($credentials, 'getId') ? $credentials->getId() : sha1((string)$credentials->getKey());
+                $key = SshKeyHelper::trimKey($key);
+                $keyId = (method_exists($credentials, 'getId') ? $credentials->getId() : '') . '_'. substr(sha1($key), 0, 6);
                 $credentialsFile = rtrim($this->tmpDir, '/') . '/packeton_priv_key_' . $keyId . '_' . $uid;
                 if (!file_exists($credentialsFile)) {
-                    file_put_contents($credentialsFile, $credentials->getKey());
+                    file_put_contents($credentialsFile, $key);
                     chmod($credentialsFile, 0600);
                 }
                 putenv("GIT_SSH_COMMAND=ssh -o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $credentialsFile");
