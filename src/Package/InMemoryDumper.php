@@ -100,8 +100,8 @@ class InMemoryDumper
         $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
         $slug = $subRepo && !$this->subRepositoryHelper->isAutoHost() ? '/'. $subRepo->getSlug() : '';
 
-        $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
-        $rootFile['notify-batch'] = $this->router->generate('track_download_batch');
+        $rootFile['notify'] = $slug . str_replace('VND/PKG', '%package%', $url);
+        $rootFile['notify-batch'] = $slug . $this->router->generate('track_download_batch');
         $rootFile['metadata-changes-url'] = $this->router->generate('metadata_changes');
         $rootFile['providers-url'] = $slug . '/p/%package%$%hash%.json';
 

@@ -129,14 +129,15 @@ class ProviderController extends AbstractController
     {
         $isDev = str_ends_with($package, '~dev');
         $packageName = preg_replace('/~dev$/', '', $package);
-        if (!$this->checkSubrepositoryAccess($packageName)) {
-            return $this->createNotFound();
-        }
 
         $response = new JsonResponse([]);
         $response->setLastModified($this->providerManager->getLastModify($package));
         if ($response->isNotModified($request)) {
             return $response;
+        }
+
+        if (!$this->checkSubrepositoryAccess($packageName)) {
+            return $this->createNotFound();
         }
 
         $package = $this->packageManager->getPackageV2Json($this->getUser(), $packageName, $isDev);
