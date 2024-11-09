@@ -199,6 +199,16 @@ trait PackageSerializedTrait
         $this->setSerialized('custom_versions', $versions);
     }
 
+    public function getCustomComposerJson(): array
+    {
+        return $this->getSerialized('custom_composer_json', 'array', []);
+    }
+
+    public function setCustomComposerJson(?array $composer): void
+    {
+        $this->setSerialized('custom_composer_json', $composer);
+    }
+
     public function isDisabledUpdate(): bool
     {
         return (bool) ($this->serializedFields['disabled_update'] ?? false);

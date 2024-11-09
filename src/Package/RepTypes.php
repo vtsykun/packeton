@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Package;
 
 use Packeton\Form\Type\Package\ArtifactPackageType;
+use Packeton\Form\Type\Package\AssetPackageType;
 use Packeton\Form\Type\Package\CustomPackageType;
 use Packeton\Form\Type\Package\IntegrationPackageType;
 use Packeton\Form\Type\Package\MonoRepoPackageType;
@@ -20,8 +21,9 @@ class RepTypes
     public const CUSTOM = 'custom';
     public const VIRTUAL = 'virtual';
     public const PROXY = 'proxy';
+    public const ASSET = 'asset';
 
-    private static $types = [
+    private static array $types = [
         self::ARTIFACT,
         self::MONO_REPO,
         self::INTEGRATION,
@@ -29,6 +31,7 @@ class RepTypes
         self::CUSTOM,
         self::VIRTUAL,
         self::PROXY,
+        self::ASSET
     ];
 
     public static function getFormType(?string $type): string
@@ -39,6 +42,7 @@ class RepTypes
             self::INTEGRATION => IntegrationPackageType::class,
             self::CUSTOM, self::VIRTUAL => CustomPackageType::class,
             self::PROXY => ProxyPackageType::class,
+            self::ASSET => AssetPackageType::class,
             default => PackageType::class,
         };
     }
@@ -74,7 +78,16 @@ class RepTypes
             self::CUSTOM => self::CUSTOM,
             self::VIRTUAL => self::VIRTUAL,
             self::PROXY => self::PROXY,
+            self::ASSET => self::ASSET,
             default => self::VCS,
         };
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getAllTypes(): array
+    {
+        return self::$types;
     }
 }
