@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Form\Type;
 
+use Packeton\Util\SshKeyHelper;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -38,10 +39,12 @@ class PrivateKeyType extends AbstractType
             return;
         }
 
-        if ($key = openssl_pkey_get_private($value)) {
-            if ($pubInfo = openssl_pkey_get_details($key)) {
-                return;
-            }
+        $value = SshKeyHelper::trimKey($value);
+        if (SshKeyHelper::isSshEd25519Key($value)) {
+            return;
+        }
+        if (($key = openssl_pkey_get_private($value)) && false !== openssl_pkey_get_details($key)) {
+            return;
         }
 
         $context->addViolation('This private key is not valid');
