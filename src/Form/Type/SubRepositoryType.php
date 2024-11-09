@@ -51,11 +51,15 @@ class SubRepositoryType extends AbstractType
             ->add('urls', TextareaType::class, [
                 'required' => false,
                 'label' => 'Subdomain or separate hostname',
-                'attr' => ['placeholder' => "e.g.: repo1.example.com\nrepo2.example.com", 'rows' => 4]
+                'attr' => ['placeholder' => "e.g.: repo1.example.com\nrepo2.example.com", 'rows' => 4],
             ])
             ->add('publicAccess', CheckboxType::class, [
                 'required' => false,
                 'label' => 'Allow public access',
+            ])
+            ->add('htmlMarkup', TextareaType::class, [
+                'required' => false,
+                'label' => 'HTML public page markup',
             ])
             ->add('packages', ChoiceType::class, [
                 'required' => false,

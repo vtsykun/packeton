@@ -53,6 +53,14 @@ class SubRepositoryHelper
         return $entity === null ? null : (empty($packages) ? [] : $packages);
     }
 
+    public function getRepoOption(?int $subRepo, ?string $name = null): mixed
+    {
+        $subRepo ??= $this->getSubrepositoryId();
+        $data = $this->getData()[$subRepo] ?? null;
+
+        return null === $name ? $data : ($data[$name] ?? null);
+    }
+
     public function allowedPackageIds(?array $moreAllowed = null): ?array
     {
         $entity = $this->getCurrentSubrepository();
@@ -120,6 +128,14 @@ class SubRepositoryHelper
         return self::applyCondition($qb, $allowed);
     }
 
+    public function findSubRepo(null|int|string $subRepoOrSlug = null): ?SubRepository
+    {
+        $subRepoOrSlug ??= $this->getSubrepositoryId();
+        $subRepo = is_string($subRepoOrSlug) ? $this->getBySlug($subRepoOrSlug) : $subRepoOrSlug;
+
+        return null !== $subRepo ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
+    }
+
     public function getCurrentSubrepository(): ?SubRepository
     {
         if (!$req = $this->requestStack->getMainRequest()) {
@@ -130,7 +146,13 @@ class SubRepositoryHelper
             $subRepo = $req->attributes->get('_sub_repo');
             $entity = $subRepo > 0 ? $this->registry->getRepository(SubRepository::class)->find($subRepo) : null;
         }
+
         return $entity;
+    }
+
+    public function getCurrentSlug(): ?string
+    {
+        return ($subRepo = $this->getCurrentSubrepository()) && !$this->isAutoHost() ? $subRepo->getSlug() : null;
     }
 
     public function getSubrepositoryId(): ?int

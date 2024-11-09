@@ -20,6 +20,7 @@ use Packeton\Package\RepTypes;
 use Packeton\Security\Provider\AuditSessionProvider;
 use Packeton\Service\JobPersister;
 use Packeton\Service\Scheduler;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\PacketonUtils;
 use Packeton\Webhook\HookBus;
 use Psr\Log\LoggerInterface;
@@ -43,6 +44,7 @@ class ApiController extends AbstractController
         protected ValidatorInterface $validator,
         protected IntegrationRegistry $integrations,
         protected AuditSessionProvider $auditSessionProvider,
+        protected SubRepositoryHelper $subRepositoryHelper,
     ) {
     }
 
@@ -189,12 +191,14 @@ class ApiController extends AbstractController
 
 
     #[Route('/downloads/{name}', name: 'track_download', requirements: ['name' => '%package_name_regex%'], methods: ['POST'])]
+    #[Route('/{slug}/downloads/{name}', name: 'track_download_slug', requirements: ['name' => '%package_name_regex%'], methods: ['POST'])]
     public function trackDownloadAction(Request $request, $name): Response
     {
+        $allowed = $this->subRepositoryHelper->allowedPackageIds();
         $result = $this->getPackageAndVersionId($name, $request->request->get('version_normalized'));
 
-        if (!$result) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Package not found'], 200);
+        if (!$result || (null !== $allowed && !in_array($result['id'], $allowed, true))) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Package not found'], 404);
         }
 
         $this->downloadManager->addDownloads(['id' => $result['id'], 'vid' => $result['vid'], 'ip' => $request->getClientIp()]);
@@ -223,6 +227,7 @@ class ApiController extends AbstractController
      * @inheritDoc
      */
     #[Route('/downloads/', name: 'track_download_batch', methods: ['POST'])]
+    #[Route('/{slug}/downloads/', name: 'track_download_batch_slug', methods: ['POST'])]
     public function trackDownloadsAction(Request $request): Response
     {
         $contents = \json_decode($request->getContent(), true);
@@ -234,11 +239,16 @@ class ApiController extends AbstractController
         $ip = $request->getClientIp();
 
         $jobs = [];
+        $allowed = $this->subRepositoryHelper->allowedPackageIds();
         foreach ($contents['downloads'] as $package) {
             $result = $this->getPackageAndVersionId($package['name'], $package['version']);
 
             if (!$result) {
                 $failed[] = $package;
+                continue;
+            }
+
+            if (null !== $allowed && !in_array($result['id'], $allowed, true)) {
                 continue;
             }
 

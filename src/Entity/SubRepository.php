@@ -35,6 +35,9 @@ class SubRepository
     #[ORM\Column(name: 'public_access', type: 'boolean', nullable: true)]
     private ?bool $publicAccess = null;
 
+    #[ORM\Column(name: 'html_markup', type: 'text', nullable: true)]
+    private ?string $htmlMarkup = null;
+
     /** @internal  */
     private ?array $cachedIds = null;
 
@@ -141,6 +144,17 @@ class SubRepository
     public function setPublicAccess(?bool $publicAccess): static
     {
         $this->publicAccess = $publicAccess;
+        return $this;
+    }
+
+    public function getHtmlMarkup(): ?string
+    {
+        return $this->htmlMarkup;
+    }
+
+    public function setHtmlMarkup(?string $htmlMarkup): static
+    {
+        $this->htmlMarkup = $htmlMarkup;
         return $this;
     }
 }

@@ -18,6 +18,7 @@ use Packeton\Entity\Version;
 use Packeton\Event\FormHandlerEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
+use Packeton\Service\SubRepositoryHelper;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
@@ -38,7 +39,8 @@ class PackagistListener
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ProviderManager $providerManager,
-    ){
+        private readonly SubRepositoryHelper $subRepositoryHelper,
+    ) {
     }
 
     /**
@@ -56,8 +58,10 @@ class PackagistListener
         $dist = $version->getDist();
         if (isset($dist['url']) && \str_starts_with($dist['url'], DistConfig::HOSTNAME_PLACEHOLDER)) {
             $currentHost = $request->getSchemeAndHttpHost();
+            $slug = $this->subRepositoryHelper->getCurrentSlug();
+            $replacement = null !== $slug ? $currentHost . '/' . $slug : $currentHost;
 
-            $dist['url'] = \str_replace(DistConfig::HOSTNAME_PLACEHOLDER, $currentHost, $dist['url']);
+            $dist['url'] = \str_replace(DistConfig::HOSTNAME_PLACEHOLDER, $replacement, $dist['url']);
             $version->distNormalized = $dist;
         }
     }

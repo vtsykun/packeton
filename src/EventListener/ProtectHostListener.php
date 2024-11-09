@@ -27,6 +27,8 @@ class ProtectHostListener
         'root_package_slug' => 1,
         'root_package_v2_slug' => 1,
         'download_dist_package_slug' => 1,
+        'track_download_batch_slug' => 1,
+        'track_download_slug' => 1,
         'mirror_root' => 1,
         'mirror_metadata_v2' => 1,
         'mirror_metadata_v1' => 1,

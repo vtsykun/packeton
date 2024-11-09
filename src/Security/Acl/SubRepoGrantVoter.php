@@ -11,12 +11,25 @@ use Symfony\Component\Security\Core\Authorization\Voter\CacheableVoterInterface;
 
 class SubRepoGrantVoter implements CacheableVoterInterface
 {
-    public static $subRoutes = [
+    public static array $subRoutes = [
         'root_packages_slug' => 1,
         'root_providers_slug' => 1,
         'root_package_slug' => 1,
         'root_package_v2_slug' => 1,
         'download_dist_package_slug' => 1,
+        'track_download_batch_slug' => 1,
+        'track_download_slug' => 1,
+        'sub_repository_home' => 1,
+    ];
+
+    public static array $rootRoutes = [
+        'root_packages' => 1,
+        'root_providers' => 1,
+        'root_package' => 1,
+        'root_package_v2' => 1,
+        'download_dist_package' => 1,
+        'track_download_batch' => 1,
+        'track_download' => 1,
     ];
 
     public function __construct(
@@ -29,7 +42,14 @@ class SubRepoGrantVoter implements CacheableVoterInterface
      */
     public function vote(TokenInterface $token, mixed $request, array $attributes): int
     {
-        if ($request instanceof Request && isset(self::$subRoutes[$request->attributes->get('_route')])) {
+        if (!$request instanceof Request) {
+            return self::ACCESS_ABSTAIN;
+        }
+
+        $route = $request->attributes->get('_route');
+        if (isset(self::$subRoutes[$route])
+            || (isset(self::$rootRoutes[$route]) && null !== $this->helper->getByHost($request->getHost()))
+        ) {
             return $token->getUser() || $this->isPublicSubRepo($request) ? self::ACCESS_GRANTED : self::ACCESS_ABSTAIN;
         }
 

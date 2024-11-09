@@ -12,6 +12,7 @@ use Packeton\Event\ZipballEvent;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
 use Packeton\Service\DistManager;
+use Packeton\Service\SubRepositoryHelper;
 use Packeton\Util\PacketonUtils;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,11 +28,14 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 #[Route(defaults: ['_format' => 'json'])]
 class ZipballController extends AbstractController
 {
+    use SubRepoControllerTrait;
+
     public function __construct(
         protected DistManager $dm,
         protected UploadZipballStorage $storage,
         protected ManagerRegistry $registry,
         protected EventDispatcherInterface $dispatcher,
+        protected SubRepositoryHelper $subRepositoryHelper,
         protected LoggerInterface $logger,
     ) {
     }
@@ -94,16 +98,24 @@ class ZipballController extends AbstractController
     public function zipballAction(#[Vars('name')] Package $package, string $hash): Response
     {
         if ((false === $this->dm->isEnabled() && false === RepTypes::isBuildInDist($package->getRepoType()))
-            || !\preg_match('{[a-f0-9]{40}}i', $hash, $match) || !($reference = $match[0])
+            || !\preg_match('{[a-f0-9]{40}}i', $hash, $match)
+            || !($reference = $match[0])
+            || !$this->checkSubrepositoryAccess($package->getName())
         ) {
             return $this->createNotFound();
         }
 
-        $isGranted = $this->isGranted('VIEW_ALL_VERSION', $package) || $this->isGranted('ROLE_FULL_CUSTOMER', $package);
-        foreach ($package->getAllVersionsByReference($reference) as $version) {
-            $isGranted |= $this->isGranted('ROLE_FULL_CUSTOMER', $version);
+        $isGranted = $this->subRepositoryHelper->isPublicAccess()
+            || $this->isGranted('VIEW_ALL_VERSION', $package)
+            || $this->isGranted('ROLE_FULL_CUSTOMER', $package);
+
+        if (false === $isGranted) {
+            foreach ($package->getAllVersionsByReference($reference) as $version) {
+                $isGranted = $isGranted || $this->isGranted('ROLE_FULL_CUSTOMER', $version);
+            }
         }
-        if (!$isGranted) {
+
+        if (true !== $isGranted) {
             return $this->createNotFound();
         }
 
