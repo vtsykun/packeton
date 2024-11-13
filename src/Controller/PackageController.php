@@ -281,7 +281,6 @@ class PackageController extends AbstractController
         ]);
     }
 
-
     #[Route('/providers/{name}/', name: 'view_providers', requirements: ['name' => '[A-Za-z0-9/_.-]+?'], defaults: ['_format' => 'html'], methods: ['GET'])]
     #[IsGranted('ROLE_MAINTAINER')]
     public function viewProvidersAction($name, \Redis $redis): Response
