@@ -18,7 +18,7 @@ class PatUserScores
         'webhooks' => ['generic_webhook_invoke', 'github_postreceive', 'bitbucket_postreceive', 'generic_postreceive', 'generic_named_postreceive'],
         'feeds' => ['feeds', 'feed_packages', 'feed_releases', 'feed_vendor', 'feed_package'],
         'packages:read' => ['api_packages_lists', 'api_packages_item', 'api_packages_changelog', 'api_packages_dependents', 'list', 'package_changelog'],
-        'packages:all' => ['@packages:read', 'api_edit_package', 'generic_create'],
+        'packages:all' => ['@packages:read', 'api_edit_package', 'generic_create', 'package_push_nexus'],
         'users' => ['api_users_lists', 'api_users_get', 'api_users_create', 'api_users_update', 'api_users_delete'],
         'groups' => ['api_groups_lists', 'api_groups_create', 'api_groups_item', 'api_groups_update', 'api_groups_delete'],
     ];
