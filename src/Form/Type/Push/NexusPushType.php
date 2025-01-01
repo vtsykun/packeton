@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Form\Type\Push;
 
 use Packeton\Form\Model\NexusPushRequestDto;
+use Packeton\Form\RequestHandler\PutRequestHandler;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -20,6 +21,9 @@ class NexusPushType extends AbstractType
             ->add('src-url', TextType::class, ['property_path' => 'srcUrl'])
             ->add('src-ref', TextType::class, ['property_path' => 'srcRef'])
             ->add('package', FileType::class);
+
+        $requestHandler = $builder->getRequestHandler();
+        $builder->setRequestHandler(new PutRequestHandler($requestHandler));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

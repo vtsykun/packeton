@@ -9,6 +9,7 @@ use League\Flysystem\FilesystemOperator;
 use Packeton\Entity\Zipball;
 use Packeton\Util\PacketonUtils;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -66,7 +67,7 @@ class UploadZipballStorage
         return $localName;
     }
 
-    public function save(UploadedFile $file): array
+    public function save(File $file): array
     {
         $mime = $file->getMimeType();
         $extension = $this->guessExtension($file, $mime);
@@ -94,7 +95,7 @@ class UploadZipballStorage
         }
 
         $zipball = new Zipball();
-        $zipball->setOriginalFilename($file->getClientOriginalName())
+        $zipball->setOriginalFilename($file instanceof UploadedFile ? $file->getClientOriginalName() : time() . '.zip')
             ->setExtension($extension)
             ->setFileSize($size)
             ->setMimeType($mime)
@@ -112,13 +113,15 @@ class UploadZipballStorage
         ];
     }
 
-    protected function guessExtension(UploadedFile $file, ?string $mimeType): ?string
+    protected function guessExtension(File $file, ?string $mimeType): ?string
     {
-        if (str_ends_with($file->getClientOriginalName(), 'tar.gz')) {
-            return 'tgz';
-        }
-        if ($extension = $file->getClientOriginalExtension()) {
-            return $extension;
+        if ($file instanceof UploadedFile) {
+            if (str_ends_with($file->getClientOriginalName(), 'tar.gz')) {
+                return 'tgz';
+            }
+            if ($extension = $file->getClientOriginalExtension()) {
+                return $extension;
+            }
         }
 
         return $mimeType ? (MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? null) : null;
