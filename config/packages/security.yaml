@@ -23,7 +23,7 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         packages:
-            pattern: (^(.+\.json$|/p/|/mirror/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/downloads/|/api/))+
+            pattern: (^(.+\.json$|/p/|/mirror/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/packages/upload/|/downloads/|/api/))+
             api_basic:
                 provider: all_users
             stateless: true
