@@ -13,7 +13,7 @@ https://example.com/oauth2/{alias}/check
 
 Select the `api`, `read_user`, `read_repository` scopes and save the new application. The redirect urls you may change later.
 
-Use obtained `clinent_id`, `client_secret` to create configuration in yaml. For docker installation you may use `config.yaml` file in docker volume.
+Use obtained `client_id`, `client_secret` to create configuration in yaml. For docker installation you may use `config.yaml` file in docker volume.
 
 ```yaml
 packeton:
