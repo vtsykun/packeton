@@ -400,7 +400,7 @@ from a git post-receive hook or similar. You have to do a POST request to
 
 It will be works with Gitea by default.
 
-Also, you can use package name in path parameter, see [ApiController](src/Controller/ApiController.php#L78)
+Also, you can use package name in path parameter, see [ApiController](src/Controller/Api/ApiController.php#L116)
 
 ```
 https://example.org/api/update-package/acme/packet1?token=<token>
