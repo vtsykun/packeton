@@ -35,4 +35,17 @@ class NexusPushRequestDto implements PushRequestDtoInterface
     {
         return $this->version;
     }
+
+    public function getSource(): ?array
+    {
+        if ($this->srcRef !== null && $this->srcUrl !== null) {
+            return [
+                'type' => $this->srcType ?? 'git',
+                'url' => $this->srcUrl,
+                'reference' => $this->srcRef,
+            ];
+        }
+
+        return null;
+    }
 }

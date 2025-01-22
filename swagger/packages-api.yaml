@@ -51,7 +51,7 @@ paths:
             tags: [ Packages ]
             summary: 'Create a package'
             example: $PackageCreate
-    
+
     '/api/packages':
         get:
             tags: [ Packages ]
@@ -84,12 +84,26 @@ paths:
             example: $PackageUpdate
             <<: *pkg-param
 
+    '/api/packages/upload/{name}/{version}':
+        put:
+            tags: [ Packages ]
+            summary: 'Put a new version to package and upload zip artifact. Support custom JSON and artifact package type. Request body is <raw blob file>'
+            parameters:
+                -   name: name
+                    in: path
+                    required: true
+                    type: string
+                -   name: version
+                    description: version, example v2.8.0
+                    in: query
+            example: "<raw blob file>"
+
     '/api/packages/{name}/dependents':
         get:
             tags: [ Packages ]
             summary: 'View the dependents of a package'
             <<: *pkg-param
-    
+
     '/api/packages/{name}/changelog':
         get:
             tags: [ Packages ]

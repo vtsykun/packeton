@@ -598,12 +598,8 @@ class PackageController extends AbstractController
         $doctrine = $this->registry;
         $this->checkSubrepositoryAccess($name);
 
-        try {
-            /** @var Package $package */
-            $package = $doctrine
-                ->getRepository(Package::class)
-                ->getPackageByName($name);
-        } catch (NoResultException) {
+        $package = $doctrine->getRepository(Package::class)->getPackageByName($name);
+        if (null === $package) {
             return new JsonResponse(['status' => 'error', 'message' => 'Package not found'], 404);
         }
 

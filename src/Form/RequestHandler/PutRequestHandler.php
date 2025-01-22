@@ -8,13 +8,15 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 
 #[Exclude]
 class PutRequestHandler implements RequestHandlerInterface
 {
     public function __construct(
-        private readonly RequestHandlerInterface $requestHandle
+        private readonly RequestHandlerInterface $requestHandle,
+        private readonly string $singleFieldName = 'file',
     ) {
     }
 
@@ -31,10 +33,22 @@ class PutRequestHandler implements RequestHandlerInterface
         return $data instanceof File;
     }
 
-    protected function decodeMultiPartFormData(Request $request): void
+    private function decodeMultiPartFormData(Request $request): void
     {
         $rawData = $request->getContent();
         if (!$rawData) {
+            return;
+        }
+
+        $contentType = $request->headers->get('Content-Type');
+        if (null === $contentType || !str_contains($contentType, 'multipart/form-data')) {
+            $this->createUploadedFile(
+                request: $request,
+                content: $rawData,
+                fileName: (string)time(),
+                fieldName: $this->singleFieldName,
+                contentType: $contentType
+            );
             return;
         }
 
@@ -66,23 +80,35 @@ class PutRequestHandler implements RequestHandlerInterface
             if ($fileName === null) {
                 $request->request->set($fieldName, $content);
             } else {
-                $localFileName = tempnam(sys_get_temp_dir(), 'sfy');
-                file_put_contents($localFileName, $content);
-
-                $file = [
-                    'name' => $fileName,
-                    'type' => $headers['content-type'],
-                    'tmp_name' => $localFileName,
-                    'error' => 0,
-                    'size' => filesize($localFileName)
-                ];
-
-                register_shutdown_function(static function () use ($localFileName) {
-                    @unlink($localFileName);
-                });
-
-                $request->files->set($fieldName, $file);
+                $this->createUploadedFile(
+                    request: $request,
+                    content: $content,
+                    fileName: $fileName,
+                    fieldName: $fieldName,
+                    contentType: $headers['content-type'] ?? null,
+                );
             }
         }
+    }
+
+    private function createUploadedFile(Request $request, string $content, string $fileName, string $fieldName, ?string $contentType): void
+    {
+        $localFileName = tempnam(sys_get_temp_dir(), 'sfy');
+        file_put_contents($localFileName, $content);
+        $contentType ??= 'binary/octet-stream';
+
+        register_shutdown_function(static function () use ($localFileName) {
+            @unlink($localFileName);
+        });
+
+        $file = new UploadedFile(
+            path: $localFileName,
+            originalName: $fileName,
+            mimeType: $contentType,
+            error: 0,
+            test: true
+        );
+
+        $request->files->set($fieldName, $file);
     }
 }

@@ -13,4 +13,6 @@ interface PushRequestDtoInterface
     public function getPackageName(): string;
 
     public function getPackageVersion(): string;
+
+    public function getSource(): ?array;
 }

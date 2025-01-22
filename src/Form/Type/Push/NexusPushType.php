@@ -20,10 +20,11 @@ class NexusPushType extends AbstractType
             ->add('src-type', TextType::class, ['property_path' => 'srcType'])
             ->add('src-url', TextType::class, ['property_path' => 'srcUrl'])
             ->add('src-ref', TextType::class, ['property_path' => 'srcRef'])
-            ->add('package', FileType::class);
+            ->add('package', FileType::class)
+            ->add('version', TextType::class);
 
         $requestHandler = $builder->getRequestHandler();
-        $builder->setRequestHandler(new PutRequestHandler($requestHandler));
+        $builder->setRequestHandler(new PutRequestHandler($requestHandler, 'package'));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

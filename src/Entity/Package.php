@@ -455,6 +455,7 @@ class Package
             'repoType' => $this->repoType ?: 'vcs',
             'subDirectory' => $this->getSubDirectory(),
             'archives' => $this->getArchives(),
+            'archive_overwrite_mapping' => $this->getArchiveOverwrite(),
             'oauth2' => $this->integration,
             'externalRef' => $this->externalRef,
             'customVersions' => $this->getCustomVersions(),

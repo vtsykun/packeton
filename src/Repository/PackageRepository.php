@@ -300,16 +300,16 @@ class PackageRepository extends EntityRepository
         return $pkg;
     }
 
-    public function getPackageByName($name)
+    public function getPackageByName(string $name): ?Package
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('p', 'm')
-            ->from('Packeton\Entity\Package', 'p')
+            ->from(Package::class, 'p')
             ->leftJoin('p.maintainers', 'm')
             ->where('p.name = ?0')
             ->setParameters(array($name));
 
-        return $qb->getQuery()->getSingleResult();
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     public function getPackagesWithVersions(?array $ids = null, $filters = [])

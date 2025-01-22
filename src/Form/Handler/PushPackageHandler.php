@@ -7,6 +7,8 @@ namespace Packeton\Form\Handler;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
+use Packeton\Exception\ValidationException;
+use Packeton\Exception\ZipballException;
 use Packeton\Form\Model\PushRequestDtoInterface;
 use Packeton\Model\PackageManager;
 use Packeton\Package\RepTypes;
@@ -27,20 +29,25 @@ class PushPackageHandler
 
     public function __invoke(FormInterface $form, Request $request, string $name, ?string $version = null, ?UserInterface $user = null): void
     {
-        // todo fix PUT support
+        $request->request->set('version', $version ?? 'dev-master');
+
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
-            throw new \RuntimeException('todo');
+            throw ValidationException::create("Validation errors", $form);
         }
 
-        /** @var PushRequestDtoInterface $artifact */
-        $artifact = $form->getData();
+        /** @var PushRequestDtoInterface $dtoRequest */
+        $dtoRequest = $form->getData();
         $package = $this->getRepo()->getPackageByName($name);
         if (null === $package) {
             $package = $this->createArtifactPackage($name, $user);
         }
 
-
+        try {
+            $this->handler->addVersion($dtoRequest, $package);
+        } catch (ZipballException $e) {
+            throw ValidationException::create($e->getMessage(), previous: $e);
+        }
     }
 
     private function getRepo(): PackageRepository
@@ -53,7 +60,12 @@ class PushPackageHandler
         $em = $this->registry->getManager();
         $package = new Package();
         $package->setName($name);
-        $package->setRepoType(RepTypes::ARTIFACT);
+        $package->setRepoType(RepTypes::CUSTOM);
+        $package->setRepositoryPath(null);
+
+        $user = null !== $user ?
+            $this->registry->getRepository(User::class)->findOneBy(['username' => $user->getUserIdentifier()])
+            : $user;
 
         if ($user instanceof User) {
             $package->addMaintainer($user);

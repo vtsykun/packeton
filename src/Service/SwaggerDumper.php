@@ -83,7 +83,14 @@ class SwaggerDumper
 
             foreach ($resources as $name => $resource) {
                 if (isset($resource['example'])) {
-                    $example = ($isRef = str_starts_with($resource['example'], '$')) ? $resource['example'] : json_decode($resource['example']);
+                    $isRef = false;
+                    if (is_string($resource['example'])) {
+                        $example = ($isRef = str_starts_with($resource['example'], '$')) ? $resource['example'] :
+                            (null !== json_decode($resource['example']) ? json_decode($resource['example']) : $resource['example']);
+                    } else {
+                        $example = $resource['example'];
+                    }
+
                     $hash = sha1(serialize($example));
                     unset($resource['example']);
                     if ($example === null) {
@@ -115,8 +122,15 @@ class SwaggerDumper
         return $spec;
     }
 
-    protected function dumpExample($example)
+    protected function dumpExample(mixed $example)
     {
+        if (is_string($example)) {
+            return [
+                'type' => 'string',
+                'format' => 'binary'
+            ];
+        }
+
         $obj = [
             'type' => 'object',
             'properties' => []
