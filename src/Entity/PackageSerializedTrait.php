@@ -6,6 +6,7 @@ namespace Packeton\Entity;
 
 use Composer\Package\Version\VersionParser;
 use Composer\Semver\Constraint\Constraint;
+use Packeton\Util\PacketonUtils;
 
 trait PackageSerializedTrait
 {
@@ -76,7 +77,7 @@ trait PackageSerializedTrait
         return $this->serializedFields['archives'] ?? null;
     }
 
-    public function getAllArchives(): ?array
+    public function getAllArchives(): array
     {
         $archives =  $this->serializedFields['archives'] ?? [];
         foreach ($this->getCustomVersions() as $version) {
@@ -100,6 +101,38 @@ trait PackageSerializedTrait
         }
 
         $this->setSerialized('archives', $archives);
+    }
+
+    public function setArchiveOverwrite(int $archiveId, array $versionData): void
+    {
+        $mapping = $this->getSerialized('archive_version_mapping', 'array') ?? [];
+        $archives = $this->getArchives();
+        $version = $versionData['version'] ?? null;
+
+        $unset = [];
+        foreach ($mapping as $id => $data) {
+            if (($data['version'] ?? '_na') === $version) {
+                $unset[] = $id;
+            }
+        }
+
+        $archives[] = $archiveId;
+        $archives = array_diff($archives, $unset);
+        $this->setArchives(array_values(array_unique($archives)));
+
+        $mapping[$archiveId] = $versionData;
+        foreach ($mapping as $id => $data) {
+            if (!in_array($id, $archives)) {
+                unset($mapping[$id]);
+            }
+        }
+
+        $this->setSerialized('archive_version_mapping', $mapping);
+    }
+
+    public function getArchiveOverwrite(): array
+    {
+        return $this->getSerialized('archive_version_mapping', 'array') ?? [];
     }
 
     public function setUpdateFlags(int $flags): void
@@ -197,6 +230,15 @@ trait PackageSerializedTrait
         $versions = $versions ? array_values($versions) : null;
 
         $this->setSerialized('custom_versions', $versions);
+    }
+
+    public function addCustomVersions(array $versionData): void
+    {
+        $versions = $this->getCustomVersions();
+        $versions = PacketonUtils::buildChoices($versions, 'version');
+        $versions[$versionData['version']] = $versionData;
+
+        $this->setCustomVersions(array_values($versions));
     }
 
     public function getCustomComposerJson(): array

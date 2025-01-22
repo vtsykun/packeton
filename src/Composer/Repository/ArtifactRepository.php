@@ -31,7 +31,11 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     protected $lookup;
 
     /** @var array */
-    protected $archives;
+    protected array $archives = [];
+
+    protected array $archivesOverwriteInfo = [];
+
+    protected array $archivesOverwriteInfoByRef = [];
 
     public function __construct(
         protected array $repoConfig,
@@ -51,6 +55,7 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
         $this->lookup = $repoConfig['url'] ?? null;
         $this->lookup = $this->lookup === '_unset' ? null : $this->lookup;
         $this->archives = $this->repoConfig['archives'] ?? [];
+        $this->archivesOverwriteInfo = $this->repoConfig['archive_overwrite_mapping'] ?? [];
 
         $this->process ??= new ProcessExecutor($this->io);
     }
@@ -136,7 +141,7 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     private function doInitialize(): void
     {
         foreach ($this->allArtifacts() as $ref => $file) {
-            $package = $this->getComposerInformation($file, $ref);
+            $package = $this->getComposerInformation($file, $ref, $this->archivesOverwriteInfoByRef[$ref] ?? null);
             if (!$package) {
                 $this->io->writeError("File <comment>{$file->getBasename()}</comment> doesn't seem to hold a package", true, IOInterface::VERBOSE);
                 continue;
@@ -164,6 +169,8 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
                 continue;
             }
 
+            $this->archivesOverwriteInfoByRef[$zip->getReference()] = $this->archivesOverwriteInfo[$zip->getId()] ?? null;
+
             yield $zip->getReference() => new \SplFileInfo($path);
         }
     }
@@ -190,7 +197,7 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
     /**
      * {@inheritdoc}
      */
-    public function getComposerInformation(\SplFileInfo $file, $ref = null): ?BasePackage
+    public function getComposerInformation(\SplFileInfo $file, mixed $ref = null, ?array $overwrite = null): ?BasePackage
     {
         $json = null;
         $fileExtension = pathinfo($file->getPathname(), PATHINFO_EXTENSION);
@@ -217,6 +224,8 @@ class ArtifactRepository extends ArrayRepository implements PacketonRepositoryIn
         }
 
         $package = JsonFile::parseJson($json, $file->getPathname().'#composer.json');
+        $package = array_merge($package, $overwrite ?? []);
+
         $package['dist'] = [
             'type' => $fileType,
             'url' => strtr($file->getPathname(), '\\', '/'),

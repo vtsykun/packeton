@@ -9,6 +9,7 @@ use Packeton\Attribute\Vars;
 use Packeton\Entity\Package;
 use Packeton\Entity\Zipball;
 use Packeton\Event\ZipballEvent;
+use Packeton\Exception\ZipballException;
 use Packeton\Model\UploadZipballStorage;
 use Packeton\Package\RepTypes;
 use Packeton\Service\DistManager;
@@ -40,7 +41,7 @@ class ZipballController extends AbstractController
     ) {
     }
 
-    #[Route('/archive/upload', name: 'archive_upload', methods: ["POST"])]
+    #[Route('/archive/upload', name: 'archive_upload', methods: ["POST"], format: 'json')]
     #[IsGranted('ROLE_MAINTAINER')]
     public function upload(Request $request): Response
     {
@@ -52,8 +53,13 @@ class ZipballController extends AbstractController
             return new JsonResponse(['error' => 'File is empty'], 400);
         }
 
-        $result = $this->storage->save($file);
-        return new JsonResponse($result, $result['code'] ?? 201);
+        try {
+            $result = $this->storage->save($file);
+        } catch (ZipballException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], max($e->getCode(), 300));
+        }
+
+        return new JsonResponse(['id' => $result->getId(), 'filename' => $result->getFilename(), 'size' => $result->getFileSize()], 201);
     }
 
     #[Route('/archive/remove/{id}', name: 'archive_remove', methods: ["DELETE"])]

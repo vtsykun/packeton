@@ -7,8 +7,10 @@ namespace Packeton\Model;
 use Doctrine\Persistence\ManagerRegistry;
 use League\Flysystem\FilesystemOperator;
 use Packeton\Entity\Zipball;
+use Packeton\Exception\ZipballException;
 use Packeton\Util\PacketonUtils;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -66,7 +68,7 @@ class UploadZipballStorage
         return $localName;
     }
 
-    public function save(UploadedFile $file): array
+    public function save(File $file): Zipball
     {
         $mime = $file->getMimeType();
         $extension = $this->guessExtension($file, $mime);
@@ -75,7 +77,7 @@ class UploadZipballStorage
         // Limited by ArtifactRepository, mimetype will check later, not necessary a strict validation.
         if (!in_array($extension, $this->supportTypes, true)) {
             $supportTypes = json_encode($this->supportTypes);
-            return ['code' => 400, 'error' => "Allowed only $supportTypes archives, but given *.$extension"];
+            throw new ZipballException("Allowed only $supportTypes archives, but given *.$extension", 400);
         }
 
         $hash = sha1(random_bytes(30));
@@ -84,17 +86,17 @@ class UploadZipballStorage
         try {
             $file->move($this->tmpDir, $filename);
             $fullname = PacketonUtils::buildPath($this->tmpDir, $filename);
+
             if (!$this->artifactStorage->fileExists($filename)) {
                 $stream = fopen($fullname, 'r');
                 $this->artifactStorage->writeStream($filename, $stream);
             }
-
         } catch (\Exception $e) {
-            return ['code' => 400, 'error' => $e->getMessage()];
+            throw new ZipballException($e->getMessage(), 400, $e);
         }
 
         $zipball = new Zipball();
-        $zipball->setOriginalFilename($file->getClientOriginalName())
+        $zipball->setOriginalFilename($file instanceof UploadedFile ? $file->getClientOriginalName() : time() . '.zip')
             ->setExtension($extension)
             ->setFileSize($size)
             ->setMimeType($mime)
@@ -105,20 +107,18 @@ class UploadZipballStorage
         $manager->persist($zipball);
         $manager->flush();
 
-        return [
-            'id' => $zipball->getId(),
-            'filename' => $zipball->getOriginalFilename(),
-            'size' => $zipball->getFileSize(),
-        ];
+        return $zipball;
     }
 
-    protected function guessExtension(UploadedFile $file, ?string $mimeType): ?string
+    protected function guessExtension(File $file, ?string $mimeType): ?string
     {
-        if (str_ends_with($file->getClientOriginalName(), 'tar.gz')) {
-            return 'tgz';
-        }
-        if ($extension = $file->getClientOriginalExtension()) {
-            return $extension;
+        if ($file instanceof UploadedFile) {
+            if (str_ends_with($file->getClientOriginalName(), 'tar.gz')) {
+                return 'tgz';
+            }
+            if ($extension = $file->getClientOriginalExtension()) {
+                return $extension;
+            }
         }
 
         return $mimeType ? (MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? null) : null;

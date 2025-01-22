@@ -216,7 +216,15 @@ class PacketonUtils
 
     public static function buildChoices(array $listOf, string $key, ?string $value = null): array
     {
-        return array_combine(array_column($listOf, $key), $value ? array_column($listOf, $value) : $listOf);
+        $result = [];
+        foreach ($listOf as $item) {
+            if (!isset($item[$key])) {
+                continue;
+            }
+            $result[$item[$key]] = null === $value ? $item : ($item[$value] ?? null);
+        }
+
+        return $result;
     }
 
     public static function matchGlobAll(array $listOf, null|string|array $globs, string|array|null $excluded = null): array
