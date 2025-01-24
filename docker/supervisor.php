@@ -230,7 +230,7 @@ class TaskManager
         echo (new \DateTime('now'))->format('Y-m-d H:i:s.u') . " $msg\n";
     }
 
-    protected function loadConfiguration(string $file = null): array
+    protected function loadConfiguration(?string $file = null): array
     {
         $file ??= $this->configPath;
         if (!file_exists($file) || !is_readable($file)) {
@@ -293,7 +293,7 @@ class TaskManager
      * @param array|null $configs
      * @return Task[]
      */
-    protected function loadTasks(array $configs = null): array
+    protected function loadTasks(?array $configs = null): array
     {
         $tasks = [];
         $configs ??= $this->loadConfiguration();
@@ -335,7 +335,7 @@ class TaskManager
      * @param array|null $tasks
      * @return Task[]
      */
-    protected function prepareTasks(array $tasks = null): array
+    protected function prepareTasks(?array $tasks = null): array
     {
         $tasks ??= $this->loadTasks();
 
