@@ -82,6 +82,34 @@ server {
 }
 ```
 
+#### Nginx with a sub-path
+
+In case you already have a site, and you want Packeton to share the domain name, 
+you can setup Nginx to serve Packeton under a sub-path by adding the following
+server section into the http section of nginx.conf:
+
+```
+server {
+   ....
+    location ~ ^/packeton(/?)(.*) {
+        resolver 1.1.1.1 valid=30s;
+        set $upstream_pkg pack4.example.com;
+
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Prefix /packeton;
+        proxy_set_header X-Forwarded-Host portal.example.com;
+
+        proxy_pass https://$upstream_pkg/$2$is_args$args;
+    }
+}
+```
+
+Where `X-Forwarded-Host` real host and `X-Forwarded-Prefix` site prefix.
+
+Then you MUST set something like `TRUSTED_PROXIES=172.16.0.0/12,127.0.0.1` correctly in your .env vars. 172.16.0.0/12 - IPs of proxy servers
+
 #### Apache
 
 ```

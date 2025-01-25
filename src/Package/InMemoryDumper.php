@@ -17,11 +17,15 @@ use Packeton\Repository\VersionRepository;
 use Packeton\Security\Acl\PackagesAclChecker;
 use Packeton\Service\DistConfig;
 use Packeton\Service\SubRepositoryHelper;
+use Packeton\Trait\RequestContextTrait;
+use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class InMemoryDumper
 {
+    use RequestContextTrait;
+
     private MetadataFormat $metadataFormat;
     private ?string $infoMessage;
 
@@ -31,6 +35,7 @@ class InMemoryDumper
         private readonly RouterInterface $router,
         private readonly SubRepositoryHelper $subRepositoryHelper,
         private readonly DistConfig $distConfig,
+        private readonly RequestContext $requestContext,
         ?array $config = null,
     ) {
         $this->infoMessage = $config['info_cmd_message'] ?? null;
@@ -97,21 +102,23 @@ class InMemoryDumper
         [$providers, $packagesData, $availablePackages] = $this->dumpUserPackages($user, $apiVersion, $subRepo);
 
         $rootFile = ['packages' => []];
-        $url = $this->router->generate('track_download', ['name' => 'VND/PKG']);
-        $slug = $subRepo && !$this->subRepositoryHelper->isAutoHost() ? '/'. $subRepo->getSlug() : '';
 
-        $rootFile['notify'] = $slug . str_replace('VND/PKG', '%package%', $url);
-        $rootFile['notify-batch'] = $slug . $this->router->generate('track_download_batch');
+        $slug = $subRepo && !$this->subRepositoryHelper->isAutoHost() ? '/'. $subRepo->getSlug() : '';
+        $slugName = '' === $slug ? null : $subRepo->getSlug();
+        $url = $this->generateRoute('track_download', $slugName, ['name' => 'VND/PKG']);
+
+        $rootFile['notify'] = str_replace('VND/PKG', '%package%', $url);
+        $rootFile['notify-batch'] = $this->generateRoute('track_download_batch', $slugName);
         $rootFile['metadata-changes-url'] = $this->router->generate('metadata_changes');
-        $rootFile['providers-url'] = $slug . '/p/%package%$%hash%.json';
+        $rootFile['providers-url'] = $this->generateUrl($slug . '/p/%package%$%hash%.json');
 
         if ($this->distConfig->mirrorEnabled()) {
             $ref = '0000000000000000000000000000000000000000.zip';
-            $zipball = $slug . $this->router->generate('download_dist_package', ['package' => 'VND/PKG', 'hash' => $ref]);
+            $zipball = $this->generateRoute('download_dist_package', $slugName, ['package' => 'VND/PKG', 'hash' => $ref]);
             $rootFile['mirrors'][] = ['dist-url' => \str_replace(['VND/PKG', $ref], ['%package%', '%reference%.%type%'], $zipball), 'preferred' => true];
         }
 
-        $rootFile['metadata-url'] = $slug . '/p2/%package%.json';
+        $rootFile['metadata-url'] = $this->generateUrl($slug . '/p2/%package%.json');
         if ($subRepo) {
             $rootFile['_comment'] = "Subrepository {$subRepo->getSlug()}";
         }
@@ -129,7 +136,7 @@ class InMemoryDumper
 
         if ($this->metadataFormat->lazyProviders($apiVersion)) {
             unset($rootFile['provider-includes'], $rootFile['providers-url']);
-            $rootFile['providers-lazy-url'] = $slug . '/p/%package%.json';
+            $rootFile['providers-lazy-url'] = $this->generateUrl($slug . '/p/%package%.json');
         }
 
         if (false === $this->metadataFormat->metadataUrl($apiVersion)) {
