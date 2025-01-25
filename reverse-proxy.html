@@ -222,6 +222,28 @@
     }
 }
 </code></pre>
+<h4 id="nginx-with-a-sub-path"><a class="header" href="#nginx-with-a-sub-path">Nginx with a sub-path</a></h4>
+<p>In case you already have a site, and you want Packeton to share the domain name, 
+you can setup Nginx to serve Packeton under a sub-path by adding the following
+server section into the http section of nginx.conf:</p>
+<pre><code>server {
+   ....
+    location ~ ^/packeton(/?)(.*) {
+        resolver 1.1.1.1 valid=30s;
+        set $upstream_pkg pack4.example.com;
+
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Prefix /packeton;
+        proxy_set_header X-Forwarded-Host portal.example.com;
+
+        proxy_pass https://$upstream_pkg/$2$is_args$args;
+    }
+}
+</code></pre>
+<p>Where <code>X-Forwarded-Host</code> real host and <code>X-Forwarded-Prefix</code> site prefix.</p>
+<p>Then you MUST set something like <code>TRUSTED_PROXIES=172.16.0.0/12,127.0.0.1</code> correctly in your .env vars. 172.16.0.0/12 - IPs of proxy servers</p>
 <h4 id="apache"><a class="header" href="#apache">Apache</a></h4>
 <pre><code>&lt;VirtualHost *:443&gt;
     ServerName pack1.loc.example.ovh
