@@ -127,22 +127,26 @@
         if (submit.is('.loading')) {
             return;
         }
-        data = $('.package .force-update').serializeArray();
+
+        let $buttonUpdate = $('.package .force-update');
+        let jobUrl = $buttonUpdate.attr('data-job-url');
+
+        data = $buttonUpdate.serializeArray();
         if (updateAll) {
             data.push({name: 'updateAll', value: '1'});
         }
 
         $.ajax({
-            url: $('.package .force-update').attr('action'),
+            url: $buttonUpdate.attr('action'),
             dataType: 'json',
             cache: false,
             data: data,
-            type: $('.package .force-update').attr('method'),
+            type: $buttonUpdate.attr('method'),
             success: function (data) {
                 if (data.job) {
                     let checkJobStatus = function () {
                         $.ajax({
-                            url: '/jobs/' + data.job,
+                            url: jobUrl.replace('fffffaafaaffff', data.job),
                             cache: false,
                             success: function (data) {
                                 if (data.status == 'completed' || data.status == 'errored' || data.status == 'failed' || data.status == 'package_deleted') {

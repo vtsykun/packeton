@@ -80,8 +80,9 @@
             <div class="col-xs-12 col-sm-10">
                 {% for version in package.versions %}
                     {%- if (version.dist) and (version.type != 'metapackage') -%}
+                        {% set distURL = version.distNormalized['url'] ?? version.dist['url']|replace({'__host_unset__': ''}) %}
 
-                        <a href="{{ version.dist['url']|replace({'__host_unset__': ''}) }}" title="dist-reference: {{ version.dist['reference'] }}">
+                        <a href="{{ distURL }}" title="dist-reference: {{ version.dist['reference'] }}">
                             {{ version.version }}
                         </a>
                         {%- else -%}

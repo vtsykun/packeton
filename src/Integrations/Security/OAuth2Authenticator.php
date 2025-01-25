@@ -8,10 +8,12 @@ use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\User;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\LoginInterface;
+use Packeton\Trait\RequestContextTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpClient\Exception\ClientException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -24,10 +26,13 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class OAuth2Authenticator implements InteractiveAuthenticatorInterface
 {
+    use RequestContextTrait;
+
     public function __construct(
         protected IntegrationRegistry $integrations,
         protected ManagerRegistry $registry,
-        protected LoggerInterface $logger
+        protected LoggerInterface $logger,
+        protected RequestContext $requestContext,
     ) {
     }
 
@@ -157,6 +162,9 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
     // Used to remove referral header.
     protected function getJSRedirectTemplate($route): string
     {
+        $path = $this->generateUrl('/packeton/js/redirect.js');
+        $route = $this->generateUrl($route);
+
         $text = <<<TXT
 <html lang="en">
 <head>
@@ -167,7 +175,7 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
 <div>
 <p>Processing redirect <a id="route" href="$route">$route</a></p>
 </div>
-<script src="/packeton/js/redirect.js"></script>
+<script src="$path"></script>
 </body>
 </html>
 TXT;

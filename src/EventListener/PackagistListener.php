@@ -19,14 +19,18 @@ use Packeton\Event\FormHandlerEvent;
 use Packeton\Model\ProviderManager;
 use Packeton\Service\DistConfig;
 use Packeton\Service\SubRepositoryHelper;
+use Packeton\Trait\RequestContextTrait;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\Routing\RequestContext;
 
 #[AsEventListener(event: 'formHandler')]
 #[AsDoctrineListener(event: 'onFlush')]
 #[AsEntityListener(event: 'postLoad', entity: 'Packeton\Entity\Version')]
 class PackagistListener
 {
+    use RequestContextTrait;
+
     private static $trackLastModifyClasses = [
         GroupAclPermission::class => true,
         Group::class => true,
@@ -40,6 +44,7 @@ class PackagistListener
         private readonly RequestStack $requestStack,
         private readonly ProviderManager $providerManager,
         private readonly SubRepositoryHelper $subRepositoryHelper,
+        private readonly RequestContext $requestContext,
     ) {
     }
 
@@ -59,7 +64,7 @@ class PackagistListener
         if (isset($dist['url']) && \str_starts_with($dist['url'], DistConfig::HOSTNAME_PLACEHOLDER)) {
             $currentHost = $request->getSchemeAndHttpHost();
             $slug = $this->subRepositoryHelper->getCurrentSlug();
-            $replacement = null !== $slug ? $currentHost . '/' . $slug : $currentHost;
+            $replacement = rtrim($currentHost . $this->generateUrl('/') . $slug . '/', '/');
 
             $dist['url'] = \str_replace(DistConfig::HOSTNAME_PLACEHOLDER, $replacement, $dist['url']);
             $version->distNormalized = $dist;

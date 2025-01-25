@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packeton\Composer\Cache;
 
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\RequestContext;
 use Symfony\Contracts\Cache\CacheInterface;
 
 class MetadataCache
@@ -12,6 +13,7 @@ class MetadataCache
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly CacheInterface $packagesCachePool,
+        private readonly RequestContext $requestContext,
         private readonly int $maxTtl = 1800 // TTL default / 2
     ) {
     }
@@ -22,7 +24,7 @@ class MetadataCache
         // But for will protection must be used trusted_hosts
         $httpKey = $this->requestStack->getMainRequest()?->getSchemeAndHttpHost();
 
-        $cacheKey = sha1($key . $httpKey);
+        $cacheKey = sha1($key . $httpKey . $this->requestContext->getBaseUrl());
         $item = $this->packagesCachePool->getItem($cacheKey);
         @[$ctime, $data] = $item->get();
 

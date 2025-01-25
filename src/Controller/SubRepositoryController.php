@@ -67,14 +67,16 @@ class SubRepositoryController extends AbstractController
     public function switchAction(Request $request, #[Vars] SubRepository $entity): Response
     {
         $request->getSession()->set('_sub_repo', $entity->getId());
-        return new RedirectResponse('/');
+
+        return $this->redirectToRoute('home');
     }
 
     #[Route('/switch-root', name: 'subrepository_switch_root')]
     public function switchRoot(Request $request): Response
     {
         $request->getSession()->remove('_sub_repo');
-        return new RedirectResponse('/');
+
+        return $this->redirectToRoute('home');
     }
 
     protected function handleUpdate(Request $request, SubRepository $group, string $flashMessage): Response

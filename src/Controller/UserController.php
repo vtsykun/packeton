@@ -367,7 +367,8 @@ class UserController extends AbstractController
                 $em->flush();
 
                 $this->addFlash('success', $key ? 'Ssh key updated successfully.' : 'Ssh key added successfully.');
-                return new RedirectResponse('/');
+
+                return $this->redirectToRoute('home');
             }
         }
 
@@ -401,7 +402,8 @@ class UserController extends AbstractController
         $em = $this->registry->getManager();
         $em->remove($key);
         $em->flush();
-        return new RedirectResponse('/');
+
+        return $this->redirectToRoute('home');
     }
 
     #[Route('/users/{name}', name: 'user_profile')]
