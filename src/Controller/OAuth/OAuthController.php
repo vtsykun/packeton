@@ -30,7 +30,7 @@ class OAuthController extends AbstractController
     public function oauthLogin(string $alias, Request $request): Response
     {
         if ($this->getUser()) {
-            return $this->redirect('/');
+            return $this->redirectToRoute('home');
         }
 
         $this->state->set('controller', 'oauth_check');
