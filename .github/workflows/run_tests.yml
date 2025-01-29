@@ -40,7 +40,7 @@ jobs:
           - php: '8.4'
             driver: 'SQLITE'
             redis: 7
-            symfony: '7.1.*'
+            symfony: '7.2.*'
             composer_flags: '--ignore-platform-reqs'
     name: PHP ${{ matrix.php }} ${{ matrix.driver }} SF ${{ matrix.symfony }}
     runs-on: ubuntu-22.04
