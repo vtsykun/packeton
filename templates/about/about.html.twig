@@ -7,7 +7,7 @@
     </p>
     <p>You can find the source on <a href="https://github.com/vtsykun/packeton">GitHub</a>.</p>
 
-    {% set url = app.request.getSchemeAndHttpHost() %}
+    {% set url = app.request.getSchemeAndHttpHost() ~ app.request.baseUrl() %}
     {% set apiToken = get_api_token(app.user) %}
     {% set shortApiToken = get_api_token(app.user, false)|default('<token>') %}
 

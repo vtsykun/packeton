@@ -23,7 +23,7 @@
   <li><a href="#swagger-ui">Swagger</a></li>
 </ul>
 {% set apiToken = get_api_token(app.user)|default('<api_token>') %}
-{% set packagist_url = app.request.getSchemeAndHttpHost() %}
+{% set packagist_url = app.request.getSchemeAndHttpHost() ~ app.request.baseUrl() %}
 
 <section class="col-d-12">
 <h3 id="list-packages">{{ 'api_doc.listing_names'|trans }}</h3>
