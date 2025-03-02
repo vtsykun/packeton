@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Packeton\Service;
 
+use Packeton\Trait\RequestContextTrait;
+use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Yaml\Yaml;
 
 class SwaggerDumper
 {
+    use RequestContextTrait;
+
     public function __construct(
         protected string $swaggerDocsDir,
+        protected RequestContext $requestContext,
     ) {
     }
 
@@ -41,8 +46,8 @@ class SwaggerDumper
 
     protected function wrapResponse(array $spec): array
     {
-        $paths = $spec['paths'] ?? [];
-        foreach ($paths as $path => $resources) {
+        $paths = [];
+        foreach ($spec['paths'] ?? [] as $path => $resources) {
             if (!is_array($resources)) {
                 continue;
             }
@@ -66,6 +71,8 @@ class SwaggerDumper
                 }
                 $resources[$name] = $resource;
             }
+
+            $path = $this->generateUrl($path);
             $paths[$path] = $resources;
         }
         $spec['paths'] = $paths;
