@@ -14,6 +14,7 @@ use Packeton\Integrations\Github\GithubAppFactory;
 use Packeton\Integrations\Github\GithubOAuth2Factory;
 use Packeton\Integrations\Gitlab\GitLabOAuth2Factory;
 use Packeton\Integrations\IntegrationInterface;
+use Packeton\Integrations\Keycloak\KeycloakOAuth2Factory;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
@@ -30,6 +31,7 @@ class PacketonExtension extends Extension implements PrependExtensionInterface
     {
         $this->addFactories(new GithubOAuth2Factory());
         $this->addFactories(new GitLabOAuth2Factory());
+        $this->addFactories(new KeycloakOAuth2Factory());
         $this->addFactories(new GithubAppFactory());
         $this->addFactories(new GiteaOAuth2Factory());
         $this->addFactories(new BitbucketOAuth2Factory());

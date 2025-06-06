@@ -335,6 +335,10 @@ class Configuration implements ConfigurationInterface
             'google' => [
                 'svg_logo' => 'svg/google.html.twig',
                 'login_title' => 'Login with Google',
+            ],
+            'keycloak' => [
+                'svg_logo' => 'svg/keycloak.html.twig',
+                'login_title' => 'Login with Keycloak',
             ]
         ];
     }
