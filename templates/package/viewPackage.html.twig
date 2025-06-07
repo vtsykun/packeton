@@ -158,7 +158,7 @@
                                 {% endif %}
                             </p>
 
-                            {% set repoUrl = package.browsableRepository %}
+                            {% set repoUrl = package.browsableRepository|replace({'.git':''}) %}
                             <p class="canonical">
                                 <a href="{{ repoUrl }}" title="Canonical Repository URL">{{ repoUrl|replace({'https://':'', 'http://':''}) }}</a>
                             </p>
