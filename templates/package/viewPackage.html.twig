@@ -241,7 +241,7 @@
                             {% if package.gitHubWatches is not null %}
                                 <p>
                                     <span>
-                                        <a href="{{ repoUrl }}/watchers">Watchers</a>:
+                                        <a href="{{ repoUrl|replace({'.git':''}) }}/watchers">Watchers</a>:
                                     </span> {{ package.gitHubWatches|number_format(0, '.', '&#8201;')|raw }}
                                 </p>
                             {% endif %}
