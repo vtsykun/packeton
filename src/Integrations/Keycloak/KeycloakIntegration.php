@@ -45,7 +45,6 @@ class KeycloakIntegration implements IntegrationInterface, LoginInterface
             $this->baseUrl = rtrim($config['base_url'], '/');
         }
 
-        // Set realm-specific endpoints
         if (isset($config['realm'])) {
             $realmPath = '/realms/' . $config['realm'];
             $this->pathAuthorize = $realmPath . $this->pathAuthorize;
@@ -54,12 +53,18 @@ class KeycloakIntegration implements IntegrationInterface, LoginInterface
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function redirectOAuth2Url(?Request $request = null, array $options = []): Response
     {
         $options = $options + ['scope' => ['openid', 'profile', 'email']];
         return $this->getAuthorizationResponse($this->baseUrl . $this->pathAuthorize, $options);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getAccessToken(Request $request, array $options = []): array
     {
         if (!$request->get('code') || !$this->checkState($request->get('state'))) {
@@ -72,7 +77,7 @@ class KeycloakIntegration implements IntegrationInterface, LoginInterface
         $query = [
             'client_id' => $this->config['client_id'],
             'client_secret' => $this->config['client_secret'],
-            'code'  => $request->get('code'),
+            'code' => $request->get('code'),
             'grant_type' => 'authorization_code',
             'redirect_uri' => $redirectUrl,
         ];
@@ -85,28 +90,9 @@ class KeycloakIntegration implements IntegrationInterface, LoginInterface
         return $response->toArray() + ['redirect_uri' => $redirectUrl];
     }
 
-    protected function doRefreshToken(array $token): array
-    {
-        if (!isset($token['refresh_token'])) {
-            return $token;
-        }
-
-        $query = [
-            'client_id' => $this->config['client_id'],
-            'client_secret' => $this->config['client_secret'],
-            'grant_type'  => 'refresh_token',
-            'refresh_token' => $token['refresh_token'],
-            'redirect_uri' => $token['redirect_uri']
-        ];
-
-        $response = $this->httpClient->request('POST', $this->baseUrl . $this->pathToken, [
-            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-            'body' => $query
-        ]);
-
-        return array_merge($token, $response->toArray());
-    }
-
+    /**
+     * {@inheritdoc}
+     */
     public function fetchUser(Request|array $request, array $options = [], ?array &$accessToken = null): array
     {
         $accessToken ??= $request instanceof Request ? $this->getAccessToken($request) : $request;
@@ -125,6 +111,9 @@ class KeycloakIntegration implements IntegrationInterface, LoginInterface
         return $response;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function createUser(array $data): User
     {
         $user = new User();
