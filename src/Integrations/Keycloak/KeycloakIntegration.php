@@ -25,7 +25,6 @@ class KeycloakIntegration implements IntegrationInterface, LoginInterface
     protected $pathToken = '/protocol/openid-connect/token';
     protected $pathUserInfo = '/protocol/openid-connect/userinfo';
     protected $separator = ' ';
-
     protected $baseUrl = '';
     protected $name;
 
