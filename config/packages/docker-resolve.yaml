@@ -15,21 +15,6 @@ resolve:
                         client_id: '%env(OAUTH_GOOGLE_CLIENT_ID)%'
                         client_secret: '%env(OAUTH_GOOGLE_CLIENT_SECRET)%'
 
-    keycloak_integration:
-        expression: 'env("OAUTH_KEYCLOAK_CLIENT_ID")'
-        parameters:
-            env(OAUTH_KEYCLOAK_ALLOW_REGISTRATION): false
-        packeton:
-            integrations:
-                keycloak:
-                    allow_login: true # this integration makes no sense with false
-                    allow_register: '%env(bool:OAUTH_KEYCLOAK_ALLOW_REGISTRATION)%'
-                    keycloak:
-                        client_id: '%env(OAUTH_KEYCLOAK_CLIENT_ID)%'
-                        client_secret: '%env(OAUTH_KEYCLOAK_CLIENT_SECRET)%'
-                        realm: '%env(OAUTH_KEYCLOAK_REALM)%'
-                        base_url: '%env(OAUTH_KEYCLOAK_BASE_URL)%'
-
     github_integration:
         expression: 'env("OAUTH_GITHUB_CLIENT_ID")'
         parameters:
@@ -109,3 +94,18 @@ resolve:
                     bitbucket:
                         key: '%env(OAUTH_BITBUCKET_CLIENT_ID)%'
                         secret: '%env(OAUTH_BITBUCKET_CLIENT_SECRET)%'
+
+    keycloak_integration:
+        expression: 'env("OAUTH_KEYCLOAK_CLIENT_ID")'
+        parameters:
+            env(OAUTH_KEYCLOAK_ALLOW_REGISTRATION): false
+        packeton:
+            integrations:
+                keycloak:
+                    allow_login: true # this integration makes no sense with false
+                    allow_register: '%env(bool:OAUTH_KEYCLOAK_ALLOW_REGISTRATION)%'
+                    keycloak:
+                        client_id: '%env(OAUTH_KEYCLOAK_CLIENT_ID)%'
+                        client_secret: '%env(OAUTH_KEYCLOAK_CLIENT_SECRET)%'
+                        realm: '%env(OAUTH_KEYCLOAK_REALM)%'
+                        base_url: '%env(OAUTH_KEYCLOAK_BASE_URL)%'

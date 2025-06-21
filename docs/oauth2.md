@@ -9,6 +9,7 @@ Table of content
 - [GitLab Setup](oauth2/gitlab-integration.md)
 - [Gitea Setup](oauth2/gitea.md)
 - [Bitbucket Setup](oauth2/bitbucket.md)
+- [Keycloak Setup](oauth2/keycloak.md)
 
 ## Base configuration reference
 
@@ -81,6 +82,14 @@ packeton:
             google:
                 client_id: 'xxxxx.apps.googleusercontent.com'
                 client_secret: 'xxxx'    
+        keycloak:
+          allow_login: true # this integration makes no sense with false
+          allow_register: true
+          keycloak:
+            client_id: 'xxx'
+            client_secret: 'xxx'
+            realm: 'xxx'
+            base_url: 'xxx'
 
 ```
 
@@ -121,6 +130,13 @@ To make docker usage more easy, you can use env variables to configure basic set
 # OAUTH_GOOGLE_CLIENT_ID=
 # OAUTH_GOOGLE_CLIENT_SECRET=
 # OAUTH_GOOGLE_ALLOW_REGISTRATION=
+
+# Keycloak SSO
+# OAUTH_KEYCLOAK_BASE_URL=
+# OAUTH_KEYCLOAK_REALM=
+# OAUTH_KEYCLOAK_CLIENT_ID=
+# OAUTH_KEYCLOAK_CLIENT_SECRET=
+# OAUTH_KEYCLOAK_ALLOW_REGISTRATION=
 
 # Additinal vars ${NAME} = GITLAB/GITHUB/ .. 
 # OAUTH_*_DISABLE_ORG_HOOK=
