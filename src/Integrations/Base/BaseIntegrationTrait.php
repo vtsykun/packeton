@@ -172,10 +172,11 @@ trait BaseIntegrationTrait
         $username = $data['user_name'] ?? $data['user_identifier'];
         $username = preg_replace('#[^a-z0-9-_]#i', '_', $username);
         $email = $data['email'] ?? (str_contains($data['user_identifier'], '@') ? $data['user_identifier'] : $data['user_identifier'] .'@example.com');
+        $roles = $data['_mapped_roles'] ?? $this->getConfig()->roles();
 
         $user = new User();
         $user->setEnabled(true)
-            ->setRoles($this->getConfig()->roles())
+            ->setRoles($roles)
             ->setEmail($email)
             ->setUsername($username)
             ->setGithubId($data['external_id'] ?? null)
