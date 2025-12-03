@@ -14,6 +14,44 @@ STORAGE_AWS_ARTIFACT_PREFIX=artifact
 STORAGE_AWS_ARGS='{"endpoint": "https://s3.waw.io.cloud.ovh.net", "accessKeyId": "xxx", "accessKeySecret": "xxx", "region": "waw"}'
 ```
 
+## IRSA (IAM Roles for Service Accounts) - EKS/Kubernetes
+
+For Kubernetes/EKS deployments, you can use IRSA to authenticate without static credentials.
+The pod's service account assumes an IAM role via web identity token.
+
+### Explicit Configuration
+
+```
+STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=packeton-bucket
+STORAGE_AWS_ARGS='{"region": "us-east-1", "roleArn": "arn:aws:iam::123456789:role/packeton-s3-role", "webIdentityTokenFile": "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"}'
+```
+
+Configuration keys:
+- `roleArn` - ARN of the IAM role to assume
+- `webIdentityTokenFile` - Path to the OIDC token file (injected by EKS)
+- `roleSessionName` - Optional session identifier (defaults to `async-aws-*`)
+
+### Auto-detection via Environment Variables
+
+AsyncAws automatically detects IRSA when standard AWS environment variables are set by EKS:
+
+- `AWS_WEB_IDENTITY_TOKEN_FILE`
+- `AWS_ROLE_ARN`
+- `AWS_REGION`
+
+With IRSA properly configured on your EKS cluster, you may only need:
+
+```
+STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=packeton-bucket
+STORAGE_AWS_ARGS='{"region": "us-east-1"}'
+```
+
+The SDK will automatically use the injected token file and role ARN from environment variables.
+
+See [AsyncAws Authentication](https://async-aws.com/authentication.html) for more details.
+
 ## Mirror Storage (Stateless Mode)
 
 When `STORAGE_SOURCE=s3`, mirrored repositories metadata and zipballs are also stored in S3.
