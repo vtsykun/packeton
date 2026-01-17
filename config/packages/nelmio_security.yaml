@@ -6,10 +6,6 @@ nelmio_security:
     content_type:
         nosniff: true
 
-    xss_protection:
-        enabled: true
-        mode_block: true
-
     csp:
         enabled: true
         hash:
