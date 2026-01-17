@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Integrations\Base;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Okvpn\Expression\TwigLanguage;
 use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\User;
@@ -11,10 +12,18 @@ use Packeton\Integrations\Model\AppConfig;
 use Packeton\Integrations\Model\OAuth2ExpressionExtension;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 
 trait BaseIntegrationTrait
 {
     protected ?TwigLanguage $exprLang = null;
+    protected ManagerRegistry $registry;
+
+    #[Required]
+    public function setManagerRegistry(ManagerRegistry $registry): void
+    {
+        $this->registry = $registry;
+    }
 
     /**
      * {@inheritdoc}
