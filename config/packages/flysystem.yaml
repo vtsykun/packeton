@@ -10,6 +10,16 @@ flysystem:
             options:
                 directory: '%packeton_artifact_storage%'
 
+        local.mirror.meta:
+            adapter: 'local'
+            options:
+                directory: '%mirror_repos_meta_dir%'
+
+        local.mirror.dist:
+            adapter: 'local'
+            options:
+                directory: '%mirror_repos_dist_dir%'
+
         flysystem.base:
             adapter: 'lazy'
             options:
@@ -19,6 +29,16 @@ flysystem:
             adapter: 'lazy'
             options:
                 source: '%env(STORAGE_SOURCE)%.artifact'
+
+        flysystem.mirror.meta:
+            adapter: 'lazy'
+            options:
+                source: '%env(STORAGE_SOURCE)%.mirror.meta'
+
+        flysystem.mirror.dist:
+            adapter: 'lazy'
+            options:
+                source: '%env(STORAGE_SOURCE)%.mirror.dist'
 
 resolve:
     # deferred config loading depending on env vars
@@ -39,11 +59,27 @@ resolve:
                     bucket: '%env(STORAGE_AWS_BUCKET)%'
                     prefix: '%env(STORAGE_AWS_ARTIFACT_PREFIX)%'
 
+            s3.mirror.meta:
+                adapter: 'asyncaws'
+                options:
+                    client: 'packeton.s3.storage'
+                    bucket: '%env(STORAGE_AWS_BUCKET)%'
+                    prefix: '%env(STORAGE_AWS_MIRROR_META_PREFIX)%'
+
+            s3.mirror.dist:
+                adapter: 'asyncaws'
+                options:
+                    client: 'packeton.s3.storage'
+                    bucket: '%env(STORAGE_AWS_BUCKET)%'
+                    prefix: '%env(STORAGE_AWS_MIRROR_DIST_PREFIX)%'
+
     parameters:
         env(STORAGE_AWS_BUCKET): 'packeton-bucket'
         env(STORAGE_AWS_PREFIX): 'packeton'
         env(STORAGE_AWS_ARGS): '[]'
         env(STORAGE_AWS_ARTIFACT_PREFIX): 'artifact'
+        env(STORAGE_AWS_MIRROR_META_PREFIX): 'mirror-meta'
+        env(STORAGE_AWS_MIRROR_DIST_PREFIX): 'mirror-dist'
 
     services:
         packeton.s3.storage:

@@ -9,6 +9,7 @@ Table of content
 - [GitLab Setup](oauth2/gitlab-integration.md)
 - [Gitea Setup](oauth2/gitea.md)
 - [Bitbucket Setup](oauth2/bitbucket.md)
+- [Generic OIDC Setup](oauth2/oidc.md)
 
 ## Base configuration reference
 
@@ -80,7 +81,23 @@ packeton:
             allow_login: true
             google:
                 client_id: 'xxxxx.apps.googleusercontent.com'
-                client_secret: 'xxxx'    
+                client_secret: 'xxxx'
+
+        # Generic OIDC provider (Authentik, Keycloak, Azure AD, Okta, etc.)
+        authentik:
+            allow_login: true
+            allow_register: true
+            login_title: 'Login with Authentik'
+            oidc:
+                client_id: 'packeton-client-id'
+                client_secret: 'packeton-client-secret'
+                issuer: 'https://auth.example.com/application/o/packeton/'
+                # scopes: ['openid', 'email', 'profile']  # defaults
+                # require_email_verified: true  # default
+                # claim_mapping:  # customize for non-standard providers
+                #     email: 'email'
+                #     username: 'preferred_username'
+                #     sub: 'sub'
 
 ```
 
@@ -195,3 +212,10 @@ Redirect Urls:
 ```
 https://example.com/oauth2/{alias}/auto
 ```
+
+### OIDC (OpenID Connect)
+
+Generic OIDC provider for SSO login with Authentik, Keycloak, Azure AD, Okta, Auth0, and other OIDC-compliant providers.
+Supports automatic role mapping from OIDC groups/roles claims.
+
+See [Generic OIDC Setup](oauth2/oidc.md) for full configuration details.
