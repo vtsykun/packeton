@@ -13,6 +13,8 @@ parameters:
     env(MAILER_FROM): 'Packeton <packeton@example.com>'
     env(PUBLIC_ACCESS): false
     env(STORAGE_SOURCE): local
+    env(MIRROR_METADATA_CACHE_DIR): ~
+    env(MIRROR_DIST_CACHE_DIR): ~
 
     # twig sandbox
     security_policy_tags: ['app', 'for', 'if', 'spaceless', 'set', 'do', 'apply', 'verbatim', 'return']
@@ -41,6 +43,8 @@ parameters:
     composer_home_dir: '%env(resolve:APP_COMPOSER_HOME)%'
     mirror_repos_meta_dir: '%composer_home_dir%/proxy-meta'
     mirror_repos_dist_dir: '%composer_home_dir%/proxy-dist'
+    mirror_meta_cache_dir: '%env(MIRROR_METADATA_CACHE_DIR)%'
+    mirror_dist_cache_dir: '%env(MIRROR_DIST_CACHE_DIR)%'
 
     package_name_regex: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+'
     package_name_regex_v2: '[A-Za-z0-9_.-]+/[A-Za-z0-9_.~-]+'
@@ -69,6 +73,10 @@ services:
             Symfony\Component\Security\Core\User\UserCheckerInterface: '@Packeton\Security\UserChecker'
             League\Flysystem\FilesystemOperator $baseStorage: '@flysystem.base'
             League\Flysystem\FilesystemOperator $artifactStorage: '@flysystem.artifact'
+            League\Flysystem\FilesystemOperator $mirrorMetaStorage: '@flysystem.mirror.meta'
+            League\Flysystem\FilesystemOperator $mirrorDistStorage: '@flysystem.mirror.dist'
+            $mirrorMetaCacheDir: '%mirror_meta_cache_dir%'
+            $mirrorDistCacheDir: '%mirror_dist_cache_dir%'
 
     Packeton\:
         resource: '../src/'
