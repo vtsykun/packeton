@@ -335,6 +335,10 @@ class Configuration implements ConfigurationInterface
             'google' => [
                 'svg_logo' => 'svg/google.html.twig',
                 'login_title' => 'Login with Google',
+            ],
+            'oidc' => [
+                'svg_logo' => 'svg/oidc.html.twig',
+                'login_title' => 'Login with SSO',
             ]
         ];
     }
