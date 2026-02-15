@@ -18,6 +18,7 @@ permissions:
 
 env:
   APP_ENV: test
+  DOCKER_API_VERSION: '1.44'
 
 jobs:
   tests:
