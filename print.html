@@ -2390,6 +2390,34 @@ STORAGE_AWS_ARTIFACT_PREFIX=artifact
 
 STORAGE_AWS_ARGS='{&quot;endpoint&quot;: &quot;https://s3.waw.io.cloud.ovh.net&quot;, &quot;accessKeyId&quot;: &quot;xxx&quot;, &quot;accessKeySecret&quot;: &quot;xxx&quot;, &quot;region&quot;: &quot;waw&quot;}'
 </code></pre>
+<h2 id="irsa-iam-roles-for-service-accounts---ekskubernetes"><a class="header" href="#irsa-iam-roles-for-service-accounts---ekskubernetes">IRSA (IAM Roles for Service Accounts) - EKS/Kubernetes</a></h2>
+<p>For Kubernetes/EKS deployments, you can use IRSA to authenticate without static credentials.
+The pod's service account assumes an IAM role via web identity token.</p>
+<h3 id="explicit-configuration"><a class="header" href="#explicit-configuration">Explicit Configuration</a></h3>
+<pre><code>STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=packeton-bucket
+STORAGE_AWS_ARGS='{&quot;region&quot;: &quot;us-east-1&quot;, &quot;roleArn&quot;: &quot;arn:aws:iam::123456789:role/packeton-s3-role&quot;, &quot;webIdentityTokenFile&quot;: &quot;/var/run/secrets/eks.amazonaws.com/serviceaccount/token&quot;}'
+</code></pre>
+<p>Configuration keys:</p>
+<ul>
+<li><code>roleArn</code> - ARN of the IAM role to assume</li>
+<li><code>webIdentityTokenFile</code> - Path to the OIDC token file (injected by EKS)</li>
+<li><code>roleSessionName</code> - Optional session identifier (defaults to <code>async-aws-*</code>)</li>
+</ul>
+<h3 id="auto-detection-via-environment-variables"><a class="header" href="#auto-detection-via-environment-variables">Auto-detection via Environment Variables</a></h3>
+<p>AsyncAws automatically detects IRSA when standard AWS environment variables are set by EKS:</p>
+<ul>
+<li><code>AWS_WEB_IDENTITY_TOKEN_FILE</code></li>
+<li><code>AWS_ROLE_ARN</code></li>
+<li><code>AWS_REGION</code></li>
+</ul>
+<p>With IRSA properly configured on your EKS cluster, you may only need:</p>
+<pre><code>STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=packeton-bucket
+STORAGE_AWS_ARGS='{&quot;region&quot;: &quot;us-east-1&quot;}'
+</code></pre>
+<p>The SDK will automatically use the injected token file and role ARN from environment variables.</p>
+<p>See <a href="https://async-aws.com/authentication.html">AsyncAws Authentication</a> for more details.</p>
 <h2 id="mirror-storage-stateless-mode"><a class="header" href="#mirror-storage-stateless-mode">Mirror Storage (Stateless Mode)</a></h2>
 <p>When <code>STORAGE_SOURCE=s3</code>, mirrored repositories metadata and zipballs are also stored in S3.
 This enables running Packeton in stateless mode.</p>
@@ -2576,6 +2604,7 @@ sebastian/lines-of-code            2.0.1   Library for counting the lines of cod
 <li><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li>
 <li><a href="oauth2/gitea.html">Gitea Setup</a></li>
 <li><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li>
+<li><a href="oauth2/oidc.html">Generic OIDC Setup</a></li>
 </ul>
 <h2 id="base-configuration-reference"><a class="header" href="#base-configuration-reference">Base configuration reference</a></h2>
 <p>To enable OAuth2 integrations, you need to add the following configuration </p>
@@ -2645,7 +2674,23 @@ sebastian/lines-of-code            2.0.1   Library for counting the lines of cod
             allow_login: true
             google:
                 client_id: 'xxxxx.apps.googleusercontent.com'
-                client_secret: 'xxxx'    
+                client_secret: 'xxxx'
+
+        # Generic OIDC provider (Authentik, Keycloak, Azure AD, Okta, etc.)
+        authentik:
+            allow_login: true
+            allow_register: true
+            login_title: 'Login with Authentik'
+            oidc:
+                client_id: 'packeton-client-id'
+                client_secret: 'packeton-client-secret'
+                issuer: 'https://auth.example.com/application/o/packeton/'
+                # scopes: ['openid', 'email', 'profile']  # defaults
+                # require_email_verified: true  # default
+                # claim_mapping:  # customize for non-standard providers
+                #     email: 'email'
+                #     username: 'preferred_username'
+                #     sub: 'sub'
 
 </code></pre>
 <p>Where <code>clone_preference</code>:</p>
@@ -2733,6 +2778,10 @@ to find related integration access token.</p>
 <p>Redirect Urls:</p>
 <pre><code>https://example.com/oauth2/{alias}/auto
 </code></pre>
+<h3 id="oidc-openid-connect"><a class="header" href="#oidc-openid-connect">OIDC (OpenID Connect)</a></h3>
+<p>Generic OIDC provider for SSO login with Authentik, Keycloak, Azure AD, Okta, Auth0, and other OIDC-compliant providers.
+Supports automatic role mapping from OIDC groups/roles claims.</p>
+<p>See <a href="oauth2/oidc.html">Generic OIDC Setup</a> for full configuration details.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pull-request-composer-lock-review"><a class="header" href="#pull-request-composer-lock-review">Pull Request composer lock review</a></h1>
 <p>Every time when you create a Pull Request with <code>composer.lock</code> changes, the Packeton add a comment with descriptions 
 of changing dependencies. It detects the next of changes:</p>

@@ -157,6 +157,7 @@
 <li><a href="oauth2/gitlab-integration.html">GitLab Setup</a></li>
 <li><a href="oauth2/gitea.html">Gitea Setup</a></li>
 <li><a href="oauth2/bitbucket.html">Bitbucket Setup</a></li>
+<li><a href="oauth2/oidc.html">Generic OIDC Setup</a></li>
 </ul>
 <h2 id="base-configuration-reference"><a class="header" href="#base-configuration-reference">Base configuration reference</a></h2>
 <p>To enable OAuth2 integrations, you need to add the following configuration </p>
@@ -226,7 +227,23 @@
             allow_login: true
             google:
                 client_id: 'xxxxx.apps.googleusercontent.com'
-                client_secret: 'xxxx'    
+                client_secret: 'xxxx'
+
+        # Generic OIDC provider (Authentik, Keycloak, Azure AD, Okta, etc.)
+        authentik:
+            allow_login: true
+            allow_register: true
+            login_title: 'Login with Authentik'
+            oidc:
+                client_id: 'packeton-client-id'
+                client_secret: 'packeton-client-secret'
+                issuer: 'https://auth.example.com/application/o/packeton/'
+                # scopes: ['openid', 'email', 'profile']  # defaults
+                # require_email_verified: true  # default
+                # claim_mapping:  # customize for non-standard providers
+                #     email: 'email'
+                #     username: 'preferred_username'
+                #     sub: 'sub'
 
 </code></pre>
 <p>Where <code>clone_preference</code>:</p>
@@ -314,6 +331,10 @@ to find related integration access token.</p>
 <p>Redirect Urls:</p>
 <pre><code>https://example.com/oauth2/{alias}/auto
 </code></pre>
+<h3 id="oidc-openid-connect"><a class="header" href="#oidc-openid-connect">OIDC (OpenID Connect)</a></h3>
+<p>Generic OIDC provider for SSO login with Authentik, Keycloak, Azure AD, Okta, Auth0, and other OIDC-compliant providers.
+Supports automatic role mapping from OIDC groups/roles claims.</p>
+<p>See <a href="oauth2/oidc.html">Generic OIDC Setup</a> for full configuration details.</p>
 
                     </main>
 
