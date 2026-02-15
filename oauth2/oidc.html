@@ -1,0 +1,348 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>OIDC - Packeton Docs</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><li class="part-title">Introduction</li><li class="chapter-item expanded "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Setup</li><li class="chapter-item expanded "><a href="../installation.html">Installation</a></li><li class="chapter-item expanded "><a href="../installation-docker.html">Using docker</a></li><li class="chapter-item expanded "><a href="../reverse-proxy.html">Using a reverse proxy</a></li><li class="chapter-item expanded affix "><li class="part-title">Usage</li><li class="chapter-item expanded "><a href="../usage/index.html">Administration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../usage/api.html">Admin API</a></li><li class="chapter-item expanded "><a href="../webhook.html">Outgoing Webhook</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../webhook.html">Intro</a></li><li class="chapter-item expanded "><a href="../webhook.html">Examples</a></li><li class="chapter-item expanded "><a href="../webhook/webhook-secrets.html">Secrets</a></li><li class="chapter-item expanded "><a href="../webhook/wh-security.html">Security Policy</a></li><li class="chapter-item expanded "><a href="../webhook/wh-test.html">Testing</a></li></ol></li><li class="chapter-item expanded "><a href="../usage/update-packages.html">Update Webhooks</a></li><li class="chapter-item expanded "><a href="../usage/customers.html">Customer Users</a></li><li class="chapter-item expanded "><a href="../usage/credential.html">SSH Credential</a></li><li class="chapter-item expanded "><a href="../usage/mirroring.html">Mirroring Packages</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../usage/mirroring.html">Configuration</a></li><li class="chapter-item expanded "><a href="../usage/mirroring.html">Strict mode</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../authentication.html">User Authentication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../authentication-jwt.html">JWT Configuration</a></li><li class="chapter-item expanded "><a href="../authentication-ldap.html">LDAP Configuration</a></li></ol></li><li class="chapter-item expanded "><a href="../usage/storage.html">S3 Storage Provider</a></li><li class="chapter-item expanded "><a href="../usage/custom-page.html">Custom landing page</a></li><li class="chapter-item expanded "><a href="../usage/security-monitoring.html">Security Monitoring</a></li><li class="chapter-item expanded "><a href="../usage/migrate.html">Migrate from Satis</a></li><li class="chapter-item expanded "><a href="../oauth2.html">OAuth2 Integrations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../pull-request-review.html">Pull Request review</a></li><li class="chapter-item expanded "><a href="../oauth2/github-oauth.html">GitHub Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/githubapp.html">GitHub AppBot</a></li><li class="chapter-item expanded "><a href="../oauth2/gitlab-integration.html">GitLab Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/gitea.html">Gitea Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/bitbucket.html">Bitbucket Setup</a></li><li class="chapter-item expanded "><a href="../oauth2/oidc.html" class="active">OIDC</a></li><li class="chapter-item expanded "><a href="../oauth2/login-expression.html">Login Restriction</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Development</li><li class="chapter-item expanded "><a href="../dev/CONTRIBUTING.html">Contributing</a></li><li class="chapter-item expanded "><a href="../dev/configuration.html">Configuration Reference</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Packeton Docs</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/vtsykun/packeton" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/vtsykun/packeton/edit/master/docs/oauth2/oidc.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="generic-oidc-provider"><a class="header" href="#generic-oidc-provider">Generic OIDC Provider</a></h1>
+<p>Generic OpenID Connect (OIDC) provider for SSO login with any OIDC-compliant identity provider:
+Authentik, Keycloak, Azure AD, Okta, Auth0, and others.</p>
+<p><strong>Note</strong>: This is a login-only provider. It does not support repository synchronization.</p>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        authentik:  # Alias name - can be any URL-safe value
+            allow_login: true
+            allow_register: true
+            default_roles: ['ROLE_USER', 'ROLE_MAINTAINER']
+            login_title: 'Login with Authentik'
+            oidc:
+                client_id: 'packeton-client-id'
+                client_secret: 'packeton-client-secret'
+                issuer: 'https://auth.example.com/application/o/packeton/'
+</code></pre>
+<h2 id="configuration-options"><a class="header" href="#configuration-options">Configuration Options</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Required</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>client_id</code></td><td>Yes</td><td>-</td><td>OAuth2 client ID</td></tr>
+<tr><td><code>client_secret</code></td><td>Yes</td><td>-</td><td>OAuth2 client secret</td></tr>
+<tr><td><code>issuer</code></td><td>Yes*</td><td>-</td><td>OIDC issuer URL (discovery URL is derived from this)</td></tr>
+<tr><td><code>discovery_url</code></td><td>Yes*</td><td>-</td><td>Explicit OIDC discovery URL (alternative to issuer)</td></tr>
+<tr><td><code>scopes</code></td><td>No</td><td><code>['openid', 'email', 'profile']</code></td><td>OIDC scopes to request</td></tr>
+<tr><td><code>require_email_verified</code></td><td>No</td><td><code>true</code></td><td>Reject login if <code>email_verified</code> claim is false</td></tr>
+<tr><td><code>claim_mapping</code></td><td>No</td><td>See below</td><td>Map OIDC claims to user fields and roles</td></tr>
+</tbody></table>
+</div>
+<p>*Either <code>issuer</code> or <code>discovery_url</code> must be provided.</p>
+<h2 id="redirect-url"><a class="header" href="#redirect-url">Redirect URL</a></h2>
+<p>Configure this redirect URL in your identity provider:</p>
+<pre><code>https://example.com/oauth2/{alias}/check
+</code></pre>
+<p>Where <code>{alias}</code> is the integration name (e.g., <code>authentik</code>, <code>keycloak</code>).</p>
+<h2 id="claim-mapping"><a class="header" href="#claim-mapping">Claim Mapping</a></h2>
+<p>The provider maps standard OIDC claims to Packeton user fields. Configure <code>claim_mapping</code> for providers with non-standard claim names:</p>
+<pre><code class="language-yaml">oidc:
+    claim_mapping:
+        email: 'email'                    # Default: email
+        username: 'preferred_username'    # Default: preferred_username
+        sub: 'sub'                        # Default: sub
+</code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Mapping Key</th><th>Default OIDC Claim</th><th>Packeton Field</th></tr></thead><tbody>
+<tr><td><code>email</code></td><td><code>email</code></td><td>User email / identifier</td></tr>
+<tr><td><code>username</code></td><td><code>preferred_username</code></td><td>Username (falls back to email prefix)</td></tr>
+<tr><td><code>sub</code></td><td><code>sub</code></td><td>External ID (prefixed with provider name)</td></tr>
+</tbody></table>
+</div>
+<h2 id="role-mapping"><a class="header" href="#role-mapping">Role Mapping</a></h2>
+<p>Map OIDC groups/roles claims directly to Packeton roles. This provides an alternative to <code>login_control_expression</code> for simple role assignment.</p>
+<pre><code class="language-yaml">packeton:
+    integrations:
+        keycloak:
+            allow_login: true
+            allow_register: true
+            login_title: 'Login with Keycloak'
+            oidc:
+                client_id: 'packeton'
+                client_secret: 'secret'
+                issuer: 'https://keycloak.example.com/realms/myrealm'
+                scopes: ['openid', 'email', 'profile', 'groups']
+                claim_mapping:
+                    roles_claim: 'groups'
+                    roles_map:
+                        'packeton-admins': ['ROLE_ADMIN', 'ROLE_MAINTAINER']
+                        'packeton-maintainers': ['ROLE_MAINTAINER']
+                        'packeton-users': ['ROLE_USER']
+</code></pre>
+<h3 id="role-mapping-options"><a class="header" href="#role-mapping-options">Role Mapping Options</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>roles_claim</code></td><td>Claim containing user roles/groups (e.g., <code>groups</code>, <code>roles</code>, <code>realm_access.roles</code>)</td></tr>
+<tr><td><code>roles_map</code></td><td>Map OIDC groups to Packeton roles</td></tr>
+</tbody></table>
+</div>
+<h3 id="behavior"><a class="header" href="#behavior">Behavior</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Scenario</th><th>Result</th></tr></thead><tbody>
+<tr><td>User has <code>packeton-admins</code> group</td><td>Gets <code>ROLE_ADMIN</code>, <code>ROLE_MAINTAINER</code></td></tr>
+<tr><td>User has multiple mapped groups</td><td>Roles are merged (union)</td></tr>
+<tr><td>User has no mapped groups</td><td>Falls back to <code>default_roles</code></td></tr>
+<tr><td><code>roles_claim</code> not configured</td><td>Role mapping disabled, uses <code>default_roles</code></td></tr>
+<tr><td>Claim doesn't exist in token</td><td>Falls back to <code>default_roles</code></td></tr>
+</tbody></table>
+</div>
+<h2 id="provider-specific-setup"><a class="header" href="#provider-specific-setup">Provider-Specific Setup</a></h2>
+<h3 id="authentik"><a class="header" href="#authentik">Authentik</a></h3>
+<ol>
+<li>Create an OAuth2/OIDC Provider in Authentik admin</li>
+<li>Set the redirect URI to <code>https://your-packeton.com/oauth2/{alias}/check</code></li>
+<li>Use issuer format: <code>https://auth.example.com/application/o/{app-slug}/</code></li>
+</ol>
+<pre><code class="language-yaml">authentik:
+    allow_login: true
+    allow_register: true
+    login_title: 'Login with Authentik'
+    oidc:
+        client_id: 'your-client-id'
+        client_secret: 'your-client-secret'
+        issuer: 'https://auth.example.com/application/o/packeton/'
+</code></pre>
+<h3 id="keycloak"><a class="header" href="#keycloak">Keycloak</a></h3>
+<ol>
+<li>Create a &quot;Confidential&quot; client with Standard Flow enabled</li>
+<li>Add redirect URI in client settings</li>
+<li>Use issuer format: <code>https://keycloak.example.com/realms/{realm-name}</code></li>
+</ol>
+<pre><code class="language-yaml">keycloak:
+    allow_login: true
+    allow_register: true
+    login_title: 'Login with Keycloak'
+    oidc:
+        client_id: 'packeton'
+        client_secret: 'your-client-secret'
+        issuer: 'https://keycloak.example.com/realms/myrealm'
+        scopes: ['openid', 'email', 'profile', 'groups']
+        claim_mapping:
+            roles_claim: 'groups'
+            roles_map:
+                'packeton-admins': ['ROLE_ADMIN']
+                'packeton-maintainers': ['ROLE_MAINTAINER']
+</code></pre>
+<h3 id="azure-ad--entra-id"><a class="header" href="#azure-ad--entra-id">Azure AD / Entra ID</a></h3>
+<ol>
+<li>Register an application in Azure Portal</li>
+<li>Add redirect URI in the application settings</li>
+<li>Use issuer format: <code>https://login.microsoftonline.com/{tenant-id}/v2.0</code></li>
+<li>May need additional scopes for email access</li>
+</ol>
+<pre><code class="language-yaml">azure:
+    allow_login: true
+    login_title: 'Login with Microsoft'
+    oidc:
+        client_id: 'your-application-id'
+        client_secret: 'your-client-secret'
+        issuer: 'https://login.microsoftonline.com/{tenant-id}/v2.0'
+</code></pre>
+<h3 id="okta"><a class="header" href="#okta">Okta</a></h3>
+<ol>
+<li>Create a Web application in Okta admin</li>
+<li>Use issuer format: <code>https://{domain}.okta.com</code> or custom authorization server</li>
+</ol>
+<pre><code class="language-yaml">okta:
+    allow_login: true
+    login_title: 'Login with Okta'
+    oidc:
+        client_id: 'your-client-id'
+        client_secret: 'your-client-secret'
+        issuer: 'https://dev-xxxxx.okta.com'
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../oauth2/bitbucket.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../oauth2/login-expression.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../oauth2/bitbucket.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../oauth2/login-expression.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>
