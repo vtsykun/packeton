@@ -2390,7 +2390,32 @@ STORAGE_AWS_ARTIFACT_PREFIX=artifact
 
 STORAGE_AWS_ARGS='{&quot;endpoint&quot;: &quot;https://s3.waw.io.cloud.ovh.net&quot;, &quot;accessKeyId&quot;: &quot;xxx&quot;, &quot;accessKeySecret&quot;: &quot;xxx&quot;, &quot;region&quot;: &quot;waw&quot;}'
 </code></pre>
-<p>Sometimes for Artifact Repository requires direct access to files from the archive, so to 
+<h2 id="mirror-storage-stateless-mode"><a class="header" href="#mirror-storage-stateless-mode">Mirror Storage (Stateless Mode)</a></h2>
+<p>When <code>STORAGE_SOURCE=s3</code>, mirrored repositories metadata and zipballs are also stored in S3.
+This enables running Packeton in stateless mode.</p>
+<p>Additional env vars for mirror storage (optional):</p>
+<pre><code># S3 prefixes for mirror data (defaults shown)
+STORAGE_AWS_MIRROR_META_PREFIX=mirror-meta
+STORAGE_AWS_MIRROR_DIST_PREFIX=mirror-dist
+
+# Optional local cache directories. If empty, data is read/written directly to S3 (fully stateless).
+# Set to /tmp paths for ephemeral caching in container environments.
+MIRROR_METADATA_CACHE_DIR=
+MIRROR_DIST_CACHE_DIR=
+</code></pre>
+<p>Example for fully stateless deployment:</p>
+<pre><code>STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=my-bucket
+MIRROR_METADATA_CACHE_DIR=
+MIRROR_DIST_CACHE_DIR=
+</code></pre>
+<p>Example with ephemeral local cache (recommended for performance):</p>
+<pre><code>STORAGE_SOURCE=s3
+STORAGE_AWS_BUCKET=my-bucket
+MIRROR_METADATA_CACHE_DIR=/tmp/mirror-meta
+MIRROR_DIST_CACHE_DIR=/tmp/mirror-dist
+</code></pre>
+<p>Sometimes for Artifact Repository requires direct access to files from the archive, so to
 improve performance and reduces count of S3 API requests, the all archives are cached on the local filesystem too. </p>
 <p>If you need to use the other provider, like Google Cloud, you may add config file to <code>config/packages</code> or use <code>config.yaml</code> in data docker dir.</p>
 <pre><code class="language-yaml">flysystem:
