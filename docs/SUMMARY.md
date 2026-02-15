@@ -37,6 +37,7 @@
     - [GitLab Setup](oauth2/gitlab-integration.md)
     - [Gitea Setup](oauth2/gitea.md)
     - [Bitbucket Setup](oauth2/bitbucket.md)
+    - [OIDC](oauth2/oidc.md)
     - [Login Restriction](oauth2/login-expression.md)
 
 # Development
