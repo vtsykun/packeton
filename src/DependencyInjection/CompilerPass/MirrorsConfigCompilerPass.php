@@ -41,13 +41,17 @@ final class MirrorsConfigCompilerPass implements CompilerPassInterface
         $container->setDefinition($rmpId = 'packeton.mirror_rmp.' . $name, $rmp);
 
         $container->setDefinition($dmId = 'packeton.mirror_dm.' . $name, new ChildDefinition(ZipballDownloadManager::class))
-            ->setArgument('$aliasName', $name);
+            ->setArgument('$aliasName', $name)
+            ->setArgument('$mirrorDistStorage', new Reference('flysystem.mirror.dist'))
+            ->setArgument('$mirrorDistCacheDir', '%mirror_dist_cache_dir%');
 
         $service = new ChildDefinition(RemoteProxyRepository::class);
 
         $service->setArgument('$repoConfig', ['name' => $name, 'type' => 'composer'] + $repoConfig)
             ->setArgument('$rpm', new Reference($rmpId))
-            ->setArgument('$zipballManager', new Reference($dmId));
+            ->setArgument('$zipballManager', new Reference($dmId))
+            ->setArgument('$mirrorMetaStorage', new Reference('flysystem.mirror.meta'))
+            ->setArgument('$mirrorMetaCacheDir', '%mirror_meta_cache_dir%');
 
         $container
             ->setDefinition($serviceId = $this->getMirrorServiceId($name), $service);

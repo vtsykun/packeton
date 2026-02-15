@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packeton\Mirror;
 
+use League\Flysystem\FilesystemOperator;
 use Packeton\Composer\Util\ConfigFactory;
 use Packeton\Mirror\Model\GZipTrait;
 use Packeton\Mirror\Model\JsonMetadata;
@@ -15,7 +16,7 @@ use Packeton\Mirror\Utils\ApiMetadataUtils;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * Filesystem mirror proxy repo for metadata.
+ * Filesystem mirror proxy repo for metadata with optional S3 storage support.
  */
 class RemoteProxyRepository extends AbstractProxyRepository
 {
@@ -32,6 +33,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     protected string $redisStatKey;
 
     protected string $ds;
+    protected string $repoName;
 
     public function __construct(
         protected array $repoConfig,
@@ -39,21 +41,24 @@ class RemoteProxyRepository extends AbstractProxyRepository
         protected Filesystem $filesystem,
         protected \Redis $redis,
         protected RemotePackagesManager $rpm,
-        protected ZipballDownloadManager $zipballManager
+        protected ZipballDownloadManager $zipballManager,
+        protected FilesystemOperator $mirrorMetaStorage,
+        protected ?string $mirrorMetaCacheDir = null,
     ) {
         if (null === $mirrorRepoMetaDir) {
             $mirrorRepoMetaDir = ConfigFactory::getHomeDir();
         }
 
         $this->ds = DIRECTORY_SEPARATOR;
+        $this->repoName = $this->repoConfig['name'];
 
-        $this->mirrorRepoMetaDir = \rtrim($mirrorRepoMetaDir, $this->ds) . $this->ds . $this->repoConfig['name'];
+        $this->mirrorRepoMetaDir = \rtrim($mirrorRepoMetaDir, $this->ds) . $this->ds . $this->repoName;
         $this->rootFilename = $this->mirrorRepoMetaDir . $this->ds . self::ROOT_PACKAGE;
         $this->providersDir = $this->mirrorRepoMetaDir . $this->ds . 'p' . $this->ds;
         $this->packageDir = $this->mirrorRepoMetaDir . $this->ds . 'package' . $this->ds;
 
-        $this->redisRootKey = "proxy-root-{$this->repoConfig['name']}";
-        $this->redisStatKey = "proxy-info-{$this->repoConfig['name']}";
+        $this->redisRootKey = "proxy-root-{$this->repoName}";
+        $this->redisStatKey = "proxy-info-{$this->repoName}";
 
         $this->zipballManager->setRepository($this);
     }
@@ -72,8 +77,12 @@ class RemoteProxyRepository extends AbstractProxyRepository
      */
     public function rootMetadata(?int $modifiedSince = null): ?JsonMetadata
     {
-        if ($this->filesystem->exists($this->rootFilename)) {
-            return $this->createMetadataFromFile($this->rootFilename);
+        $storageKey = $this->storageKey(self::ROOT_PACKAGE);
+        $cacheFile = $this->cacheFilePath(self::ROOT_PACKAGE);
+
+        $content = $this->readFromStorage($storageKey, $cacheFile);
+        if ($content !== null) {
+            return new JsonMetadata($content, \time(), null, $this->repoConfig);
         }
 
         return null;
@@ -84,10 +93,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
      */
     public function findProviderMetadata(string $providerName, ?int $modifiedSince = null): ?JsonMetadata
     {
-        $filename = $this->providersDir . $this->providerKey($providerName);
+        $key = 'p/' . $this->providerKey($providerName);
+        $storageKey = $this->storageKey($key);
+        $cacheFile = $this->cacheFilePath($key);
 
-        if ($this->filesystem->exists($filename)) {
-            return $this->createMetadataFromFile($filename);
+        $content = $this->readFromStorage($storageKey, $cacheFile);
+        if ($content !== null) {
+            return new JsonMetadata($content, \time(), null, $this->repoConfig);
         }
 
         return null;
@@ -123,9 +135,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
             }
         }
 
-        $filename = $this->packageDir . $this->packageKey($package, $hash);
-        if ($this->filesystem->exists($filename)) {
-            return $this->createMetadataFromFile($filename, $hash, $modifiedSince, $patch);
+        $key = 'package/' . $this->packageKey($package, $hash);
+        $storageKey = $this->storageKey($key);
+        $cacheFile = $this->cacheFilePath($key);
+
+        $content = $this->readFromStorage($storageKey, $cacheFile);
+        if ($content !== null) {
+            return new JsonMetadata($content, \time(), $hash, $this->repoConfig, $patch);
         }
 
         return null;
@@ -166,21 +182,14 @@ class RemoteProxyRepository extends AbstractProxyRepository
         return $packages;
     }
 
-    protected function createMetadataFromFile(string $filename, ?string $hash = null, ?int $modifiedSince = null, mixed $patch  = null): JsonMetadata
-    {
-        $unix = @\filemtime($filename) ?: null;
-        if ($modifiedSince && $unix && $unix <= $modifiedSince) {
-            return JsonMetadata::createNotModified($modifiedSince);
-        }
-
-        $content = \file_get_contents($filename);
-        return new JsonMetadata($content, $unix, $hash, $this->repoConfig, $patch);
-    }
-
     public function dumpRootMeta(array $root): void
     {
         $rootJson = \json_encode($root, \JSON_UNESCAPED_SLASHES);
-        $this->filesystem->dumpFile($this->rootFilename, $rootJson);
+
+        $storageKey = $this->storageKey(self::ROOT_PACKAGE);
+        $cacheFile = $this->cacheFilePath(self::ROOT_PACKAGE);
+
+        $this->writeToStorage($storageKey, $cacheFile, $rootJson);
         $this->updateRootStats($root);
 
         $this->proxyOptions = null;
@@ -190,7 +199,7 @@ class RemoteProxyRepository extends AbstractProxyRepository
     {
         $root ??= $this->rootMetadata()?->decodeJson() ?: [];
         if ($root) {
-            $modifiedSince = @\filemtime($this->rootFilename) ?: \time();
+            $modifiedSince = \time();
             $root['__packages'] = (bool)($root['packages'] ?? ($root['__packages'] ?? false));
             $root['modified_since'] = $modifiedSince;
             unset($root['packages']);
@@ -219,37 +228,57 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function isRootFresh(array $root): bool
     {
-        if ($this->filesystem->exists($this->rootFilename)) {
+        $storageKey = $this->storageKey(self::ROOT_PACKAGE);
+        $cacheFile = $this->cacheFilePath(self::ROOT_PACKAGE);
+
+        $existingContent = $this->readFromStorage($storageKey, $cacheFile);
+        if ($existingContent !== null) {
             $rootJson = \json_encode($root, \JSON_UNESCAPED_SLASHES);
-            return \sha1_file($this->rootFilename) === \sha1($rootJson);
+            return \sha1($existingContent) === \sha1($rootJson);
         }
+
         return false;
     }
 
     public function touchRoot(): void
     {
-        if ($this->filesystem->exists($this->rootFilename)) {
-            $this->filesystem->touch($this->rootFilename);
-
-            $root = $this->redis->get($this->redisRootKey);
-            if ($root = $root ? \json_decode($root, true) : null) {
-                $modifiedSince = @\filemtime($this->rootFilename) ?: \time();
-                $root['modified_since'] = $modifiedSince;
-                $this->redis->set($this->redisRootKey, \json_encode($root));
-            }
+        $root = $this->redis->get($this->redisRootKey);
+        if ($root = $root ? \json_decode($root, true) : null) {
+            $root['modified_since'] = \time();
+            $this->redis->set($this->redisRootKey, \json_encode($root));
         }
     }
 
     public function hasPackage(string $package, ?string $hash = null): bool
     {
-        $filename = $this->packageDir . $this->packageKey($package, $hash);
-        return $this->filesystem->exists($filename);
+        $key = 'package/' . $this->packageKey($package, $hash);
+        $cacheFile = $this->cacheFilePath($key);
+
+        // Check local cache first
+        if ($cacheFile !== null && $this->filesystem->exists($cacheFile)) {
+            return true;
+        }
+
+        $storageKey = $this->storageKey($key);
+        return $this->mirrorMetaStorage->fileExists($storageKey);
     }
 
     public function packageModifiedSince(string $package): ?int
     {
-        $filename = $this->packageDir . $this->packageKey($package);
-        return $this->filesystem->exists($filename) ? (@\filemtime($filename) ?: null) : null;
+        $key = 'package/' . $this->packageKey($package);
+        $cacheFile = $this->cacheFilePath($key);
+
+        // Check local cache first for mtime
+        if ($cacheFile !== null && $this->filesystem->exists($cacheFile)) {
+            return @\filemtime($cacheFile) ?: null;
+        }
+
+        $storageKey = $this->storageKey($key);
+        if ($this->mirrorMetaStorage->fileExists($storageKey)) {
+            return $this->mirrorMetaStorage->lastModified($storageKey);
+        }
+
+        return null;
     }
 
     public function dumpPackage(string $package, string|array|null $content, ?string $hash = null): void
@@ -260,12 +289,18 @@ class RemoteProxyRepository extends AbstractProxyRepository
             return;
         }
 
-        $filename = $this->packageDir . $this->packageKey($package, $hash);
-        $this->filesystem->dumpFile($filename, $content);
+        $key = 'package/' . $this->packageKey($package, $hash);
+        $storageKey = $this->storageKey($key);
+        $cacheFile = $this->cacheFilePath($key);
+
+        $this->writeToStorage($storageKey, $cacheFile, $content);
 
         if ($hash !== null) {
-            $filename = $this->packageDir . $this->packageKey($package);
-            $this->filesystem->dumpFile($filename, $content);
+            $keyWithoutHash = 'package/' . $this->packageKey($package);
+            $storageKeyWithoutHash = $this->storageKey($keyWithoutHash);
+            $cacheFileWithoutHash = $this->cacheFilePath($keyWithoutHash);
+
+            $this->writeToStorage($storageKeyWithoutHash, $cacheFileWithoutHash, $content);
         }
     }
 
@@ -281,18 +316,28 @@ class RemoteProxyRepository extends AbstractProxyRepository
 
     public function hasProvider(string $uri): bool
     {
-        $filename = $this->providersDir . $this->providerKey($uri);
+        $key = 'p/' . $this->providerKey($uri);
+        $cacheFile = $this->cacheFilePath($key);
 
-        return $this->filesystem->exists($filename);
+        // Check local cache first
+        if ($cacheFile !== null && $this->filesystem->exists($cacheFile)) {
+            return true;
+        }
+
+        $storageKey = $this->storageKey($key);
+        return $this->mirrorMetaStorage->fileExists($storageKey);
     }
 
     public function dumpProvider(string $uri, string|array $content): void
     {
         $content = \is_array($content) ? \json_encode($content, JSON_UNESCAPED_SLASHES) : $content;
-
         $content = $this->encode($content);
-        $filename = $this->providersDir . $this->providerKey($uri);
-        $this->filesystem->dumpFile($filename, $content);
+
+        $key = 'p/' . $this->providerKey($uri);
+        $storageKey = $this->storageKey($key);
+        $cacheFile = $this->cacheFilePath($key);
+
+        $this->writeToStorage($storageKey, $cacheFile, $content);
     }
 
     public function lookupAllProviders(?ProxyOptions $config = null): iterable
@@ -303,10 +348,13 @@ class RemoteProxyRepository extends AbstractProxyRepository
         }
 
         foreach ($config->getProviderIncludes(true) as $provider) {
-            $filename = $this->providersDir . $this->providerKey($provider);
-            if ($this->filesystem->exists($filename)) {
-                $content = \file_get_contents($filename);
-                $content = $content ? $this->decode($content) : null;
+            $key = 'p/' . $this->providerKey($provider);
+            $storageKey = $this->storageKey($key);
+            $cacheFile = $this->cacheFilePath($key);
+
+            $content = $this->readFromStorage($storageKey, $cacheFile);
+            if ($content !== null) {
+                $content = $this->decode($content);
                 $content = $content ? \json_decode($content, true) : [];
                 yield $content['providers'] ?? [];
             }
@@ -362,15 +410,70 @@ class RemoteProxyRepository extends AbstractProxyRepository
         $pkg = $this->safeName($pkg) ?: '_null_';
         $hash = $hash ? $this->safeName($hash) : null;
 
-        return $vendor . $this->ds . $pkg . ($hash ? self::HASH_SEPARATOR . $hash : '') . '.json.gz';
+        return $vendor . '/' . $pkg . ($hash ? self::HASH_SEPARATOR . $hash : '') . '.json.gz';
     }
 
     public function providerKey(string $uri): string
     {
-        return  $this->safeName($uri) . '.json.gz';
+        return $this->safeName($uri) . '.json.gz';
     }
 
-    private function safeName($name)
+    protected function storageKey(string $relativePath): string
+    {
+        return $this->repoName . '/' . $relativePath;
+    }
+
+    protected function cacheFilePath(string $relativePath): ?string
+    {
+        if ($this->mirrorMetaCacheDir === null || $this->mirrorMetaCacheDir === '') {
+            return null;
+        }
+
+        return \rtrim($this->mirrorMetaCacheDir, '/') . '/' . $this->repoName . '/' . $relativePath;
+    }
+
+    protected function readFromStorage(string $storageKey, ?string $cacheFile): ?string
+    {
+        // Check local cache first if configured
+        if ($cacheFile !== null && $this->filesystem->exists($cacheFile)) {
+            return \file_get_contents($cacheFile);
+        }
+
+        // Read from remote storage
+        if (!$this->mirrorMetaStorage->fileExists($storageKey)) {
+            return null;
+        }
+
+        $content = $this->mirrorMetaStorage->read($storageKey);
+
+        // Optionally write to local cache
+        if ($cacheFile !== null && $content !== null) {
+            $dir = \dirname($cacheFile);
+            if (!$this->filesystem->exists($dir)) {
+                $this->filesystem->mkdir($dir);
+            }
+            @\file_put_contents($cacheFile, $content);
+        }
+
+        return $content;
+    }
+
+    protected function writeToStorage(string $storageKey, ?string $cacheFile, string $content): void
+    {
+        // Always write to remote storage
+        $this->mirrorMetaStorage->write($storageKey, $content);
+
+        // Optionally write to local cache
+        if ($cacheFile !== null) {
+            $dir = \dirname($cacheFile);
+            if (!$this->filesystem->exists($dir)) {
+                $this->filesystem->mkdir($dir);
+            }
+            $this->filesystem->dumpFile($cacheFile, $content);
+        }
+    }
+
+    private function safeName($name): string
     {
         $name = (string) $name;
         $name = \str_replace('.', '_', $name);

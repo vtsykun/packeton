@@ -13,10 +13,12 @@ use Packeton\Mirror\Model\StrictProxyRepositoryInterface as PRI;
 use Packeton\Mirror\Service\ComposeProxyRegistry;
 use Packeton\Security\Acl\ObjectIdentity;
 use Packeton\Util\UserAgentParser;
+use Packeton\Util\PacketonUtils;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -96,15 +98,27 @@ class MirrorController extends AbstractController
 
             $ref = str_starts_with($ref, 'ref') ? substr($ref, 3) : $ref;
             $path = $dm->distPath($package, $version, $ref, $type);
+
+            $response = new BinaryFileResponse($path);
+            $response->setAutoEtag();
+            $response->setPublic();
+
+            return $response;
         } catch (MetadataNotFoundException $e) {
             throw $this->createNotFoundException($e->getMessage(), $e);
+        } catch (\RuntimeException $e) {
+            // Local cache write failed, try streaming directly from S3
+            $dm = $this->proxyRegistry->getProxyDownloadManager($alias);
+            $stream = $dm->distStream($package, $version, $ref, $type);
+
+            if ($stream !== null) {
+                return new StreamedResponse(PacketonUtils::readStream($stream), 200, [
+                    'Content-Type' => 'application/zip',
+                ]);
+            }
+
+            throw $this->createNotFoundException($e->getMessage(), $e);
         }
-
-        $response = new BinaryFileResponse($path);
-        $response->setAutoEtag();
-        $response->setPublic();
-
-        return $response;
     }
 
     // provider - proxy full url name, include providers is not changed for root
