@@ -119,6 +119,10 @@ class ArchiveManager extends ComposerArchiveManager
         $filesystem->ensureDirectoryExists(dirname($target));
 
         if (!$this->overwriteFiles && file_exists($target)) {
+            if (!$package instanceof RootPackageInterface) {
+                $filesystem->removeDirectory($sourcePath);
+            }
+
             return $target;
         }
 
