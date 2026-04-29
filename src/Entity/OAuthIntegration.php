@@ -268,6 +268,8 @@ class OAuthIntegration
         if ($short) {
             $repos = array_map(fn($r) => ['id' => $r['ext_ref'], 'text' => $r['name']], $repos);
         }
+
+        usort($repos, fn($a, $b) => $a['text'] <=> $b['text']);
         return $repos;
     }
 
