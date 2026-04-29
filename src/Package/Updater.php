@@ -607,7 +607,7 @@ class Updater implements UpdaterInterface
                 $path = $this->distManager->buildAndWriteArchive(
                     $dist['reference'] ?? $data->getDistReference(),
                     $package,
-                    $data->getVersion()
+                    $data->getPrettyVersion()
                 );
             } catch (\Throwable $e) {
             }
