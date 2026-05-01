@@ -94,7 +94,7 @@ class IntegrationController extends AbstractController
         $excludedRepos = array_values(
             array_map(
                 function(Package $r) {
-                    if( 1 === preg_match('/^https:\/\/bitbucket.org\/([a-z0-9_-]+\/[a-z0-9_-]+)\.git/i', $r->getRepository(), $matches)) {
+                    if( 1 === preg_match("/^https?:\/\/[a-z0-9-]+?\.[a-z]{2,}\/([a-z0-9_-]+\/[a-z0-9_-]+)\.git/i", $r->getRepository(), $matches)) {
                         return $matches[1];
                     }
 
