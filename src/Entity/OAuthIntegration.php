@@ -252,7 +252,7 @@ class OAuthIntegration
         return $this->setSerialized('installation_id', $id ? (int) $id : null);
     }
 
-    public function filteredRepos(array $repos, bool $short = false): array
+    public function filteredRepos(array $repos, bool $short = false ): array
     {
         $listOf = array_column($repos, 'name');
         $filtered = PacketonUtils::matchGlobAll($listOf, $this->getGlobFilter(), $this->getExcludedRepos());
