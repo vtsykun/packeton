@@ -13,6 +13,7 @@
 namespace Packeton\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Packeton\Model\BaseUser;
 use Packeton\Model\PacketonUserInterface;
@@ -52,6 +53,12 @@ class User extends BaseUser implements PacketonUserInterface
     #[ORM\InverseJoinColumn(name: 'group_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private $groups;
 
+    /**
+     * @var Group[]|Collection
+     */
+    #[ORM\ManyToMany(targetEntity: Group::class, mappedBy: 'owners')]
+    private Collection $ownedGroups;
+
     #[ORM\ManyToMany(targetEntity: 'Packeton\Entity\Package', mappedBy: 'maintainers')]
     private $packages;
 
@@ -87,6 +94,7 @@ class User extends BaseUser implements PacketonUserInterface
         $this->packages = new ArrayCollection();
         $this->authors = new ArrayCollection();
         $this->groups = new ArrayCollection();
+        $this->ownedGroups = new ArrayCollection();
         $this->createdAt = new \DateTime();
         parent::__construct();
     }
@@ -298,6 +306,14 @@ class User extends BaseUser implements PacketonUserInterface
     public function removeGroup($group)
     {
         $this->groups->removeElement($group);
+    }
+
+    /**
+     * @return Collection|Group[]
+     */
+    public function getOwnedGroups(): Collection
+    {
+        return $this->ownedGroups;
     }
 
     /**

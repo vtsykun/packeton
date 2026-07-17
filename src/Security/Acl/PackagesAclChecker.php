@@ -7,6 +7,7 @@ use Composer\Semver\Constraint\Constraint;
 use Doctrine\Persistence\ManagerRegistry;
 use Packeton\Entity\Group;
 use Packeton\Entity\Package;
+use Packeton\Entity\User;
 use Packeton\Entity\Version;
 use Packeton\Model\PacketonUserInterface as PUI;
 use Packeton\Repository\GroupRepository;
@@ -33,6 +34,11 @@ class PackagesAclChecker
      */
     public function isGrantedAccessForPackage(PUI $user, Package $package)
     {
+        // Maintainers always have read access to their own packages
+        if ($user instanceof User && $package->getMaintainers()->contains($user)) {
+            return true;
+        }
+
         $version = $this->getVersions($user, $package);
         return \count($version) > 0;
     }
@@ -66,6 +72,10 @@ class PackagesAclChecker
      */
     public function isGrantedAccessForVersion(PUI $user, Version $version)
     {
+        if ($user instanceof User && $version->getPackage()->getMaintainers()->contains($user)) {
+            return true;
+        }
+
         if (($date = $this->getExpiredDate($user, $version->getPackage())) && $date < $version->getReleasedAt()) {
             return false;
         }

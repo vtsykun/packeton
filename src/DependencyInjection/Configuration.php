@@ -55,6 +55,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->booleanNode('anonymous_access')->defaultFalse()->end()
                 ->booleanNode('anonymous_archive_access')->defaultFalse()->end()
+                ->booleanNode('allow_maintainer_group_creation')->defaultFalse()->end()
                 ->arrayNode('web_protection')
                     ->addDefaultsIfNotSet()
                     ->children()

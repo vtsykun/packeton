@@ -4,6 +4,7 @@ packeton:
     archive: ['mirror', 'replace']
     anonymous_access: '%env(bool:PUBLIC_ACCESS)%'
     anonymous_archive_access: '%env(bool:PUBLIC_ACCESS)%'
+    allow_maintainer_group_creation: '%env(bool:ALLOW_MAINTAINER_GROUPS)%'
     archive_options:
         format: zip
         basedir: '%env(resolve:PACKAGIST_DIST_PATH)%'

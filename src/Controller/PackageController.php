@@ -43,6 +43,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Packeton\Security\Acl\PackageManageVoter;
 
 class PackageController extends AbstractController
 {
@@ -575,7 +576,10 @@ class PackageController extends AbstractController
         $package = $version->getPackage();
         $this->checkSubrepositoryAccess($package->getName());
 
-        if (!$package->getMaintainers()->contains($this->getUser()) && !$this->isGranted('ROLE_DELETE_PACKAGES')) {
+        if (!$this->isGranted(PackageManageVoter::MANAGE, $package)
+            && !$package->getMaintainers()->contains($this->getUser())
+            && !$this->isGranted('ROLE_DELETE_PACKAGES')
+        ) {
             throw new AccessDeniedException;
         }
 
@@ -1145,13 +1149,20 @@ class PackageController extends AbstractController
 
     private function canEditPackage(Package $package): bool
     {
-        return $this->isGranted('ROLE_EDIT_PACKAGES') || $package->getMaintainers()->contains($this->getUser());
+        return $this->isGranted('ROLE_EDIT_PACKAGES')
+            || $package->getMaintainers()?->contains($this->getUser())
+            || $this->isGranted(PackageManageVoter::MANAGE, $package);
     }
 
     private function canDeletePackage(Package $package): bool
     {
         if (!$user = $this->getUser()) {
             return false;
+        }
+
+        // Group owners with ACL permissions can always manage/delete
+        if ($this->isGranted(PackageManageVoter::MANAGE, $package)) {
+            return true;
         }
 
         // super admins bypass additional checks

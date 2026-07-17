@@ -31,9 +31,17 @@ class Group
     #[ORM\OneToMany(mappedBy: "group", targetEntity: GroupAclPermission::class, cascade: ["all"], orphanRemoval: true)]
     private $aclPermissions;
 
+    /**
+     * @var User[]|Collection
+     */
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'ownedGroups')]
+    #[ORM\JoinTable(name: 'group_owner')]
+    private Collection $owners;
+
     public function __construct()
     {
         $this->aclPermissions = new ArrayCollection();
+        $this->owners = new ArrayCollection();
     }
 
     /**
@@ -161,5 +169,46 @@ class Group
     {
         $this->expiredUpdatesAt = $expiredUpdatesAt;
         return $this;
+    }
+
+    /**
+     * @return Collection|User[]
+     */
+    public function getOwners(): Collection
+    {
+        return $this->owners;
+    }
+
+    /**
+     * @param User $user
+     * @return $this
+     */
+    public function addOwner(User $user): self
+    {
+        if (!$this->owners->contains($user)) {
+            $this->owners->add($user);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param User $user
+     * @return $this
+     */
+    public function removeOwner(User $user): self
+    {
+        $this->owners->removeElement($user);
+
+        return $this;
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     */
+    public function hasOwner(User $user): bool
+    {
+        return $this->owners->contains($user);
     }
 }
