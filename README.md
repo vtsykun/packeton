@@ -354,7 +354,8 @@ every time you push code. More simple way use group webhooks, to prevent from be
 
 | Provider  | Group webhook support | Target Path                                               |
 |-----------|-----------------------|-----------------------------------------------------------|
-| GitHub    | Yes                   | `https://example.org/api/github?token=`                   |
+| GitHub    | Yes (signature-based) | `https://example.org/api/hooks/github`                    |
+| GitHub    | Yes (legacy token)    | `https://example.org/api/github?token=`                   |
 | GitLab    | Only paid plan        | `https://example.org/api/update-package?token=`           |
 | Gitea     | Yes                   | `https://example.org/api/update-package?token=`           |
 | Bitbucket | Yes                   | `https://example.org/api/bitbucket?token=`                |
@@ -380,7 +381,18 @@ To enable the Group GitLab webhook you must have the paid plan.
 Go to your GitLab Group > Settings > Webhooks.
 Enter `https://<app>/api/update-package?token=user:token` as URL.
 
-#### GitHub Webhooks
+#### GitHub Organization Webhooks (recommended)
+For organization-wide webhooks, use signature-based authentication instead of putting a user API token in the URL.
+
+1. In Packeton, go to Settings > Incoming webhook secrets and create a secret.
+2. In GitHub, go to Organization Settings > Webhooks > Add webhook.
+3. Set the payload URL to `https://<app>/api/hooks/github`.
+4. Select `application/json`, paste the generated secret, and subscribe to push events.
+
+Packeton validates GitHub's `X-Hub-Signature-256` header before updating packages. Existing token-based webhook URLs
+remain available for backwards compatibility.
+
+#### GitHub Repository Webhooks (legacy)
 To enable the GitHub webhook go to your GitHub repository. Click the "Settings" button, click "Webhooks". 
 Add a new hook. Enter `https://<app>/api/github?token=user:token` as URL.
 

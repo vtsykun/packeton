@@ -22,6 +22,9 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        github_webhook:
+            pattern: ^/api/hooks/github$
+            security: false
         packages:
             pattern: (^(.+\.json$|/p/|/mirror/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/packages/upload/|/downloads/|/api/))+
             api_basic:
@@ -72,6 +75,7 @@ security:
         # Maintainers
         - { path: (^(/users/(.+)/packages))+, roles: ROLE_MAINTAINER }
         - { path: (^(/users/(.+)/favorites))+, roles: ROLE_MAINTAINER }
+        - { path: ^/api/hooks/github$, roles: PUBLIC_ACCESS }
         - { path: (^(/metadata/changes.json$|/explore|/jobs/|/archive/|/api/hooks/))+, roles: ROLE_MAINTAINER }
 
         # Secured part of the site

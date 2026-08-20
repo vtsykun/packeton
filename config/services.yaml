@@ -25,6 +25,7 @@ parameters:
         - 'Packeton\Entity\SshCredentials'
         - 'Packeton\Entity\ApiToken'
         - 'Packeton\Entity\OAuthIntegration'
+        - 'Packeton\Entity\WebhookSecret'
     security_policy_forbidden_properties:
         'Packeton\Entity\User': ['apiToken', 'githubToken', 'password', 'salt']
         'Packeton\Entity\Package': ['credentials']
