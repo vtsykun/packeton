@@ -1,7 +1,7 @@
-# S3 Storage Provider
+# S3 / GCS Storage Provider
 
 By default, Packeton stores packages archives on the local filesystem. But you can easily configure 
-the S3 using `league/flysystem-bundle`.
+the S3 or Google Cloud Storage (GCS) using `league/flysystem-bundle`.
 
 For docker env, please set env vars. 
 
@@ -86,10 +86,51 @@ MIRROR_METADATA_CACHE_DIR=/tmp/mirror-meta
 MIRROR_DIST_CACHE_DIR=/tmp/mirror-dist
 ```
 
-Sometimes for Artifact Repository requires direct access to files from the archive, so to
-improve performance and reduces count of S3 API requests, the all archives are cached on the local filesystem too. 
+## Google Cloud Storage (GCS)
 
-If you need to use the other provider, like Google Cloud, you may add config file to `config/packages` or use `config.yaml` in data docker dir.
+Set `STORAGE_SOURCE=gcs` to store archives, artifacts and mirror data in a GCS bucket.
+
+```
+STORAGE_SOURCE=gcs
+STORAGE_GCS_BUCKET=packeton-bucket
+STORAGE_GCS_PREFIX=packeton
+STORAGE_GCS_ARTIFACT_PREFIX=artifact
+
+# Optional, defaults shown
+STORAGE_GCS_MIRROR_META_PREFIX=mirror-meta
+STORAGE_GCS_MIRROR_DIST_PREFIX=mirror-dist
+```
+
+`STORAGE_GCS_ARGS` is a JSON object passed to the `Google\Cloud\Storage\StorageClient` constructor,
+see [StorageClient](https://cloud.google.com/php/docs/reference/cloud-storage/latest/StorageClient) for all options.
+
+### Service account key file
+
+```
+STORAGE_SOURCE=gcs
+STORAGE_GCS_BUCKET=packeton-bucket
+STORAGE_GCS_ARGS='{"projectId": "my-project", "keyFilePath": "/data/gcs-key.json"}'
+```
+
+### Application Default Credentials (GKE Workload Identity, GCE, Cloud Run)
+
+If `STORAGE_GCS_ARGS` is empty, the client uses [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials):
+the `GOOGLE_APPLICATION_CREDENTIALS` env var, or the metadata server when running on GKE with Workload Identity, GCE or Cloud Run.
+No static credentials are needed:
+
+```
+STORAGE_SOURCE=gcs
+STORAGE_GCS_BUCKET=packeton-bucket
+```
+
+The service account needs the `roles/storage.objectAdmin` role on the bucket.
+
+Packeton does not set per-object ACLs, so buckets with uniform bucket-level access are supported.
+
+Sometimes for Artifact Repository requires direct access to files from the archive, so to
+improve performance and reduces count of S3/GCS API requests, the all archives are cached on the local filesystem too. 
+
+If you need to use the other provider, or a custom storage configuration, you may add config file to `config/packages` or use `config.yaml` in data docker dir.
 
 ```yaml
 flysystem:

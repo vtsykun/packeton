@@ -64,7 +64,7 @@ Table of content
     - [Manual hook](#manual-hook-setup)
     - [Custom webhook format](#custom-webhook-format-transformer)
 - [Mirroring Composer repos](docs/usage/mirroring.md)
-- [S3 Storage Provider](docs/usage/storage.md)
+- [S3 / GCS Storage Provider](docs/usage/storage.md)
 - [Security Monitoring](docs/usage/security-monitoring.md)
 - [Compare Private Packagist with Packeton](docs/readme.md#compare-private-packagist-with-packeton)
 - [Usage](#usage-and-authentication)

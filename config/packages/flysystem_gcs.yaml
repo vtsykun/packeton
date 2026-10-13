@@ -1,0 +1,54 @@
+# Google Cloud Storage provider, see docs/usage/storage.md
+resolve:
+    # deferred config loading depending on env vars
+    expression: 'env("STORAGE_SOURCE") == "gcs"'
+    flysystem:
+        storages:
+            gcs.storage:
+                adapter: 'gcloud'
+                options:
+                    client: 'packeton.gcs.storage'
+                    bucket: '%env(STORAGE_GCS_BUCKET)%'
+                    prefix: '%env(STORAGE_GCS_PREFIX)%'
+                    visibility_handler: 'packeton.gcs.visibility_handler'
+
+            gcs.artifact:
+                adapter: 'gcloud'
+                options:
+                    client: 'packeton.gcs.storage'
+                    bucket: '%env(STORAGE_GCS_BUCKET)%'
+                    prefix: '%env(STORAGE_GCS_ARTIFACT_PREFIX)%'
+                    visibility_handler: 'packeton.gcs.visibility_handler'
+
+            gcs.mirror.meta:
+                adapter: 'gcloud'
+                options:
+                    client: 'packeton.gcs.storage'
+                    bucket: '%env(STORAGE_GCS_BUCKET)%'
+                    prefix: '%env(STORAGE_GCS_MIRROR_META_PREFIX)%'
+                    visibility_handler: 'packeton.gcs.visibility_handler'
+
+            gcs.mirror.dist:
+                adapter: 'gcloud'
+                options:
+                    client: 'packeton.gcs.storage'
+                    bucket: '%env(STORAGE_GCS_BUCKET)%'
+                    prefix: '%env(STORAGE_GCS_MIRROR_DIST_PREFIX)%'
+                    visibility_handler: 'packeton.gcs.visibility_handler'
+
+    parameters:
+        env(STORAGE_GCS_BUCKET): 'packeton-bucket'
+        env(STORAGE_GCS_PREFIX): 'packeton'
+        env(STORAGE_GCS_ARGS): '[]'
+        env(STORAGE_GCS_ARTIFACT_PREFIX): 'artifact'
+        env(STORAGE_GCS_MIRROR_META_PREFIX): 'mirror-meta'
+        env(STORAGE_GCS_MIRROR_DIST_PREFIX): 'mirror-dist'
+
+    services:
+        packeton.gcs.storage:
+            class: Google\Cloud\Storage\StorageClient
+            arguments:
+                - '%env(json:STORAGE_GCS_ARGS)%'
+
+        packeton.gcs.visibility_handler:
+            class: League\Flysystem\GoogleCloudStorage\UniformBucketLevelAccessVisibility
