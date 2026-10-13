@@ -26,7 +26,7 @@
   - [User Authentication](authentication.md)
     - [JWT Configuration](authentication-jwt.md)
     - [LDAP Configuration](authentication-ldap.md)
-  - [S3 Storage Provider](usage/storage.md)
+  - [S3 / GCS Storage Provider](usage/storage.md)
   - [Custom landing page](usage/custom-page.md)
   - [Security Monitoring](usage/security-monitoring.md)
   - [Migrate from Satis](usage/migrate.md)
