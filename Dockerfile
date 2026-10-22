@@ -1,4 +1,6 @@
-FROM php:8.4-fpm-alpine
+# PHP >= 8.4.27 fixes PHP2Shell (CVE-2026-109618, CVE-2026-109619)
+ARG PHP_VERSION=8.4.27
+FROM php:${PHP_VERSION}-fpm-alpine
 
 RUN apk --no-cache add nginx curl runit subversion \
     git bash openssh-client zip unzip redis shadow && \
