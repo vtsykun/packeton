@@ -16,7 +16,7 @@ class PacketonUtils
     public static function buildHashReference(PackageInterface $package): string
     {
         $reference = $package->getSourceReference();
-        if (preg_match('/^[a-f0-9]{40}$/', $reference)) {
+        if (null !== $reference && preg_match('/^[a-f0-9]{40}$/', $reference)) {
             return $reference;
         }
 
