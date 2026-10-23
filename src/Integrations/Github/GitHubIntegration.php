@@ -429,8 +429,11 @@ class GitHubIntegration implements IntegrationInterface, LoginInterface, AppInte
             'client_id' => $this->config['client_id'],
             'client_secret' => $this->config['client_secret'],
             'code'  => $code,
-            'grant_type' => 'authorization_code'
+            'grant_type' => 'authorization_code',
+            'redirect_uri' => $this->getRedirectUrls()[0] ?? null,
         ];
+
+        $query = array_filter($query);
 
         $params = [
             'query' => $query,
