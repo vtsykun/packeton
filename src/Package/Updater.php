@@ -594,12 +594,15 @@ class Updater implements UpdaterInterface
             ];
         }
 
+        // Packages of a proxied Composer repository (e.g. repo.magento.com) may have
+        // neither a source nor a dist reference, see #328.
+        $reference = $package->getRepoType() === RepTypes::PROXY
+            ? PacketonUtils::buildHashReference($data)
+            : ($data->getSourceReference() ?: $data->getDistReference() ?: sha1($data->getVersion()));
+
         $dist['type'] = $this->distConfig->getArchiveFormat();
-        $dist['url'] = $this->distConfig->generateRoute($data->getName(), $data->getSourceReference());
-        $dist['reference'] = $data->getSourceReference();
-        if ($package->getRepoType() === RepTypes::PROXY) {
-            $dist['reference'] = PacketonUtils::buildHashReference($data);
-        }
+        $dist['url'] = $this->distConfig->generateRoute($data->getName(), $reference);
+        $dist['reference'] = $reference;
 
         if ($this->distConfig->isPreBuild()) {
             $path = null;
