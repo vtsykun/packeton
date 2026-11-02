@@ -11,6 +11,7 @@ use Packeton\Entity\OAuthIntegration;
 use Packeton\Entity\Package;
 use Packeton\Entity\User;
 use Packeton\Entity\Webhook;
+use Packeton\Entity\WebhookSecret;
 use Packeton\Integrations\IntegrationRegistry;
 use Packeton\Integrations\Model\AppUtils;
 use Packeton\Model\AutoHookUser;
@@ -21,6 +22,7 @@ use Packeton\Security\Provider\AuditSessionProvider;
 use Packeton\Service\JobPersister;
 use Packeton\Service\Scheduler;
 use Packeton\Service\SubRepositoryHelper;
+use Packeton\Service\WebhookSignatureValidator;
 use Packeton\Util\PacketonUtils;
 use Packeton\Webhook\HookBus;
 use Psr\Log\LoggerInterface;
@@ -150,6 +152,84 @@ class ApiController extends AbstractController
             if (!$packages = PacketonUtils::findPackagesByPayload($payload, $repo, true)) {
                 return new JsonResponse(['status' => 'error', 'message' => 'Missing or invalid payload'], 406);
             }
+        }
+
+        return $this->schedulePostJobs($packages);
+    }
+
+    #[Route('/api/hooks/github', name: 'github_secure_postreceive', methods: ['POST'])]
+    public function secureGitHubWebhookAction(Request $request, WebhookSignatureValidator $signatureValidator): Response
+    {
+        $secretRepository = $this->registry->getRepository(WebhookSecret::class);
+        $secrets = $secretRepository->findSecretValues();
+        if (!$secrets) {
+            return new JsonResponse(
+                ['status' => 'error', 'message' => 'No incoming webhook secrets are configured'],
+                Response::HTTP_SERVICE_UNAVAILABLE,
+            );
+        }
+
+        $signature = $request->headers->get(WebhookSignatureValidator::SIGNATURE_HEADER);
+        if (null === $signature || '' === $signature) {
+            $this->logger->warning('GitHub webhook signature validation failed: missing signature header', [
+                'ip' => $request->getClientIp(),
+                'user_agent' => $request->headers->get('User-Agent'),
+            ]);
+
+            return new JsonResponse(
+                ['status' => 'error', 'message' => 'Missing X-Hub-Signature-256 header'],
+                Response::HTTP_UNAUTHORIZED,
+            );
+        }
+
+        $matchedSecretId = $signatureValidator->findMatchingSecretId($request->getContent(), $signature, $secrets);
+        if (null === $matchedSecretId) {
+            $this->logger->warning('GitHub webhook signature validation failed: invalid signature', [
+                'ip' => $request->getClientIp(),
+                'user_agent' => $request->headers->get('User-Agent'),
+            ]);
+
+            return new JsonResponse(
+                ['status' => 'error', 'message' => 'Invalid signature'],
+                Response::HTTP_FORBIDDEN,
+            );
+        }
+
+        $secret = $secretRepository->find($matchedSecretId);
+        if (null !== $secret) {
+            $secret->updateLastUsedAt();
+            $this->registry->getManager()->flush();
+        }
+
+        $event = $request->headers->get('X-GitHub-Event');
+        if ('ping' === $event) {
+            return new JsonResponse(['status' => 'success', 'message' => 'Webhook configured successfully']);
+        }
+        if ('push' !== $event) {
+            return new JsonResponse(
+                ['status' => 'success', 'message' => sprintf('GitHub event "%s" ignored', $event ?? '')],
+                Response::HTTP_ACCEPTED,
+            );
+        }
+
+        $payload = $this->getJsonPayload($request);
+        if (!$payload) {
+            return new JsonResponse(
+                ['status' => 'error', 'message' => 'Missing or invalid JSON payload'],
+                Response::HTTP_NOT_ACCEPTABLE,
+            );
+        }
+
+        $packages = PacketonUtils::findPackagesByPayload(
+            $payload,
+            $this->registry->getRepository(Package::class),
+            true,
+        );
+        if (!$packages) {
+            return new JsonResponse(
+                ['status' => 'error', 'message' => 'No matching packages found'],
+                Response::HTTP_NOT_FOUND,
+            );
         }
 
         return $this->schedulePostJobs($packages);

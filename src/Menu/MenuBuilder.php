@@ -56,6 +56,7 @@ class MenuBuilder
         $menu->addChild($this->translator->trans('menu.my_groups'), ['label' => 'menu.my_groups_icon', 'route' => 'groups_index', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.ssh_keys'), ['label' => 'menu.ssh_keys_icon', 'route' => 'user_add_sshkey', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.webhooks'), ['label' => 'menu.webhooks_icon', 'route' => 'webhook_index', 'extras' => ['safe_label' => true]]);
+        $menu->addChild($this->translator->trans('menu.webhook_secrets'), ['label' => 'menu.webhook_secrets_icon', 'route' => 'webhook_secret_index', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.proxies'), ['label' => 'menu.proxies_icon', 'route' => 'proxies_list', 'extras' => ['safe_label' => true]]);
         $menu->addChild($this->translator->trans('menu.subrepository'), ['label' => 'menu.subrepository_icon', 'route' => 'subrepository_index', 'extras' => ['safe_label' => true]]);
         if ($this->integrations->getNames()) {

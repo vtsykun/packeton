@@ -28,6 +28,7 @@ menu:
     my_groups: My groups
     ssh_keys: Credentials
     webhooks: Webhooks
+    webhook_secrets: Incoming webhook secrets
     proxies: Composer Proxies
     subrepository: SubRepositories
     integrations: Integrations
@@ -43,6 +44,7 @@ menu:
     my_login_icon: '<span class="fa fa-desktop"></span>Login attempts'
     ssh_keys_icon: '<span class="fa fa-key"></span>Credentials'
     webhooks_icon: '<span class="fa fa-bell"></span>Webhooks'
+    webhook_secrets_icon: '<span class="fa fa-shield"></span>Incoming webhook secrets'
     subrepository_icon: '<span class="fa fa-floppy-o"></span>SubRepositories'
     break_line_icon: '<hr>'
     proxies_icon: '<span class="fa fa-random"></span>Composer Proxies'
@@ -215,4 +217,3 @@ Order: 'Order'
 Username: 'Username'
 asc: 'asc'
 desc: 'desc'
-
