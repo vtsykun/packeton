@@ -3545,16 +3545,16 @@
         },
         {
             "name": "okvpn/expression-language",
-            "version": "1.0.3",
+            "version": "1.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/okvpn/expression-language.git",
-                "reference": "4f24b60cbea28c9f68dfcd640603f7da9bbd1a14"
+                "reference": "102e0075d8b07a22fc5c2ac172a428e869dba61a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/okvpn/expression-language/zipball/4f24b60cbea28c9f68dfcd640603f7da9bbd1a14",
-                "reference": "4f24b60cbea28c9f68dfcd640603f7da9bbd1a14",
+                "url": "https://api.github.com/repos/okvpn/expression-language/zipball/102e0075d8b07a22fc5c2ac172a428e869dba61a",
+                "reference": "102e0075d8b07a22fc5c2ac172a428e869dba61a",
                 "shasum": ""
             },
             "require": {
@@ -3597,7 +3597,7 @@
                 "issues": "https://github.com/okvpn/expression-language/issues",
                 "source": "https://github.com/okvpn/expression-language/releases"
             },
-            "time": "2024-09-14T11:34:07+00:00"
+            "time": "2026-11-02T10:38:47+00:00"
         },
         {
             "name": "oro/doctrine-extensions",
