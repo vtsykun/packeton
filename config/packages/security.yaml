@@ -23,7 +23,7 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         packages:
-            pattern: (^(.+\.json$|/p/|/mirror/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/packages/upload/|/downloads/|/api/))+
+            pattern: (^(.+\.json$|/p/|/mirror/|/[^/]+/zipball/|/zipball/|/feeds/.+(\.rss|\.atom)|/packages/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?(\.json|/changelog)|/packages/list\.json|/packages/upload/|/downloads/|/api/))+
             api_basic:
                 provider: all_users
             stateless: true
@@ -64,7 +64,7 @@ security:
         - { path: (^(/search|/packages/|/versions/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
         - { path: ^/mirror/, roles: ROLE_USER, allow_if: "is_granted('PACKETON_MIRROR_PUBLIC')" }
         - { path: (^(/packages.json$|/p/|/p2/|/downloads/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
-        - { path: (^(/zipball/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_ARCHIVE_PUBLIC')" }
+        - { path: (^(/zipball/|/[^/]+/zipball/))+, roles: ROLE_USER, allow_if: "is_granted('PACKETON_ARCHIVE_PUBLIC')" }
         - { path: (^(/api/webhook-invoke/))+, roles: ROLE_USER }
         - { path: (^(/api/(create-package|update-package|github|bitbucket)|/apidoc|/about))$, roles: ROLE_MAINTAINER }
         - { path: ^/$, roles: ROLE_USER, allow_if: "is_granted('PACKETON_PUBLIC')" }
