@@ -69,7 +69,7 @@ class SyncProviderService
 
             return $http
                 ->add($repo->getUrl($uri))
-                ->then(fn (Response $rs) => $repo->dumpProvider($uri, $rs->getBody()), $this->onRejected);
+                ->then(fn (Response $rs) => $repo->dumpProvider($uri, $rs->getBody()), fn () => false);
         };
 
         return $this->httpLoop($providerIncludes, $repo->getConfig(), $loopCallback);
