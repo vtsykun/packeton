@@ -90,6 +90,22 @@ class IntegrationController extends AbstractController
             $repos = [];
         }
 
+        $pkgRepo = $this->registry->getRepository(Package::class);
+        $excludedRepos = array_values(
+            array_map(
+                function(Package $r) {
+                    if( 1 === preg_match("/^https?:\/\/[a-z0-9-]+?\.[a-z]{2,}\/([a-z0-9_-]+\/[a-z0-9_-]+)\.git/i", $r->getRepository(), $matches)) {
+                        return $matches[1];
+                    }
+
+                    return $r->getPackageName();
+                },
+                $pkgRepo->findAll()
+            )
+        );
+
+        $oauth->setExcludedRepos(array_merge($excludedRepos, $oauth->getExcludedRepos() ?? []));
+
         return new JsonResponse($oauth->filteredRepos($repos, true));
     }
 
