@@ -10,9 +10,10 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
 trait PacketonTestTrait
 {
-    private function getUser($username): User
+    private function getUser($username, ?KernelBrowser $client = null): User
     {
-        return static::getContainer()->get(ManagerRegistry::class)
+        $container = $client ? $client->getContainer() : static::getContainer();
+        return $container->get(ManagerRegistry::class)
             ->getRepository(User::class)
             ->findOneBy(['username' => $username]);
     }

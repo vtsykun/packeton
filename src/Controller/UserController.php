@@ -340,8 +340,11 @@ class UserController extends AbstractController
     #[Route('/users/sshkey/{id}', name: 'user_edit_sshkey', methods: ['GET', 'POST'])]
     public function addSSHKeyAction(Request $request, #[Vars] ?SshCredentials $key = null): Response
     {
-        if ($key && !$this->isGranted('VIEW', $key)) {
-            throw new AccessDeniedException();
+        if (!$this->isGranted('ROLE_MAINTAINER')) {
+            throw $this->createAccessDeniedException();
+        }
+        if ($key && !$this->isGranted('MANAGE', $key)) {
+            throw $this->createAccessDeniedException();
         }
 
         $sshKey = $key ?: new SshCredentials();
@@ -372,10 +375,17 @@ class UserController extends AbstractController
             }
         }
 
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
         $listKeys = [];
         if ($this->getUser() instanceof User) {
-            $listKeys = $this->registry->getRepository(SshCredentials::class)
-                ->findBy(['owner' => $this->getUser()]);
+            $qb = $this->registry->getRepository(SshCredentials::class)
+                ->createQueryBuilder('c');
+            if (!$isAdmin) {
+                $qb->andWhere('c.owner = :user')
+                    ->setParameter('user', $this->getUser());
+            }
+            $qb->orderBy('c.id', 'DESC');
+            $listKeys = $qb->getQuery()->getResult();
         }
 
         $deleteForm = $this->createFormBuilder()->getForm();
@@ -385,6 +395,7 @@ class UserController extends AbstractController
             'sshKey' => $sshKey,
             'listKeys' => $listKeys,
             'deleteForm' => $deleteForm->createView(),
+            'isAdmin' => $isAdmin,
         ]);
     }
 
@@ -395,9 +406,7 @@ class UserController extends AbstractController
             return new Response('Invalid csrf form', 400);
         }
 
-        if (!$this->isGranted('VIEW', $key)) {
-            throw new AccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted('MANAGE', $key);
 
         $em = $this->registry->getManager();
         $em->remove($key);

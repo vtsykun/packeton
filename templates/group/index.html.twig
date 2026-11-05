@@ -11,7 +11,9 @@
     </form>
 </section>
 <div style="float:right; margin: 20px">
+    {% if is_granted('ROLE_ADMIN') or (is_granted('ROLE_MAINTAINER') and allowMaintainerGroupCreation) %}
     <a class="btn btn-default" href="{{ path('groups_create') }}">Create group</a>
+    {% endif %}
 </div>
 <section class="row">
     <ul class="packages list-unstyled">
@@ -24,10 +26,12 @@
                         <div class="s-flex">
                             <h4 class="s-flex tab-cell font-bold"><a class="no-underline" style="white-space: nowrap" href="{{ groupUrl }}">{{ group.name }}</a></h4>
                             <div style="width: 100%; margin-top: 10px">
+                                {% if is_granted('ROLE_ADMIN') %}
                                 <form class="onsubmit-confirm" action="{{ path('groups_delete', { 'id': group.id}) }}" style="float: right" method="POST">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete') }}">
                                     <button type="submit" class="btn btn-danger" title="Delete">Delete</button>
                                 </form>
+                                {% endif %}
                             </div>
                         </div>
 

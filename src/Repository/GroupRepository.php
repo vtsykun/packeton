@@ -32,6 +32,10 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
             return [null]; // all versions
         }
 
+        if ($user instanceof User && $package->getMaintainers()->contains($user)) {
+            return [null]; // Maintainers see all versions of their packages
+        }
+
         if ($user instanceof User) {
             $qb
                 ->select('acl.version')
@@ -119,6 +123,22 @@ class GroupRepository extends \Doctrine\ORM\EntityRepository
 
         $result = $qb->getQuery()->getSingleColumnResult();
         $result = array_merge($result, $this->getFullVisiblePackages());
+
+        // Add packages where user is a maintainer
+        if ($user instanceof User) {
+            $maintainerQb = $this->getEntityManager()->createQueryBuilder();
+            $maintainerQb
+                ->select('p.id')
+                ->from(Package::class, 'p')
+                ->innerJoin('p.maintainers', 'm')
+                ->where('m.id = :uid')
+                ->setParameter('uid', $user->getId());
+
+            $maintainerIds = $maintainerQb->getQuery()->getSingleColumnResult();
+            $result = array_merge($result, $maintainerIds);
+        }
+
+        $result = array_unique($result);
 
         if (empty($result)) {
             return [];

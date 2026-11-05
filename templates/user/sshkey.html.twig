@@ -48,7 +48,7 @@
         <div class="col-md-6">
 
             <h2 class="title"></h2>
-            <b>Your SSH credentials</b>
+            <b>{{ isAdmin ? 'SSH credentials' : 'Your SSH credentials' }}</b>
 
             {% for listKey in listKeys %}
                 <div class="panel panel-default">
@@ -56,6 +56,9 @@
                         <a href="{{ path('user_edit_sshkey', {id: listKey.id}) }}">{{ listKey.name|truncate(45) }}</a>
                         &nbsp;
                         <span style="font-size: 0.8em; color: grey">{{ listKey.fingerprint ? listKey.fingerprint : 'Composer Auth' }}</span>
+                        {% if isAdmin and listKey.owner %}
+                            <span style="font-size: 0.8em; color: #999">owner: {{ listKey.owner.username }}</span>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}

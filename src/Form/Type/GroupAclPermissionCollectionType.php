@@ -54,11 +54,14 @@ class GroupAclPermissionCollectionType extends AbstractType
             $data = new ArrayCollection($data->toArray());
         }
 
-        $this->fillEmptyCollectionData($data);
+        $options = $event->getForm()->getConfig()->getOptions();
+        $allowedPackages = $options['allowed_packages'] ?? null;
+
+        $this->fillEmptyCollectionData($data, $allowedPackages);
         $event->setData($data);
     }
 
-    protected function fillEmptyCollectionData(Collection $collection)
+    protected function fillEmptyCollectionData(Collection $collection, ?array $allowedPackages = null)
     {
         $packages = $collection->map(
             function (GroupAclPermission $permission) {
@@ -70,8 +73,15 @@ class GroupAclPermissionCollectionType extends AbstractType
             }
         );
 
-        $allPackages = $this->registry->getRepository(Package::class)
-            ->findAll();
+        $repository = $this->registry->getRepository(Package::class);
+
+        if ($allowedPackages === null) {
+            $allPackages = $repository->findAll();
+        } elseif (count($allowedPackages) > 0) {
+            $allPackages = $repository->findBy(['id' => $allowedPackages]);
+        } else {
+            $allPackages = [];
+        }
 
         foreach ($allPackages as $package) {
             if (false === $packages->contains($package->getName())) {
@@ -98,6 +108,7 @@ class GroupAclPermissionCollectionType extends AbstractType
                 'entry_type' => PackagePermissionType::class,
                 'entry_options' => ['label' => false],
                 'allow_add' => true,
+                'allowed_packages' => null,
             ]
         );
     }
