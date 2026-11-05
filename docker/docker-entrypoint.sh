@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -x
 
 if [[ ! -z "$WAIT_FOR_HOST" ]]; then
   wait-for-it.sh $WAIT_FOR_HOST
