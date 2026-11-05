@@ -101,6 +101,13 @@ class OAuth2Authenticator implements InteractiveAuthenticatorInterface
                 throw new CustomUserMessageAuthenticationException('Registration is not allowed');
             }
             $user = $client->createUser($data);
+        } else {
+            // Update roles for existing SSO users on every login
+            $rolesToApply = $data['_mapped_roles'] ?? $config->roles();
+            if (!empty($rolesToApply)) {
+                $user->setRoles($rolesToApply);
+                $em->flush();
+            }
         }
 
         if ($config->hasLoginExpression()) {
