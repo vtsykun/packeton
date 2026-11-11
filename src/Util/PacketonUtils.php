@@ -130,8 +130,8 @@ class PacketonUtils
 
     public static function getBrowsableRepository(string $repository): ?string
     {
-        if (preg_match('{(://|@)bitbucket.org[:/]}i', $repository)) {
-            return preg_replace('{^(?:git@|https://|git://)bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $repository);
+        if (preg_match('{(://|@)(?:ssh\.)?bitbucket.org[:/]}i', $repository)) {
+            return preg_replace('{^(?:git@|https://|git://)(?:ssh\.)?bitbucket.org[:/](.+?)(?:\.git)?$}i', 'https://bitbucket.org/$1', $repository);
         }
 
         if (preg_match('{^(git://github.com/|git@github.com:)}', $repository)) {
