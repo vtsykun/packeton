@@ -803,7 +803,7 @@ class Updater implements UpdaterInterface
                     $readme = $parser->parse($source);
 
                     if (!empty($readme)) {
-                        if (preg_match('{^(?:git://|git@|https?://)(gitlab.com|github.com|bitbucket.org)[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match)) {
+                        if (preg_match('{^(?:git://|git@|https?://)(?:ssh\.)?(gitlab.com|github.com|bitbucket.org)[:/]([^/]+)/(.+?)(?:\.git|/)?$}i', $package->getRepository(), $match)) {
                             $package->setReadme($this->prepareReadme($readme, $match[1], $match[2], $match[3]));
                         } else {
                             $package->setReadme($this->prepareReadme($readme));
