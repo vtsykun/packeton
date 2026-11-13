@@ -94,6 +94,9 @@ class WebController extends AbstractController
     public function searchAction(Request $req): Response
     {
         $packages = [];
+        $adapter = new ArrayAdapter($packages);
+        $maxPerPage = 10;
+        $page = max(1, $req->query->getInt('page', 1));
         $form = $this->createForm(SearchQueryType::class, new SearchQuery());
         $form->handleRequest($req);
 
@@ -109,18 +112,23 @@ class WebController extends AbstractController
 
             $perPage = $req->query->getInt('per_page', 15);
             if ($perPage <= 0 || $perPage > 100) {
-                $perPage = max(0, min(100, $perPage));
+                $perPage = max(1, min(100, $perPage));
             }
 
-            $page = $req->query->get('page', 1) - 1;
-            $packages = $repo->searchPackage($query, $perPage, $page, $allowed);
+            $maxPerPage = $perPage;
+            $adapter = new CallbackAdapter(
+                fn () => $repo->countPackageNames($allowed),
+                fn (int $offset, int $length) => $repo->searchPackage($query, $length, intdiv($offset, $length), $allowed),
+            );
         } else if ($tags = $req->query->get('tags')) {
             $tags = explode(',', $tags);
             $packages = $repo->searchPackageByTags($tags, $allowed);
+            $adapter = new ArrayAdapter($packages);
         }
 
-        $paginator = new Pagerfanta(new ArrayAdapter($packages));
-        $paginator->setMaxPerPage(10);
+        $paginator = new Pagerfanta($adapter);
+        $paginator->setMaxPerPage($maxPerPage);
+        $paginator->setCurrentPage($page);
 
         return $this->render('web/search.html.twig', ['packages' => $paginator]);
     }

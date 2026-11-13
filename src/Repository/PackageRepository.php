@@ -73,6 +73,22 @@ class PackageRepository extends EntityRepository
         return array_map('strtolower', $names);
     }
 
+    public function countPackageNames(?array $allowed = null): int
+    {
+        if (is_array($allowed) && empty($allowed)) {
+            return 0;
+        }
+
+        $query = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)');
+
+        if ($allowed) {
+            $query->where('p.id IN (:ids)')->setParameter('ids', $allowed);
+        }
+
+        return (int) $query->getQuery()->getSingleScalarResult();
+    }
+
     /**
      * @param Package $package
      * @return Package[]
