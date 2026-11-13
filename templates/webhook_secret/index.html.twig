@@ -1,0 +1,36 @@
+{% extends "layout.html.twig" %}
+
+{% block content %}
+    <section class="row">
+        <div>
+            <div style="float: right">
+                <a class="btn btn-default" href="{{ path('webhook_secret_create') }}">Add webhook secret</a>
+            </div>
+            <h3>Incoming webhook secrets</h3>
+            <p style="max-width: 65%">
+                These secrets authenticate incoming GitHub organization webhooks. Secret values are encrypted in the
+                database and are only displayed once, immediately after creation.
+            </p>
+        </div>
+
+        <div style="padding-top: 10px; clear: both"></div>
+
+        {% for secret in secrets %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>{{ secret.name }}</strong>
+                </div>
+                <div class="panel-body">
+                    <form style="float: right" class="onsubmit-confirm" action="{{ path('webhook_secret_delete', {id: secret.id}) }}" method="POST">
+                        <input type="hidden" name="_token" value="{{ csrf_token('webhook_secret_delete_' ~ secret.id) }}" />
+                        <button class="btn btn-danger" type="submit">Delete</button>
+                    </form>
+                    <p>Created: {{ secret.createdAt|date('Y-m-d H:i:s T') }}</p>
+                    <p>Last used: {{ secret.lastUsedAt ? secret.lastUsedAt|date('Y-m-d H:i:s T') : 'Never' }}</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No incoming webhook secrets have been configured.</div>
+        {% endfor %}
+    </section>
+{% endblock %}
