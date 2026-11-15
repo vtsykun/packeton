@@ -32,6 +32,14 @@ class RemoteReposSyncWorker
     {
         $payload = $job->getPayload();
 
+        $existing = $this->registry->getRepository(Package::class)->findOneBy(['externalRef' => $payload['external_id']]);
+        if (null !== $existing) {
+            return [
+                'status' => Job::STATUS_COMPLETED,
+                'message' => "Package {$existing->getName()} already exists for repo {$payload['external_id']}",
+            ];
+        }
+
         $em = $this->registry->getManager();
         $app = $this->registry->getRepository(OAuthIntegration::class)->find($payload['app']);
         $client = $this->integrations->findApp($app->getAlias());

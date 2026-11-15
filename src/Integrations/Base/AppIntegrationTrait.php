@@ -241,7 +241,7 @@ trait AppIntegrationTrait
         $job = null;
         $this->getCached($app, "sync:{$payload['name']}", false === $newAdded, function (CacheItem $item) use ($payload, $useCache, $app, &$job) {
             $item->expiresAfter($useCache ? 86400 : 40);
-            $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $payload['external_ref'], 'app' => $app->getId()], $app->getId());
+            $job = $this->scheduler->publish('integration:repo:sync', ['external_id' => $payload['external_ref'], 'app' => $app->getId()]);
             $job = ['status' => 'new_repo', 'job' => $job->getId(), 'code' => 202];
             return [];
         });
